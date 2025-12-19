@@ -4,16 +4,14 @@ import { providePrimeNG } from 'primeng/config';
 import { routes } from './app.routes';
 import Aura from '@primeuix/themes/aura';
 
-
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
     providePrimeNG({
-            theme: {
-                preset: Aura
-            }
-    }
-  )
+      theme: {
+        preset: Aura
+      }
+    })
   ]
 };
