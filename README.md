@@ -8,6 +8,4 @@ angular version
 v21
 
 PrimeNG
-v 
-
-
+v21  
