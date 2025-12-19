@@ -5,7 +5,10 @@ node version
 v24.11.1
 
 angular version 
-v21
+v21.0.4
 
 PrimeNG
 v21  
+
+npm 
+v.11.6.2
