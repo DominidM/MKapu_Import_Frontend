@@ -1,0 +1,41 @@
+.prueba{
+    background-color: aqua;
+}
+
+/* Contenedor principal: sidebar + derecha */
+.main-container {
+  display: flex;
+  height: 100vh; /* Ocupa toda la altura de la ventana */
+  width: 100%;
+  overflow: hidden;
+}
+
+/* Sidebar izquierdo */
+.sidebar {
+  width: 250px; /* ancho fijo */
+  background-color: #1f1f1f; /* gris oscuro tipo tu captura */
+  color: white;
+}
+
+/* Sección derecha */
+.right-section {
+  display: flex;
+  flex-direction: column;
+  flex: 1; /* ocupa todo el espacio restante */
+  height: 100%;
+}
+
+/* Header arriba */
+.header {
+  height: 64px; /* igual que tu captura */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  flex-shrink: 0; /* no se encoge */
+}
+
+/* Contenido dinámico debajo */
+.content {
+  flex: 1; /* ocupa todo el espacio restante */
+  overflow-y: auto; /* scroll si el contenido es largo */
+  
+  padding: 16px;
+}

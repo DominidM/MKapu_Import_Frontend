@@ -1,0 +1,14 @@
+.img-custom {
+    width: 90px;          /* tamaño base */
+    height: auto;          /* mantiene proporción */
+    display: block;
+    margin: 0 auto;        /* centrado horizontal */
+    border-radius: 10px; 
+    transform: scale(1.0);  
+    margin-top: 20px;
+}
+
+:host ::ng-deep .login-card .p-card-title,
+:host ::ng-deep .login-card .p-card-subtitle {
+    text-align: center;
+}

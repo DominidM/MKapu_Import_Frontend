@@ -1,0 +1,10 @@
+.img-custom {
+    width: 70px;          /* tamaño base */
+    height: auto;          /* mantiene proporción */
+    display: block;
+    margin: 0 auto;        /* centrado horizontal */
+    border-radius: 10px; 
+    transform: scale(0.7);  
+    margin-top: 20px;
+    border-radius: 50%;
+}

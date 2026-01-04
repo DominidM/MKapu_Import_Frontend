@@ -1,6 +1,22 @@
 import { bootstrapApplication } from '@angular/platform-browser';
-import { appConfig } from './app/app.config';
+import { provideRouter } from '@angular/router';
+import { providePrimeNG } from 'primeng/config';
 import { App } from './app/app';
+import Aura from '@primeuix/themes/aura';
+import { routes } from './app/app.routes';
+import MyPreset from './app/core/mypreset';
 
-bootstrapApplication(App, appConfig)
-  .catch((err) => console.error(err));
+bootstrapApplication(App, {
+  providers: [
+    provideRouter(routes),
+    providePrimeNG({
+      theme: {
+        preset: MyPreset,
+        options: {
+          darkModeSelector: '.app-dark'
+        }
+      }
+    })
+  ]
+}).catch(err => console.error(err));
+

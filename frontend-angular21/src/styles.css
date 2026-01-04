@@ -1,2 +1,26 @@
+@import "primeicons/primeicons.css";
 
+body {
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+  line-height: 1.5;
+  margin:0px;
+}
 
+/* Tema claro personalizado */
+:root {
+  --surface-ground: #f5f5f5; /* gris claro */
+  --text-color: #333;
+}
+
+/* Tema oscuro */
+.app-dark {
+  --surface-ground: ##121212;
+  --text-color: #f5f5f5;
+}
+
+/* Aplicar fondo a toda la app */
+body {
+  background-color: var(--surface-ground);
+  color: var(--text-color);
+}
