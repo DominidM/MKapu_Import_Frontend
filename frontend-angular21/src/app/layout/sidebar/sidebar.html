@@ -1,9 +1,9 @@
-<div class="flex h-screen"> <!-- contenedor principal ocupa toda la ventana -->
+<div class="flex h-screen">
 
-  <!-- Sidebar -->
-  <div class="p-sidebar flex flex-column h-full w-64 surface-border">
+  <!-- SIDEBAR -->
+  <div class="p-sidebar flex flex-column h-full w-64 surface-border text-white">
 
-    <!-- Logo / Header -->
+    <!-- LOGO / HEADER -->
     <div class="flex align-items-center justify-content-between px-4 py-3 border-bottom-1 surface-border">
       <div class="flex align-items-center gap-2">
         <div class="flex justify-content-center mb-3">
@@ -13,56 +13,143 @@
       </div>
     </div>
 
-    <!-- Menú -->
+    <!-- MENÚ -->
     <div class="flex-1 overflow-auto p-2">
-      <ul class="list-none m-0 p-0">
-        <li>
-          <a class="flex align-items-center px-4 py-2 gap-2 cursor-pointer hover:surface-400"
-          [routerLink]="'/inicio/dashboard'"
-          routerLinkActive="bg-primary text-black border-round"
-          style="text-decoration: none; display: flex; color: white;">
-            <i class="pi pi-home"></i>
-            <span>Dashboard</span>
-          </a>
-        </li>
-        <li>
-          <a class="flex align-items-center px-4 py-2 gap-2 cursor-pointer hover:surface-400">
-            <i class="pi pi-bookmark"></i>
-            <span>Ventas</span>
-          </a>
-        </li>
-        <li>
-          <a class="flex align-items-center px-4 py-2 gap-2 cursor-pointer hover:surface-400"
-            [routerLink]="'/inicio/almacen'"
-            routerLinkActive="bg-primary text-black border-round"
-            style="text-decoration: none; display: flex; color: white;">
-            <i class="pi pi-chart-line"></i>
-            <span>Almacen</span>
-          </a>
-        </li>
-        <li>
-          <a class="flex align-items-center px-4 py-2 gap-2 cursor-pointer hover:bg-primary hover:text-white rounded"
-            [routerLink]="'/inicio/administracion'"
-            routerLinkActive="bg-primary text-black border-round"
-            style="text-decoration: none; display: flex; color: white;">
-            <i class="pi pi-users"></i>
-            <span>Administrador</span>
-          </a>
-        </li>
-      </ul>
-    </div>
-    
 
-    <!-- Footer fijo abajo -->
+      <!-- DASHBOARD -->
+      <a
+        class="flex align-items-center px-4 py-2 gap-2 cursor-pointer hover:surface-400"
+        [routerLink]="'/inicio/dashboard'"
+        routerLinkActive="bg-primary text-black border-round"
+        style="text-decoration: none; color: white;"
+      >
+        <i class="pi pi-home"></i>
+        <span>Dashboard</span>
+      </a>
+
+      <!-- VENTAS -->
+      <div class="mt-2">
+        <div
+          class="flex align-items-center px-4 py-2 gap-2 cursor-pointer hover:surface-400"
+          (click)="toggleMenu('ventas')"
+        >
+          <i class="pi pi-bookmark"></i>
+          <span class="flex-1">Ventas</span>
+          <i
+            class="pi"
+            [ngClass]="activeMenu === 'ventas' ? 'pi-chevron-down' : 'pi-chevron-right'"
+          ></i>
+        </div>
+
+        <div *ngIf="activeMenu === 'ventas'" class="ml-4">
+          <a
+            class="flex px-4 py-2 cursor-pointer hover:surface-400"
+            [routerLink]="'/inicio/ventas/facturas'"
+            routerLinkActive="bg-primary text-black border-round"
+            style="text-decoration: none; color: white;"
+          >
+            Facturas
+          </a>
+          <a
+            class="flex px-4 py-2 cursor-pointer hover:surface-400"
+            [routerLink]="'/inicio/ventas/clientes'"
+            routerLinkActive="bg-primary text-black border-round"
+            style="text-decoration: none; color: white;"
+          >
+            Clientes
+          </a>
+        </div>
+      </div>
+
+      <!-- ALMACÉN -->
+      <div class="mt-2">
+        <div
+          class="flex align-items-center px-4 py-2 gap-2 cursor-pointer hover:surface-400"
+          (click)="toggleMenu('almacen')"
+        >
+          <i class="pi pi-chart-line"></i>
+          <span class="flex-1">Almacén</span>
+          <i
+            class="pi"
+            [ngClass]="activeMenu === 'almacen' ? 'pi-chevron-down' : 'pi-chevron-right'"
+          ></i>
+        </div>
+
+        <div *ngIf="activeMenu === 'almacen'" class="ml-4">
+          <a
+            class="flex px-4 py-2 cursor-pointer hover:surface-400"
+            [routerLink]="'/inicio/almacen/productos'"
+            routerLinkActive="bg-primary text-black border-round"
+            style="text-decoration: none; color: white;"
+          >
+            Productos
+          </a>
+          <a
+            class="flex px-4 py-2 cursor-pointer hover:surface-400"
+            [routerLink]="'/inicio/almacen/categorias'"
+            routerLinkActive="bg-primary text-black border-round"
+            style="text-decoration: none; color: white;"
+          >
+            Categorías
+          </a>
+        </div>
+      </div>
+
+      <!-- ADMINISTRACIÓN -->
+      <div class="mt-2">
+        <div
+          class="flex align-items-center px-4 py-2 gap-2 cursor-pointer hover:surface-400"
+          (click)="toggleMenu('admin')"
+        >
+          <i class="pi pi-users"></i>
+          <span class="flex-1">Administrador</span>
+          <i
+            class="pi"
+            [ngClass]="activeMenu === 'admin' ? 'pi-chevron-down' : 'pi-chevron-right'"
+          ></i>
+        </div>
+
+        <div *ngIf="activeMenu === 'admin'" class="ml-4">
+          <a
+            class="flex px-4 py-2 cursor-pointer hover:surface-400"
+            [routerLink]="'/inicio/administracion/usuarios'"
+            routerLinkActive="bg-primary text-black border-round"
+            style="text-decoration: none; color: white;"
+          >
+            Usuarios
+          </a>
+          <a
+            class="flex px-4 py-2 cursor-pointer hover:surface-400"
+            [routerLink]="'/inicio/administracion/roles'"
+            routerLinkActive="bg-primary text-black border-round"
+            style="text-decoration: none; color: white;"
+          >
+            Roles
+          </a>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- FOOTER -->
     <div class="mt-auto border-top-1 surface-border p-3 flex align-items-center gap-2">
-      <p-avatar image="https://primefaces.org/cdn/primeng/images/demo/avatar/amyelsner.png" shape="circle" />
+      <p-avatar
+        image="https://primefaces.org/cdn/primeng/images/demo/avatar/amyelsner.png"
+        shape="circle"
+      ></p-avatar>
       <span class="font-bold">Admin</span>
-      <p-button class="ml-7" icon="pi pi-sign-out" (onClick)="confirm2($event)" severity="danger" />
+      <p-button
+        class="ml-auto"
+        icon="pi pi-sign-out"
+        severity="danger"
+        (onClick)="confirm2($event)"
+      ></p-button>
     </div>
 
   </div>
 
-  <!-- Aquí podrías tener el contenido principal -->
-  <p-toast />
-  <p-confirmdialog />
+  <!-- TOASTS -->
+  <p-toast></p-toast>
+  <p-confirmdialog></p-confirmdialog>
+
 </div>
