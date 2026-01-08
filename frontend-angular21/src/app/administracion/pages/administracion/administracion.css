@@ -1,0 +1,52 @@
+.rol-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid transparent;
+    border-radius: 6px;
+    padding: 1rem;
+    cursor: pointer;
+    height: 100%;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+  }
+  .field {
+    display: flex;
+    align-items: center;
+    gap: 1rem;              /* separación label-input */
+    margin-bottom: 1rem;
+  }
+  
+  .field label {
+    width: 150px;           /* alineación perfecta */
+    font-size: 1rem;
+    white-space: nowrap;
+  }
+    .field input,
+    .field .p-inputtext,
+    .field .p-password {
+     flex: 1;
+}
+/* Mover el ojito más a la izquierda */
+.field .p-password .p-inputtext {
+    padding-right: 2rem;
+  }
+  ::ng-deep .field .p-password .p-password-icon {
+    right: 0.5rem;
+  }
+  
+  .rol-card:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 1px var(--primary-color),
+                0 2px 6px rgba(0, 0, 0, 0.45);
+  }
+  
+  .rol-card.selected {
+    border-color: var(--primary-color);
+    background: rgba(255, 193, 7, 0.08);
+  }
+  
+  .rol-icon {
+    font-size: 3rem;
+    margin-bottom: 0.25rem;
+    color: var(--primary-color);
+  }
+  
