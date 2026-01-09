@@ -8,6 +8,7 @@ import { Router, RouterModule } from '@angular/router';
 import { ConfirmDialog } from 'primeng/confirmdialog';
 import { ToastModule } from 'primeng/toast';
 import { CommonModule } from '@angular/common';
+import { AuthService } from '../../core/services/auth.service';
 
 
 @Component({
@@ -33,14 +34,19 @@ export class Sidebar implements OnInit {
 
   // controla qué menú está abierto (solo uno)
   activeMenu: string | null = null;
+  role: string | null = null;
+
 
   constructor(
     private confirmationService: ConfirmationService,
     private messageService: MessageService,
-    private router: Router
+    private router: Router,
+    private authService: AuthService
   ) {}
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    this.role = this.authService.getRole();
+  }
 
   toggleMenu(menu: string) {
     this.activeMenu = this.activeMenu === menu ? null : menu;
@@ -62,6 +68,8 @@ export class Sidebar implements OnInit {
         outlined: true
       },
       accept: () => {
+        this.authService.logout();
+
         this.messageService.add({
           severity: 'success',
           summary: 'Confirmación',

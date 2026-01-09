@@ -1,0 +1,100 @@
+<div class="editar-sede-page flex justify-content-center align-items-center">
+  <p-card styleClass="sede-card">
+    <div class="sede-card-header flex align-items-center justify-content-between">
+      <p-button
+        icon="pi pi-arrow-left"
+        text
+        severity="secondary"
+        aria-label="Volver a sedes"
+        [routerLink]="['/admin/sedes']"
+      ></p-button>
+      <h2 class="sede-card-title">Modificar Sede</h2>
+      <span class="sede-card-spacer"></span>
+    </div>
+
+    <div class="sede-section">
+      <div class="sede-section-title">UBICACION:</div>
+      <p-divider></p-divider>
+    </div>
+
+    <div class="grid form-grid">
+      <div class="col-12 md:col-6">
+        <label class="field-label" for="codigo">CODIGO:</label>
+        <input
+          id="codigo"
+          pInputText
+          class="w-full"
+          placeholder="Ingrese datos"
+          [(ngModel)]="sede.codigo"
+        />
+      </div>
+      <div class="col-12 md:col-6">
+        <label class="field-label" for="nombre">NOMBRE:</label>
+        <input
+          id="nombre"
+          pInputText
+          class="w-full"
+          placeholder="Ingrese datos"
+          [(ngModel)]="sede.nombre"
+        />
+      </div>
+      <div class="col-12 md:col-6">
+        <label class="field-label" for="ciudad">CIUDAD:</label>
+        <input
+          id="ciudad"
+          pInputText
+          class="w-full"
+          placeholder="Ingrese datos"
+          [(ngModel)]="sede.ciudad"
+        />
+      </div>
+      <div class="col-12 md:col-6">
+        <label class="field-label" for="telefono">TELEFONO:</label>
+        <input
+          id="telefono"
+          pInputText
+          class="w-full"
+          placeholder="Ingrese datos"
+          [(ngModel)]="sede.telefono"
+        />
+      </div>
+      <div class="col-12">
+        <label class="field-label" for="departamento">DEPARTAMENTO:</label>
+        <input
+          id="departamento"
+          pInputText
+          class="w-full"
+          placeholder="Ingrese datos"
+          [(ngModel)]="sede.departamento"
+        />
+      </div>
+      <div class="col-12">
+        <label class="field-label" for="direccion">DIRECCION:</label>
+        <input
+          id="direccion"
+          pInputText
+          class="w-full"
+          placeholder="Ingrese datos"
+          [(ngModel)]="sede.direccion"
+        />
+      </div>
+    </div>
+
+    <p-divider></p-divider>
+
+    <div class="flex align-items-center justify-content-center gap-3 mt-3">
+      <p-button
+        label="Cancelar"
+        outlined
+        severity="secondary"
+        styleClass="sede-btn-cancel"
+        [routerLink]="['/admin/sedes']"
+      ></p-button>
+      <p-button
+        label="Modificar Sede"
+        icon="pi pi-check"
+        styleClass="sede-btn-primary"
+      ></p-button>
+    </div>
+  </p-card>
+</div>

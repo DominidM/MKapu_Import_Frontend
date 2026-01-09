@@ -1,9 +1,7 @@
 <div class="flex h-screen">
-
-  <!-- SIDEBAR -->
   <div class="p-sidebar flex flex-column h-full w-64 surface-border text-white">
 
-    <!-- LOGO / HEADER -->
+    <!-- HEADER -->
     <div class="flex align-items-center justify-content-between px-4 py-3 border-bottom-1 surface-border">
       <div class="flex align-items-center gap-2">
         <div class="flex justify-content-center mb-3">
@@ -13,96 +11,113 @@
       </div>
     </div>
 
-    <!-- MENÚ -->
     <div class="flex-1 overflow-auto p-2">
 
-      <!-- DASHBOARD -->
-      <a
-        class="flex align-items-center px-4 py-2 gap-2 cursor-pointer hover:surface-400"
-        [routerLink]="'/inicio/dashboard'"
-        routerLinkActive="bg-primary text-black border-round"
-        style="text-decoration: none; color: white;"
-      >
-        <i class="pi pi-home"></i>
-        <span>Dashboard</span>
-      </a>
-
-      <!-- VENTAS -->
-      <div class="mt-2">
-        <div
+      <div class="mt-2" *ngIf="role === 'ventas'">
+        <a
           class="flex align-items-center px-4 py-2 gap-2 cursor-pointer hover:surface-400"
-          (click)="toggleMenu('ventas')"
+          [routerLink]="'/ventas/dashboard'"
+          routerLinkActive="bg-primary text-black border-round"
+          style="text-decoration: none; color: white;"
         >
           <i class="pi pi-bookmark"></i>
-          <span class="flex-1">Ventas</span>
-          <i
-            class="pi"
-            [ngClass]="activeMenu === 'ventas' ? 'pi-chevron-down' : 'pi-chevron-right'"
-          ></i>
-        </div>
-
-        <div *ngIf="activeMenu === 'ventas'" class="ml-4">
-          <a
-            class="flex px-4 py-2 cursor-pointer hover:surface-400"
-            [routerLink]="'/inicio/ventas/facturas'"
-            routerLinkActive="bg-primary text-black border-round"
-            style="text-decoration: none; color: white;"
-          >
-            Facturas
-          </a>
-          <a
-            class="flex px-4 py-2 cursor-pointer hover:surface-400"
-            [routerLink]="'/inicio/ventas/clientes'"
-            routerLinkActive="bg-primary text-black border-round"
-            style="text-decoration: none; color: white;"
-          >
-            Clientes
-          </a>
-        </div>
+          <span>Dashboard</span>
+        </a>
       </div>
 
-      <!-- ALMACÉN -->
-      <div class="mt-2">
-        <div
+
+      <div class="mt-2" *ngIf="role === 'almacen'">
+        <a
           class="flex align-items-center px-4 py-2 gap-2 cursor-pointer hover:surface-400"
-          (click)="toggleMenu('almacen')"
+          [routerLink]="'/almacen/dashboard'"
+          routerLinkActive="bg-primary text-black border-round"
+          style="text-decoration: none; color: white;"
         >
           <i class="pi pi-chart-line"></i>
-          <span class="flex-1">Almacén</span>
+          <span>Dashboard</span>
+        </a>
+      </div>
+
+      
+
+      <div class="mt-2" *ngIf="role === 'admin'">
+
+        <a
+          class="flex align-items-center px-4 py-2 gap-2 cursor-pointer hover:surface-400"
+          [routerLink]="'/admin/dashboard'"
+          routerLinkActive="bg-primary text-black border-round"
+          style="text-decoration: none; color: white;"
+        >
+          <i class="pi pi-home"></i>
+          <span>Dashboard</span>
+        </a>
+
+        <div
+          class="flex align-items-center px-4 py-2 gap-2 cursor-pointer hover:surface-400"
+          (click)="toggleMenu('vistas')"
+        >
+          <i class="pi pi-eye"></i>
+          <span class="flex-1">Ver Vistas</span>
           <i
             class="pi"
-            [ngClass]="activeMenu === 'almacen' ? 'pi-chevron-down' : 'pi-chevron-right'"
+            [ngClass]="activeMenu === 'vistas' ? 'pi-chevron-down' : 'pi-chevron-right'"
           ></i>
         </div>
 
-        <div *ngIf="activeMenu === 'almacen'" class="ml-4">
+        <div *ngIf="activeMenu === 'vistas'" class="ml-4">
           <a
             class="flex px-4 py-2 cursor-pointer hover:surface-400"
-            [routerLink]="'/inicio/almacen/productos'"
             routerLinkActive="bg-primary text-black border-round"
             style="text-decoration: none; color: white;"
           >
-            Productos
+            Ver vista Ventas
           </a>
+
           <a
             class="flex px-4 py-2 cursor-pointer hover:surface-400"
-            [routerLink]="'/inicio/almacen/categorias'"
             routerLinkActive="bg-primary text-black border-round"
             style="text-decoration: none; color: white;"
           >
-            Categorías
+            Ver vista Almacén
           </a>
         </div>
-      </div>
 
-      <!-- ADMINISTRACIÓN -->
-      <div class="mt-2">
+        <div
+          class="flex align-items-center px-4 py-2 gap-2 cursor-pointer hover:surface-400"
+          (click)="toggleMenu('reportes')"
+        >
+          <i class="pi pi-chart-bar"></i>
+          <span class="flex-1">Reportes</span>
+          <i
+            class="pi"
+            [ngClass]="activeMenu === 'reportes' ? 'pi-chevron-down' : 'pi-chevron-right'"
+          ></i>
+        </div>
+
+        <div *ngIf="activeMenu === 'reportes'" class="ml-4">
+          <a
+            class="flex px-4 py-2 cursor-pointer hover:surface-400"
+            routerLinkActive="bg-primary text-black border-round"
+            style="text-decoration: none; color: white;"
+          >
+            Reporte Ventas
+          </a>
+
+          <a
+            class="flex px-4 py-2 cursor-pointer hover:surface-400"
+            routerLinkActive="bg-primary text-black border-round"
+            style="text-decoration: none; color: white;"
+          >
+            Reporte Inventario
+          </a>
+        </div>
+
         <div
           class="flex align-items-center px-4 py-2 gap-2 cursor-pointer hover:surface-400"
           (click)="toggleMenu('admin')"
         >
           <i class="pi pi-users"></i>
-          <span class="flex-1">Administrador</span>
+          <span class="flex-1">Administración</span>
           <i
             class="pi"
             [ngClass]="activeMenu === 'admin' ? 'pi-chevron-down' : 'pi-chevron-right'"
@@ -112,32 +127,82 @@
         <div *ngIf="activeMenu === 'admin'" class="ml-4">
           <a
             class="flex px-4 py-2 cursor-pointer hover:surface-400"
-            [routerLink]="'/inicio/administracion'"
             routerLinkActive="bg-primary text-black border-round"
             style="text-decoration: none; color: white;"
           >
-            Usuarios
+            Gestion de Sedes
+          </a>
+
+          <a
+            class="flex px-4 py-2 cursor-pointer hover:surface-400"
+            [routerLink]="['/admin/usuarios']"
+            routerLinkActive="bg-primary text-black border-round"
+            style="text-decoration: none; color: white;"
+          >
+            Gestion de Usuarios
+          </a>
+
+          <a
+            class="flex px-4 py-2 cursor-pointer hover:surface-400"
+            [routerLink]="['/admin/gestion-productos']"
+            routerLinkActive="bg-primary text-black border-round"
+            style="text-decoration: none; color: white;"
+          >
+            Gestion de Productos
+          </a>
+
+          <a
+            class="flex px-4 py-2 cursor-pointer hover:surface-400"
+            routerLinkActive="bg-primary text-black border-round"
+            style="text-decoration: none; color: white;"
+          >
+            Gestion de Promociones
           </a>
           <a
             class="flex px-4 py-2 cursor-pointer hover:surface-400"
-            [routerLink]="'/inicio/administracion/roles'"
+            [routerLink]="'/admin/sedes'"
             routerLinkActive="bg-primary text-black border-round"
             style="text-decoration: none; color: white;"
           >
-            Roles
+            Sedes
           </a>
         </div>
+
+        <a
+          class="flex align-items-center px-4 py-2 gap-2 cursor-pointer hover:surface-400"
+          routerLinkActive="bg-primary text-black border-round"
+          style="text-decoration: none; color: white;"
+        >
+          <i class="pi pi-book"></i>
+          <span>Libro de Ventas</span>
+        </a>
+
+        <a
+          class="flex align-items-center px-4 py-2 gap-2 cursor-pointer hover:surface-400"
+          routerLinkActive="bg-primary text-black border-round"
+          style="text-decoration: none; color: white;"
+        >
+          <i class="pi pi-user"></i>
+          <span>Perfil</span>
+        </a>
+
       </div>
+
+
 
     </div>
 
-    <!-- FOOTER -->
     <div class="mt-auto border-top-1 surface-border p-3 flex align-items-center gap-2">
+
       <p-avatar
         image="https://primefaces.org/cdn/primeng/images/demo/avatar/amyelsner.png"
         shape="circle"
       ></p-avatar>
-      <span class="font-bold">Admin</span>
+
+      <span class="font-bold">
+        {{ role ? (role | titlecase) : 'Invitado' }}
+      </span>
+
       <p-button
         class="ml-auto"
         icon="pi pi-sign-out"
@@ -148,8 +213,6 @@
 
   </div>
 
-  <!-- TOASTS -->
   <p-toast></p-toast>
   <p-confirmdialog></p-confirmdialog>
-
 </div>
