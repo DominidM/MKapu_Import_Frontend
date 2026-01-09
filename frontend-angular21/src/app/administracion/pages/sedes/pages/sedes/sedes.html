@@ -30,7 +30,7 @@
           label="Agregar Sede"
           icon="pi pi-plus"
           styleClass="sedes-pill"
-          [routerLink]="['/inicio/administracion/sedes/agregar-sede']"
+          [routerLink]="['/admin/sedes/agregar-sede']"
         ></p-button>
       </div>
     </div>
@@ -82,7 +82,7 @@
                 styleClass="sedes-icon-btn sedes-icon-soft"></p-button>
               <p-button icon="pi pi-pencil" text severity="secondary"
                 styleClass="sedes-icon-btn sedes-icon-warn"
-                [routerLink]="['/inicio/administracion/sedes/editar-sede']"
+                [routerLink]="['/admin/sedes/editar-sede']"
                 [queryParams]="{ codigo: sede.codigo }"></p-button>
               <p-button icon="pi pi-check" text severity="success"
                 styleClass="sedes-icon-btn sedes-icon-success"></p-button>
