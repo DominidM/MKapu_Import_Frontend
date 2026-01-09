@@ -20,7 +20,24 @@ export const routes: Routes = [
             { path: 'crear-producto', loadComponent: () => import('./administracion/pages/gestion-productos/productos-form/productos-form').then(m => m.ProductosForm) },
             { path: 'editar-producto/:id', loadComponent: () => import('./administracion/pages/gestion-productos/productos-form/productos-form').then(m => m.ProductosForm) },
             { path: 'productos-eliminados', loadComponent: () => import('./administracion/pages/gestion-productos/productos-eliminados/productos-eliminados').then(m => m.ProductosEliminados) }
-      ]}
+      ]},
+      {
+        path: 'sedes',
+        children: [
+          {
+            path: '',
+            loadComponent: () => import('./administracion/pages/sedes/pages/sedes/sedes').then(m => m.Sedes)
+          },
+          {
+            path: 'agregar-sede',
+            loadComponent: () => import('./administracion/pages/sedes/pages/agregar-sede/agregar-sede').then(m => m.AgregarSede)
+          },
+          {
+            path: 'editar-sede',
+            loadComponent: () => import('./administracion/pages/sedes/pages/editar-sede/editar-sede').then(m => m.EditarSede)
+          }
+        ]
+      },
 
     ]
   },
@@ -38,6 +55,7 @@ export const routes: Routes = [
     component: Main,
     children: [
       { path: 'dashboard', loadComponent: () => import('./ventas/pages/ventas/ventas').then(m => m.Ventas) }
+
     ]
   }
 ];
