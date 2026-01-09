@@ -11,9 +11,14 @@ export const routes: Routes = [
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       { path: 'dashboard', loadComponent: () => import('./dashboard/pages/dashboard/dashboard').then(m => m.Dashboard) },
-      { path: 'administracion', loadComponent: () => import('./administracion/pages/administracion/administracion').then(m => m.Administracion) },
+      { path: 'administracion',loadComponent: () => import('./administracion/pages/administracion/administracion').then(m => m.Administracion) },
       { path: 'almacen', loadComponent: () => import('./almacen/pages/almacen/almacen').then(m => m.Almacen) },
-      { path: 'ventas', loadComponent: () => import('./ventas/pages/ventas/ventas').then(m => m.Ventas) },
+      { path: 'ventas',
+        children: [
+          { path: '',  loadComponent: () => import('./ventas/pages/ventas/ventas').then(m => m.Ventas) },
+          { path: 'clientes', loadComponent: () => import('./ventas/pages/clientes/clientes').then(m => m.Clientes) },
+        ] 
+      },
     ]
   }
 ];
