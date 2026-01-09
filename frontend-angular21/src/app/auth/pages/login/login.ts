@@ -9,6 +9,8 @@ import { InputTextModule } from 'primeng/inputtext';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { Router } from '@angular/router';
+import { AuthService } from '../../../core/services/auth.service';
+
 
 @Component({
   selector: 'app-login',
@@ -23,30 +25,43 @@ export class Login {
   password: string = "";
   usuario: string = "";
 
- constructor(private themeService: ThemeService, private messageService: MessageService, private router: Router) {}
+ constructor(private themeService: ThemeService, private messageService: MessageService, private router: Router, private authService: AuthService) {}
 
   toggleTheme(): void {
     this.themeService.toggleTheme();
   }
 
   prueba(): void{
-    if(this.usuario == "admin" && this.password == "admin"){
+
+    const success = this.authService.login(this.usuario, this.password);
+
+    if(success)
+    {
+      const role = this.authService.getRole();
+
       this.messageService.add({ 
         severity: 'success', 
         summary: 'Login Correcto', 
         detail: 'Bienvenido al sistema' 
       });
+
       setTimeout(() => {
-      this.router.navigate(['/inicio']);  // Cambia '/home' por la ruta de tu página principal
+        if (role === 'admin') this.router.navigate(['/admin/dashboard']);
+        if (role === 'almacen') this.router.navigate(['/almacen/dashboard']);
+        if (role === 'ventas') this.router.navigate(['/ventas/dashboard']);
       }, 1000);
 
-    }else{
+    }
+    else
+    {
       this.messageService.add({ 
         severity: 'error', 
-        summary: 'Credenciales incorrectas', 
-        detail: 'Ingrese sus credenciales correctamente por favor' 
+        summary: 'Login Incorrecto', 
+        detail: 'Usuario o contraseña incorrecta' 
       });
     }
+
+
   }
 
 }

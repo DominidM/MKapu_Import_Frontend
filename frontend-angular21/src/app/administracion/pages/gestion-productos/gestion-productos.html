@@ -1,0 +1,215 @@
+<div class="p-2">
+
+  <!-- CABECERA -->
+  <div *ngIf="!isRutaHija()">
+
+  <div class="card mb-4 p-4 surface-card border-round-xl shadow-1">
+
+    <div class="flex justify-content-between align-items-center gap-4">
+      
+      <div class="flex align-items-center gap-4">
+        <i class="pi pi-building text-6xl text-1500"></i>
+        <div class="flex flex-column gap-1">
+          <label class="font-bold text-xs " style="color: #D7D8DB;">
+            ADMINISTRACION - ADMIN - PRODUCTOS ACTIVOS
+          </label>
+          <label class="font-black text-lg" style="color: #000000; font-weight: 700;">
+            GESTIÓN DE PRODUCTOS
+          </label>
+        </div>
+      </div>
+      
+      <div class="flex gap-2">
+        <button pButton label="" icon="pi pi-trash" severity="danger" 
+                size="large" (click)="irEliminados()" class="w-3rem" [disabled]="!sedeValue"></button>
+
+        <button pButton label="Registrar Producto" icon="pi pi-plus" severity="success" 
+                size="large" (click)="irCrear()" class="w-14rem" [disabled]="!sedeValue"></button>
+      </div>
+      
+    </div>
+  </div>
+
+  <!-- SELECCIONAR SEDE -->
+
+  <div class="card mb-4 p-4 surface-card border-round-xl shadow-1">
+    <div class="flex justify-content-between align-items-center">
+      
+      <div class="flex align-items-center gap-4">
+        <i class="pi pi-home text-6xl text-1500"></i>
+        <div class="flex flex-column gap-1">
+          <label class="font-bold text-xs">SELECCIONAR SEDE:</label>
+          <p-select 
+            [(ngModel)]="sedeValue"
+            [options]="sedes"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Elija una sede para gestionar productos..."
+            (onChange)="onSelectSede()"
+            class="w-24rem">
+          </p-select>
+        </div>
+      </div>
+      
+      <div class="flex align-items-center justify-content-end" style="min-width: 120px;">
+        <span class="p-tag p-tag-success text-xs font-bold">
+          {{totalSedesActivas}} ACTIVAS
+        </span>
+      </div>
+      
+    </div>
+  </div>
+
+  <!-- FILTROS -->
+  <div class="card mb-4 surface-card border-round-xl shadow-1">
+    <div class="p-4">
+      <div class="flex flex-wrap gap-4 align-items-end">
+        <div class="flex flex-column flex-grow-1 min-w-30rem">
+          <label class="font-medium mb-2">Buscar Producto</label>
+          <p-autocomplete 
+            [(ngModel)]="buscarValue"
+            [suggestions]="items"
+            (completeMethod)="searchBuscar($event)"
+            (onSelect)="filtrarPorBusqueda()"
+            placeholder="Escribe nombre, código o familia..."
+            [inputStyle]="{width: '100%'}"
+            class="w-full"
+            [disabled]="!sedeValue">
+          </p-autocomplete>
+        </div>
+
+        <!-- FAMILIA -->
+        <div class="flex flex-column w-16rem">
+          <label class="font-medium mb-2">Familia</label>
+          <p-select 
+            [(ngModel)]="familiaValue"
+            [options]="familias"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Todas las familias"
+            [disabled]="!sedeValue"
+            (onChange)="onSelectFamilia()"
+            class="w-full">
+          </p-select>
+        </div>
+
+        <!-- BOTONES DE CONTROL -->
+        <div class="flex gap-3 align-items-end">
+          <p-toggleButton 
+            [(ngModel)]="vistaLista" 
+            onLabel="Lista" 
+            offLabel="Tarjetas" 
+            onIcon="pi pi-table"
+            offIcon="pi pi-list">
+          </p-toggleButton>
+          <button pButton icon="pi pi-filter-slash" label="Limpiar" severity="secondary" 
+                  (click)="limpiarFiltros()"></button>
+          <button pButton icon="pi pi-refresh" label="Recargar" severity="info" 
+                  (click)="cargarProductos()"></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MENSAJE SIN SEDE -->
+  <div *ngIf="!sedeValue" class="card p-8 text-center mb-6">
+    <div class="flex flex-column align-items-center gap-4">
+      <i class="pi pi-exclamation-triangle text-6xl text-400"></i>
+      <h3 class="text-2xl font-bold text-900 mb-2">¡Debe definir una Sede!</h3>
+      <p class="text-xl text-600 m-0">Seleccione una sede arriba para poder ver y gestionar los productos</p>
+    </div>
+  </div>
+
+  <!-- VISTA LISTA -->
+  <div *ngIf="sedeValue && vistaLista && productos.length > 0" class="card mb-6 surface-card border-round-xl shadow-2">
+    <p-table [value]="productos" responsiveLayout="scroll" [paginator]="true" [rows]="10" 
+             [rowsPerPageOptions]="[5,10,25,50]" tableStyleClass="p-datatable-sm" 
+             [showCurrentPageReport]="true"
+             currentPageReportTemplate="Mostrando {first}-{last} de {totalRecords} productos"
+             [loading]="loading">
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 12%">Código</th>
+          <th style="width: 28%">Producto</th>
+          <th style="width: 15%">Familia</th>
+          <th style="width: 10%">Stock</th>
+          <th style="width: 12%">Precio Unit.</th>
+          <th style="width: 13%">Precio Caja</th>
+          <th style="width: 10%">Acciones</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-p>
+        <tr>
+          <td>{{p.codigo}}</td>
+          <td>{{p.nombre}}</td>
+          <td>{{p.familia}}</td>
+          <td>
+            <p-tag [value]="p.stock.toString()" [severity]="getStockSeverity(p.stock)" class="font-bold">
+            </p-tag>
+          </td>
+          <td class="text-right font-medium">S/ {{p.precioUnidad | number:'1.2-2'}}</td>
+          <td class="text-right font-medium">S/ {{p.precioCaja | number:'1.2-2'}}</td>
+          <td>
+            <div class="flex gap-1 flex-wrap">
+              <button pButton icon="pi pi-eye" severity="info" size="small" 
+                      pTooltip="Ver Detalles" (click)="irDetalle(p.id)"
+                      class="p-button-rounded p-button-sm"></button>
+              <button pButton icon="pi pi-pencil" severity="success" size="small" 
+                      pTooltip="Editar Producto" (click)="irEditar(p.id)"
+                      class="p-button-rounded p-button-sm"></button>
+              <button pButton icon="pi pi-trash" severity="danger" size="small" 
+                      pTooltip="Eliminar Producto" (click)="eliminarProducto(p)"
+                      class="p-button-rounded p-button-sm"></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="7" class="text-center py-6">
+            <i class="pi pi-inbox text-4xl text-400 mb-3 block"></i>
+            <p class="text-900 font-medium mb-0">No se encontraron productos</p>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <!-- VISTA TARJETAS -->
+  <div *ngIf="sedeValue && !vistaLista && productos.length > 0" class="grid mb-6">
+    <div class="col-12 md:col-6 lg:col-4 xl:col-3" *ngFor="let p of productos; trackBy: trackByFn">
+      <p-card class="h-full surface-card hover:shadow-4 transition-duration-200">
+        <ng-template pTemplate="title" class="font-bold text-lg">{{p.nombre}}</ng-template>
+        <ng-template pTemplate="subtitle" class="text-500">{{p.codigo}} • {{p.familia}}</ng-template>
+        <div class="flex flex-wrap gap-2 mb-3 mt-2">
+          <p-tag [value]="'Stock: ' + p.stock" [severity]="getStockSeverity(p.stock)" class="font-medium"></p-tag>
+          <p-tag [value]="'S/ ' + (p.precioUnidad | number:'1.2-2')" severity="success" class="font-medium"></p-tag>
+        </div>
+        <div class="flex flex-wrap gap-2 pt-2">
+          <button pButton icon="pi pi-eye" severity="info" size="small" label="Detalle" 
+                  class="flex-1" (click)="irDetalle(p.id)"></button>
+          <button pButton icon="pi pi-pencil" severity="success" size="small" label="Editar" 
+                  class="flex-1" (click)="irEditar(p.id)"></button>
+          <button pButton icon="pi pi-trash" severity="danger" size="small" label="Eliminar" 
+                  class="flex-1" (click)="eliminarProducto(p)"></button>
+        </div>
+      </p-card>
+    </div>
+  </div>
+
+  <!-- SIN PRODUCTOS -->
+  <div *ngIf="sedeValue && productos.length === 0" class="card p-6 text-center py-8">
+    <i class="pi pi-inbox text-6xl text-400 mb-4 block"></i>
+    <h3 class="text-2xl font-bold text-900 mb-2">Sin Productos</h3>
+    <p class="text-600 mb-6">No hay productos activos en esta sede</p>
+    <button pButton label="Agregar Primer Producto" icon="pi pi-plus" severity="success" 
+            size="large" class="w-12rem" (click)="irCrear()"></button>
+  </div>
+
+
+  </div>
+  </div>
+
+    <div class="router-child-outlet" style="min-height: 400px;">
+    <router-outlet></router-outlet>
+  </div>
