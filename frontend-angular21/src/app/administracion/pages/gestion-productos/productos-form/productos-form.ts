@@ -1,13 +1,18 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 
-import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { SelectModule } from 'primeng/select';
 import { CardModule } from 'primeng/card';
+import { ConfirmDialog } from 'primeng/confirmdialog';
+import { ToastModule } from 'primeng/toast';
+import { ConfirmationService, MessageService } from 'primeng/api';
+import { Button } from 'primeng/button';
+
+import { ProductosService, Producto } from '../../../../core/services/productos.service';
 
 @Component({
   selector: 'app-productos-form',
@@ -15,151 +20,40 @@ import { CardModule } from 'primeng/card';
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    ButtonModule,
+    Button,
     InputTextModule,
     InputNumberModule,
     SelectModule,
-    CardModule
+    CardModule,
+    ConfirmDialog,
+    ToastModule
   ],
-  template: `
-    <div class="p-4">
-      <div class="flex justify-content-between align-items-center mb-4">
-        <h2 class="m-0">{{ isEditMode ? 'Editar Producto' : 'Nuevo Producto' }}</h2>
-        <button pButton label="Volver" icon="pi pi-arrow-left" severity="secondary" (click)="volver()"></button>
-      </div>
-
-      <p-card>
-        <form [formGroup]="productoForm" (ngSubmit)="guardar()" class="formgrid grid">
-          
-          <div class="field col-12 md:col-6">
-            <label for="codigo">Código *</label>
-            <input pInputText id="codigo" formControlName="codigo" class="w-full" />
-            <small class="text-red-500" *ngIf="productoForm.get('codigo')?.invalid && productoForm.get('codigo')?.touched">
-              El código es requerido
-            </small>
-          </div>
-
-          <div class="field col-12 md:col-6">
-            <label for="nombre">Nombre *</label>
-            <input pInputText id="nombre" formControlName="nombre" class="w-full" />
-            <small class="text-red-500" *ngIf="productoForm.get('nombre')?.invalid && productoForm.get('nombre')?.touched">
-              El nombre es requerido
-            </small>
-          </div>
-
-          <div class="field col-12 md:col-6">
-            <label for="sede">Sede *</label>
-            <p-select 
-              id="sede"
-              formControlName="sede" 
-              [options]="sedes" 
-              placeholder="Seleccionar sede"
-              class="w-full">
-            </p-select>
-          </div>
-
-          <div class="field col-12 md:col-6">
-            <label for="familia">Familia *</label>
-            <p-select 
-              id="familia"
-              formControlName="familia" 
-              [options]="familias" 
-              placeholder="Seleccionar familia"
-              class="w-full">
-            </p-select>
-          </div>
-
-          <div class="field col-12 md:col-3">
-            <label for="stock">Stock Inicial *</label>
-            <p-inputNumber 
-              id="stock"
-              formControlName="stock" 
-              class="w-full"
-              [min]="0">
-            </p-inputNumber>
-          </div>
-
-          <div class="field col-12 md:col-3">
-            <label for="precioUnidad">Precio Unidad (S/) *</label>
-            <p-inputNumber 
-              id="precioUnidad"
-              formControlName="precioUnidad" 
-              mode="currency" 
-              currency="PEN" 
-              locale="es-PE"
-              class="w-full"
-              [min]="0">
-            </p-inputNumber>
-          </div>
-
-          <div class="field col-12 md:col-3">
-            <label for="precioCaja">Precio Caja (S/) *</label>
-            <p-inputNumber 
-              id="precioCaja"
-              formControlName="precioCaja" 
-              mode="currency" 
-              currency="PEN" 
-              locale="es-PE"
-              class="w-full"
-              [min]="0">
-            </p-inputNumber>
-          </div>
-
-          <div class="field col-12 md:col-3">
-            <label for="precioMayorista">Precio Mayorista (S/) *</label>
-            <p-inputNumber 
-              id="precioMayorista"
-              formControlName="precioMayorista" 
-              mode="currency" 
-              currency="PEN" 
-              locale="es-PE"
-              class="w-full"
-              [min]="0">
-            </p-inputNumber>
-          </div>
-
-          <div class="field col-12 flex gap-2 justify-content-end">
-            <button 
-              pButton 
-              type="button" 
-              label="Cancelar" 
-              severity="secondary" 
-              icon="pi pi-times"
-              (click)="volver()">
-            </button>
-            <button 
-              pButton 
-              type="submit" 
-              label="Guardar" 
-              icon="pi pi-check"
-              [disabled]="!productoForm.valid">
-            </button>
-          </div>
-          
-        </form>
-      </p-card>
-    </div>
-  `
+  templateUrl: './productos-form.html',
+  styleUrls: ['./productos-form.css'],
+  providers: [ConfirmationService, MessageService]
 })
-export class ProductosForm implements OnInit {
+export class ProductosForm implements OnInit, OnDestroy {
   productoForm: FormGroup;
   isEditMode = false;
   productoId: number | null = null;
+  productoOriginal: Producto | null = null;
 
-  sedes = ['Lima', 'Arequipa', 'Cusco', 'Trujillo', 'Chiclayo'];
-  familias = ['Bebidas', 'Snacks', 'Abarrotes', 'Lácteos', 'Limpieza', 'Embutidos'];
+  sedes: { label: string; value: string }[] = [];
+  familias: { label: string; value: string }[] = [];
 
   constructor(
     private fb: FormBuilder,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private productosService: ProductosService,
+    private confirmationService: ConfirmationService,
+    private messageService: MessageService
   ) {
     this.productoForm = this.fb.group({
       codigo: ['', Validators.required],
       nombre: ['', Validators.required],
       sede: ['', Validators.required],
       familia: ['', Validators.required],
-      stock: [0, [Validators.required, Validators.min(0)]],
       precioUnidad: [0, [Validators.required, Validators.min(0)]],
       precioCaja: [0, [Validators.required, Validators.min(0)]],
       precioMayorista: [0, [Validators.required, Validators.min(0)]]
@@ -167,62 +61,266 @@ export class ProductosForm implements OnInit {
   }
 
   ngOnInit() {
+    this.cargarSedes();
+    this.cargarFamilias();
+
     this.route.params.subscribe(params => {
       if (params['id']) {
         this.isEditMode = true;
         this.productoId = +params['id'];
         this.cargarProducto(this.productoId);
+      } else {
+        this.isEditMode = false;
+        this.productoId = null;
+        this.productoOriginal = null;
       }
     });
   }
 
-  cargarProducto(id: number) {
-    
-    const productoMock = {
-      codigo: 'P001',
-      nombre: 'Inca Kola 500ml',
-      sede: 'Lima',
-      familia: 'Bebidas',
-      stock: 120,
-      precioUnidad: 3.5,
-      precioCaja: 40,
-      precioMayorista: 3
-    };
-    
-    this.productoForm.patchValue(productoMock);
+  ngOnDestroy() {
+    this.confirmationService.close();
   }
 
-  guardar() {
-    if (this.productoForm.valid) {
-      const data = {
-        ...this.productoForm.value,
-        estado: 'Activo'
-      };
-      
-      if (this.isEditMode) {
-        console.log('Actualizando producto ID:', this.productoId, data);
-        // this.productoService.update(this.productoId, data).subscribe(() => {
-        //   this.router.navigate(['/admin/gestion-productos']);
-        // })
-      } else {
-        console.log('Creando nuevo producto:', data);
-        // this.productoService.create(data).subscribe(() => {
-        //   this.router.navigate(['/admin/gestion-productos']);
-        // })
-      }
-      
-      this.volver();
-    } 
-    else 
-    {
+  cargarSedes() {
+    const sedesData = this.productosService.getSedes();
+    this.sedes = sedesData.map(sede => ({
+      label: this.formatearNombreSede(sede),
+      value: sede
+    }));
+  }
 
-      Object.keys(this.productoForm.controls).forEach(key => {
-        this.productoForm.get(key)?.markAsTouched();
+  cargarFamilias() {
+    const familiasData = this.productosService.getFamilias();
+    this.familias = familiasData.map(familia => ({
+      label: familia,
+      value: familia
+    }));
+  }
+
+  formatearNombreSede(sede: string): string {
+    return sede
+      .split(' ')
+      .map(palabra => palabra.charAt(0).toUpperCase() + palabra.slice(1).toLowerCase())
+      .join(' ');
+  }
+
+  cargarProducto(id: number) {
+    const producto = this.productosService.getProductoPorId(id);
+    
+    if (producto) {
+      this.productoOriginal = { ...producto };
+      
+      this.productoForm.patchValue({
+        codigo: producto.codigo,
+        nombre: producto.nombre,
+        sede: producto.sede,
+        familia: producto.familia,
+        precioUnidad: producto.precioUnidad,
+        precioCaja: producto.precioCaja,
+        precioMayorista: producto.precioMayorista
       });
+
+      setTimeout(() => {
+        this.productoForm.markAsPristine();
+        this.productoForm.markAsUntouched();
+      }, 0);
+      
+    } else {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Producto no encontrado',
+        life: 3000
+      });
+      this.volverSinConfirmar();
     }
   }
 
+  hayaCambios(): boolean {
+    if (!this.isEditMode || !this.productoOriginal) {
+      const formData = this.productoForm.value;
+      return (
+        (formData.codigo && formData.codigo.trim() !== '') ||
+        (formData.nombre && formData.nombre.trim() !== '') ||
+        formData.sede !== '' ||
+        formData.familia !== '' ||
+        formData.precioUnidad > 0 ||
+        formData.precioCaja > 0 ||
+        formData.precioMayorista > 0
+      );
+    }
+
+    const formData = this.productoForm.value;
+    
+    return (
+      String(formData.codigo || '').trim() !== String(this.productoOriginal.codigo || '').trim() ||
+      String(formData.nombre || '').trim() !== String(this.productoOriginal.nombre || '').trim() ||
+      String(formData.sede || '') !== String(this.productoOriginal.sede || '') ||
+      String(formData.familia || '') !== String(this.productoOriginal.familia || '') ||
+      Number(formData.precioUnidad || 0) !== Number(this.productoOriginal.precioUnidad || 0) ||
+      Number(formData.precioCaja || 0) !== Number(this.productoOriginal.precioCaja || 0) ||
+      Number(formData.precioMayorista || 0) !== Number(this.productoOriginal.precioMayorista || 0)
+    );
+  }
+
+  guardar() {
+    if (!this.productoForm.valid) {
+      Object.keys(this.productoForm.controls).forEach(key => {
+        this.productoForm.get(key)?.markAsTouched();
+      });
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Formulario Incompleto',
+        detail: 'Por favor complete todos los campos requeridos',
+        life: 3000
+      });
+      return;
+    }
+
+    const formData = this.productoForm.value;
+    
+    if (this.isEditMode && this.productoId) {
+      this.confirmarActualizacion(formData);
+    } else {
+      this.confirmarCreacion(formData);
+    }
+  }
+
+  private confirmarActualizacion(formData: any) {
+    this.confirmationService.confirm({
+      message: `¿Seguro que deseas actualizar el producto <strong>${formData.nombre}</strong>?`,
+      header: 'Confirmar Actualización',
+      icon: 'pi pi-exclamation-triangle',
+      rejectLabel: 'Cancelar',
+      acceptLabel: 'Actualizar',
+      acceptButtonProps: { severity: 'warning' },
+      rejectButtonProps: { severity: 'secondary', outlined: true },
+      accept: () => {
+        const productoActualizado: Partial<Producto> = {
+          codigo: formData.codigo,
+          nombre: formData.nombre,
+          sede: formData.sede,
+          familia: formData.familia,
+          precioUnidad: formData.precioUnidad,
+          precioCaja: formData.precioCaja,
+          precioMayorista: formData.precioMayorista
+        };
+
+        const exito = this.productosService.actualizarProducto(this.productoId!, productoActualizado);
+        
+        if (exito) {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Producto Actualizado',
+            detail: `"${formData.nombre}" actualizado correctamente`,
+            life: 3000
+          });
+          setTimeout(() => this.volverSinConfirmar(), 1500);
+        } else {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Error al actualizar el producto',
+            life: 3000
+          });
+        }
+      },
+      reject: () => {
+        this.messageService.add({
+          severity: 'info',
+          summary: 'Cancelado',
+          detail: 'Actualización cancelada',
+          life: 2000
+        });
+      }
+    });
+  }
+
+  private confirmarCreacion(formData: any) {
+    this.confirmationService.confirm({
+      message: `¿Seguro que deseas crear el producto <strong>${formData.nombre}</strong>?`,
+      header: 'Confirmar Creación',
+      icon: 'pi pi-info-circle',
+      rejectLabel: 'Cancelar',
+      acceptLabel: 'Crear',
+      acceptButtonProps: { severity: 'warning' },
+      rejectButtonProps: { severity: 'secondary', outlined: true },
+      accept: () => {
+        const nuevoProducto: Omit<Producto, 'id'> = {
+          codigo: formData.codigo,
+          nombre: formData.nombre,
+          sede: formData.sede,
+          familia: formData.familia,
+          precioUnidad: formData.precioUnidad,
+          precioCaja: formData.precioCaja,
+          precioMayorista: formData.precioMayorista,
+          estado: 'Activo'
+        };
+
+        try {
+          this.productosService.crearProducto(nuevoProducto);
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Producto Creado',
+            detail: `"${nuevoProducto.nombre}" creado correctamente`,
+            life: 3000
+          });
+          setTimeout(() => this.volverSinConfirmar(), 1500);
+        } catch (error) {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Error al crear el producto',
+            life: 3000
+          });
+        }
+      },
+      reject: () => {
+        this.messageService.add({
+          severity: 'info',
+          summary: 'Cancelado',
+          detail: 'Creación cancelada',
+          life: 2000
+        });
+      }
+    });
+  }
+
   volver() {
+    if (!this.hayaCambios()) {
+      this.router.navigate(['/admin/gestion-productos']);
+      return;
+    }
+
+    const mensaje = this.isEditMode && this.productoOriginal
+      ? `¿Seguro que deseas cancelar la edición de <strong>${this.productoOriginal.nombre}</strong>?<br>Se perderán los cambios realizados.`
+      : `¿Seguro que deseas cancelar la creación del producto?<br>Se perderán los datos ingresados.`;
+    
+    const header = this.isEditMode ? 'Cancelar Edición' : 'Cancelar Creación';
+    
+    this.confirmationService.confirm({
+      message: mensaje,
+      header: header,
+      icon: 'pi pi-exclamation-triangle',
+      rejectLabel: 'Quedarme',
+      acceptLabel: 'Salir',
+      acceptButtonProps: { severity: 'danger' },
+      rejectButtonProps: { severity: 'secondary', outlined: true },
+      accept: () => {
+        this.messageService.add({
+          severity: 'info',
+          summary: this.isEditMode ? 'Edición Cancelada' : 'Creación Cancelada',
+          detail: this.isEditMode 
+            ? `Edición de "${this.productoOriginal?.nombre}" cancelada`
+            : 'Creación de producto cancelada',
+          life: 2000
+        });
+        setTimeout(() => this.router.navigate(['/admin/gestion-productos']), 500);
+      }
+    });
+  }
+
+  volverSinConfirmar() {
     this.router.navigate(['/admin/gestion-productos']);
   }
 }

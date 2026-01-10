@@ -1,3 +1,83 @@
+/* En tu gestion-productos.css */
+:host ::ng-deep {
+  .surface-50 {
+    border-radius: 1rem !important;
+  }
+  
+  p-paginator .p-paginator-pages .p-paginator-page {
+    margin: 0 0.125rem;
+  }
+
+  .h-header-fijo {
+    min-height: 5rem !important;
+    max-height: 5rem !important;
+  }
+  
+  .truncate {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* ✅ AUTOCOMPLETE PERSONALIZADO */
+  .autocomplete-productos .p-autocomplete-input {
+    font-weight: 500;
+    color: #1e293b;
+  }
+
+  /* ✅ PANEL MÁS ANCHO Y MÁS ABAJO */
+  .p-autocomplete-panel {
+    min-width: 600px !important;
+    max-width: 750px !important;
+    margin-top: 12px !important;
+  }
+
+  /* ✅ ITEMS MUCHO MÁS ESPACIOSOS */
+  .autocomplete-item-custom {
+    padding: 1.75rem 2rem !important; /* ⬅️ MUCHO MÁS PADDING */
+    border-radius: 10px;
+    transition: all 0.2s ease;
+    background-color: transparent;
+    min-height: 85px; /* ⬅️ ALTURA MÍNIMA */
+  }
+
+  .autocomplete-item-custom:hover {
+    background-color: #FFF5E6 !important;
+    transform: translateX(6px);
+  }
+
+  .autocomplete-item-custom .font-bold {
+    font-size: 1.1rem !important; /* ⬅️ MÁS GRANDE */
+    color: #0f172a;
+    margin-bottom: 0.75rem !important; /* ⬅️ MÁS ESPACIO */
+    line-height: 1.4;
+  }
+
+  .autocomplete-item-custom small {
+    font-size: 0.9rem !important; /* ⬅️ MÁS GRANDE */
+    color: #64748b;
+    display: block;
+    margin-top: 0.5rem;
+    line-height: 1.5;
+  }
+
+  .p-autocomplete-panel .p-autocomplete-items .p-autocomplete-item {
+    padding: 0 !important;
+    border-bottom: 1px solid #f1f5f9;
+    margin-bottom: 4px; /* ⬅️ ESPACIO ENTRE ITEMS */
+  }
+
+  .p-autocomplete-panel .p-autocomplete-items .p-autocomplete-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+  }
+
+  .p-autocomplete-panel .p-autocomplete-items .p-autocomplete-item.p-highlight {
+    background-color: #FFE0B3 !important;
+    color: #0f172a !important;
+  }
+}
+
 /* TU CABECERA EXACTA */
 .productos-header-card .p-card-body {
   padding: 1rem 1.25rem;
@@ -40,9 +120,15 @@
   transition: all 0.2s;
 }
 
-.productos-pill-danger {
+/* ✅ Borde más oscuro para que se vea */
+.productos-pill-danger-outlined {
+  background: transparent !important;
+  border: 3px solid #ef4444 !important;
+  color: #ef4444 !important;
+}
+
+.productos-pill-danger-outlined:hover {
   background: #ef4444 !important;
-  border: 2px solid #dc2626 !important;
   color: #ffffff !important;
 }
 
@@ -52,10 +138,17 @@
   color: #1f2937 !important;
 }
 
+.productos-pill-secondary {
+  background: #64748b !important;
+  border: 2px solid #475569 !important;
+  color: #ffffff !important;
+}
+
 .productos-pill:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 8px 20px #00000033 !important;
 }
+
 /* TABLA NATIVA - Dark Mode */
 .productos-table-nativa .p-datatable-thead > tr > th {
   background: var(--surface-50) !important;
@@ -72,6 +165,38 @@
   padding: 1rem 0.75rem !important;
 }
 
-.productos-table-nativa .p-datatable-tbody > tr:hover {
-  background: var(--surface-hover) !important;
+/* ✅ HOVER - Hexadecimal con opacidad (15%) */
+:host ::ng-deep .productos-table-hover .p-datatable-tbody > tr:hover {
+  background-color: #F6AF3326 !important; /* rgba(246, 175, 51, 0.15) en hex */
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+
+:host ::ng-deep .productos-table-hover .p-datatable-tbody > tr:hover > td {
+  background-color: transparent !important;
+}
+
+/* ICONOS ESTILO SEDES */
+.productos-icon-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.productos-icon-soft {
+  background: #ecfdf3;
+  color: #15803d;
+}
+
+.productos-icon-warn {
+  background: #fff7ed;
+  color: #b45309;
+}
+
+.productos-icon-danger {
+  background: #fee2e2;
+  color: #b91c1c;
 }

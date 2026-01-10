@@ -19,8 +19,7 @@ export const routes: Routes = [
             { path: '', redirectTo: '', pathMatch: 'full' },
             { path: 'ver-detalle-producto/:id', loadComponent: () => import('./administracion/pages/gestion-productos/productos-detalles/productos-detalles').then(m => m.ProductosDetalles) },
             { path: 'crear-producto', loadComponent: () => import('./administracion/pages/gestion-productos/productos-form/productos-form').then(m => m.ProductosForm) },
-            { path: 'editar-producto/:id', loadComponent: () => import('./administracion/pages/gestion-productos/productos-form/productos-form').then(m => m.ProductosForm) },
-            { path: 'productos-eliminados', loadComponent: () => import('./administracion/pages/gestion-productos/productos-eliminados/productos-eliminados').then(m => m.ProductosEliminados) }
+            { path: 'editar-producto/:id', loadComponent: () => import('./administracion/pages/gestion-productos/productos-form/productos-form').then(m => m.ProductosForm) }
       ]},
       {
         path: 'sedes',
