@@ -1,17 +1,30 @@
-<div class="editar-sede-page flex justify-content-center align-items-center">
-  <p-card styleClass="sede-card">
-    <div class="sede-card-header flex align-items-center justify-content-between">
-      <p-button
-        icon="pi pi-arrow-left"
-        text
-        severity="secondary"
-        aria-label="Volver a sedes"
-        [routerLink]="['/admin/sedes']"
-      ></p-button>
-      <h2 class="sede-card-title">Modificar Sede</h2>
-      <span class="sede-card-spacer"></span>
+<div class="editar-sede-page">
+  <p-card styleClass="sedes-header-card">
+    <div class="flex align-items-center justify-content-between flex-wrap gap-3">
+      <div class="flex align-items-center gap-3">
+        <span class="sedes-title-icon">
+          <i class="pi pi-list"></i>
+        </span>
+        <div>
+          <p class="sedes-kicker">ADMINISTRADOR - ADMINISTRACION - SEDE INACTIVAS</p>
+          <h2 class="sedes-title">GESTION DE SEDES</h2>
+        </div>
+      </div>
     </div>
+  </p-card>
 
+  <div class="flex align-items-center justify-content-between mb-4">
+    <h2 class="sede-card-title">Modificar Sede</h2>
+    <p-button
+      icon="pi pi-arrow-left"
+      text
+      severity="secondary"
+      aria-label="Volver a sedes"
+      [routerLink]="['/admin/sedes']"
+    ></p-button>
+  </div>
+
+  <p-card styleClass="sede-card">
     <div class="sede-section">
       <div class="sede-section-title">UBICACION:</div>
       <p-divider></p-divider>
@@ -50,12 +63,13 @@
       </div>
       <div class="col-12 md:col-6">
         <label class="field-label" for="telefono">TELEFONO:</label>
-        <input
-          id="telefono"
-          pInputText
+        <p-inputnumber
           class="w-full"
-          placeholder="Ingrese datos"
           [(ngModel)]="sede.telefono"
+          inputId="telefono"
+          placeholder="Ingrese datos"
+          [useGrouping]="false"
+          [maxlength]="9"
         />
       </div>
       <div class="col-12">
@@ -88,7 +102,7 @@
         outlined
         severity="secondary"
         styleClass="sede-btn-cancel"
-        [routerLink]="['/admin/sedes']"
+        (click)="confirmCancel()"
       ></p-button>
       <p-button
         label="Modificar Sede"
@@ -97,4 +111,5 @@
       ></p-button>
     </div>
   </p-card>
+  <p-confirmdialog />
 </div>
