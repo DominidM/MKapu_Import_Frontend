@@ -1,44 +1,44 @@
-<!-- CABECERA (TU DISEÑO EXACTO) -->
 <div class="p-2">
-<p-card styleClass="productos-header-card mb-4 productos-header-bordered">
-  <div class="flex align-items-center justify-content-between flex-wrap gap-2">
-    <div class="flex align-items-center gap-3">
-      <span class="productos-title-icon">
-        <i class="pi pi-building"></i>
-      </span>
-      <div>
-        <p class="productos-kicker mb-0">
-          ADMINISTRADOR - ADMINISTRACION - PRODUCTOS ACTIVOS
-        </p>
-        <h2 class="productos-title mb-0">GESTIÓN DE PRODUCTOS</h2>
+
+  <p-card styleClass="productos-header-card mb-4 productos-header-bordered">
+    <div class="flex align-items-center justify-content-between flex-wrap gap-2">
+      <div class="flex align-items-center gap-3">
+        <span class="productos-title-icon">
+          <i class="pi pi-building"></i>
+        </span>
+        <div>
+          <p class="productos-kicker mb-0">
+            ADMINISTRADOR - ADMINISTRACION - PRODUCTOS ACTIVOS
+          </p>
+          <h2 class="productos-title mb-0">GESTIÓN DE PRODUCTOS</h2>
+        </div>
+      </div>
+
+      <div class="flex gap-2">
+        <p-button 
+          icon="pi pi-trash" 
+          severity="danger"
+          styleClass="productos-pill productos-pill-danger"
+          (onClick)="irEliminados()"
+          [disabled]="!totalEliminados">
+        </p-button>
+
+        <p-button 
+          label="Agregar Producto"
+          icon="pi pi-plus"
+          styleClass="productos-pill productos-pill-warning"
+          (onClick)="irCrear()" 
+          [disabled]="!sedeValue">
+        </p-button>
       </div>
     </div>
-
-    <div class="flex gap-2">
-      <p-button 
-        icon="pi pi-trash" 
-        severity="danger"
-        styleClass="productos-pill productos-pill-danger"
-        (onClick)="irEliminados()"
-        [disabled]="!totalEliminados">
-      </p-button>
-
-      <p-button 
-        label="Agregar Producto"
-        icon="pi pi-plus"
-        styleClass="productos-pill productos-pill-warning"
-        (onClick)="irCrear()" 
-        [disabled]="!sedeValue">
-      </p-button>
-    </div>
-  </div>
-</p-card>
+  </p-card>
 </div>
 
 <div class="p-2">
+
   <div *ngIf="!isRutaHija()">
     
-    <!-- SEDE - PrimeNG Nativo -->
     <div class="surface-card border-round-xl shadow-1 p-4 mb-4">
       <div class="flex justify-content-between align-items-center">
         <div class="flex align-items-center gap-4">
@@ -56,17 +56,18 @@
             </p-select>
           </div>
         </div>
+        
         <p-tag 
           [value]="totalSedesActivas + ' ACTIVAS'" 
           severity="success"
-          class="text-xs font-bold">
+          class="text-6xl font-bold">
         </p-tag>
       </div>
     </div>
 
     <!-- FILTROS - PrimeNG Nativo -->
     <div class="surface-card border-round-xl shadow-1 mb-4">
-      <div class="p-4">
+      <div class="p-3">
         <div class="flex flex-wrap gap-4 align-items-end">
           <div class="flex flex-column flex-grow-1" style="min-width: 400px; flex: 2;">
             <label class="font-medium mb-2">Buscar Producto</label>
