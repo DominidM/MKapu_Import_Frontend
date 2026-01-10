@@ -1,5 +1,5 @@
 <div class="p-2">
-  <!-- CABECERA DINÁMICA -->
+  <!-- CABECERA -->
   <p-card styleClass="productos-header-card mb-4 productos-header-bordered">
     <div class="flex align-items-center justify-content-between flex-wrap gap-2">
       <div class="flex align-items-center gap-3">
@@ -50,7 +50,6 @@
     </div>
   </p-card>
 </div>
-
 
 <div class="p-2">
   <div *ngIf="!isRutaHija()">
@@ -212,7 +211,7 @@
 
     <!-- PRODUCTOS ACTIVOS -->
     <div *ngIf="sedeValue && !esVistaEliminados">
-      <!-- TABLA ACTIVOS -->
+
       <div *ngIf="vistaLista" class="mb-6">
         <div *ngIf="productos.length > 0" class="surface-card border-round-xl shadow-1 overflow-hidden">
           <p-table
@@ -239,7 +238,7 @@
                 <td>{{ p.codigo }}</td>
                 <td>{{ p.nombre }}</td>
                 <td>{{ p.familia }}</td>
-                <td class="font-bold text-green-500">S/ {{ p.precioUnidad | number : '1.2-2' }}</td>
+                <td class="font-bold text-green-500">S/ {{ p.precioVenta | number : '1.2-2' }}</td>
                 <td>
                   <div class="flex align-items-center gap-2">
                     <p-button icon="pi pi-eye" text severity="secondary" styleClass="productos-icon-btn productos-icon-soft" pTooltip="Ver Detalles" (onClick)="irDetalle(p.id)"></p-button>
@@ -292,7 +291,7 @@
               <div class="mb-4 p-3 bg-green-50 border-round-lg flex-shrink-0" style="flex: 0 0 4rem">
                 <div class="flex align-items-center justify-content-center h-full">
                   <i class="pi pi-tag text-green-500 mr-2"></i>
-                  <span class="text-3xl font-black text-green-600">S/ {{ p.precioUnidad | number : '1.2-2' }}</span>
+                  <span class="text-3xl font-black text-green-600">S/ {{ p.precioVenta | number : '1.2-2' }}</span>
                 </div>
               </div>
               <div class="flex-shrink-0 mb-4" style="flex: 0 0 2.5rem; display: flex; align-items: center; justify-content: end">
@@ -346,7 +345,7 @@
 
     <!-- PRODUCTOS ELIMINADOS -->
     <div *ngIf="sedeValue && esVistaEliminados">
-      <!-- TABLA ELIMINADOS -->
+
       <div *ngIf="vistaListaEliminados" class="mb-6">
         <div *ngIf="productosEliminadosFiltrados.length > 0" class="surface-card border-round-xl shadow-1 overflow-hidden">
           <p-table [value]="productosEliminadosFiltrados" [loading]="loadingEliminados" styleClass="productos-table-nativa productos-table-hover">
@@ -364,7 +363,7 @@
                 <td>{{p.codigo}}</td>
                 <td>{{p.nombre}}</td>
                 <td>{{p.familia}}</td>
-                <td class="font-bold text-orange-500">S/ {{p.precioUnidad | number:'1.2-2'}}</td>
+                <td class="font-bold text-orange-500">S/ {{p.precioVenta | number:'1.2-2'}}</td>
                 <td>
                   <div class="flex align-items-center gap-2">
                     <p-button icon="pi pi-eye" text severity="secondary" styleClass="productos-icon-btn productos-icon-soft" pTooltip="Ver Detalles" (onClick)="irDetalle(p.id)"></p-button>
@@ -397,7 +396,7 @@
               <div class="mb-4 p-3 bg-orange-50 border-round-lg flex-shrink-0" style="flex: 0 0 4rem">
                 <div class="flex align-items-center justify-content-center h-full">
                   <i class="pi pi-tag text-orange-500 mr-2"></i>
-                  <span class="text-3xl font-black text-orange-600">S/ {{ p.precioUnidad | number : '1.2-2' }}</span>
+                  <span class="text-3xl font-black text-orange-600">S/ {{ p.precioVenta | number : '1.2-2' }}</span>
                 </div>
               </div>
               <div class="flex-shrink-0 mb-4" style="flex: 0 0 2.5rem; display: flex; align-items: center; justify-content: end">
@@ -428,7 +427,7 @@
   </div>
 
   <!-- ROUTER OUTLET -->
-  <div class="router-child-outlet surface-section" style="min-height: 400px">
+  <div class="router-child-outlet surface-section" [style.min-height]="isRutaHija() ? '400px' : '0'">
     <router-outlet></router-outlet>
   </div>
 </div>

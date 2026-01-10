@@ -170,6 +170,16 @@ export class ProductosDetalles implements OnInit {
     return this.producto?.estado === 'Eliminado';
   }
 
+  get margenGanancia(): number {
+    if (!this.producto) return 0;
+    return this.productosService.getMargenGanancia(this.producto);
+  }
+
+  get porcentajeMargen(): number {
+    if (!this.producto) return 0;
+    return this.productosService.getPorcentajeMargen(this.producto);
+  }
+
   formatearNombreSede(sede: string): string {
     return sede
       .split(' ')

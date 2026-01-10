@@ -41,6 +41,7 @@ export class ProductosFormulario implements OnInit, OnDestroy {
 
   sedes: { label: string; value: string }[] = [];
   familias: { label: string; value: string }[] = [];
+  unidadesMedida: { label: string; value: string }[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -52,18 +53,24 @@ export class ProductosFormulario implements OnInit, OnDestroy {
   ) {
     this.productoForm = this.fb.group({
       codigo: ['', Validators.required],
+      anexo: [''],
       nombre: ['', Validators.required],
+      descripcion: [''],
       sede: ['', Validators.required],
       familia: ['', Validators.required],
+      precioCompra: [0, [Validators.required, Validators.min(0)]],
+      precioVenta: [0, [Validators.required, Validators.min(0)]],
       precioUnidad: [0, [Validators.required, Validators.min(0)]],
       precioCaja: [0, [Validators.required, Validators.min(0)]],
-      precioMayorista: [0, [Validators.required, Validators.min(0)]]
+      precioMayorista: [0, [Validators.required, Validators.min(0)]],
+      unidadMedida: ['UND', Validators.required]
     });
   }
 
   ngOnInit() {
     this.cargarSedes();
     this.cargarFamilias();
+    this.cargarUnidadesMedida();
 
     this.route.queryParams.subscribe(params => {
       if (params['returnUrl']) {
@@ -83,7 +90,6 @@ export class ProductosFormulario implements OnInit, OnDestroy {
       }
     });
   }
-
 
   ngOnDestroy() {
     this.confirmationService.close();
@@ -105,6 +111,14 @@ export class ProductosFormulario implements OnInit, OnDestroy {
     }));
   }
 
+  cargarUnidadesMedida() {
+    const unidadesData = this.productosService.getUnidadesMedida();
+    this.unidadesMedida = unidadesData.map(unidad => ({
+      label: unidad,
+      value: unidad
+    }));
+  }
+
   formatearNombreSede(sede: string): string {
     return sede
       .split(' ')
@@ -120,12 +134,17 @@ export class ProductosFormulario implements OnInit, OnDestroy {
       
       this.productoForm.patchValue({
         codigo: producto.codigo,
+        anexo: producto.anexo || '',
         nombre: producto.nombre,
+        descripcion: producto.descripcion || '',
         sede: producto.sede,
         familia: producto.familia,
+        precioCompra: producto.precioCompra,
+        precioVenta: producto.precioVenta,
         precioUnidad: producto.precioUnidad,
         precioCaja: producto.precioCaja,
-        precioMayorista: producto.precioMayorista
+        precioMayorista: producto.precioMayorista,
+        unidadMedida: producto.unidadMedida
       });
 
       setTimeout(() => {
@@ -149,12 +168,17 @@ export class ProductosFormulario implements OnInit, OnDestroy {
       const formData = this.productoForm.value;
       return (
         (formData.codigo && formData.codigo.trim() !== '') ||
+        (formData.anexo && formData.anexo.trim() !== '') ||
         (formData.nombre && formData.nombre.trim() !== '') ||
+        (formData.descripcion && formData.descripcion.trim() !== '') ||
         formData.sede !== '' ||
         formData.familia !== '' ||
+        formData.precioCompra > 0 ||
+        formData.precioVenta > 0 ||
         formData.precioUnidad > 0 ||
         formData.precioCaja > 0 ||
-        formData.precioMayorista > 0
+        formData.precioMayorista > 0 ||
+        formData.unidadMedida !== 'UND'
       );
     }
 
@@ -162,12 +186,17 @@ export class ProductosFormulario implements OnInit, OnDestroy {
     
     return (
       String(formData.codigo || '').trim() !== String(this.productoOriginal.codigo || '').trim() ||
+      String(formData.anexo || '').trim() !== String(this.productoOriginal.anexo || '').trim() ||
       String(formData.nombre || '').trim() !== String(this.productoOriginal.nombre || '').trim() ||
+      String(formData.descripcion || '').trim() !== String(this.productoOriginal.descripcion || '').trim() ||
       String(formData.sede || '') !== String(this.productoOriginal.sede || '') ||
       String(formData.familia || '') !== String(this.productoOriginal.familia || '') ||
+      Number(formData.precioCompra || 0) !== Number(this.productoOriginal.precioCompra || 0) ||
+      Number(formData.precioVenta || 0) !== Number(this.productoOriginal.precioVenta || 0) ||
       Number(formData.precioUnidad || 0) !== Number(this.productoOriginal.precioUnidad || 0) ||
       Number(formData.precioCaja || 0) !== Number(this.productoOriginal.precioCaja || 0) ||
-      Number(formData.precioMayorista || 0) !== Number(this.productoOriginal.precioMayorista || 0)
+      Number(formData.precioMayorista || 0) !== Number(this.productoOriginal.precioMayorista || 0) ||
+      String(formData.unidadMedida || '') !== String(this.productoOriginal.unidadMedida || '')
     );
   }
 
@@ -206,12 +235,17 @@ export class ProductosFormulario implements OnInit, OnDestroy {
       accept: () => {
         const productoActualizado: Partial<Producto> = {
           codigo: formData.codigo,
+          anexo: formData.anexo || undefined,
           nombre: formData.nombre,
+          descripcion: formData.descripcion || undefined,
           sede: formData.sede,
           familia: formData.familia,
+          precioCompra: formData.precioCompra,
+          precioVenta: formData.precioVenta,
           precioUnidad: formData.precioUnidad,
           precioCaja: formData.precioCaja,
-          precioMayorista: formData.precioMayorista
+          precioMayorista: formData.precioMayorista,
+          unidadMedida: formData.unidadMedida
         };
 
         const exito = this.productosService.actualizarProducto(this.productoId!, productoActualizado);
@@ -256,13 +290,20 @@ export class ProductosFormulario implements OnInit, OnDestroy {
       accept: () => {
         const nuevoProducto: Omit<Producto, 'id'> = {
           codigo: formData.codigo,
+          anexo: formData.anexo || undefined,
           nombre: formData.nombre,
+          descripcion: formData.descripcion || undefined,
           sede: formData.sede,
           familia: formData.familia,
+          precioCompra: formData.precioCompra,
+          precioVenta: formData.precioVenta,
           precioUnidad: formData.precioUnidad,
           precioCaja: formData.precioCaja,
           precioMayorista: formData.precioMayorista,
-          estado: 'Activo'
+          unidadMedida: formData.unidadMedida,
+          estado: 'Activo',
+          fechaCreacion: new Date(),
+          fechaActualizacion: new Date()
         };
 
         try {
@@ -327,7 +368,6 @@ export class ProductosFormulario implements OnInit, OnDestroy {
       }
     });
   }
-
 
   volverSinConfirmar() {
     this.router.navigateByUrl(this.returnUrl);

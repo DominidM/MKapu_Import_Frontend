@@ -489,7 +489,6 @@ export class GestionListado implements OnInit, OnDestroy, AfterViewInit {
     }, 0);
   }
 
-
   isRutaHija(): boolean {
     const url = this.router.url;
     return url.includes('crear-producto') || 
