@@ -14,12 +14,12 @@ export const routes: Routes = [
       { path: 'usuarios', loadComponent: () => import('./administracion/pages/administracion/administracion').then(m => m.Administracion) },
 
       {   path: 'gestion-productos',
-          loadComponent: () => import('./administracion/pages/gestion-productos/gestion-productos').then(m => m.GestionProductos),
+          loadComponent: () => import('./administracion/pages/gestion-productos/productos-listado/gestion-listado').then(m => m.GestionListado),
           children: [
             { path: '', redirectTo: '', pathMatch: 'full' },
             { path: 'ver-detalle-producto/:id', loadComponent: () => import('./administracion/pages/gestion-productos/productos-detalles/productos-detalles').then(m => m.ProductosDetalles) },
-            { path: 'crear-producto', loadComponent: () => import('./administracion/pages/gestion-productos/productos-form/productos-form').then(m => m.ProductosForm) },
-            { path: 'editar-producto/:id', loadComponent: () => import('./administracion/pages/gestion-productos/productos-form/productos-form').then(m => m.ProductosForm) }
+            { path: 'crear-producto', loadComponent: () => import('./administracion/pages/gestion-productos/productos-formulario/productos-formulario').then(m => m.ProductosFormulario) },
+            { path: 'editar-producto/:id', loadComponent: () => import('./administracion/pages/gestion-productos/productos-formulario/productos-formulario').then(m => m.ProductosFormulario) }
       ]},
       {
         path: 'sedes',

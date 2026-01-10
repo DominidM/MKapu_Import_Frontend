@@ -20,7 +20,7 @@ import { ConfirmDialog } from 'primeng/confirmdialog';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmationService, MessageService } from 'primeng/api';
 
-import { ProductosService, Producto } from '../../../core/services/productos.service';
+import { ProductosService, Producto } from '../../../../core/services/productos.service';
 
 @Component({
   selector: 'app-gestion-productos',
@@ -31,11 +31,11 @@ import { ProductosService, Producto } from '../../../core/services/productos.ser
     InputTextModule, TooltipModule, PaginatorModule, RouterOutlet, RouterModule,
     ConfirmDialog, ToastModule
   ],
-  templateUrl: './gestion-productos.html',
-  styleUrl: './gestion-productos.css',
+  templateUrl: './gestion-listado.html',
+  styleUrl: './gestion-listado.css',
   providers: [ConfirmationService, MessageService]
 })
-export class GestionProductos implements OnInit, OnDestroy, AfterViewInit {
+export class GestionListado implements OnInit, OnDestroy, AfterViewInit {
   private destroy$ = new Subject<void>();
 
   tituloKicker = 'ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS ACTIVOS';
@@ -481,11 +481,14 @@ export class GestionProductos implements OnInit, OnDestroy, AfterViewInit {
   
   irEditar(id: number) { 
     setTimeout(() => {
-      this.router.navigate(['/admin/gestion-productos/editar-producto', id]);
+      this.router.navigate(['/admin/gestion-productos/editar-producto', id], {
+        queryParams: { returnUrl: '/admin/gestion-productos' }
+      });
       this.actualizarCabecera();
       this.cdr.detectChanges();
     }, 0);
   }
+
 
   isRutaHija(): boolean {
     const url = this.router.url;

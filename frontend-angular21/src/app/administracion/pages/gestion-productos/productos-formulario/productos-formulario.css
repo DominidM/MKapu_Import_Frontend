@@ -1,0 +1,103 @@
+::ng-deep .p-inputtext,
+::ng-deep .p-inputnumber-input {
+  padding: 0.75rem !important;
+  font-size: 1rem !important;
+}
+
+::ng-deep .p-select {
+  min-height: 3rem;
+}
+
+::ng-deep .p-inputtext:hover,
+::ng-deep .p-inputnumber:hover .p-inputnumber-input {
+  border-color: var(--primary-color) !important;
+}
+
+label {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+::ng-deep .productos-pill-warning {
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  transition: all 0.3s ease !important;
+}
+
+
+::ng-deep .productos-pill-warning:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+}
+
+
+/* ========== ESTILOS DE CABECERA (Mismo tamaño que productos-detalles) ========== */
+.productos-title-icon {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #f5c34d;
+  color: #1f2937;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.productos-kicker {
+  margin: 0;
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.productos-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.productos-pill-secondary {
+  background: #64748b !important;
+  border: 2px solid #475569 !important;
+  color: #ffffff !important;
+  border-radius: 9999px !important;
+  padding: 1.25rem 2.5rem !important;
+  font-size: 1.1rem !important;
+  font-weight: 600 !important;
+  min-height: 56px !important;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15) !important;
+  transition: all 0.2s ease !important;
+}
+
+.productos-pill-secondary:hover:not(:disabled) {
+  background: #475569 !important;
+  border: 2px solid #334155 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .productos-title-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+  }
+
+  .productos-kicker {
+    font-size: 0.6rem;
+  }
+
+  .productos-title {
+    font-size: 1rem;
+  }
+
+  .productos-pill-secondary {
+    padding: 1rem 2rem !important;
+    font-size: 1rem !important;
+    min-height: 48px !important;
+  }
+}

@@ -1,1 +1,331 @@
-<p>productos-detalles works!</p>
+<div class="p-4" *ngIf="producto">
+  <!-- CABECERA -->
+  <div class="surface-card border-1 border-300 border-round-xl shadow-1 p-4 mb-4">
+    <div class="flex justify-content-between align-items-center flex-wrap gap-3">
+      <div class="flex align-items-center gap-3">
+        <span class="productos-title-icon">
+          <i class="pi pi-eye"></i>
+        </span>
+        <div>
+          <p class="productos-kicker mb-0">DETALLES DEL PRODUCTO</p>
+          <h2 class="productos-title mb-0">{{ producto.nombre }}</h2>
+        </div>
+      </div>
+      
+      <div class="flex gap-2 flex-wrap">
+        <p-button 
+          label="Volver" 
+          icon="pi pi-arrow-left" 
+          severity="secondary"
+          styleClass="productos-pill productos-pill-secondary"
+          (onClick)="volver()">
+        </p-button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <div class="grid">
+    <!-- INFORMACIÓN GENERAL -->
+    <div class="col-12 lg:col-8">
+      <p-card styleClass="border-1 border-300 border-round-xl shadow-2 h-full">
+        <div class="flex align-items-center gap-3 mb-4">
+          <i class="pi pi-info-circle text-3xl text-primary"></i>
+          <h3 class="m-0 text-xl font-bold text-900">Información General</h3>
+        </div>
+        
+        <p-divider></p-divider>
+        
+        <div class="grid">
+          <div class="col-12 md:col-6 mb-4">
+            <label class="block text-sm font-semibold text-600 mb-2">CÓDIGO DEL PRODUCTO</label>
+            <div class="flex align-items-center gap-2 p-3 bg-primary-50 border-round-lg">
+              <i class="pi pi-tag text-primary text-xl"></i>
+              <span class="text-2xl font-black text-primary">{{ producto.codigo }}</span>
+            </div>
+          </div>
+          
+          <div class="col-12 md:col-6 mb-4">
+            <label class="block text-sm font-semibold text-600 mb-2">ESTADO</label>
+            <div class="p-3">
+              <p-tag 
+                [value]="producto.estado" 
+                [severity]="producto.estado === 'Activo' ? 'success' : 'danger'"
+                styleClass="text-lg font-bold px-4 py-2">
+              </p-tag>
+            </div>
+          </div>
+          
+          <div class="col-12 mb-4">
+            <label class="block text-sm font-semibold text-600 mb-2">NOMBRE DEL PRODUCTO</label>
+            <div class="p-3 surface-50 border-round-lg border-1 border-300">
+              <p class="m-0 text-xl font-semibold text-900">{{ producto.nombre }}</p>
+            </div>
+          </div>
+          
+          <div class="col-12 md:col-6 mb-4">
+            <label class="block text-sm font-semibold text-600 mb-2">SEDE</label>
+            <div class="flex align-items-center gap-3 p-3 surface-50 border-round-lg border-1 border-300">
+              <i class="pi pi-home text-2xl text-primary"></i>
+              <span class="text-lg font-bold text-900">{{ formatearNombreSede(producto.sede) }}</span>
+            </div>
+          </div>
+          
+          <div class="col-12 md:col-6 mb-4">
+            <label class="block text-sm font-semibold text-600 mb-2">FAMILIA</label>
+            <div class="flex align-items-center gap-3 p-3 surface-50 border-round-lg border-1 border-300">
+              <i class="pi pi-box text-2xl text-primary"></i>
+              <span class="text-lg font-bold text-900">{{ producto.familia }}</span>
+            </div>
+          </div>
+        </div>
+      </p-card>
+    </div>
+
+    <!-- PRECIOS -->
+    <div class="col-12 lg:col-4">
+      <p-card styleClass="border-1 border-300 border-round-xl shadow-2 h-full">
+        <div class="flex align-items-center gap-3 mb-4">
+          <i class="pi pi-dollar text-3xl text-green-600"></i>
+          <h3 class="m-0 text-xl font-bold text-900">Precios</h3>
+        </div>
+        
+        <p-divider></p-divider>
+        
+        <div class="flex flex-column gap-4">
+          <div class="p-4 bg-green-50 border-round-xl border-2 border-green-200">
+            <label class="block text-xs font-bold text-green-700 mb-2 uppercase">Precio Unidad</label>
+            <div class="flex align-items-center gap-2">
+              <i class="pi pi-tag text-green-600 text-xl"></i>
+              <span class="text-3xl font-black text-green-600">S/ {{ producto.precioUnidad | number : '1.2-2' }}</span>
+            </div>
+          </div>
+          
+          <div class="p-4 bg-blue-50 border-round-xl border-2 border-blue-200">
+            <label class="block text-xs font-bold text-blue-700 mb-2 uppercase">Precio Caja</label>
+            <div class="flex align-items-center gap-2">
+              <i class="pi pi-box text-blue-600 text-xl"></i>
+              <span class="text-3xl font-black text-blue-600">S/ {{ producto.precioCaja | number : '1.2-2' }}</span>
+            </div>
+          </div>
+          
+          <div class="p-4 bg-orange-50 border-round-xl border-2 border-orange-200">
+            <label class="block text-xs font-bold text-orange-700 mb-2 uppercase">Precio Mayorista</label>
+            <div class="flex align-items-center gap-2">
+              <i class="pi pi-users text-orange-600 text-xl"></i>
+              <span class="text-3xl font-black text-orange-600">S/ {{ producto.precioMayorista | number : '1.2-2' }}</span>
+            </div>
+          </div>
+        </div>
+      </p-card>
+    </div>
+
+    <!-- COMPARATIVA DE PRECIOS POR SEDE -->
+    <div class="col-12" *ngIf="tieneVariasSedes && comparativa">
+      <p-card styleClass="border-1 border-300 border-round-xl shadow-2">
+        <div class="flex align-items-center gap-3 mb-4">
+          <i class="pi pi-chart-bar text-3xl text-orange-500"></i>
+          <h3 class="m-0 text-xl font-bold text-900">Comparativa de Precios por Sede</h3>
+          <p-tag [value]="comparativa.variantes.length + ' sedes'" severity="warn" styleClass="ml-2"></p-tag>
+        </div>
+        
+        <p-divider></p-divider>
+
+        <!-- RESUMEN ESTADÍSTICO -->
+        <div class="grid mb-4">
+          <div class="col-12 md:col-3">
+            <div class="p-3 bg-blue-50 border-round-lg text-center">
+              <label class="block text-xs font-bold text-blue-700 mb-2 uppercase">Precio Promedio</label>
+              <span class="text-2xl font-black text-blue-600">S/ {{ comparativa.precioPromedioUnidad | number : '1.2-2' }}</span>
+            </div>
+          </div>
+          <div class="col-12 md:col-3">
+            <div class="p-3 bg-green-50 border-round-lg text-center">
+              <label class="block text-xs font-bold text-green-700 mb-2 uppercase">Precio Mínimo</label>
+              <span class="text-2xl font-black text-green-600">S/ {{ comparativa.precioMinimoUnidad | number : '1.2-2' }}</span>
+            </div>
+          </div>
+          <div class="col-12 md:col-3">
+            <div class="p-3 bg-red-50 border-round-lg text-center">
+              <label class="block text-xs font-bold text-red-700 mb-2 uppercase">Precio Máximo</label>
+              <span class="text-2xl font-black text-red-600">S/ {{ comparativa.precioMaximoUnidad | number : '1.2-2' }}</span>
+            </div>
+          </div>
+          <div class="col-12 md:col-3">
+            <div class="p-3 bg-purple-50 border-round-lg text-center">
+              <label class="block text-xs font-bold text-purple-700 mb-2 uppercase">Diferencia</label>
+              <span class="text-2xl font-black text-purple-600">S/ {{ (comparativa.precioMaximoUnidad - comparativa.precioMinimoUnidad) | number : '1.2-2' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CARDS DE CADA SEDE -->
+        <div class="grid">
+          <div class="col-12 md:col-6 lg:col-4" *ngFor="let variante of comparativa.variantes">
+            <div class="surface-card border-2 border-round-xl p-4 h-full hover:shadow-4 transition-duration-300"
+                 [ngClass]="{
+                   'border-green-300 bg-green-50': variante.sede === comparativa.sedeMasBarata,
+                   'border-red-300 bg-red-50': variante.sede === comparativa.sedeMasCara,
+                   'border-300': variante.sede !== comparativa.sedeMasBarata && variante.sede !== comparativa.sedeMasCara
+                 }">
+              
+              <!-- ENCABEZADO SEDE -->
+              <div class="flex justify-content-between align-items-center mb-3">
+                <div class="flex align-items-center gap-2">
+                  <i class="pi pi-home text-2xl text-primary"></i>
+                  <span class="font-bold text-lg text-900">{{ formatearNombreSede(variante.sede) }}</span>
+                </div>
+                <p-tag 
+                  *ngIf="variante.sede === comparativa.sedeMasBarata"
+                  value="MÁS BARATO" 
+                  severity="success"
+                  icon="pi pi-star-fill">
+                </p-tag>
+                <p-tag 
+                  *ngIf="variante.sede === comparativa.sedeMasCara"
+                  value="MÁS CARO" 
+                  severity="danger"
+                  icon="pi pi-exclamation-circle">
+                </p-tag>
+              </div>
+
+              <p-divider></p-divider>
+
+              <!-- PRECIOS -->
+              <div class="flex flex-column gap-3 mb-4">
+                <div class="flex justify-content-between align-items-center p-2 surface-100 border-round">
+                  <span class="text-sm font-semibold text-600">Precio Unidad:</span>
+                  <span class="text-lg font-black text-green-600">S/ {{ variante.precioUnidad | number : '1.2-2' }}</span>
+                </div>
+                <div class="flex justify-content-between align-items-center p-2 surface-100 border-round">
+                  <span class="text-sm font-semibold text-600">Precio Caja:</span>
+                  <span class="text-lg font-black text-blue-600">S/ {{ variante.precioCaja | number : '1.2-2' }}</span>
+                </div>
+                <div class="flex justify-content-between align-items-center p-2 surface-100 border-round">
+                  <span class="text-sm font-semibold text-600">Precio Mayorista:</span>
+                  <span class="text-lg font-black text-orange-600">S/ {{ variante.precioMayorista | number : '1.2-2' }}</span>
+                </div>
+              </div>
+
+              <!-- DIFERENCIA VS PROMEDIO -->
+              <div class="p-3 border-round-lg mb-3"
+                   [ngClass]="{
+                     'bg-green-100': variante.diferenciaPrecioUnidad! < 0,
+                     'bg-red-100': variante.diferenciaPrecioUnidad! > 0,
+                     'bg-gray-100': variante.diferenciaPrecioUnidad === 0
+                   }">
+                <div class="flex align-items-center justify-content-between">
+                  <span class="text-xs font-bold uppercase"
+                        [ngClass]="{
+                          'text-green-700': variante.diferenciaPrecioUnidad! < 0,
+                          'text-red-700': variante.diferenciaPrecioUnidad! > 0,
+                          'text-gray-700': variante.diferenciaPrecioUnidad === 0
+                        }">
+                    Vs. Promedio:
+                  </span>
+                  <div class="flex align-items-center gap-2">
+                    <i [class]="'pi ' + getIconoPorDiferencia(variante.diferenciaPrecioUnidad!)"
+                       [ngClass]="{
+                         'text-green-600': variante.diferenciaPrecioUnidad! < 0,
+                         'text-red-600': variante.diferenciaPrecioUnidad! > 0,
+                         'text-gray-600': variante.diferenciaPrecioUnidad === 0
+                       }">
+                    </i>
+                    <span class="font-black text-lg"
+                          [ngClass]="{
+                            'text-green-700': variante.diferenciaPrecioUnidad! < 0,
+                            'text-red-700': variante.diferenciaPrecioUnidad! > 0,
+                            'text-gray-700': variante.diferenciaPrecioUnidad === 0
+                          }">
+                      {{ variante.porcentajeDiferencia! >= 0 ? '+' : '' }}{{ variante.porcentajeDiferencia! | number : '1.1-1' }}%
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- BOTÓN EDITAR VARIANTE -->
+              <div class="flex justify-content-end gap-2">
+                <p-button 
+                  *ngIf="!esProductoEliminado"
+                  label="Eliminar" 
+                  icon="pi pi-trash" 
+                  severity="danger"
+                  [outlined]="true"
+                  styleClass="text-base font-bold px-4"
+                  (onClick)="eliminarProducto($event)">
+                </p-button>
+                
+                <p-button 
+                  *ngIf="esProductoEliminado"
+                  label="Restaurar" 
+                  icon="pi pi-refresh" 
+                  severity="success"
+                  [outlined]="true"
+                  styleClass="text-base font-bold px-4"
+                  (onClick)="restaurarProducto($event)">
+                </p-button>
+                
+                <p-button 
+                  label="Editar" 
+                  icon="pi pi-pencil" 
+                  severity="warn"
+                  [outlined]="true"
+                  styleClass="text-base font-bold px-4"
+                  (onClick)="irEditarVariante(variante.id)">
+                </p-button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </p-card>
+    </div>
+
+    <!-- INFORMACIÓN ADICIONAL -->
+    <div class="col-12" *ngIf="producto.fechaCreacion || producto.fechaActualizacion">
+      <p-card styleClass="border-1 border-300 border-round-xl shadow-1">
+        <div class="flex align-items-center gap-3 mb-3">
+          <i class="pi pi-calendar text-2xl text-600"></i>
+          <h3 class="m-0 text-lg font-bold text-900">Información de Registro</h3>
+        </div>
+        
+        <p-divider></p-divider>
+        
+        <div class="grid">
+          <div class="col-12 md:col-6" *ngIf="producto.fechaCreacion">
+            <div class="flex align-items-center gap-3 p-3 surface-50 border-round-lg">
+              <i class="pi pi-plus-circle text-xl text-green-600"></i>
+              <div>
+                <label class="block text-xs font-semibold text-600 mb-1">FECHA DE CREACIÓN</label>
+                <span class="text-sm font-medium text-900">{{ producto.fechaCreacion | date: 'dd/MM/yyyy HH:mm' }}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-12 md:col-6" *ngIf="producto.fechaActualizacion">
+            <div class="flex align-items-center gap-3 p-3 surface-50 border-round-lg">
+              <i class="pi pi-refresh text-xl text-blue-600"></i>
+              <div>
+                <label class="block text-xs font-semibold text-600 mb-1">ÚLTIMA ACTUALIZACIÓN</label>
+                <span class="text-sm font-medium text-900">{{ producto.fechaActualizacion | date: 'dd/MM/yyyy HH:mm' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </p-card>
+    </div>
+
+  </div>
+</div>
+
+<!-- MENSAJE DE PRODUCTO NO ENCONTRADO -->
+<div *ngIf="!producto && !loading" class="surface-card p-8 text-center mb-6 border-round-xl">
+  <div class="flex flex-column align-items-center gap-4">
+    <i class="pi pi-exclamation-triangle text-6xl text-warning"></i>
+    <h3 class="text-2xl font-bold text-900 mb-2">Producto No Encontrado</h3>
+    <p class="text-xl text-600 m-0">El producto que buscas no existe o fue eliminado</p>
+    <p-button label="Volver a Productos" icon="pi pi-arrow-left" severity="secondary" size="large" (onClick)="volver()"></p-button>
+  </div>
+</div>
+
+<p-toast></p-toast>
+<p-confirmdialog></p-confirmdialog>

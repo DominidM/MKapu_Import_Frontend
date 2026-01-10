@@ -28,15 +28,16 @@ import { ProductosService, Producto } from '../../../../core/services/productos.
     ConfirmDialog,
     ToastModule
   ],
-  templateUrl: './productos-form.html',
-  styleUrls: ['./productos-form.css'],
+  templateUrl: './productos-formulario.html',
+  styleUrls: ['./productos-formulario.css'],
   providers: [ConfirmationService, MessageService]
 })
-export class ProductosForm implements OnInit, OnDestroy {
+export class ProductosFormulario implements OnInit, OnDestroy {
   productoForm: FormGroup;
   isEditMode = false;
   productoId: number | null = null;
   productoOriginal: Producto | null = null;
+  returnUrl: string = '/admin/gestion-productos'; 
 
   sedes: { label: string; value: string }[] = [];
   familias: { label: string; value: string }[] = [];
@@ -64,6 +65,12 @@ export class ProductosForm implements OnInit, OnDestroy {
     this.cargarSedes();
     this.cargarFamilias();
 
+    this.route.queryParams.subscribe(params => {
+      if (params['returnUrl']) {
+        this.returnUrl = params['returnUrl'];
+      }
+    });
+
     this.route.params.subscribe(params => {
       if (params['id']) {
         this.isEditMode = true;
@@ -76,6 +83,7 @@ export class ProductosForm implements OnInit, OnDestroy {
       }
     });
   }
+
 
   ngOnDestroy() {
     this.confirmationService.close();
@@ -288,7 +296,7 @@ export class ProductosForm implements OnInit, OnDestroy {
 
   volver() {
     if (!this.hayaCambios()) {
-      this.router.navigate(['/admin/gestion-productos']);
+      this.router.navigateByUrl(this.returnUrl);
       return;
     }
 
@@ -315,12 +323,13 @@ export class ProductosForm implements OnInit, OnDestroy {
             : 'Creación de producto cancelada',
           life: 2000
         });
-        setTimeout(() => this.router.navigate(['/admin/gestion-productos']), 500);
+        setTimeout(() => this.router.navigateByUrl(this.returnUrl), 500);
       }
     });
   }
 
+
   volverSinConfirmar() {
-    this.router.navigate(['/admin/gestion-productos']);
+    this.router.navigateByUrl(this.returnUrl);
   }
 }
