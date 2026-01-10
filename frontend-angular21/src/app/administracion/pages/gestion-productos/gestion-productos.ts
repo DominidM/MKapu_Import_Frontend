@@ -1,18 +1,24 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { Subject, takeUntil } from 'rxjs';
 
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import { CardModule } from 'primeng/card';
 import { TagModule } from 'primeng/tag';
 import { AutoCompleteModule } from 'primeng/autocomplete';
-import { SelectModule } from 'primeng/select'
+import { SelectModule } from 'primeng/select';
 import { ToggleButtonModule } from 'primeng/togglebutton';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
-
+import { InputTextModule } from 'primeng/inputtext';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
+import { TooltipModule } from 'primeng/tooltip';
 import { RouterOutlet, RouterModule } from '@angular/router';
+
+import { ProductosService, Producto } from '../../../core/services/productos.service';
 
 @Component({
   selector: 'app-gestion-productos',
@@ -28,195 +34,211 @@ import { RouterOutlet, RouterModule } from '@angular/router';
     SelectModule,
     ToggleButtonModule,
     ProgressSpinnerModule,
+    InputTextModule,
+    IconFieldModule,
+    InputIconModule,
+    TooltipModule,
     RouterOutlet,
     RouterModule
   ],
   templateUrl: './gestion-productos.html',
   styleUrl: './gestion-productos.css'
 })
-export class GestionProductos implements OnInit {
-  
-  get cabeceraCompleta(): string {
-    return `Administracion - Admin - <strong>Gestión de Productos Activos</strong>`;
-  }
+export class GestionProductos implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
 
-  productos: any[] = [];
-  productosOriginal: any[] = [];
+  // ✅ TIPADO CORRECTO CON INTERFAZ Producto
+  productos: Producto[] = [];
+  productosOriginal: Producto[] = [];
   loading = false;
   vistaLista = true;
   sedeValue: string | null = null;
   familiaValue: string | null = null;
   buscarValue: string | null = null;
+  items: Producto[] = [];
   sedes: {label: string, value: string}[] = [];
   familias: {label: string, value: string}[] = [];
-  items: string[] = [];
-  totalSedesActivas: number = 0;
-  modoEliminados: boolean = false;
+  
+  totalSedesActivas = 0;
+  totalProductosActivos = 0;
+
+  resumenSedes: {sede: string, activos: number, eliminados: number, total: number}[] = [];
 
   constructor(
     private router: Router,
-    private activatedRoute: ActivatedRoute
+    private activatedRoute: ActivatedRoute,
+    private productosService: ProductosService
   ) {}
 
   ngOnInit() {
     this.cargarProductos();
-    this.actualizarContadorSedes();
   }
 
-  isRutaHija(): boolean {
-    const url = this.router.url;
-    return url.includes('crear-producto') || 
-          url.includes('editar-producto') || 
-          url.includes('productos-eliminados');
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
-  actualizarContadorSedes() {
-    this.totalSedesActivas = this.sedes.filter(s => s.label !== '').length;
-  }
-
-  get totalProductos(): number {
-    return this.productos.length;
-  }
-
-  getStockSeverity(stock: number): 'success' | 'warn' | 'danger' {
-    if (stock > 10) return 'success';
-    if (stock > 0) return 'warn';
-    return 'danger';
-  }
-
+  /** ✅ CARGAR DESDE SERVICIO CON CONTADORES */
   cargarProductos() {
     this.loading = true;
     
-    this.productosOriginal = [
-      {
-        id: 1, codigo: 'P001', nombre: 'Inca Kola 500ml', familia: 'Bebidas', sede: 'LAS FLORES',
-        stock: 120, precioUnidad: 3.50, precioCaja: 40.00, precioMayorista: 3.00, estado: 'Activo'
-      },
-      {
-        id: 2, codigo: 'P002', nombre: 'Papas Lays 45g', familia: 'Snacks', sede: 'LURIN',
-        stock: 80, precioUnidad: 2.50, precioCaja: 28.00, precioMayorista: 2.20, estado: 'Activo'
-      },
-      {
-        id: 3, codigo: 'P003', nombre: 'Arroz Costeño 1kg', familia: 'Abarrotes', sede: 'LAS FLORES',
-        stock: 200, precioUnidad: 5.00, precioCaja: 55.00, precioMayorista: 4.50, estado: 'Activo'
-      },
-      {
-        id: 4, codigo: 'P004', nombre: 'Coca Cola 1L', familia: 'Bebidas', sede: 'LAS FLORES',
-        stock: 15, precioUnidad: 5.50, precioCaja: 60.00, precioMayorista: 5.00, estado: 'Activo'
-      },
-      {
-        id: 5, codigo: 'P005', nombre: 'Atún Florida 170g', familia: 'Enlatados', sede: 'LURIN',
-        stock: 5, precioUnidad: 4.20, precioCaja: 46.00, precioMayorista: 3.80, estado: 'Activo'
-      }
-    ];
+    // Obtener TODOS los productos activos del servicio RAF
+    this.productosOriginal = this.productosService.getProductos(undefined, 'Activo');
+    this.sedes = this.productosService.getSedes().map(s => ({ label: s, value: s }));
+    this.familias = this.productosService.getFamilias().map(f => ({ label: f, value: f }));
+    
+    // ✅ CONTADORES NUEVOS DEL SERVICE
+    this.resumenSedes = this.productosService.getResumenPorSedes();
+    this.totalSedesActivas = this.sedes.length;
+    this.totalProductosActivos = this.productosService.getTotalProductosActivos();
 
-    this.sedes = [...new Set(this.productosOriginal.map(p => p.sede))]
-      .map(s => ({ label: s, value: s }));
-
-    if (this.sedeValue) {
-      this.onSelectSede();
-    } else {
-      this.productos = [];
-    }
+    
     this.loading = false;
-  }
-
-  onSelectSede() {
-    if (!this.sedeValue) {
-      this.productos = [];
-      this.familias = [];
-      this.familiaValue = null;
-      return;
-    }
-
-    const filtrados = this.productosOriginal.filter(p => 
-      p.sede === this.sedeValue && p.estado === 'Activo'
-    );
-    
-    this.familias = [...new Set(filtrados.map(p => p.familia))]
-      .map(f => ({ label: f, value: f }));
-    
-    this.productos = filtrados;
-    this.familiaValue = null;
-    this.buscarValue = null;
-    
     this.actualizarContadorSedes();
   }
 
-  onSelectFamilia() {
-    if (!this.sedeValue || !this.familiaValue) {
-      if (this.sedeValue) this.onSelectSede();
+  /** ✅ SELECCIONAR SEDE */
+  onSelectSede() {
+    if (!this.sedeValue) {
+      this.resetFiltros();
       return;
     }
 
-    this.productos = this.productosOriginal.filter(p =>
-      p.sede === this.sedeValue &&
-      p.familia === this.familiaValue &&
-      p.estado === 'Activo'
-    );
+    // ✅ Filtrar por sede Y solo activos + CONTADOR ESPECÍFICO
+    this.productosOriginal = this.productosService.getProductos(this.sedeValue, 'Activo');
+    this.familias = this.productosService.getFamilias(this.sedeValue)
+      .map(f => ({ label: f, value: f }));
+    this.totalProductosActivos = this.productosService.getTotalProductosActivosPorSede(this.sedeValue!);
+    
+    this.aplicarTodosLosFiltros();
   }
 
-  filtrarPorBusqueda() {
-    if (!this.buscarValue || !this.sedeValue) return;
-
-    const query = this.buscarValue!.toLowerCase();
-
-    this.productos = this.productosOriginal.filter(p =>
-      p.sede === this.sedeValue &&
-      p.estado === 'Activo' &&
-      (
-        p.nombre.toLowerCase().includes(query) ||
-        p.codigo.toLowerCase().includes(query) ||
-        p.familia.toLowerCase().includes(query)
-      )
-    );
+  /** ✅ SELECCIONAR FAMILIA */
+  onSelectFamilia() {
+    this.aplicarTodosLosFiltros();
   }
 
-  searchBuscar(event: any) {
-    const query = event.query.toLowerCase();
-    
-    const productosDisponibles = this.sedeValue 
-      ? this.productosOriginal.filter(p => p.sede === this.sedeValue && p.estado === 'Activo')
-      : this.productosOriginal.filter(p => p.estado === 'Activo');
-    
-    this.items = productosDisponibles
-      .filter(p => p.nombre.toLowerCase().includes(query))
-      .map(p => `${p.nombre} (${p.codigo})`); 
-  }
-
-  limpiarFiltros() {
-    this.familiaValue = null;
-    this.buscarValue = null;
-    
-    if (!this.sedeValue) {
+  /** ✅ FILTROS COMPLETOS */
+  aplicarTodosLosFiltros() {
+    if (!this.sedeValue || this.productosOriginal.length === 0) {
       this.productos = [];
       return;
     }
 
-    this.productos = this.productosOriginal.filter(p =>
-      p.sede === this.sedeValue && p.estado === 'Activo'
+    this.productos = this.productosOriginal.filter((p: Producto) => {
+      // Familia
+      const matchesFamilia = !this.familiaValue || p.familia === this.familiaValue;
+      
+      // Búsqueda
+      let query = '';
+      if (this.buscarValue && typeof this.buscarValue === 'string') {
+        query = this.buscarValue.toLowerCase().replace(/\s*\([^)]+\)\s*$/, '');
+      }
+      
+      const matchesBusqueda = !query || 
+        p.nombre.toLowerCase().includes(query) ||
+        p.codigo.toLowerCase().includes(query) ||
+        p.familia.toLowerCase().includes(query);
+
+      return matchesFamilia && matchesBusqueda;
+    });
+  }
+
+  /** ✅ AUTOCOMPLETE BUSCAR */
+  searchBuscar(event: any) {
+    const query = event.query?.toLowerCase() || '';
+    
+    // Productos disponibles en la sede seleccionada
+    const disponibles = this.sedeValue 
+      ? this.productosService.getProductos(this.sedeValue, 'Activo')
+      : this.productosService.getProductos(undefined, 'Activo');
+
+    this.items = disponibles.filter((p: Producto) => 
+      p.nombre.toLowerCase().includes(query) || 
+      p.codigo.toLowerCase().includes(query) ||
+      p.familia.toLowerCase().includes(query)
+    ).slice(0, 10); // Máximo 10 sugerencias
+  }
+
+  /** ✅ SELECCIONAR DESDE AUTOCOMPLETE */
+  filtrarPorBusqueda(event: any) {
+    if (event?.value) {
+      this.buscarValue = event.value.nombre;
+      this.aplicarTodosLosFiltros();
+    }
+  }
+
+  /** ✅ ELIMINAR USANDO SERVICE CORRECTO */
+  eliminarProducto(producto: Producto) {
+    const confirmacion = confirm(
+      `¿Retirar "${producto.nombre}"?\n\n` +
+      `📦 Código: ${producto.codigo}\n` +
+      `🏪 Sede: ${producto.sede}\n` +
+      `💰 Precio: S/ ${producto.precioUnidad.toFixed(2)}\n` +
+      `📂 Familia: ${producto.familia}\n\n` +
+      `✅ Se cambiará estado de "Activo" → "Eliminado"\n` +
+      `✅ Podrá verlo en "Productos Eliminados"`
     );
+    
+    if (confirmacion) {
+      const exito = this.productosService.eliminarProducto(producto.id); // ✅ MÉTODO CORRECTO
+      if (exito) {
+        this.onSelectSede(); // ← Recarga automática
+      }
+    }
   }
 
-  toggleVistaLista(event: any) {
-    this.vistaLista = event.value;
+  /** ✅ LIMPIAR FILTROS */
+  limpiarFiltros() {
+    this.resetFiltrosParcial();
   }
 
-  trackByFn(index: number, item: any): any {
+  private resetFiltrosParcial() {
+  this.familiaValue = null;      // ✅ Limpiar familia
+  this.buscarValue = null;       // ✅ Limpiar buscador  
+  this.items = [];               // ✅ Limpiar sugerencias
+  // ✅ NO toca: sedeValue, productos, productosOriginal
+}
+
+  private resetFiltros() {
+    this.sedeValue = null;
+    this.familiaValue = null;
+    this.buscarValue = null;
+    this.items = [];
+    this.familias = [];
+    this.productos = [];
+  }
+
+  /** ✅ CONTADORES */
+  actualizarContadorSedes() {
+    this.totalSedesActivas = this.sedes.length;
+  }
+
+
+  /** ✅ PRECIO SEVERITY (REEMPLAZA STOCK) */
+  getPrecioSeverity(precio: number): "success" | "secondary" | "info" | "warn" | "danger" {
+    if (precio >= 1000) return 'success';
+    if (precio >= 500) return 'info';
+    if (precio > 100) return 'warn';
+    return 'secondary';
+  }
+
+  /** ✅ TRACK BY OPTIMIZADO */
+  trackByFn(index: number, item: Producto): number {
     return item.id;
   }
 
+  /** ✅ NAVEGACIÓN */
   irDetalle(id: number) {
-    console.log('Ver detalles/comparativa producto:', id);
+    this.router.navigate(['/admin/gestion-productos/ver-detalle-producto', id]);
   }
 
   irCrear() {
-    console.log('🚀 irCrear');
     this.router.navigate(['/admin/gestion-productos/crear-producto']);
   }
 
   irEditar(id: number) {
-    console.log('🚀 irEditar', id);
     this.router.navigate(['/admin/gestion-productos/editar-producto', id]);
   }
 
@@ -224,21 +246,32 @@ export class GestionProductos implements OnInit {
     this.router.navigate(['/admin/gestion-productos/productos-eliminados']);
   }
 
-  eliminarProducto(producto: any) {
-    const confirmacion = confirm(
-      `¿Eliminar "${producto.nombre}"?\n\n` +
-      `Código: ${producto.codigo}\n` +
-      `Sede: ${producto.sede}\n\n` +
-      `Esto cambiará su estado a "Retirado" y aparecerá en Productos Eliminados.`
-    );
-    
-    if (confirmacion) {
-      const productoIndex = this.productosOriginal.findIndex(p => p.id === producto.id);
-      if (productoIndex !== -1) {
-        this.productosOriginal[productoIndex].estado = 'Retirado';
-        this.onSelectSede();
-        console.log('Producto marcado como retirado:', producto);
-      }
+  /** ✅ RUTA HIJA */
+  isRutaHija(): boolean {
+    const url = this.router.url;
+    return url.includes('crear-producto') || 
+           url.includes('editar-producto') || 
+           url.includes('ver-detalle-producto') ||
+           url.includes('productos-eliminados');
+  }
+
+  get totalActivosSede(): number {
+    if (this.sedeValue) 
+    {
+      return this.productosService.getTotalProductosActivosPorSede(this.sedeValue);
     }
+    return 0;
+  }
+
+  get totalEliminadosSede(): number 
+  {
+    if (this.sedeValue) {
+      return this.productosService.getTotalProductosEliminadosPorSede(this.sedeValue);
+    }
+    return 0;
+  }
+
+  get totalEliminados(): number {
+    return this.productosService.getTotalProductosEliminados();
   }
 }
