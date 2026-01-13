@@ -46,7 +46,7 @@ export const routes: Routes = [
     path: 'almacen',
     component: Main,
     children: [
-      { path: 'dashboard', loadComponent: () => import('./almacen/pages/almacen/almacen').then(m => m.Almacen) } 
+      { path: 'dashboard', loadComponent: () => import('./almacen/pages/almacen/almacen').then(m => m.Almacen) }
     ]
   },
 

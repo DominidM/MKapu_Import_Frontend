@@ -39,10 +39,10 @@ export class Login {
     {
       const role = this.authService.getRole();
 
-      this.messageService.add({ 
-        severity: 'success', 
-        summary: 'Login Correcto', 
-        detail: 'Bienvenido al sistema' 
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Login Correcto',
+        detail: 'Bienvenido al sistema'
       });
 
       setTimeout(() => {
@@ -50,18 +50,14 @@ export class Login {
         if (role === 'almacen') this.router.navigate(['/almacen/dashboard']);
         if (role === 'ventas') this.router.navigate(['/ventas/dashboard']);
       }, 1000);
-
     }
     else
     {
-      this.messageService.add({ 
-        severity: 'error', 
-        summary: 'Login Incorrecto', 
-        detail: 'Usuario o contraseña incorrecta' 
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Login Incorrecto',
+        detail: 'Usuario o contraseña incorrecta'
       });
     }
-
-
   }
-
 }

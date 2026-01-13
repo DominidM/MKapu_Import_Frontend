@@ -9,6 +9,9 @@ import { SelectModule } from 'primeng/select';
 import { InputTextModule } from 'primeng/inputtext';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ConfirmationService } from 'primeng/api';
 
 @Component({
   selector: 'app-sedes',
@@ -22,7 +25,10 @@ import { TagModule } from 'primeng/tag';
     TableModule,
     TagModule,
     RouterModule,
+    InputNumberModule,
+    ConfirmDialogModule,
   ],
+  providers: [ConfirmationService],
   templateUrl: './sedes.html',
   styleUrl: './sedes.css',
 })
@@ -60,11 +66,25 @@ export class Sedes {
     },
   ];
 
-  pageSizes = [
-    { label: '10', value: 10 },
-    { label: '25', value: 25 },
-    { label: '50', value: 50 },
-  ];
+  constructor(private confirmationService: ConfirmationService) {}
 
-  pageSize = 10;
+  confirmDelete(sede: { codigo: string; nombre: string }): void {
+    this.confirmationService.confirm({
+      header: 'Confirmacion',
+      message: `¿Seguro que deseas eliminar la sede ${sede.nombre}?`,
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Eliminar',
+      rejectLabel: 'Cancelar',
+      acceptButtonProps: {
+        severity: 'danger',
+      },
+      rejectButtonProps: {
+        severity: 'secondary',
+        outlined: true,
+      },
+      accept: () => {
+        this.sedes = this.sedes.filter(item => item.codigo !== sede.codigo);
+      },
+    });
+  }
 }
