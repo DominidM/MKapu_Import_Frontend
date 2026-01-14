@@ -31,7 +31,7 @@ export const routes: Routes = [
               path: 'usuario',
               loadComponent: () =>
                 import('./administracion/pages/administracion-usuario/administracion-usuario')
-                  .then(m => m.AdministracionUsuario)
+                  .then(m => m.AdministracionUsuarioComponent)
             },
             {
               path: 'roles',
