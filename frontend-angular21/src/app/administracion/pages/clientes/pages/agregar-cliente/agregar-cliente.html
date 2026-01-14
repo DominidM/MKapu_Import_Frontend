@@ -1,0 +1,120 @@
+<div class="agregar-cliente-page">
+    <p-card styleClass="clientes-header-card">
+      <div class="flex align-items-center justify-content-between flex-wrap gap-3">
+        <div class="flex align-items-center gap-3">
+          <span class="clientes-title-icon">
+            <i class="pi pi-list"></i>
+          </span>
+          <div>
+            <p class="clientes-kicker">VENTAS - CLIENTES</p>
+            <h2 class="clientes-title">AGREGAR CLIENTE</h2>
+          </div>
+        </div>
+      </div>
+    </p-card>
+  
+    <div class="flex align-items-center justify-content-between mb-4">
+      <h2 class="cliente-card-title">Crear Cliente</h2>
+      <p-button
+        icon="pi pi-arrow-left"
+        text
+        severity="secondary"
+        aria-label="Volver a clientes"
+        [routerLink]="['/admin/clientes']"
+      ></p-button>
+    </div>
+  
+    <p-card styleClass="cliente-card border-none">
+      <div class="grid form-grid">
+        <div class="col-12 md:col-6">
+          <label class="field-label" for="nro_documento">NUMERO DE DOCUMENTO:</label>
+          <input
+            id="nro_documento"
+            pInputText
+            class="w-full"
+            placeholder="Ingrese datos"
+            [(ngModel)]="cliente.nro_documento"
+          />
+        </div>
+        <div class="col-12 md:col-6">
+          <label class="field-label" for="razon_social">RAZON SOCIAL:</label>
+          <input
+            id="razon_social"
+            pInputText
+            class="w-full"
+            placeholder="Ingrese datos"
+            [(ngModel)]="cliente.razon_social"
+          />
+        </div>
+        <div class="col-12 md:col-6">
+          <label class="field-label" for="nombres">NOMBRES:</label>
+          <input
+            id="nombres"
+            pInputText
+            class="w-full"
+            placeholder="Ingrese datos"
+            [(ngModel)]="cliente.nombres"
+          />
+        </div>
+        <div class="col-12 md:col-6">
+          <label class="field-label" for="apellidos">APELLIDOS:</label>
+          <input
+          pInputText
+            class="w-full"
+            [(ngModel)]="cliente.apellidos"
+            inputId="apellidos"
+            placeholder="Ingrese datos"
+          />
+        </div>
+        <div class="col-12">
+          <label class="field-label" for="direccion">DIRECCION:</label>
+          <input
+            id="direccion"
+            pInputText
+            class="w-full"
+            placeholder="Ingrese datos"
+            [(ngModel)]="cliente.direccion"
+          />
+        </div>
+        <div class="col-12">
+          <label class="field-label" for="email">EMAIL:</label>
+          <input
+            id="email"
+            pInputText
+            class="w-full"
+            placeholder="Ingrese datos"
+            [(ngModel)]="cliente.direccion"
+          />
+        </div>
+        <div class="col-12">
+          <label class="field-label" for="telefono">NUMERO TELEFONICO:</label>
+          <p-inputnumber
+            id="telefono"
+            class="w-full"
+            placeholder="Ingrese datos"
+            [maxlength]="9"
+            [useGrouping]="false"
+            [(ngModel)]="cliente.telefono"
+          />
+        </div>
+      </div>
+  
+      <p-divider></p-divider>
+  
+      <div class="flex align-items-center justify-content-center gap-3 mt-3">
+        <p-button
+          label="Cancelar"
+          outlined
+          severity="secondary"
+          styleClass="cliente-btn-cancel"
+        ></p-button>
+        <p-button
+          label="Registrar Cliente"
+          icon="pi pi-check"
+          styleClass="cliente-btn-primary"
+        ></p-button>
+      </div>
+    </p-card>
+    <p-confirmdialog />
+  </div>
+

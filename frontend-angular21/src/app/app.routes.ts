@@ -38,7 +38,23 @@ export const routes: Routes = [
           }
         ]
       },
-
+      {
+        path: 'clientes',
+        children: [
+          {
+            path: '',
+            loadComponent: () => import('./administracion/pages/clientes/pages/clientes/clientes').then(m => m.Clientes)
+          },
+          {
+            path: 'agregar-cliente',
+            loadComponent: () => import('./administracion/pages/clientes/pages/agregar-cliente/agregar-cliente').then(m => m.AgregarCliente)
+          },
+          {
+            path: 'editar-cliente',
+            loadComponent: () => import('./administracion/pages/clientes/pages/editar-cliente/editar-cliente').then(m => m.EditarCliente)
+          }
+        ]
+      },
     ]
   },
 
@@ -55,10 +71,10 @@ export const routes: Routes = [
     component: Main,
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-      { path: 'dashboard', loadComponent: () => import('./dashboard/pages/dashboard/dashboard').then(m => m.Dashboard) },
       { path: 'administracion', loadComponent: () => import('./administracion/pages/administracion/administracion').then(m => m.Administracion) },
       { path: 'almacen', loadComponent: () => import('./almacen/pages/almacen/almacen').then(m => m.Almacen) },
       { path: 'ventas', loadComponent: () => import('./ventas/pages/ventas/ventas').then(m => m.Ventas) },
     ]
   }
 ];
+ 
