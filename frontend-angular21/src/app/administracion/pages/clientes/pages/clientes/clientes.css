@@ -112,3 +112,30 @@
 .clientes-page-dropdown {
     min-width: 90px;
 }
+
+.clientes-search-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.clientes-search-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.clientes-search-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.clientes-search-hint {
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+.clientes-filter-actions {
+    align-self: flex-end;
+}

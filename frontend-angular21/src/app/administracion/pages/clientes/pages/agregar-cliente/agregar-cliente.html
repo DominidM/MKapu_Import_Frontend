@@ -108,11 +108,16 @@
           severity="secondary"
           styleClass="cliente-btn-cancel"
         ></p-button>
-        <p-button
+        <!-- <p-button
           label="Registrar Cliente"
           icon="pi pi-check"
           styleClass="cliente-btn-primary"
-        ></p-button>
+        ></p-button> -->
+        <div class="card flex justify-center">
+          <p-toast />
+          <p-button (onClick)="registrar()" label="Registrar Cliente" 
+          />
+      </div>
       </div>
     </p-card>
     <p-confirmdialog />

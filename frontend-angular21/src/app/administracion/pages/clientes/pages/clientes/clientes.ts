@@ -10,6 +10,9 @@ import { TableModule } from 'primeng/table';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { RouterModule } from '@angular/router';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { AutoCompleteModule } from 'primeng/autocomplete';
+import { ToastModule } from 'primeng/toast';
+import { ConfirmationService, MessageService } from 'primeng/api';
 
 @Component({
   selector: 'app-clientes',
@@ -24,14 +27,16 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
     CommonModule,
     InputNumberModule,
     RouterModule,
-    ConfirmDialogModule
+    ConfirmDialogModule,
+    ToastModule,
+    AutoCompleteModule,
   ],
   templateUrl: './clientes.html',
   styleUrl: './clientes.css',
+  providers:[ConfirmationService, MessageService],
 })
 export class Clientes {
-  searchTerm = '';
-
+  
   clientes = [
     {
       nro_documento: '74283915',
@@ -70,4 +75,73 @@ export class Clientes {
       telefono: '987654321', 
     },
   ];
+  filteredClientes = [...this.clientes];
+  clienteSuggestions = [...this.clientes];
+  searchTerm = '';
+
+  constructor(
+    private confirmationService: ConfirmationService,
+    private messageService: MessageService
+  ) {}
+
+
+  onSearch(event: { query: string }): void {
+    this.updateFilteredClientes(event.query);
+  }
+
+  onSearchChange(term: string): void {
+    this.updateFilteredClientes(term);
+  }
+
+  onSelectCliente(): void {
+    this.updateFilteredClientes(this.searchTerm);
+  }
+
+  clearSearch(): void {
+    this.searchTerm = '';
+    this.updateFilteredClientes('');
+  }
+
+private updateFilteredClientes(term: string): void {
+    const value = term?.trim().toLowerCase();
+
+    if (!value) {
+      this.filteredClientes = [...this.clientes];
+      this.clienteSuggestions = [...this.clientes];
+      return;
+    }
+
+    this.filteredClientes = this.clientes.filter(cliente =>
+      [cliente.nro_documento, cliente.nombres, cliente.apellidos].some(field =>
+        field.toLowerCase().includes(value)
+      )
+    );
+    this.clienteSuggestions = [...this.filteredClientes];
+  }
+  confirmDelete(cliente: { nro_documento: string; nombres: string; apellidos: string; }): void {
+    this.confirmationService.confirm({
+      header: 'Confirmacion',
+      message: `¿Seguro que deseas eliminar al cliente ${cliente.nombres}?`,
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Eliminar',
+      rejectLabel: 'Cancelar',
+      acceptButtonProps: {
+        severity: 'danger',
+      },
+      rejectButtonProps: {
+        severity: 'secondary',
+        outlined: true,
+      },
+      accept: () => {
+        this.clientes = this.clientes.filter(item => item.nro_documento !== cliente.nro_documento);
+        this.updateFilteredClientes(this.searchTerm);
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Cliente eliminado',
+          detail: `Se elimino el cliente ${cliente.nombres}.`,
+        });
+      },
+    });
+  }
 }
+

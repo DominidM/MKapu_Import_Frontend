@@ -59,7 +59,10 @@
 
     <div class="flex align-items-center justify-content-center gap-3 mt-3">
       <p-button label="Cancelar" outlined severity="secondary" styleClass="cliente-btn-cancel"></p-button>
-      <p-button label="Modificar Cliente" icon="pi pi-check" styleClass="cliente-btn-primary"></p-button>
+      <!-- <p-button label="Modificar Cliente" icon="pi pi-check" styleClass="cliente-btn-primary"></p-button> -->
+      <p-toast />
+      <p-button (onClick)="editar()" label="Modificar Cliente" 
+      />
     </div>
   </p-card>
   <p-confirmdialog />

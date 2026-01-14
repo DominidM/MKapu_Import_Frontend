@@ -9,6 +9,9 @@ import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService } from 'primeng/api';
+import { ToastModule } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
+
 
 
 @Component({
@@ -23,20 +26,26 @@ import { ConfirmationService } from 'primeng/api';
     InputTextModule,
     InputNumberModule,
     ConfirmDialogModule,
+    ToastModule,
   ],
   templateUrl: './editar-cliente.html',
   styleUrl: './editar-cliente.css',
-  providers: [ConfirmationService],
+  providers: [ConfirmationService, MessageService],
 })
 export class EditarCliente {
-  cliente = 
+  constructor(private messageService: MessageService) { }
+  cliente =
     {
       nro_documento: '74283915',
       razon_social: 'Servicios Integrales Andina S.A.C.',
       nombres: 'Carlos Alberto',
       apellidos: 'Torres',
       direccion: 'Av. Las Flores 15-16, Urb. Las Flores',
-      email:'abc@gmail.com', 
-      telefono: '987654321', 
+      email: 'abc@gmail.com',
+      telefono: '987654321',
     }
+
+  editar() {
+    this.messageService.add({ severity: 'success', summary: 'Edición Exitosa', detail: 'Se realizo la edición', life: 3000 });
+  }
 }
