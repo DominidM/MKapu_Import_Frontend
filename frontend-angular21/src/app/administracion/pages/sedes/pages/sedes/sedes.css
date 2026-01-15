@@ -39,11 +39,32 @@
 }
 
 .sedes-search {
-  border: 1px solid #e5e7eb;
+  border: none;
   border-radius: 12px;
   padding: 0.35rem 0.75rem;
   background: #ffffff;
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.06);
+}
+
+.sedes-search-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.sedes-search-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.sedes-search-hint {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.sedes-filter-actions {
+  align-self: flex-end;
 }
 
 .sedes-search-input {
@@ -147,5 +168,3 @@
 .sedes-page-dropdown {
   min-width: 90px;
 }
-
-

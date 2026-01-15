@@ -6,7 +6,7 @@
   <div class="card mb-4 p-4 surface-card border-round-xl shadow-1">
 
     <div class="flex justify-content-between align-items-center gap-4">
-      
+
       <div class="flex align-items-center gap-4">
         <i class="pi pi-building text-6xl text-1500"></i>
         <div class="flex flex-column gap-1">
@@ -18,15 +18,15 @@
           </label>
         </div>
       </div>
-      
+
       <div class="flex gap-2">
-        <button pButton label="" icon="pi pi-trash" severity="danger" 
+        <button pButton label="" icon="pi pi-trash" severity="danger"
                 size="large" (click)="irEliminados()" class="w-3rem" [disabled]="!sedeValue"></button>
 
-        <button pButton label="Registrar Producto" icon="pi pi-plus" severity="success" 
+        <button pButton label="Registrar Producto" icon="pi pi-plus" severity="success"
                 size="large" (click)="irCrear()" class="w-14rem" [disabled]="!sedeValue"></button>
       </div>
-      
+
     </div>
   </div>
 
@@ -34,12 +34,12 @@
 
   <div class="card mb-4 p-4 surface-card border-round-xl shadow-1">
     <div class="flex justify-content-between align-items-center">
-      
+
       <div class="flex align-items-center gap-4">
         <i class="pi pi-home text-6xl text-1500"></i>
         <div class="flex flex-column gap-1">
           <label class="font-bold text-xs">SELECCIONAR SEDE:</label>
-          <p-select 
+          <p-select
             [(ngModel)]="sedeValue"
             [options]="sedes"
             optionLabel="label"
@@ -50,13 +50,13 @@
           </p-select>
         </div>
       </div>
-      
+
       <div class="flex align-items-center justify-content-end" style="min-width: 120px;">
         <span class="p-tag p-tag-success text-xs font-bold">
           {{totalSedesActivas}} ACTIVAS
         </span>
       </div>
-      
+
     </div>
   </div>
 
@@ -66,7 +66,7 @@
       <div class="flex flex-wrap gap-4 align-items-end">
         <div class="flex flex-column flex-grow-1 min-w-30rem">
           <label class="font-medium mb-2">Buscar Producto</label>
-          <p-autocomplete 
+          <p-autocomplete
             [(ngModel)]="buscarValue"
             [suggestions]="items"
             (completeMethod)="searchBuscar($event)"
@@ -81,7 +81,7 @@
         <!-- FAMILIA -->
         <div class="flex flex-column w-16rem">
           <label class="font-medium mb-2">Familia</label>
-          <p-select 
+          <p-select
             [(ngModel)]="familiaValue"
             [options]="familias"
             optionLabel="label"
@@ -95,16 +95,16 @@
 
         <!-- BOTONES DE CONTROL -->
         <div class="flex gap-3 align-items-end">
-          <p-toggleButton 
-            [(ngModel)]="vistaLista" 
-            onLabel="Lista" 
-            offLabel="Tarjetas" 
-            onIcon="pi pi-table"
+          <p-toggleButton
+            [(ngModel)]="vistaLista"
+            onLabel="Lista"
+            offLabel="Tarjetas"
+            icon="pi pi-table"
             offIcon="pi pi-list">
           </p-toggleButton>
-          <button pButton icon="pi pi-filter-slash" label="Limpiar" severity="secondary" 
+          <button pButton icon="pi pi-filter-slash" label="Limpiar" severity="secondary"
                   (click)="limpiarFiltros()"></button>
-          <button pButton icon="pi pi-refresh" label="Recargar" severity="info" 
+          <button pButton icon="pi pi-refresh" label="Recargar" severity="info"
                   (click)="cargarProductos()"></button>
         </div>
       </div>
@@ -122,8 +122,8 @@
 
   <!-- VISTA LISTA -->
   <div *ngIf="sedeValue && vistaLista && productos.length > 0" class="card mb-6 surface-card border-round-xl shadow-2">
-    <p-table [value]="productos" responsiveLayout="scroll" [paginator]="true" [rows]="10" 
-             [rowsPerPageOptions]="[5,10,25,50]" tableStyleClass="p-datatable-sm" 
+    <p-table [value]="productos" responsiveLayout="scroll" [paginator]="true" [rows]="10"
+             [rowsPerPageOptions]="[5,10,25,50]" tableStyleClass="p-datatable-sm"
              [showCurrentPageReport]="true"
              currentPageReportTemplate="Mostrando {first}-{last} de {totalRecords} productos"
              [loading]="loading">
@@ -151,13 +151,13 @@
           <td class="text-right font-medium">S/ {{p.precioCaja | number:'1.2-2'}}</td>
           <td>
             <div class="flex gap-1 flex-wrap">
-              <button pButton icon="pi pi-eye" severity="info" size="small" 
+              <button pButton icon="pi pi-eye" severity="info" size="small"
                       pTooltip="Ver Detalles" (click)="irDetalle(p.id)"
                       class="p-button-rounded p-button-sm"></button>
-              <button pButton icon="pi pi-pencil" severity="success" size="small" 
+              <button pButton icon="pi pi-pencil" severity="success" size="small"
                       pTooltip="Editar Producto" (click)="irEditar(p.id)"
                       class="p-button-rounded p-button-sm"></button>
-              <button pButton icon="pi pi-trash" severity="danger" size="small" 
+              <button pButton icon="pi pi-trash" severity="danger" size="small"
                       pTooltip="Eliminar Producto" (click)="eliminarProducto(p)"
                       class="p-button-rounded p-button-sm"></button>
             </div>
@@ -186,11 +186,11 @@
           <p-tag [value]="'S/ ' + (p.precioUnidad | number:'1.2-2')" severity="success" class="font-medium"></p-tag>
         </div>
         <div class="flex flex-wrap gap-2 pt-2">
-          <button pButton icon="pi pi-eye" severity="info" size="small" label="Detalle" 
+          <button pButton icon="pi pi-eye" severity="info" size="small" label="Detalle"
                   class="flex-1" (click)="irDetalle(p.id)"></button>
-          <button pButton icon="pi pi-pencil" severity="success" size="small" label="Editar" 
+          <button pButton icon="pi pi-pencil" severity="success" size="small" label="Editar"
                   class="flex-1" (click)="irEditar(p.id)"></button>
-          <button pButton icon="pi pi-trash" severity="danger" size="small" label="Eliminar" 
+          <button pButton icon="pi pi-trash" severity="danger" size="small" label="Eliminar"
                   class="flex-1" (click)="eliminarProducto(p)"></button>
         </div>
       </p-card>
@@ -202,7 +202,7 @@
     <i class="pi pi-inbox text-6xl text-400 mb-4 block"></i>
     <h3 class="text-2xl font-bold text-900 mb-2">Sin Productos</h3>
     <p class="text-600 mb-6">No hay productos activos en esta sede</p>
-    <button pButton label="Agregar Primer Producto" icon="pi pi-plus" severity="success" 
+    <button pButton label="Agregar Primer Producto" icon="pi pi-plus" severity="success"
             size="large" class="w-12rem" (click)="irCrear()"></button>
   </div>
 

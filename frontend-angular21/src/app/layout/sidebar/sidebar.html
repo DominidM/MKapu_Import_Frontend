@@ -38,7 +38,7 @@
         </a>
       </div>
 
-      
+
 
       <div class="mt-2" *ngIf="role === 'admin'">
 
@@ -127,6 +127,7 @@
         <div *ngIf="activeMenu === 'admin'" class="ml-4">
           <a
             class="flex px-4 py-2 cursor-pointer hover:surface-400"
+            [routerLink]="'/admin/sedes'"
             routerLinkActive="bg-primary text-black border-round"
             style="text-decoration: none; color: white;"
           >
@@ -157,14 +158,6 @@
             style="text-decoration: none; color: white;"
           >
             Gestion de Promociones
-          </a>
-          <a
-            class="flex px-4 py-2 cursor-pointer hover:surface-400"
-            [routerLink]="'/admin/sedes'"
-            routerLinkActive="bg-primary text-black border-round"
-            style="text-decoration: none; color: white;"
-          >
-            Sedes
           </a>
         </div>
 

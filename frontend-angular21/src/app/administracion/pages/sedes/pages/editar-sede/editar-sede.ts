@@ -8,7 +8,8 @@ import { DividerModule } from 'primeng/divider';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { ConfirmationService } from 'primeng/api';
+import { ConfirmationService, MessageService } from 'primeng/api';
+import { ToastModule } from 'primeng/toast';
 
 @Component({
   selector: 'app-editar-sede',
@@ -22,8 +23,9 @@ import { ConfirmationService } from 'primeng/api';
     InputTextModule,
     InputNumberModule,
     ConfirmDialogModule,
+    ToastModule,
   ],
-  providers: [ConfirmationService],
+  providers: [ConfirmationService, MessageService],
   templateUrl: './editar-sede.html',
   styleUrl: './editar-sede.css',
 })
@@ -39,6 +41,7 @@ export class EditarSede {
 
   constructor(
     private confirmationService: ConfirmationService,
+    private messageService: MessageService,
     private router: Router
   ) {}
 
@@ -59,6 +62,14 @@ export class EditarSede {
       accept: () => {
         this.router.navigate(['/admin/sedes']);
       },
+    });
+  }
+
+  updateSede(): void {
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Sede actualizada',
+      detail: `Se actualizo la sede ${this.sede.nombre || this.sede.codigo}.`,
     });
   }
 }
