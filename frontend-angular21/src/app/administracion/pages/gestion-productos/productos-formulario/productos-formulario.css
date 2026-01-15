@@ -31,7 +31,6 @@ label {
 }
 
 
-/* ========== ESTILOS DE CABECERA (Mismo tamaño que productos-detalles) ========== */
 .productos-title-icon {
   width: 40px;
   height: 40px;
@@ -79,7 +78,6 @@ label {
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2) !important;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   .productos-title-icon {
     width: 36px;

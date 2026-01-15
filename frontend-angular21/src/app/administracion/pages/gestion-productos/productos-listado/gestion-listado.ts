@@ -45,12 +45,12 @@ export class GestionListado implements OnInit, OnDestroy, AfterViewInit {
   productosOriginal: Producto[] = [];
   productosFiltrados: Producto[] = [];
   loading = false;
-  vistaLista = true;
+  vistaLista: boolean = true;
 
   productosEliminados: Producto[] = [];
   productosEliminadosFiltrados: Producto[] = [];
   loadingEliminados = false;
-  vistaListaEliminados = true;
+  vistaListaEliminados: boolean= true;
   buscarValueEliminados: string | null = null;
 
   sedeValue: string | null = null;
@@ -515,4 +515,5 @@ export class GestionListado implements OnInit, OnDestroy, AfterViewInit {
   getLastEliminados(): number {
     return Math.min(this.firstEliminados + this.rowsEliminados, this.totalRecordsEliminados);
   }
+  
 }

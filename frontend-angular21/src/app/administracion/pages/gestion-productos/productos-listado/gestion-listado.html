@@ -163,37 +163,34 @@
             </p-select>
           </div>
           
-          <div class="flex gap-3 align-items-end">
+          <div class="flex gap-3 align-items-center">
             <p-toggleButton
               *ngIf="!esVistaEliminados"
               [(ngModel)]="vistaLista"
               name="vistaToggleActivos"
-              onLabel="Lista"
-              offLabel="Tarjetas"
-              onIcon="pi pi-table"
-              offIcon="pi pi-list"
-            >
-            </p-toggleButton>
+              [onLabel]="'Lista'"
+              [offLabel]="'Tarjetas'"
+              [onIcon]="'pi pi-table'"
+              [offIcon]="'pi pi-list'" />
+
             <p-toggleButton
               *ngIf="esVistaEliminados"
               [(ngModel)]="vistaListaEliminados"
               name="vistaToggleEliminados"
-              onLabel="Lista"
-              offLabel="Tarjetas"
-              onIcon="pi pi-table"
-              offIcon="pi pi-list"
-            >
-            </p-toggleButton>
+              [onLabel]="'Lista'"
+              [offLabel]="'Tarjetas'"
+              [onIcon]="'pi pi-table'"
+              [offIcon]="'pi pi-list'" />
+
             <p-button
               icon="pi pi-filter-slash"
               label="Limpiar Filtros"
               severity="danger"
               size="small"
-              (onClick)="limpiarFiltros()"
-              class="h-full flex-1"
-            >
+              (onClick)="limpiarFiltros()">
             </p-button>
           </div>
+
         </div>
       </div>
     </div>
@@ -245,7 +242,7 @@
 
                     <p-button icon="pi pi-pencil" text severity="secondary" styleClass="productos-icon-btn productos-icon-warn" pTooltip="Editar Producto" (onClick)="irEditar(p.id)"></p-button>
 
-                    <p-button icon="pi pi-trash" text severity="secondary" styleClass="productos-icon-btn productos-icon-danger" pTooltip="Eliminar Producto" (onClick)="eliminarProducto(p, $event)"></p-button>
+                    <p-button icon="pi pi-trash" text severity="danger" styleClass="productos-icon-btn productos-icon-danger" pTooltip="Eliminar Producto" (onClick)="eliminarProducto(p, $event)"></p-button>
                   </div>
                 </td>
               </tr>
@@ -302,9 +299,12 @@
               </div>
               <div class="flex-1"></div>
               <div class="flex align-items-center justify-content-center gap-2 pt-2">
+                
                 <p-button icon="pi pi-eye" text severity="secondary" styleClass="productos-icon-btn productos-icon-soft" pTooltip="Ver Detalles" (onClick)="irDetalle(p.id)"></p-button>
+
                 <p-button icon="pi pi-pencil" text severity="secondary" styleClass="productos-icon-btn productos-icon-warn" pTooltip="Editar Producto" (onClick)="irEditar(p.id)"></p-button>
-                <p-button icon="pi pi-trash" text severity="secondary" styleClass="productos-icon-btn productos-icon-danger" pTooltip="Eliminar Producto" (onClick)="eliminarProducto(p, $event)"></p-button>
+
+                <p-button icon="pi pi-trash" text severity="danger" styleClass="productos-icon-btn productos-icon-danger" pTooltip="Eliminar Producto" (onClick)="eliminarProducto(p, $event)"></p-button>
               </div>
             </div>
           </div>
@@ -337,6 +337,7 @@
           </p>
           <div class="flex gap-4 flex-wrap justify-content-center">
             <p-button label="Limpiar Filtros" icon="pi pi-filter-slash" severity="warn" class="w-14rem p-button-outlined" (click)="limpiarFiltros()"></p-button>
+
             <p-button label="Agregar Primer Producto" icon="pi pi-plus" severity="success" size="large" class="w-14rem" (click)="irCrear()"></p-button>
           </div>
         </div>
