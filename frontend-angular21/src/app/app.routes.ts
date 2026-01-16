@@ -16,10 +16,18 @@ export const routes: Routes = [
       {   path: 'gestion-productos',
           loadComponent: () => import('./administracion/pages/gestion-productos/productos-listado/gestion-listado').then(m => m.GestionListado),
           children: [
-            { path: '', redirectTo: '', pathMatch: 'full' },
-            { path: 'ver-detalle-producto/:id', loadComponent: () => import('./administracion/pages/gestion-productos/productos-detalles/productos-detalles').then(m => m.ProductosDetalles) },
-            { path: 'crear-producto', loadComponent: () => import('./administracion/pages/gestion-productos/productos-formulario/productos-formulario').then(m => m.ProductosFormulario) },
-            { path: 'editar-producto/:id', loadComponent: () => import('./administracion/pages/gestion-productos/productos-formulario/productos-formulario').then(m => m.ProductosFormulario) }
+            { 
+              path: '', redirectTo: '', pathMatch: 'full' 
+            },
+            { 
+              path: 'ver-detalle-producto/:id', loadComponent: () => import('./administracion/pages/gestion-productos/productos-detalles/productos-detalles').then(m => m.ProductosDetalles) 
+            },
+            { 
+              path: 'crear-producto', loadComponent: () => import('./administracion/pages/gestion-productos/productos-formulario/productos-formulario').then(m => m.ProductosFormulario) 
+            },
+            { 
+              path: 'editar-producto/:id', loadComponent: () => import('./administracion/pages/gestion-productos/productos-formulario/productos-formulario').then(m => m.ProductosFormulario) 
+            }
       ]},
       {
         path: 'sedes',
@@ -70,11 +78,38 @@ export const routes: Routes = [
     path: 'ventas',
     component: Main,
     children: [
-      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-      { path: 'administracion', loadComponent: () => import('./administracion/pages/administracion/administracion').then(m => m.Administracion) },
-      { path: 'almacen', loadComponent: () => import('./almacen/pages/almacen/almacen').then(m => m.Almacen) },
-      { path: 'ventas', loadComponent: () => import('./ventas/pages/ventas/ventas').then(m => m.Ventas) },
-      { path: 'cliente', loadComponent: () => import('./ventas/pages/clientes/clientes').then(m => m.Clientes) },
+      { 
+        path: '', 
+        redirectTo: 'generar-venta', 
+        pathMatch: 'full' 
+      },
+      { 
+        path: 'generar-venta',
+        loadComponent: () => import('./ventas/pages/generar-venta/ventas/ventas').then(m => m.Ventas),
+        children: [
+          { 
+            path: '', // Ruta vacía muestra la pantalla principal
+            pathMatch: 'full',
+            children: [] // Importante para que se muestre el contenido del padre
+          },
+          { 
+            path: 'listar', 
+            loadComponent: () => import('./ventas/pages/generar-venta/lista-ventas/lista-ventas').then(m => m.ListaVentas) 
+          },
+          { 
+            path: 'crear',
+            loadComponent: () => import('./ventas/pages/generar-venta/crear-venta/crear-venta').then(m => m.CrearVenta) 
+          },
+          { 
+            path: 'detalle/:id', 
+            loadComponent: () => import('./ventas/pages/generar-venta/detalles-venta/detalles-venta').then(m => m.DetallesVenta) 
+          },
+          { 
+            path: 'buscar-cliente', 
+            loadComponent: () => import('./ventas/pages/generar-venta/buscar-cliente/buscar-cliente').then(m => m.BuscarCliente) 
+          }
+        ]
+      }
     ]
   }
 ];

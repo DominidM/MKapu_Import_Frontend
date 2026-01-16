@@ -48,7 +48,7 @@ export class Login {
       setTimeout(() => {
         if (role === 'admin') this.router.navigate(['/admin/dashboard']);
         if (role === 'almacen') this.router.navigate(['/almacen/dashboard']);
-        if (role === 'ventas') this.router.navigate(['/ventas/dashboard']);
+        if (role === 'ventas') this.router.navigate(['/ventas/generar-venta']);
       }, 1000);
     }
     else
