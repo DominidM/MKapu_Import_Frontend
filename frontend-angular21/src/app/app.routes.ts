@@ -38,7 +38,23 @@ export const routes: Routes = [
           }
         ]
       },
-
+      {
+        path: 'clientes',
+        children: [
+          {
+            path: '',
+            loadComponent: () => import('./administracion/pages/clientes/pages/clientes/clientes').then(m => m.Clientes)
+          },
+          {
+            path: 'agregar-cliente',
+            loadComponent: () => import('./administracion/pages/clientes/pages/agregar-cliente/agregar-cliente').then(m => m.AgregarCliente)
+          },
+          {
+            path: 'editar-cliente',
+            loadComponent: () => import('./administracion/pages/clientes/pages/editar-cliente/editar-cliente').then(m => m.EditarCliente)
+          }
+        ]
+      },
     ]
   },
 
@@ -62,3 +78,4 @@ export const routes: Routes = [
     ]
   }
 ];
+ 
