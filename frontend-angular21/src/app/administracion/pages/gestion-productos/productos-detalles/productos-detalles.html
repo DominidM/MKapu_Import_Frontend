@@ -188,27 +188,27 @@
         <!-- RESUMEN ESTADÍSTICO -->
         <div class="grid mb-4">
           <div class="col-12 md:col-6 lg:col-3">
-            <div class="p-3 bg-blue-50 border-round-lg text-center">
-              <label class="block text-xs font-bold text-blue-700 mb-2 uppercase">Precio Promedio Venta</label>
-              <span class="text-2xl font-black text-blue-600">S/ {{ comparativa.precioPromedioVenta | number : '1.2-2' }}</span>
+            <div class="p-3 estadistica-box estadistica-promedio border-round-lg text-center">
+              <label class="block text-xs font-bold mb-2 uppercase estadistica-label">Precio Promedio Venta</label>
+              <span class="text-2xl font-black estadistica-valor">S/ {{ comparativa.precioPromedioVenta | number : '1.2-2' }}</span>
             </div>
           </div>
           <div class="col-12 md:col-6 lg:col-3">
-            <div class="p-3 bg-green-50 border-round-lg text-center">
-              <label class="block text-xs font-bold text-green-700 mb-2 uppercase">Precio Mínimo Venta</label>
-              <span class="text-2xl font-black text-green-600">S/ {{ comparativa.precioMinimoVenta | number : '1.2-2' }}</span>
+            <div class="p-3 estadistica-box estadistica-minimo border-round-lg text-center">
+              <label class="block text-xs font-bold mb-2 uppercase estadistica-label">Precio Mínimo Venta</label>
+              <span class="text-2xl font-black estadistica-valor">S/ {{ comparativa.precioMinimoVenta | number : '1.2-2' }}</span>
             </div>
           </div>
           <div class="col-12 md:col-6 lg:col-3">
-            <div class="p-3 bg-red-50 border-round-lg text-center">
-              <label class="block text-xs font-bold text-red-700 mb-2 uppercase">Precio Máximo Venta</label>
-              <span class="text-2xl font-black text-red-600">S/ {{ comparativa.precioMaximoVenta | number : '1.2-2' }}</span>
+            <div class="p-3 estadistica-box estadistica-maximo border-round-lg text-center">
+              <label class="block text-xs font-bold mb-2 uppercase estadistica-label">Precio Máximo Venta</label>
+              <span class="text-2xl font-black estadistica-valor">S/ {{ comparativa.precioMaximoVenta | number : '1.2-2' }}</span>
             </div>
           </div>
           <div class="col-12 md:col-6 lg:col-3">
-            <div class="p-3 bg-purple-50 border-round-lg text-center">
-              <label class="block text-xs font-bold text-purple-700 mb-2 uppercase">Diferencia</label>
-              <span class="text-2xl font-black text-purple-600">S/ {{ (comparativa.precioMaximoVenta - comparativa.precioMinimoVenta) | number : '1.2-2' }}</span>
+            <div class="p-3 estadistica-box estadistica-diferencia border-round-lg text-center">
+              <label class="block text-xs font-bold mb-2 uppercase estadistica-label">Diferencia</label>
+              <span class="text-2xl font-black estadistica-valor">S/ {{ (comparativa.precioMaximoVenta - comparativa.precioMinimoVenta) | number : '1.2-2' }}</span>
             </div>
           </div>
         </div>
@@ -216,11 +216,11 @@
         <!-- CARDS DE CADA SEDE -->
         <div class="grid">
           <div class="col-12 md:col-6 lg:col-4" *ngFor="let variante of comparativa.variantes">
-            <div class="surface-card border-2 border-round-xl p-4 h-full hover:shadow-4 transition-duration-300"
+            <div class="comparativa-card border-2 border-round-xl p-4 h-full hover:shadow-4 transition-duration-300"
                  [ngClass]="{
-                   'border-green-300 bg-green-50': variante.sede === comparativa.sedeMasBarata,
-                   'border-red-300 bg-red-50': variante.sede === comparativa.sedeMasCara,
-                   'border-300': variante.sede !== comparativa.sedeMasBarata && variante.sede !== comparativa.sedeMasCara
+                   'comparativa-mas-barato': variante.sede === comparativa.sedeMasBarata,
+                   'comparativa-mas-caro': variante.sede === comparativa.sedeMasCara,
+                   'comparativa-neutral': variante.sede !== comparativa.sedeMasBarata && variante.sede !== comparativa.sedeMasCara
                  }">
               
               <!-- ENCABEZADO SEDE -->
@@ -247,65 +247,49 @@
 
               <!-- PRECIOS -->
               <div class="flex flex-column gap-3 mb-4">
-                <div class="flex justify-content-between align-items-center p-2 surface-100 border-round">
+                <div class="flex justify-content-between align-items-center p-2 comparativa-precio-row border-round">
                   <span class="text-sm font-semibold text-600">Precio Compra:</span>
                   <span class="text-lg font-black text-red-600">S/ {{ variante.precioCompra | number : '1.2-2' }}</span>
                 </div>
-                <div class="flex justify-content-between align-items-center p-2 surface-100 border-round">
+                <div class="flex justify-content-between align-items-center p-2 comparativa-precio-row border-round">
                   <span class="text-sm font-semibold text-600">Precio Venta:</span>
                   <span class="text-lg font-black text-green-600">S/ {{ variante.precioVenta | number : '1.2-2' }}</span>
                 </div>
-                <div class="flex justify-content-between align-items-center p-2 surface-100 border-round">
+                <div class="flex justify-content-between align-items-center p-2 comparativa-precio-row border-round">
                   <span class="text-sm font-semibold text-600">Precio Unidad:</span>
                   <span class="text-lg font-black text-blue-600">S/ {{ variante.precioUnidad | number : '1.2-2' }}</span>
                 </div>
-                <div class="flex justify-content-between align-items-center p-2 surface-100 border-round">
+                <div class="flex justify-content-between align-items-center p-2 comparativa-precio-row border-round">
                   <span class="text-sm font-semibold text-600">Precio Caja:</span>
                   <span class="text-lg font-black text-indigo-600">S/ {{ variante.precioCaja | number : '1.2-2' }}</span>
                 </div>
-                <div class="flex justify-content-between align-items-center p-2 surface-100 border-round">
+                <div class="flex justify-content-between align-items-center p-2 comparativa-precio-row border-round">
                   <span class="text-sm font-semibold text-600">Precio Mayorista:</span>
                   <span class="text-lg font-black text-orange-600">S/ {{ variante.precioMayorista | number : '1.2-2' }}</span>
                 </div>
               </div>
 
               <!-- DIFERENCIA VS PROMEDIO -->
-              <div class="p-3 border-round-lg mb-3"
+              <div class="p-3 border-round-lg mb-3 comparativa-diferencia-box"
                    [ngClass]="{
-                     'bg-green-100': variante.diferenciaPrecioVenta! < 0,
-                     'bg-red-100': variante.diferenciaPrecioVenta! > 0,
-                     'bg-gray-100': variante.diferenciaPrecioVenta === 0
+                     'comparativa-diferencia-negativa': variante.diferenciaPrecioVenta! < 0,
+                     'comparativa-diferencia-positiva': variante.diferenciaPrecioVenta! > 0,
+                     'comparativa-diferencia-neutral': variante.diferenciaPrecioVenta === 0
                    }">
                 <div class="flex align-items-center justify-content-between">
-                  <span class="text-xs font-bold uppercase"
-                        [ngClass]="{
-                          'text-green-700': variante.diferenciaPrecioVenta! < 0,
-                          'text-red-700': variante.diferenciaPrecioVenta! > 0,
-                          'text-gray-700': variante.diferenciaPrecioVenta === 0
-                        }">
+                  <span class="text-xs font-bold uppercase comparativa-diferencia-label">
                     Vs. Promedio:
                   </span>
                   <div class="flex align-items-center gap-2">
-                    <i [class]="'pi ' + getIconoPorDiferencia(variante.diferenciaPrecioVenta!)"
-                       [ngClass]="{
-                         'text-green-600': variante.diferenciaPrecioVenta! < 0,
-                         'text-red-600': variante.diferenciaPrecioVenta! > 0,
-                         'text-gray-600': variante.diferenciaPrecioVenta === 0
-                       }">
-                    </i>
-                    <span class="font-black text-lg"
-                          [ngClass]="{
-                            'text-green-700': variante.diferenciaPrecioVenta! < 0,
-                            'text-red-700': variante.diferenciaPrecioVenta! > 0,
-                            'text-gray-700': variante.diferenciaPrecioVenta === 0
-                          }">
+                    <i [class]="'pi ' + getIconoPorDiferencia(variante.diferenciaPrecioVenta!)" class="comparativa-diferencia-icono"></i>
+                    <span class="font-black text-lg comparativa-diferencia-valor">
                       {{ variante.porcentajeDiferencia! >= 0 ? '+' : '' }}{{ variante.porcentajeDiferencia! | number : '1.1-1' }}%
                     </span>
                   </div>
                 </div>
               </div>
 
-              <!-- BOTÓN EDITAR VARIANTE -->
+              <!-- BOTONES -->
               <div class="flex justify-content-end gap-2">
                 <p-button 
                   *ngIf="!esProductoEliminado"
