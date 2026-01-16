@@ -19,21 +19,28 @@
 
   <p-card>
     <div class="flex flex-column lg:flex-row lg:align-items-center lg:justify-content-between gap-3">
-      <div class="sedes-search flex align-items-center gap-2 flex-1 shadow-1"
-        style="background: var(--surface-card); border-color: var(--surface-border);">
-        <i class="pi pi-search text-500"></i>
-        <input pInputText type="text" class="sedes-search-input" placeholder="Buscar sede..."
-          style="background: transparent; color: var(--text-color);" [(ngModel)]="searchTerm" />
-        <button class="sedes-clear" type="button" aria-label="Limpiar busqueda">
-          <i class="pi pi-times"></i>
-        </button>
+      <div class="sedes-search-container flex-1">
+        <span class="sedes-search-label">Buscar Sede</span>
+        <p-autoComplete class="sedes-search-input" [(ngModel)]="searchTerm" [suggestions]="sedeSuggestions"
+          field="nombre" (completeMethod)="onSearch($event)" (ngModelChange)="onSearchChange($event)"
+          (onSelect)="onSelectSede($event)"
+          placeholder="Escribe codigo, nombre o ciudad..." style="background: transparent; color: var(--text-color);"
+          [inputStyle]="{ width: '100%', background: 'transparent', color: 'var(--text-color)' }">
+          <ng-template let-item pTemplate="item">
+            <div class="flex flex-column gap-1">
+              <span class="font-medium">{{ item.nombre }}</span>
+              <small class="text-500">{{ item.codigo }}</small>
+            </div>
+          </ng-template>
+        </p-autoComplete>
       </div>
-      <div class="flex align-items-center gap-2">
+      <div class="flex align-items-center gap-2 sedes-filter-actions">
         <p-button label="Limpiar Filtros" icon="pi pi-filter-slash" severity="danger"
-          styleClass="sedes-pill sedes-pill-danger"></p-button>
+          styleClass="sedes-pill sedes-pill-danger" (click)="clearSearch()"></p-button>
       </div>
     </div>
   </p-card>
+  <p-toast position="top-right" />
 
   <p-card>
     <div class="flex align-items-center justify-content-between mb-3">
@@ -42,12 +49,12 @@
           <i class="pi pi-user"></i>
         </span>
         <span class="text-sm font-semibold text-700">SEDES INACTIVAS</span>
-        <p-tag [value]="'[' + sedes.length + '] Sedes'" severity="danger"></p-tag>
+        <p-tag [value]="'[' + filteredSedes.length + '] Sedes'" severity="danger"></p-tag>
       </div>
       <p-button icon="pi pi-id-card" text severity="secondary" styleClass="sedes-icon-btn"></p-button>
     </div>
 
-    <p-table [value]="sedes" styleClass="sedes-table" filterDisplay="row" [paginator]="true" [rows]="10"
+    <p-table [value]="filteredSedes" styleClass="sedes-table" [paginator]="true" [rows]="10"
       [rowsPerPageOptions]="[10, 25, 50]" [tableStyle]="{ 'min-width': '60rem' }">
       <ng-template pTemplate="header">
         <tr>
@@ -57,34 +64,6 @@
           <th>TELEFONO</th>
           <th>DIRECCION</th>
           <th>ACCIONES</th>
-        </tr>
-        <tr>
-          <th>
-            <p-columnFilter type="text" field="codigo" placeholder="Buscar" ariaLabel="Filtrar Codigo">
-            </p-columnFilter>
-          </th>
-          <th>
-            <p-columnFilter type="text" field="nombre" placeholder="Buscar" ariaLabel="Filtrar Nombre">
-            </p-columnFilter>
-          </th>
-          <th>
-            <p-columnFilter type="text" field="ciudad" placeholder="Buscar" ariaLabel="Filtrar Ciudad">
-            </p-columnFilter>
-          </th>
-          <th>
-            <p-columnFilter field="telefono" type="numeric" matchMode="equals" [showMenu]="false"
-              ariaLabel="Filtrar Teléfono">
-              <ng-template #filter let-value let-filter="filterCallback">
-                <p-inputnumber class="w-full" [ngModel]="value" inputId="telefono" placeholder="Ingrese datos"
-                  [useGrouping]="false" [maxlength]="9" />
-              </ng-template>
-            </p-columnFilter>
-          </th>
-          <th>
-            <p-columnFilter type="text" field="direccion" placeholder="Buscar" ariaLabel="Filtrar Direccion">
-            </p-columnFilter>
-          </th>
-          <th></th>
         </tr>
       </ng-template>
       <ng-template pTemplate="body" let-sede>
@@ -117,6 +96,4 @@
     </p-table>
     <p-confirmdialog />
   </p-card>
-
-
 </div>

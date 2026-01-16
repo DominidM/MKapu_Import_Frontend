@@ -6,7 +6,7 @@
           <i class="pi pi-list"></i>
         </span>
         <div>
-          <p class="sedes-kicker">ADMINISTRADOR - ADMINISTRACION - SEDE INACTIVAS</p>
+          <p class="sedes-kicker">ADMINISTRADOR - ADMINISTRACION - CREAR SEDE</p>
           <h2 class="sedes-title">GESTION DE SEDES</h2>
         </div>
       </div>
@@ -108,8 +108,10 @@
         label="Registrar Sede"
         icon="pi pi-check"
         styleClass="sede-btn-primary"
+        (click)="saveSede()"
       ></p-button>
     </div>
   </p-card>
+  <p-toast position="top-right" />
   <p-confirmdialog />
 </div>

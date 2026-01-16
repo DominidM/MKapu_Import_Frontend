@@ -11,7 +11,9 @@ import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { ConfirmationService } from 'primeng/api';
+import { ConfirmationService, MessageService } from 'primeng/api';
+import { AutoCompleteModule } from 'primeng/autocomplete';
+import { ToastModule } from 'primeng/toast';
 
 @Component({
   selector: 'app-sedes',
@@ -27,14 +29,14 @@ import { ConfirmationService } from 'primeng/api';
     RouterModule,
     InputNumberModule,
     ConfirmDialogModule,
+    AutoCompleteModule,
+    ToastModule,
   ],
-  providers: [ConfirmationService],
+  providers: [ConfirmationService, MessageService],
   templateUrl: './sedes.html',
   styleUrl: './sedes.css',
 })
 export class Sedes {
-  searchTerm = '';
-
   sedes = [
     {
       codigo: 'SJL-FL15',
@@ -65,8 +67,33 @@ export class Sedes {
       direccion: 'Av. Metropolitana 220',
     },
   ];
+  filteredSedes = [...this.sedes];
+  sedeSuggestions = [...this.sedes];
+  searchTerm = '';
 
-  constructor(private confirmationService: ConfirmationService) {}
+  constructor(
+    private confirmationService: ConfirmationService,
+    private messageService: MessageService
+  ) {}
+
+  onSearch(event: { query: string }): void {
+    this.updateFilteredSedes(event.query);
+  }
+
+  onSearchChange(term: string | { nombre?: string } | null): void {
+    this.updateFilteredSedes(this.getSearchValue(term));
+  }
+
+  onSelectSede(event: { value?: { nombre?: string } } | null): void {
+    const value = this.getSearchValue(event?.value ?? this.searchTerm);
+    this.searchTerm = value;
+    this.updateFilteredSedes(value);
+  }
+
+  clearSearch(): void {
+    this.searchTerm = '';
+    this.updateFilteredSedes('');
+  }
 
   confirmDelete(sede: { codigo: string; nombre: string }): void {
     this.confirmationService.confirm({
@@ -84,7 +111,42 @@ export class Sedes {
       },
       accept: () => {
         this.sedes = this.sedes.filter(item => item.codigo !== sede.codigo);
+        this.updateFilteredSedes(this.searchTerm);
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Sede eliminada',
+          detail: `Se elimino la sede ${sede.nombre}.`,
+        });
       },
     });
+  }
+
+  private updateFilteredSedes(term: string): void {
+    const value = term?.trim().toLowerCase();
+
+    if (!value) {
+      this.filteredSedes = [...this.sedes];
+      this.sedeSuggestions = [...this.sedes];
+      return;
+    }
+
+    this.filteredSedes = this.sedes.filter(sede =>
+      [sede.codigo, sede.nombre, sede.ciudad].some(field =>
+        field.toLowerCase().includes(value)
+      )
+    );
+    this.sedeSuggestions = [...this.filteredSedes];
+  }
+
+  private getSearchValue(term: string | { nombre?: string } | null): string {
+    if (!term) {
+      return '';
+    }
+
+    if (typeof term === 'string') {
+      return term;
+    }
+
+    return term.nombre ?? '';
   }
 }
