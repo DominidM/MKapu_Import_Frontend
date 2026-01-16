@@ -336,7 +336,17 @@
             No hay productos activos en esta sede <strong>"{{ sedeValue }}"</strong> con los filtros aplicados
           </p>
           <div class="flex gap-4 flex-wrap justify-content-center">
-            <p-button label="Limpiar Filtros" icon="pi pi-filter-slash" severity="warn" class="w-14rem p-button-outlined" (click)="limpiarFiltros()"></p-button>
+
+            <p-button
+              icon="pi pi-filter-slash"
+              label="Limpiar Filtros"
+              severity="danger"
+              styleClass="productos-pill"
+              size= "large"
+              [style]="{'padding': '1.25rem 2rem'}"
+              (onClick)="limpiarFiltros()">
+            </p-button>
+
 
             <p-button label="Agregar Primer Producto" icon="pi pi-plus" severity="success" size="large" class="w-14rem" (click)="irCrear()"></p-button>
           </div>

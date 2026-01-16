@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy, ChangeDetectorRef, AfterViewInit } from '
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute, NavigationEnd } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { Subject, filter } from 'rxjs';
+import { Subject, filter, takeUntil } from 'rxjs';
 
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
@@ -95,12 +95,32 @@ export class GestionListado implements OnInit, OnDestroy, AfterViewInit {
     this.actualizarCabecera();
     
     this.router.events
-      .pipe(filter(event => event instanceof NavigationEnd))
-      .subscribe(() => {
+      .pipe(
+        filter(event => event instanceof NavigationEnd),
+        takeUntil(this.destroy$)
+      )
+      .subscribe((event: NavigationEnd) => {
         this.actualizarCabecera();
+        
+        if (event.url === '/admin/gestion-productos' || 
+            event.url.startsWith('/admin/gestion-productos?')) {
+          
+          this.cargarProductos();
+          
+          if (this.sedeValue) {
+            if (this.esVistaEliminados) {
+              this.cargarProductosEliminados();
+            } else {
+              this.productosOriginal = this.productosService.getProductos(this.sedeValue, 'Activo');
+              this.aplicarTodosLosFiltros();
+            }
+          }
+        }
+        
         this.cdr.detectChanges();
       });
   }
+
 
   ngAfterViewInit() {
     this.cdr.detectChanges();
