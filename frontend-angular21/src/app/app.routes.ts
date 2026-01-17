@@ -85,7 +85,7 @@ export const routes: Routes = [
       },
       { 
         path: 'generar-venta',
-        loadComponent: () => import('./ventas/pages/generar-venta/ventas/ventas').then(m => m.Ventas),
+        loadComponent: () => import('./ventas/pages/ventas').then(m => m.Ventas),
         children: [
           { 
             path: '', // Ruta vacía muestra la pantalla principal

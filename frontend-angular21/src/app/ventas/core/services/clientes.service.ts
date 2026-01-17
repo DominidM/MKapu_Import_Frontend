@@ -10,6 +10,7 @@ export interface Cliente {
   num_doc: string;
   razon_social: string | null;
   nombres: string | null;
+  apellidos: string | null;
   direccion: string | null;
   email: string | null;
   telefono: string | null;
@@ -34,7 +35,8 @@ export class ClientesService {
         tipo_doc: 'DNI',
         num_doc: '12345678',
         razon_social: null,
-        nombres: 'Juan Pérez García',
+        nombres: 'Juan',
+        apellidos: 'Pérez García',
         direccion: 'Av. Lima 123, San Isidro',
         email: 'juan.perez@email.com',
         telefono: '987654321',
@@ -46,6 +48,7 @@ export class ClientesService {
         num_doc: '20123456789',
         razon_social: 'Empresa Ejemplo SAC',
         nombres: null,
+        apellidos: null,
         direccion: 'Av. Arequipa 456, Miraflores',
         email: 'ventas@empresa.com',
         telefono: '987654322',
@@ -56,7 +59,8 @@ export class ClientesService {
         tipo_doc: 'DNI',
         num_doc: '87654321',
         razon_social: null,
-        nombres: 'María López Sánchez',
+        nombres: 'María',
+        apellidos: 'López Sánchez',
         direccion: 'Jr. Cusco 789, Lima',
         email: 'maria.lopez@email.com',
         telefono: '998877665',
@@ -68,6 +72,7 @@ export class ClientesService {
         num_doc: '20987654321',
         razon_social: 'Distribuidora Norte EIRL',
         nombres: null,
+        apellidos: null,
         direccion: 'Av. Industrial 234, Los Olivos',
         email: 'contacto@norte.com',
         telefono: '987123456',
@@ -78,7 +83,8 @@ export class ClientesService {
         tipo_doc: 'DNI',
         num_doc: '45678912',
         razon_social: null,
-        nombres: 'Carlos Ramírez Torres',
+        nombres: 'Carlos',
+        apellidos: 'Ramírez Torres',
         direccion: 'Calle Los Pinos 567, Surco',
         email: 'carlos.ramirez@email.com',
         telefono: '965432178',
