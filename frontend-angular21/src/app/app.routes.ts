@@ -55,6 +55,19 @@ export const routes: Routes = [
           }
         ]
       },
+      {
+        path: 'ingresos-almacen',
+        children: [
+          {
+            path: '',
+            loadComponent: () => import('./administracion/pages/ingresos-almacen/pages/ingresos-almacen/ingresos-almacen').then(m => m.IngresosAlmacen)
+          },
+          {
+            path: 'ingresos-agregar',
+            loadComponent: () => import('./administracion/pages/ingresos-almacen/pages/ingresos-agregar/ingresos-agregar').then(m => m.IngresosAgregar)
+          },
+        ]
+      },
     ]
   },
 
