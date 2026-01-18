@@ -1,0 +1,284 @@
+:host ::ng-deep {
+  .surface-50 {
+    border-radius: 1rem !important;
+  }
+  
+  p-paginator .p-paginator-pages .p-paginator-page {
+    margin: 0 0.125rem;
+  }
+
+  .h-header-fijo {
+    min-height: 5rem !important;
+    max-height: 5rem !important;
+  }
+  
+  .truncate {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .autocomplete-productos .p-autocomplete-input {
+    font-weight: 500;
+    color: #1e293b;
+  }
+
+  .p-autocomplete-panel {
+    min-width: 600px !important;
+    max-width: 750px !important;
+    margin-top: 12px !important;
+  }
+
+  .autocomplete-item-custom {
+    padding: 1.75rem 2rem !important;
+    border-radius: 10px;
+    transition: all 0.2s ease;
+    background-color: transparent;
+    min-height: 85px;
+  }
+
+  .autocomplete-item-custom:hover {
+    background-color: #FFF5E6 !important;
+    transform: translateX(6px);
+  }
+
+  .autocomplete-item-custom .font-bold {
+    font-size: 1.1rem !important;
+    color: #0f172a;
+    margin-bottom: 0.75rem !important;
+    line-height: 1.4;
+  }
+
+  .autocomplete-item-custom small {
+    font-size: 0.9rem !important;
+    color: #64748b;
+    display: block;
+    margin-top: 0.5rem;
+    line-height: 1.5;
+  }
+
+  .p-autocomplete-panel .p-autocomplete-items .p-autocomplete-item {
+    padding: 0 !important;
+    border-bottom: 1px solid #f1f5f9;
+    margin-bottom: 4px;
+  }
+
+  .p-autocomplete-panel .p-autocomplete-items .p-autocomplete-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+  }
+
+  .p-autocomplete-panel .p-autocomplete-items .p-autocomplete-item.p-highlight {
+    background-color: #FFE0B3 !important;
+    color: #0f172a !important;
+  }
+
+}
+
+.productos-header-card .p-card-body {
+  padding: 1rem 1.25rem;
+}
+
+.productos-title-icon {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #f5c34d;
+  color: #1f2937;
+  font-size: 18px;
+}
+
+.productos-kicker {
+  margin: 0;
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.productos-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.productos-pill {
+  border-radius: 9999px !important;
+  padding: 1.25rem 2.5rem !important;
+  font-size: 1.1rem !important;
+  font-weight: 600;
+  min-height: 56px !important;
+  box-shadow: 0 6px 12px #00000026 !important;
+  transition: all 0.2s;
+}
+
+.productos-pill-danger-outlined {
+  background: transparent !important;
+  border: 3px solid #ef4444 !important;
+  color: #ef4444 !important;
+}
+
+.productos-pill-danger-outlined:hover {
+  background: #ef4444 !important;
+  color: #ffffff !important;
+}
+
+.productos-pill-warning {
+  background: #F6AF33 !important;
+  border: 2px solid #e8a424 !important;
+  color: #1f2937 !important;
+}
+
+.productos-pill-secondary {
+  background: #64748b !important;
+  border: 2px solid #475569 !important;
+  color: #ffffff !important;
+}
+
+.productos-pill:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px #00000033 !important;
+}
+
+.productos-table-nativa .p-datatable-thead > tr > th {
+  background: var(--surface-50) !important;
+  border-bottom: 2px solid var(--surface-border) !important;
+  color: var(--text-color) !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  font-size: 0.75rem !important;
+  padding: 1rem 0.75rem !important;
+}
+
+.productos-table-nativa .p-datatable-tbody > tr > td {
+  border-bottom: 1px solid var(--surface-border-light) !important;
+  padding: 1rem 0.75rem !important;
+}
+
+:host ::ng-deep .productos-table-hover .p-datatable-tbody > tr:hover {
+  background-color: #F6AF3326 !important;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+
+:host ::ng-deep .productos-table-hover .p-datatable-tbody > tr:hover > td {
+  background-color: transparent !important;
+}
+
+.productos-icon-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.productos-icon-soft {
+  background: #ecfdf3;
+  color: #15803d;
+}
+
+.productos-icon-warn {
+  background: #fff7ed;
+  color: #b45309;
+}
+
+.productos-icon-danger {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.app-dark :host ::ng-deep .bg-green-50 {
+  background-color: #1a3d2b !important;
+}
+
+.app-dark :host ::ng-deep .text-green-600 {
+  color: #4ade80 !important;
+}
+
+.app-dark :host ::ng-deep .text-green-500 {
+  color: #10b981 !important;
+}
+
+:host-context(.app-dark) {
+  .productos-title-icon {
+    background: #e8a424 !important;
+    color: #1f2937 !important;
+  }
+
+  .productos-kicker {
+    color: #94a3b8 !important;
+  }
+
+  .productos-title {
+    color: #f1f5f9 !important;
+  }
+
+  .productos-pill-warning {
+    background: #e8a424 !important;
+    border: 2px solid #d69520 !important;
+    color: #1f2937 !important;
+  }
+
+  .productos-icon-soft {
+    background: #1a3d2b !important;
+    color: #4ade80 !important;
+  }
+
+  .productos-icon-warn {
+    background: #2a2218 !important;
+    color: #fbbf24 !important;
+  }
+
+  .productos-icon-danger {
+    background: #3d1f1f !important;
+    color: #f87171 !important;
+  }
+}
+
+:host-context(.app-dark) ::ng-deep {
+  .bg-green-50 {
+    background-color: #1a3d2b !important;
+  }
+  
+  .text-green-600 {
+    color: #4ade80 !important;
+  }
+  
+  .text-green-500 {
+    color: #10b981 !important;
+  }
+
+  .autocomplete-productos .p-autocomplete-input {
+    color: #e2e8f0 !important;
+  }
+
+  .autocomplete-item-custom:hover {
+    background-color: #2a2218 !important;
+  }
+
+  .autocomplete-item-custom .font-bold {
+    color: #f1f5f9 !important;
+  }
+
+  .autocomplete-item-custom small {
+    color: #94a3b8 !important;
+  }
+
+  .p-autocomplete-panel .p-autocomplete-items .p-autocomplete-item {
+    border-bottom: 1px solid #374151 !important;
+  }
+
+  .p-autocomplete-panel .p-autocomplete-items .p-autocomplete-item.p-highlight {
+    background-color: #3d2e1a !important;
+    color: #f1f5f9 !important;
+  }
+
+  .productos-table-hover .p-datatable-tbody > tr:hover {
+    background-color: #3d2e1a !important;
+  }
+}

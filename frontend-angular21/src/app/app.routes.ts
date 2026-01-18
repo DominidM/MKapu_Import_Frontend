@@ -1,6 +1,8 @@
 import { Routes } from '@angular/router';
 import { Login } from './auth/pages/login/login';
 import { Main } from './layout/main/main';
+import { Clientes } from './administracion/pages/clientes/pages/clientes/clientes';
+import { ReporteInventario } from './administracion/pages/reportes/pages/reporte-inventario/reporte-inventario';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -10,16 +12,42 @@ export const routes: Routes = [
     path: 'admin',
     component: Main,
     children: [
+      { path: 'notificaciones', loadComponent: () => import('./administracion/pages/dashboard/dashboard').then(m => m.Dashboard) },
       { path: 'dashboard', loadComponent: () => import('./administracion/pages/dashboard/dashboard').then(m => m.Dashboard) },
       { path: 'usuarios', loadComponent: () => import('./administracion/pages/administracion/administracion').then(m => m.Administracion) },
 
+      {
+        path: 'transferencia',
+        children: [
+          {
+            path: '',
+            loadComponent: () => import('./administracion/pages/reportes/pages/transferencia/transferencia').then(m => m.Transferencia)
+          },
+          {
+            path: 'reporte-inventario',
+            loadComponent: () => import('./administracion/pages/reportes/pages/reporte-inventario/reporte-inventario').then(m => m.ReporteInventario)
+          },
+          {
+            path: 'editar-sede',
+            loadComponent: () => import('./administracion/pages/sedes/pages/editar-sede/editar-sede').then(m => m.EditarSede)
+          }
+        ]
+        
+      },
+
+      {
+        path: 'reporte-inventario',
+        loadComponent: () => import('./administracion/pages/reportes/pages/reporte-inventario/reporte-inventario').then(m => m.ReporteInventario)
+      },
+
+
       {   path: 'gestion-productos',
-          loadComponent: () => import('./administracion/pages/gestion-productos/gestion-productos').then(m => m.GestionProductos),
+          loadComponent: () => import('./administracion/pages/gestion-productos/productos-listado/gestion-listado').then(m => m.GestionListado),
           children: [
             { path: '', redirectTo: '', pathMatch: 'full' },
-            { path: 'crear-producto', loadComponent: () => import('./administracion/pages/gestion-productos/productos-form/productos-form').then(m => m.ProductosForm) },
-            { path: 'editar-producto/:id', loadComponent: () => import('./administracion/pages/gestion-productos/productos-form/productos-form').then(m => m.ProductosForm) },
-            { path: 'productos-eliminados', loadComponent: () => import('./administracion/pages/gestion-productos/productos-eliminados/productos-eliminados').then(m => m.ProductosEliminados) }
+            { path: 'ver-detalle-producto/:id', loadComponent: () => import('./administracion/pages/gestion-productos/productos-detalles/productos-detalles').then(m => m.ProductosDetalles) },
+            { path: 'crear-producto', loadComponent: () => import('./administracion/pages/gestion-productos/productos-formulario/productos-formulario').then(m => m.ProductosFormulario) },
+            { path: 'editar-producto/:id', loadComponent: () => import('./administracion/pages/gestion-productos/productos-formulario/productos-formulario').then(m => m.ProductosFormulario) }
       ]},
       {
         path: 'sedes',
@@ -38,6 +66,23 @@ export const routes: Routes = [
           }
         ]
       },
+      {
+        path: 'clientes',
+        children: [
+          {
+            path: '',
+            loadComponent: () => import('./administracion/pages/clientes/pages/clientes/clientes').then(m => m.Clientes)
+          },
+          {
+            path: 'agregar-cliente',
+            loadComponent: () => import('./administracion/pages/clientes/pages/agregar-cliente/agregar-cliente').then(m => m.AgregarCliente)
+          },
+          {
+            path: 'editar-cliente',
+            loadComponent: () => import('./administracion/pages/clientes/pages/editar-cliente/editar-cliente').then(m => m.EditarCliente)
+          }
+        ]
+      },
     ]
   },
 
@@ -53,7 +98,11 @@ export const routes: Routes = [
     path: 'ventas',
     component: Main,
     children: [
-      { path: 'dashboard', loadComponent: () => import('./ventas/pages/ventas/ventas').then(m => m.Ventas) }
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+      { path: 'administracion', loadComponent: () => import('./administracion/pages/administracion/administracion').then(m => m.Administracion) },
+      { path: 'almacen', loadComponent: () => import('./almacen/pages/almacen/almacen').then(m => m.Almacen) },
+      { path: 'ventas', loadComponent: () => import('./ventas/pages/ventas/ventas').then(m => m.Ventas) },
+      { path: 'cliente', loadComponent: () => import('./ventas/pages/clientes/clientes').then(m => m.Clientes) },
     ]
   }
 ];

@@ -106,12 +106,44 @@
           <a
             class="flex px-4 py-2 cursor-pointer hover:surface-400"
             routerLinkActive="bg-primary text-black border-round"
+            [routerLink]="'/admin/reporte-inventario'"
             style="text-decoration: none; color: white;"
           >
             Reporte Inventario
           </a>
         </div>
 
+        <div
+          class="flex align-items-center px-4 py-2 gap-2 cursor-pointer hover:surface-400"
+          (click)="toggleMenu('ventas')"
+        >
+          <i class="pi pi-chart-bar"></i>
+          <span class="flex-1">Ventas</span>
+          <i
+            class="pi"
+            [ngClass]="activeMenu === 'ventas' ? 'pi-chevron-down' : 'pi-chevron-right'"
+          ></i>
+        </div>
+
+        <div *ngIf="activeMenu === 'ventas'" class="ml-4">
+          <a
+            class="flex px-4 py-2 cursor-pointer hover:surface-400"
+            routerLinkActive="bg-primary text-black border-round"
+            style="text-decoration: none; color: white;"
+          >
+            Ventas
+          </a>
+        </div>
+        <div *ngIf="activeMenu === 'ventas'" class="ml-4">
+          <a
+            class="flex px-4 py-2 cursor-pointer hover:surface-400"
+            routerLinkActive="bg-primary text-black border-round"
+            [routerLink]="'/ventas/cliente'"
+            style="text-decoration: none; color: white;"
+          >
+            Clientes
+          </a>
+        </div>
         <div
           class="flex align-items-center px-4 py-2 gap-2 cursor-pointer hover:surface-400"
           (click)="toggleMenu('admin')"
@@ -158,6 +190,15 @@
             style="text-decoration: none; color: white;"
           >
             Gestion de Promociones
+          </a>
+          <a
+            class="flex px-4 py-2 cursor-pointer hover:surface-400"
+            [routerLink]="'/admin/clientes'"
+            routerLinkActive="bg-primary text-black border-round"
+            style="text-decoration
+            : none; color: white;"
+          >
+            Clientes
           </a>
         </div>
 
