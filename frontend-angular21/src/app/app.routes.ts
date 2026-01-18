@@ -27,12 +27,8 @@ export const routes: Routes = [
             path: 'reporte-inventario',
             loadComponent: () => import('./administracion/pages/reportes/pages/reporte-inventario/reporte-inventario').then(m => m.ReporteInventario)
           },
-          {
-            path: 'editar-sede',
-            loadComponent: () => import('./administracion/pages/sedes/pages/editar-sede/editar-sede').then(m => m.EditarSede)
-          }
         ]
-        
+
       },
 
       {

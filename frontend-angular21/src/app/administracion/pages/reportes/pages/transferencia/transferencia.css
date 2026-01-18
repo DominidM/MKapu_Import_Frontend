@@ -1,0 +1,120 @@
+:host {
+  display: block;
+}
+
+.transferencia-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.transferencia-header-card .p-card-body {
+  padding: 1rem 1.25rem;
+}
+
+.transferencia-title-icon {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #fde68a;
+  color: #1f2937;
+  font-size: 18px;
+}
+
+.transferencia-kicker {
+  margin: 0;
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.transferencia-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.transferencia-search-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.transferencia-search-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.transferencia-filter-actions {
+  align-self: flex-end;
+}
+
+.transferencia-search-input {
+  flex: 1;
+  border: none;
+  box-shadow: none;
+}
+
+.transferencia-search-input:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.transferencia-icon-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.transferencia-icon-warn {
+  background: #fff7ed;
+  color: #b45309;
+}
+
+.transferencia-section-icon {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #111827;
+  color: #ffffff;
+  font-size: 14px;
+}
+
+.transferencia-pill {
+  border-radius: 999px;
+  padding: 0.35rem 1rem;
+  font-size: 0.75rem;
+}
+
+.transferencia-pill-danger {
+  background: #fee2e2;
+  color: #b91c1c;
+  border-color: #fecaca;
+}
+
+.transferencia-table .p-datatable-thead > tr > th {
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  color: #6b7280;
+  text-transform: uppercase;
+}
+
+.transferencia-table .p-datatable-tbody > tr > td {
+  padding: 0.75rem 1rem;
+  color: #4b5563;
+}
+
+.transferencia-tag {
+  font-size: 0.65rem;
+  font-weight: 600;
+}

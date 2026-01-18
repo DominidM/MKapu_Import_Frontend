@@ -1,1 +1,147 @@
-<p>transferencia works!</p>
+<div class="transferencia-page">
+  <p-card styleClass="transferencia-header-card">
+    <div class="flex align-items-center justify-content-between flex-wrap gap-3">
+      <div class="flex align-items-center gap-3">
+        <span class="transferencia-title-icon">
+          <i class="pi pi-sync"></i>
+        </span>
+        <div>
+          <p class="transferencia-kicker">ADMINISTRADOR - REPORTES - TRANSFERENCIAS</p>
+          <h2 class="transferencia-title">GESTION DE TRANSFERENCIAS</h2>
+        </div>
+      </div>
+      <div class="flex justify-items-end gap-2">
+        <p-button
+          label="Nueva Transferencia"
+          icon="pi pi-plus"
+          styleClass="transferencia-pill"
+          [routerLink]="['/admin/transferencia/reporte-inventario']"
+        ></p-button>
+      </div>
+    </div>
+  </p-card>
+
+  <p-card>
+    <div class="flex flex-column lg:flex-row lg:align-items-center lg:justify-content-between gap-3">
+      <div class="transferencia-search-container flex-1">
+        <span class="transferencia-search-label">Buscar Transferencia</span>
+        <p-autoComplete
+          class="transferencia-search-input"
+          [(ngModel)]="searchTerm"
+          [suggestions]="transferenciaSuggestions"
+          field="producto"
+          (completeMethod)="onSearch($event)"
+          (ngModelChange)="onSearchChange($event)"
+          (onSelect)="onSelectTransferencia($event)"
+          placeholder="Escribe codigo, producto o sede..."
+          style="background: transparent; color: var(--text-color);"
+          [inputStyle]="{ width: '100%', background: 'transparent', color: 'var(--text-color)' }"
+        >
+          <ng-template let-item pTemplate="item">
+            <div class="flex flex-column gap-1">
+              <span class="font-medium">{{ item.producto }}</span>
+              <small class="text-500">{{ item.codigo }}</small>
+            </div>
+          </ng-template>
+        </p-autoComplete>
+      </div>
+      <div class="flex align-items-center gap-2 transferencia-filter-actions">
+        <p-button
+          label="Limpiar Filtros"
+          icon="pi pi-filter-slash"
+          severity="danger"
+          styleClass="transferencia-pill transferencia-pill-danger"
+          (click)="clearSearch()"
+        ></p-button>
+      </div>
+    </div>
+  </p-card>
+
+  <p-toast position="top-right" />
+
+  <p-card>
+    <div class="flex align-items-center justify-content-between mb-3">
+      <div class="flex align-items-center gap-2">
+        <span class="transferencia-section-icon">
+          <i class="pi pi-truck"></i>
+        </span>
+        <span class="text-sm font-semibold text-700">TRANSFERENCIAS REGISTRADAS</span>
+        <p-tag [value]="'[' + filteredTransferencias.length + '] Transferencias'" severity="info"></p-tag>
+      </div>
+      <p-button icon="pi pi-sliders-h" text severity="secondary" styleClass="transferencia-icon-btn"></p-button>
+    </div>
+
+    <p-table
+      [value]="filteredTransferencias"
+      styleClass="transferencia-table"
+      [paginator]="true"
+      [rows]="10"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      [tableStyle]="{ 'min-width': '60rem' }"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>CODIGO</th>
+          <th>PRODUCTO</th>
+          <th>SEDE ORIGEN</th>
+          <th>SEDE DESTINO</th>
+          <th>CANTIDAD</th>
+          <th>ACCIONES</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-transferencia>
+        <tr>
+          <td>{{ transferencia.codigo }}</td>
+          <td>
+            <div class="flex flex-column gap-1">
+              <span class="font-medium">{{ transferencia.producto }}</span>
+              <small class="text-500">{{ transferencia.fecha }}</small>
+            </div>
+          </td>
+          <td>
+            <span class="inline-flex align-items-center gap-2">
+              <i class="pi pi-map-marker text-500"></i>
+              {{ transferencia.origen }}
+            </span>
+          </td>
+          <td>
+            <span class="inline-flex align-items-center gap-2">
+              <i class="pi pi-map-marker text-500"></i>
+              {{ transferencia.destino }}
+            </span>
+          </td>
+          <td>
+            <div class="flex flex-column gap-2">
+              <span class="font-medium">{{ transferencia.cantidad }} uds</span>
+              <p-tag
+                [value]="transferencia.estado"
+                [severity]="getEstadoSeverity(transferencia.estado)"
+                styleClass="transferencia-tag"
+              ></p-tag>
+            </div>
+          </td>
+          <td>
+            <div class="flex align-items-center gap-2">
+              <p-button
+                icon="pi pi-eye"
+                text
+                severity="secondary"
+                styleClass="transferencia-icon-btn transferencia-icon-warn"
+                [routerLink]="['/admin/transferencia/reporte-inventario']"
+                [queryParams]="{ codigo: transferencia.codigo }"
+              ></p-button>
+              <p-button
+                icon="pi pi-trash"
+                text
+                severity="danger"
+                styleClass="transferencia-icon-btn"
+                (click)="confirmDelete(transferencia)"
+              ></p-button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+    <p-confirmdialog />
+  </p-card>
+</div>
