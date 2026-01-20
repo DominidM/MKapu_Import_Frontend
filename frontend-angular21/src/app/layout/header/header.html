@@ -1,9 +1,13 @@
 <div class="card">
     <p-toolbar>
         <ng-template #start>
-            <p-button icon="pi pi-plus" class="mr-2" text severity="secondary" />
-            <p-button icon="pi pi-print" class="mr-2" text severity="secondary" />
-            <p-button icon="pi pi-upload" text severity="secondary" />
+             <p-button
+                icon="pi pi-bars"
+                class="mr-2 menu-button"
+                text
+                severity="secondary"
+                (onClick)="toggleSidebar.emit()"
+            ></p-button>
         </ng-template>
         <ng-template #center>
             <input pInputText type="text" placeholder="Buscar" />

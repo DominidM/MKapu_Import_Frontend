@@ -9,3 +9,7 @@
     margin-top: 20px;
     border-radius: 50%;
 }
+.sidebar-root {
+  background-color: var(--surface-900);
+  color: var(--surface-0);
+}
