@@ -1,7 +1,3 @@
-/* ============================================
-   CABECERA Y TÍTULOS
-   ============================================ */
-
 .ventas-header-card .p-card-body {
   padding: 1rem 1.25rem;
 }
@@ -45,11 +41,6 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-
-/* ============================================
-   BOTONES
-   ============================================ */
-
 :host ::ng-deep .ventas-pill {
   border-radius: 8px !important;
   border: none !important;
@@ -76,11 +67,6 @@
   background: #F6AF33 !important;
   color: #1f2937 !important;
 }
-
-
-/* ============================================
-   ESTADÍSTICAS
-   ============================================ */
 
 .ventas-header-bordered {
   border-radius: 12px !important;
@@ -174,11 +160,6 @@
   letter-spacing: -0.02em;
 }
 
-
-/* ============================================
-   FILTROS - CONTENEDOR
-   ============================================ */
-
 .filtros-container {
   background: #ffffff;
   border-radius: 10px;
@@ -220,11 +201,6 @@
   line-height: 1;
   min-height: 14px;
 }
-
-
-/* ============================================
-   FILTROS - LÍNEA 1: CLIENTE Y FECHAS
-   ============================================ */
 
 .filtros-linea-1 {
   display: flex !important;
@@ -371,11 +347,6 @@
   transform: translateY(-50%) !important;
 }
 
-
-/* ============================================
-   FILTROS - LÍNEA 2: SELECTORES Y BOTÓN
-   ============================================ */
-
 .filtros-linea-2 {
   display: flex;
   gap: 1rem;
@@ -467,11 +438,6 @@
   opacity: 1 !important;
 }
 
-
-/* ============================================
-   TABLA
-   ============================================ */
-
 .seccion-tabla {
   margin-top: 1rem;
 }
@@ -515,11 +481,6 @@
   margin: 0;
   font-size: 1rem;
 }
-
-
-/* ============================================
-   BOTONES DE ACCIONES - TABLA
-   ============================================ */
 
 .ventas-icon-btn {
   width: 36px;
@@ -568,11 +529,6 @@
   opacity: 0.4;
   cursor: not-allowed;
 }
-
-
-/* ============================================
-   PAGINADOR
-   ============================================ */
 
 :host ::ng-deep .p-paginator {
   display: flex !important;
@@ -735,11 +691,6 @@
   cursor: not-allowed !important;
 }
 
-
-/* ============================================
-   DARK MODE
-   ============================================ */
-
 :host-context(.app-dark) .ventas-title {
   color: #ffffff;
 }
@@ -899,11 +850,6 @@
   color: #F6AF33 !important;
 }
 
-
-/* ============================================
-   RESPONSIVE - ESTADÍSTICAS
-   ============================================ */
-
 @media (max-width: 1200px) {
   .seccion-estadisticas {
     grid-template-columns: repeat(2, 1fr);
@@ -937,11 +883,6 @@
     min-width: 100%;
   }
 }
-
-
-/* ============================================
-   RESPONSIVE - MÓVIL
-   ============================================ */
 
 @media (max-width: 768px) {
   .cabecera-pagina {
@@ -1010,11 +951,6 @@
     grid-template-columns: 1fr;
   }
 }
-
-
-/* ============================================
-   RESPONSIVE - PAGINADOR
-   ============================================ */
 
 @media (max-width: 992px) {
   :host ::ng-deep .p-paginator {
