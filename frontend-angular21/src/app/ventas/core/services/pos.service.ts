@@ -1,9 +1,6 @@
-// src/app/ventas/core/services/pos.service.ts
-
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 
-// ✅ INTERFACE SEGÚN TABLA `pago`
 export interface Pago {
   id_pago: number;
   id_comprobante: string;
@@ -66,11 +63,7 @@ export class PosService {
     this.pagosSubject.next(datosIniciales);
   }
 
-  // ====================================
-  // GESTIÓN DE PAGOS
-  // ====================================
 
-  // ✅ REGISTRAR PAGO
   registrarPago(pago: Omit<Pago, 'id_pago'>): Pago {
     const pagos = this.pagosSubject.value;
     const nuevoId = Math.max(...pagos.map(p => p.id_pago), 0) + 1;
@@ -82,48 +75,37 @@ export class PosService {
     };
 
     this.pagosSubject.next([...pagos, nuevoPago]);
-    console.log(`💳 Pago registrado: ${pago.med_pago} - S/. ${pago.monto}`);
+    console.log(`Pago registrado: ${pago.med_pago} - S/. ${pago.monto}`);
     
     return nuevoPago;
   }
 
-  // ✅ OBTENER PAGOS POR COMPROBANTE
   getPagosPorComprobante(idComprobante: string): Pago[] {
     return this.pagosSubject.value.filter(p => p.id_comprobante === idComprobante);
   }
 
-  // ✅ OBTENER TODOS LOS PAGOS
   getPagos(): Pago[] {
     return this.pagosSubject.value;
   }
 
-  // ✅ OBTENER PAGOS POR FECHA
   getPagosPorFecha(fecha: Date): Pago[] {
     return this.pagosSubject.value.filter(p => 
       p.fec_pago.toDateString() === fecha.toDateString()
     );
   }
 
-  // ✅ OBTENER PAGOS POR MEDIO DE PAGO
   getPagosPorMedio(medio: string): Pago[] {
     return this.pagosSubject.value.filter(p => p.med_pago === medio);
   }
 
-  // ====================================
-  // CÁLCULOS DE PAGO
-  // ====================================
-
-  // ✅ CALCULAR VUELTO
   calcularVuelto(montoRecibido: number, total: number): number {
     return Number((montoRecibido - total).toFixed(2));
   }
 
-  // ✅ VALIDAR MONTO SUFICIENTE
   validarMontoSuficiente(montoRecibido: number, total: number): boolean {
     return montoRecibido >= total;
   }
 
-  // ✅ CALCULAR DESGLOSE DE BILLETES (para vuelto)
   calcularDesgloseBilletes(monto: number): { [denominacion: string]: number } {
     const denominaciones = [200, 100, 50, 20, 10, 5, 2, 1, 0.5, 0.2, 0.1, 0.05];
     const desglose: { [key: string]: number } = {};
@@ -140,18 +122,12 @@ export class PosService {
     return desglose;
   }
 
-  // ====================================
-  // VOUCHERS Y OPERACIONES
-  // ====================================
-
-  // ✅ GENERAR NÚMERO DE VOUCHER
   generarNumeroVoucher(): string {
     const timestamp = Date.now();
     const random = Math.floor(Math.random() * 1000);
     return `VOU-${timestamp}-${random}`;
   }
 
-  // ✅ GENERAR VOUCHER COMPLETO
   generarVoucher(pago: Pago): string {
     const voucher = this.generarNumeroVoucher();
     console.log(`📄 Voucher generado: ${voucher}`);
@@ -163,26 +139,18 @@ export class PosService {
     return voucher;
   }
 
-  // ✅ VALIDAR NÚMERO DE OPERACIÓN (tarjeta/transferencia)
   validarNumeroOperacion(numero: string): boolean {
     return numero.length >= 6 && numero.length <= 20;
   }
 
-  // ✅ VALIDAR NÚMERO DE TARJETA (básico - últimos 4 dígitos)
   validarNumeroTarjeta(numero: string): boolean {
     return /^\d{4}$/.test(numero);
   }
 
-  // ====================================
-  // MEDIOS DE PAGO DISPONIBLES
-  // ====================================
-
-  // ✅ OBTENER MEDIOS DE PAGO
   getMediosPago(): string[] {
     return ['EFECTIVO', 'TARJETA', 'YAPE', 'PLIN', 'TRANSFERENCIA'];
   }
 
-  // ✅ OBTENER BANCOS DISPONIBLES
   getBancosDisponibles(): string[] {
     return [
       'BCP',
@@ -197,17 +165,14 @@ export class PosService {
     ];
   }
 
-  // ✅ VALIDAR SI REQUIERE BANCO
   requiereBanco(medioPago: string): boolean {
     return ['TARJETA', 'TRANSFERENCIA'].includes(medioPago);
   }
 
-  // ✅ VALIDAR SI REQUIERE NÚMERO DE OPERACIÓN
   requiereNumeroOperacion(medioPago: string): boolean {
     return ['TARJETA', 'YAPE', 'PLIN', 'TRANSFERENCIA'].includes(medioPago);
   }
 
-  // ✅ OBTENER ICONO POR MEDIO DE PAGO
   getIconoMedioPago(medio: string): string {
     const iconos: { [key: string]: string } = {
       'EFECTIVO': 'pi pi-money-bill',
@@ -219,78 +184,59 @@ export class PosService {
     return iconos[medio] || 'pi pi-wallet';
   }
 
-  // ====================================
-  // GESTIÓN DE CAJA
-  // ====================================
-
-  // ✅ ABRIR CAJA
   abrirCaja(saldoInicial: number): void {
     this.cajaAbierta.next(true);
     this.saldoCaja.next(saldoInicial);
-    console.log(`🔓 Caja abierta con saldo inicial: S/. ${saldoInicial}`);
+    console.log(`Caja abierta con saldo inicial: S/. ${saldoInicial}`);
   }
 
-  // ✅ CERRAR CAJA
   cerrarCaja(): { saldoFinal: number; totalIngresos: number; totalEgresos: number } {
     const saldoFinal = this.saldoCaja.value;
     const totalIngresos = this.calcularTotalIngresos();
     const totalEgresos = this.calcularTotalEgresos();
     
     this.cajaAbierta.next(false);
-    console.log(`🔒 Caja cerrada. Saldo final: S/. ${saldoFinal}`);
+    console.log(`Caja cerrada. Saldo final: S/. ${saldoFinal}`);
     
     return { saldoFinal, totalIngresos, totalEgresos };
   }
 
-  // ✅ VERIFICAR SI CAJA ESTÁ ABIERTA
   isCajaAbierta(): boolean {
     return this.cajaAbierta.value;
   }
 
-  // ✅ OBTENER SALDO ACTUAL
   getSaldoCaja(): number {
     return this.saldoCaja.value;
   }
 
-  // ✅ REGISTRAR INGRESO EN CAJA
   registrarIngreso(monto: number, concepto: string): void {
     const saldoActual = this.saldoCaja.value;
     this.saldoCaja.next(saldoActual + monto);
-    console.log(`💰 Ingreso registrado: S/. ${monto} - ${concepto}`);
+    console.log(`Ingreso registrado: S/. ${monto} - ${concepto}`);
   }
 
-  // ✅ REGISTRAR EGRESO EN CAJA
   registrarEgreso(monto: number, concepto: string): void {
     const saldoActual = this.saldoCaja.value;
     if (saldoActual >= monto) {
       this.saldoCaja.next(saldoActual - monto);
-      console.log(`💸 Egreso registrado: S/. ${monto} - ${concepto}`);
+      console.log(`Egreso registrado: S/. ${monto} - ${concepto}`);
     } else {
-      console.error('❌ Saldo insuficiente en caja');
+      console.error('Saldo insuficiente en caja');
     }
   }
 
-  // ====================================
-  // REPORTES Y ESTADÍSTICAS
-  // ====================================
-
-  // ✅ CALCULAR TOTAL DE INGRESOS
   calcularTotalIngresos(): number {
     return this.pagosSubject.value.reduce((total, pago) => total + pago.monto, 0);
   }
 
-  // ✅ CALCULAR TOTAL DE EGRESOS (simulado - en producción vendría de movimientos_caja)
   calcularTotalEgresos(): number {
-    // Simulación - en producción usar tabla movimientos_caja
     return 0;
   }
 
-  // ✅ CALCULAR TOTAL POR MEDIO DE PAGO
   calcularTotalPorMedioPago(medio: string): number {
     return this.getPagosPorMedio(medio).reduce((total, pago) => total + pago.monto, 0);
   }
 
-  // ✅ OBTENER RESUMEN DE PAGOS
   getResumenPagos(): { [medio: string]: { cantidad: number; total: number } } {
     const medios = this.getMediosPago();
     const resumen: { [key: string]: { cantidad: number; total: number } } = {};
@@ -306,21 +252,15 @@ export class PosService {
     return resumen;
   }
 
-  // ✅ OBTENER PAGOS DEL DÍA
   getPagosHoy(): Pago[] {
     return this.getPagosPorFecha(new Date());
   }
 
-  // ✅ CALCULAR TOTAL PAGOS HOY
   getTotalPagosHoy(): number {
     return this.getPagosHoy().reduce((total, pago) => total + pago.monto, 0);
   }
 
-  // ====================================
-  // IMPRESIÓN Y TICKETS
-  // ====================================
 
-  // ✅ IMPRIMIR VOUCHER DE PAGO
   imprimirVoucher(pago: Pago): void {
     console.log('🖨️ ========== VOUCHER DE PAGO ==========');
     console.log(`Comprobante: ${pago.id_comprobante}`);
@@ -333,7 +273,6 @@ export class PosService {
     console.log('========================================');
   }
 
-  // ✅ IMPRIMIR TICKET DE VUELTO
   imprimirTicketVuelto(total: number, recibido: number, vuelto: number): void {
     console.log('🖨️ ========== TICKET ==========');
     console.log(`Total: S/. ${total.toFixed(2)}`);
@@ -342,7 +281,6 @@ export class PosService {
     console.log('================================');
   }
 
-  // ✅ GENERAR REPORTE DE CIERRE DE CAJA
   generarReporteCierreCaja(): string {
     const resumen = this.getResumenPagos();
     let reporte = '\n📊 ========== CIERRE DE CAJA ==========\n';
@@ -361,16 +299,10 @@ export class PosService {
     return reporte;
   }
 
-  // ====================================
-  // VALIDACIONES DE SEGURIDAD
-  // ====================================
-
-  // ✅ VALIDAR MONTO VÁLIDO
   validarMonto(monto: number): boolean {
     return monto > 0 && isFinite(monto);
   }
 
-  // ✅ VALIDAR PAGO COMPLETO
   validarPago(pago: Partial<Pago>): { valido: boolean; errores: string[] } {
     const errores: string[] = [];
 

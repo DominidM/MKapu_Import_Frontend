@@ -1,9 +1,6 @@
-// src/app/ventas/core/services/clientes.service.ts
-
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 
-// ✅ INTERFACE SEGÚN TABLA `cliente`
 export interface Cliente {
   id_cliente: string;
   tipo_doc: 'DNI' | 'RUC' | 'CE';
@@ -95,14 +92,12 @@ export class ClientesService {
     this.clientesSubject.next(datosIniciales);
   }
 
-  // ✅ BUSCAR POR DOCUMENTO
   buscarPorDocumento(documento: string): Cliente | undefined {
     return this.clientesSubject.value.find(
       c => c.num_doc === documento && c.estado === true
     );
   }
 
-  // ✅ CREAR CLIENTE
   crearCliente(cliente: Omit<Cliente, 'id_cliente'>): Cliente {
     const clientes = this.clientesSubject.value;
     const nuevoId = `CLI-${String(clientes.length + 1).padStart(3, '0')}`;
@@ -117,17 +112,14 @@ export class ClientesService {
     return nuevoCliente;
   }
 
-  // ✅ OBTENER TODOS LOS CLIENTES ACTIVOS
   getClientes(): Cliente[] {
     return this.clientesSubject.value.filter(c => c.estado === true);
   }
 
-  // ✅ OBTENER CLIENTE POR ID
   getClientePorId(id: string): Cliente | undefined {
     return this.clientesSubject.value.find(c => c.id_cliente === id);
   }
 
-  // ✅ ACTUALIZAR CLIENTE
   actualizarCliente(id: string, cambios: Partial<Cliente>): boolean {
     const clientes = [...this.clientesSubject.value];
     const index = clientes.findIndex(c => c.id_cliente === id);
@@ -140,36 +132,30 @@ export class ClientesService {
     return false;
   }
 
-  // ✅ DESACTIVAR CLIENTE
   desactivarCliente(id: string): boolean {
     return this.actualizarCliente(id, { estado: false });
   }
 
-  // ✅ VALIDAR DNI (8 dígitos)
   validarDNI(dni: string): boolean {
     return /^\d{8}$/.test(dni);
   }
 
-  // ✅ VALIDAR RUC (11 dígitos, empieza con 10 o 20)
   validarRUC(ruc: string): boolean {
     return /^(10|20)\d{9}$/.test(ruc);
   }
 
-  // ✅ VALIDAR DOCUMENTO
   validarDocumento(documento: string, tipo: 'DNI' | 'RUC' | 'CE'): boolean {
     if (tipo === 'DNI') return this.validarDNI(documento);
     if (tipo === 'RUC') return this.validarRUC(documento);
     return documento.length >= 8; // CE básico
   }
 
-  // ✅ OBTENER TIPO DE DOCUMENTO SEGÚN LONGITUD
   obtenerTipoDocumento(documento: string): 'DNI' | 'RUC' | 'INVALIDO' {
     if (this.validarDNI(documento)) return 'DNI';
     if (this.validarRUC(documento)) return 'RUC';
     return 'INVALIDO';
   }
 
-  // ✅ BUSCAR CLIENTES POR NOMBRE
   buscarPorNombre(termino: string): Cliente[] {
     const busqueda = termino.toLowerCase();
     return this.clientesSubject.value.filter(c => 
@@ -180,12 +166,10 @@ export class ClientesService {
     );
   }
 
-  // ✅ CONTAR CLIENTES
   getTotalClientes(): number {
     return this.getClientes().length;
   }
 
-  // ✅ OBTENER CLIENTES POR TIPO
   getClientesPorTipo(tipo: 'DNI' | 'RUC' | 'CE'): Cliente[] {
     return this.getClientes().filter(c => c.tipo_doc === tipo);
   }

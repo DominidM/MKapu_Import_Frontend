@@ -80,36 +80,24 @@ export const routes: Routes = [
     children: [
       { 
         path: '', 
-        redirectTo: 'generar-venta', 
+        redirectTo: 'dashboard-ventas', 
         pathMatch: 'full' 
       },
+      { path: 'dashboard-ventas', loadComponent: () => import('./ventas/pages/dashboard-ventas/dashboard-ventas').then(m => m. DashboardVentas)
+      },
+      { path: 'generar-venta', loadComponent: () => import('./ventas/pages/generar-venta/generar-venta').then(m => m.GenerarVenta)
+      },
       { 
-        path: 'generar-venta',
-        loadComponent: () => import('./ventas/pages/ventas').then(m => m.Ventas),
-        children: [
-          { 
-            path: '', // Ruta vacía muestra la pantalla principal
-            pathMatch: 'full',
-            children: [] // Importante para que se muestre el contenido del padre
-          },
-          { 
-            path: 'listar', 
-            loadComponent: () => import('./ventas/pages/generar-venta/lista-ventas/lista-ventas').then(m => m.ListaVentas) 
-          },
-          { 
-            path: 'crear',
-            loadComponent: () => import('./ventas/pages/generar-venta/crear-venta/crear-venta').then(m => m.CrearVenta) 
-          },
-          { 
-            path: 'detalle/:id', 
-            loadComponent: () => import('./ventas/pages/generar-venta/detalles-venta/detalles-venta').then(m => m.DetallesVenta) 
-          },
-          { 
-            path: 'buscar-cliente', 
-            loadComponent: () => import('./ventas/pages/generar-venta/buscar-cliente/buscar-cliente').then(m => m.BuscarCliente) 
-          }
-        ]
-      }
+        path: 'historial-ventas', loadComponent: () => import('./ventas/pages/historial-ventas/historial-ventas').then(m => m.HistorialVentas) 
+      },
+      {
+        path: 'imprimir-comprobante',
+        loadComponent: () => import('./ventas/pages/imprimir-comprobante/imprimir-comprobante').then(m => m.ImprimirComprobante)
+      },
+      { 
+        path: 'ver-detalle/:id', 
+        loadComponent: () => import('./ventas/pages/detalles-venta/detalle-venta').then(m => m.DetalleVenta) 
+      },
     ]
   }
 ];
