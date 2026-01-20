@@ -1,6 +1,8 @@
 import { Routes } from '@angular/router';
 import { Login } from './auth/pages/login/login';
 import { Main } from './layout/main/main';
+import { Clientes } from './administracion/pages/clientes/pages/clientes/clientes';
+import { ReporteInventario } from './administracion/pages/reportes/pages/reporte-inventario/reporte-inventario';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -10,8 +12,30 @@ export const routes: Routes = [
     path: 'admin',
     component: Main,
     children: [
+      { path: 'notificaciones', loadComponent: () => import('./administracion/pages/dashboard/dashboard').then(m => m.Dashboard) },
       { path: 'dashboard', loadComponent: () => import('./administracion/pages/dashboard/dashboard').then(m => m.Dashboard) },
       { path: 'usuarios', loadComponent: () => import('./administracion/pages/administracion/administracion').then(m => m.Administracion) },
+
+      {
+        path: 'transferencia',
+        children: [
+          {
+            path: '',
+            loadComponent: () => import('./administracion/pages/reportes/pages/transferencia/transferencia').then(m => m.Transferencia)
+          },
+          {
+            path: 'reporte-inventario',
+            loadComponent: () => import('./administracion/pages/reportes/pages/reporte-inventario/reporte-inventario').then(m => m.ReporteInventario)
+          },
+        ]
+
+      },
+
+      {
+        path: 'reporte-inventario',
+        loadComponent: () => import('./administracion/pages/reportes/pages/reporte-inventario/reporte-inventario').then(m => m.ReporteInventario)
+      },
+
 
       {   path: 'gestion-productos',
           loadComponent: () => import('./administracion/pages/gestion-productos/productos-listado/gestion-listado').then(m => m.GestionListado),
@@ -114,4 +138,3 @@ export const routes: Routes = [
     ]
   }
 ];
- 

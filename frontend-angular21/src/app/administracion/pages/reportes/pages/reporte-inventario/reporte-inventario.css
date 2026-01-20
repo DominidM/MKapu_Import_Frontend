@@ -1,0 +1,184 @@
+:host {
+  display: block;
+  width: 100%;
+  min-height: 100%;
+  --reporte-bg: #f4f4f4;
+  --reporte-card: #ffffff;
+  --reporte-panel: #ffffff;
+  --reporte-subpanel: #ffffff;
+  --reporte-border: #6f6f6f;
+  --reporte-border-subtle: #9a9a9a;
+  --reporte-divider: #c8c8c8;
+  --reporte-text: #242424;
+  --reporte-muted: #5b5b5b;
+  --reporte-kicker: #5b5b5b;
+  --reporte-accent: #f0a83a;
+  --reporte-accent-strong: #f0a83a;
+  --reporte-accent-strong-hover: #e69a27;
+  --reporte-input-bg: #ffffff;
+}
+
+:host-context(.app-dark) {
+  --reporte-bg: #101214;
+  --reporte-card: #14171a;
+  --reporte-panel: #1a1d21;
+  --reporte-subpanel: #1f2328;
+  --reporte-border: #3a3f45;
+  --reporte-border-subtle: #2c3137;
+  --reporte-divider: #2a2f36;
+  --reporte-text: #f2f4f7;
+  --reporte-muted: #b0b6be;
+  --reporte-kicker: #9aa2ac;
+  --reporte-accent: #f0b356;
+  --reporte-accent-strong: #f0a63f;
+  --reporte-accent-strong-hover: #e3992f;
+  --reporte-input-bg: #161a1f;
+}
+
+/* =========================
+   LAYOUT FULL WIDTH
+========================= */
+
+.reporte-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.1rem 2rem 2.2rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.reporte-wrapper {
+  width: 100%;
+  display: block;
+}
+
+.reporte-card {
+  width: 100%;
+  max-width: 100%;
+  border-radius: 0.75rem;
+  border: 1px solid var(--reporte-border);
+  background: var(--reporte-card);
+  padding: 1.2rem 1.4rem 1.4rem;
+  box-sizing: border-box;
+}
+
+:host ::ng-deep .reporte-card .p-card-body {
+  padding: 0;
+}
+
+.reporte-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.reporte-card-title {
+  flex: 1;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--reporte-text);
+}
+
+.reporte-card-spacer {
+  width: 2rem;
+}
+
+/* =========================
+   SECCIONES
+========================= */
+
+.reporte-section {
+  border: 1px solid var(--reporte-border);
+  border-radius: 0.6rem;
+  background: var(--reporte-panel);
+  margin-bottom: 1rem;
+  padding: 0.85rem 1rem;
+}
+
+.reporte-subcard {
+  border: 1px solid var(--reporte-border-subtle);
+  border-radius: 0.55rem;
+  padding: 0.65rem 0.75rem;
+  background: var(--reporte-subpanel);
+}
+
+.reporte-divider {
+  height: 1px;
+  background: var(--reporte-divider);
+}
+
+/* =========================
+   FORM & BUTTONS
+========================= */
+
+.reporte-actions {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+:host ::ng-deep .reporte-btn-primary.p-button {
+  background: var(--reporte-accent-strong);
+  border-color: var(--reporte-accent-strong);
+  color: #1f1f1f;
+  font-weight: 700;
+}
+
+:host ::ng-deep .reporte-btn-primary.p-button:hover {
+  background: var(--reporte-accent-strong-hover);
+  border-color: var(--reporte-accent-strong-hover);
+}
+
+
+:host ::ng-deep .inventory-header-card.p-card {
+  border-radius: 0.85rem;
+  background: var(--reporte-panel);
+  margin-top: 0.75rem;
+}
+
+.inventory-title {
+  margin: 0;
+  font-size: 1rem;
+  text-transform: uppercase;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 768px) {
+  .reporte-shell {
+    padding: 1rem 0.85rem 1.8rem;
+  }
+
+  .reporte-card {
+    padding: 1rem;
+  }
+
+  .reporte-card-title {
+    text-align: left;
+  }
+  /* =========================
+   TOAST SUCCESS (VERDE)
+========================= */
+
+:host ::ng-deep .p-toast-message-success {
+  background: linear-gradient(135deg, #0f3d2e, #064e3b);
+  border-left: 6px solid #22c55e;
+  color: #d1fae5;
+}
+
+:host ::ng-deep .p-toast-message-success .p-toast-summary {
+  font-weight: 700;
+  color: #22c55e;
+}
+
+:host ::ng-deep .p-toast-message-success .p-toast-detail {
+  color: #d1fae5;
+  font-size: 0.85rem;
+}
+
+}
