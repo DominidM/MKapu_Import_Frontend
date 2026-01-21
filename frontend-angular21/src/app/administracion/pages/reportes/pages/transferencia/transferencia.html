@@ -15,7 +15,7 @@
           label="Nueva Transferencia"
           icon="pi pi-plus"
           styleClass="transferencia-pill"
-          [routerLink]="['/admin/transferencia/reporte-inventario']"
+          [routerLink]="['/admin/transferencia/nueva-transferencia']"
         ></p-button>
       </div>
     </div>
@@ -127,7 +127,7 @@
                 text
                 severity="secondary"
                 styleClass="transferencia-icon-btn transferencia-icon-warn"
-                [routerLink]="['/admin/transferencia/reporte-inventario']"
+                [routerLink]="['/admin/transferencia/vista-transferencia']"
                 [queryParams]="{ codigo: transferencia.codigo }"
               ></p-button>
               <p-button

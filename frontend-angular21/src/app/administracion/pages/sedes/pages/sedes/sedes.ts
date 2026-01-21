@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -36,7 +36,7 @@ import { ToastModule } from 'primeng/toast';
   templateUrl: './sedes.html',
   styleUrl: './sedes.css',
 })
-export class Sedes {
+export class Sedes implements OnInit {
   sedes = [
     {
       codigo: 'SJL-FL15',
@@ -75,6 +75,22 @@ export class Sedes {
     private confirmationService: ConfirmationService,
     private messageService: MessageService
   ) {}
+
+  ngOnInit(): void {
+    const rawToast = sessionStorage.getItem('sedesToast');
+    if (!rawToast) return;
+    sessionStorage.removeItem('sedesToast');
+    try {
+      const toast = JSON.parse(rawToast);
+      this.messageService.add(toast);
+    } catch {
+      this.messageService.add({
+        severity: 'info',
+        summary: 'Aviso',
+        detail: 'Accion completada.',
+      });
+    }
+  }
 
   onSearch(event: { query: string }): void {
     this.updateFilteredSedes(event.query);

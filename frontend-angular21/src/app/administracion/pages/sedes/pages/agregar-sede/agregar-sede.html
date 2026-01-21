@@ -25,6 +25,7 @@
   </div>
 
   <p-card styleClass="sede-card border-none">
+    <form #sedeForm="ngForm" novalidate>
     <div class="sede-section">
       <div class="sede-section-title">UBICACION:</div>
       <p-divider></p-divider>
@@ -39,6 +40,15 @@
           class="w-full"
           placeholder="Ingrese datos"
           [(ngModel)]="sede.codigo"
+          name="codigo"
+          required
+          #codigo="ngModel"
+          [ngClass]="{ 'p-invalid': (sedeForm.submitted || codigo.touched) && codigo.invalid }"
+        />
+        <p-message
+          *ngIf="(sedeForm.submitted || codigo.touched) && codigo.invalid"
+          severity="error"
+          text="El codigo es obligatorio."
         />
       </div>
       <div class="col-12 md:col-6">
@@ -49,6 +59,15 @@
           class="w-full"
           placeholder="Ingrese datos"
           [(ngModel)]="sede.nombre"
+          name="nombre"
+          required
+          #nombre="ngModel"
+          [ngClass]="{ 'p-invalid': (sedeForm.submitted || nombre.touched) && nombre.invalid }"
+        />
+        <p-message
+          *ngIf="(sedeForm.submitted || nombre.touched) && nombre.invalid"
+          severity="error"
+          text="El nombre es obligatorio."
         />
       </div>
       <div class="col-12 md:col-6">
@@ -59,6 +78,15 @@
           class="w-full"
           placeholder="Ingrese datos"
           [(ngModel)]="sede.ciudad"
+          name="ciudad"
+          required
+          #ciudad="ngModel"
+          [ngClass]="{ 'p-invalid': (sedeForm.submitted || ciudad.touched) && ciudad.invalid }"
+        />
+        <p-message
+          *ngIf="(sedeForm.submitted || ciudad.touched) && ciudad.invalid"
+          severity="error"
+          text="La ciudad es obligatoria."
         />
       </div>
       <div class="col-12 md:col-6">
@@ -70,6 +98,15 @@
           placeholder="Ingrese datos"
           [useGrouping]="false"
           [maxlength]="9"
+          name="telefono"
+          required
+          #telefono="ngModel"
+          [inputStyleClass]="(sedeForm.submitted || telefono.touched) && telefono.invalid ? 'p-invalid' : ''"
+        />
+        <p-message
+          *ngIf="(sedeForm.submitted || telefono.touched) && telefono.invalid"
+          severity="error"
+          text="El telefono es obligatorio."
         />
       </div>
       <div class="col-12">
@@ -80,6 +117,15 @@
           class="w-full"
           placeholder="Ingrese datos"
           [(ngModel)]="sede.departamento"
+          name="departamento"
+          required
+          #departamento="ngModel"
+          [ngClass]="{ 'p-invalid': (sedeForm.submitted || departamento.touched) && departamento.invalid }"
+        />
+        <p-message
+          *ngIf="(sedeForm.submitted || departamento.touched) && departamento.invalid"
+          severity="error"
+          text="El departamento es obligatorio."
         />
       </div>
       <div class="col-12">
@@ -90,6 +136,15 @@
           class="w-full"
           placeholder="Ingrese datos"
           [(ngModel)]="sede.direccion"
+          name="direccion"
+          required
+          #direccion="ngModel"
+          [ngClass]="{ 'p-invalid': (sedeForm.submitted || direccion.touched) && direccion.invalid }"
+        />
+        <p-message
+          *ngIf="(sedeForm.submitted || direccion.touched) && direccion.invalid"
+          severity="error"
+          text="La direccion es obligatoria."
         />
       </div>
     </div>
@@ -108,9 +163,11 @@
         label="Registrar Sede"
         icon="pi pi-check"
         styleClass="sede-btn-primary"
-        (click)="saveSede()"
+        (click)="saveSede(sedeForm)"
+        [disabled]="sedeForm.invalid"
       ></p-button>
     </div>
+    </form>
   </p-card>
   <p-toast position="top-right" />
   <p-confirmdialog />

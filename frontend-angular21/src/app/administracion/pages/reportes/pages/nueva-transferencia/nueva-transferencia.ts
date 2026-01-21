@@ -9,7 +9,7 @@ import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 
 @Component({
-  selector: 'app-reporte-inventario',
+  selector: 'app-nueva-transferencia',
   standalone: true,
   imports: [
     SelectModule,
@@ -20,11 +20,11 @@ import { ToastModule } from 'primeng/toast';
     CardModule,
     ToastModule
   ],
-  templateUrl: './reporte-inventario.html',
-  styleUrl: './reporte-inventario.css',
+  templateUrl: './nueva-transferencia.html',
+  styleUrl: './nueva-transferencia.css',
   providers: [MessageService]
 })
-export class ReporteInventario {
+export class NuevaTransferencia {
 
   constructor(private messageService: MessageService) {}
 
@@ -53,5 +53,5 @@ export class ReporteInventario {
     });
   }
 
-  
+
 }

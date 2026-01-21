@@ -2,7 +2,8 @@ import { Routes } from '@angular/router';
 import { Login } from './auth/pages/login/login';
 import { Main } from './layout/main/main';
 import { Clientes } from './administracion/pages/clientes/pages/clientes/clientes';
-import { ReporteInventario } from './administracion/pages/reportes/pages/reporte-inventario/reporte-inventario';
+import { NuevaTransferencia } from './administracion/pages/reportes/pages/nueva-transferencia/nueva-transferencia';
+import { pendingChangesGuard } from './core/guards/pending-changes.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -24,33 +25,27 @@ export const routes: Routes = [
             loadComponent: () => import('./administracion/pages/reportes/pages/transferencia/transferencia').then(m => m.Transferencia)
           },
           {
-            path: 'reporte-inventario',
-            loadComponent: () => import('./administracion/pages/reportes/pages/reporte-inventario/reporte-inventario').then(m => m.ReporteInventario)
+            path: 'nueva-transferencia',
+            loadComponent: () => import('./administracion/pages/reportes/pages/nueva-transferencia/nueva-transferencia').then(m => m.NuevaTransferencia)
           },
         ]
 
       },
 
-      {
-        path: 'reporte-inventario',
-        loadComponent: () => import('./administracion/pages/reportes/pages/reporte-inventario/reporte-inventario').then(m => m.ReporteInventario)
-      },
-
-
       {   path: 'gestion-productos',
           loadComponent: () => import('./administracion/pages/gestion-productos/productos-listado/gestion-listado').then(m => m.GestionListado),
           children: [
-            { 
-              path: '', redirectTo: '', pathMatch: 'full' 
+            {
+              path: '', redirectTo: '', pathMatch: 'full'
             },
-            { 
-              path: 'ver-detalle-producto/:id', loadComponent: () => import('./administracion/pages/gestion-productos/productos-detalles/productos-detalles').then(m => m.ProductosDetalles) 
+            {
+              path: 'ver-detalle-producto/:id', loadComponent: () => import('./administracion/pages/gestion-productos/productos-detalles/productos-detalles').then(m => m.ProductosDetalles)
             },
-            { 
-              path: 'crear-producto', loadComponent: () => import('./administracion/pages/gestion-productos/productos-formulario/productos-formulario').then(m => m.ProductosFormulario) 
+            {
+              path: 'crear-producto', loadComponent: () => import('./administracion/pages/gestion-productos/productos-formulario/productos-formulario').then(m => m.ProductosFormulario)
             },
-            { 
-              path: 'editar-producto/:id', loadComponent: () => import('./administracion/pages/gestion-productos/productos-formulario/productos-formulario').then(m => m.ProductosFormulario) 
+            {
+              path: 'editar-producto/:id', loadComponent: () => import('./administracion/pages/gestion-productos/productos-formulario/productos-formulario').then(m => m.ProductosFormulario)
             }
       ]},
       {
@@ -62,11 +57,13 @@ export const routes: Routes = [
           },
           {
             path: 'agregar-sede',
-            loadComponent: () => import('./administracion/pages/sedes/pages/agregar-sede/agregar-sede').then(m => m.AgregarSede)
+            loadComponent: () => import('./administracion/pages/sedes/pages/agregar-sede/agregar-sede').then(m => m.AgregarSede),
+            canDeactivate: [pendingChangesGuard]
           },
           {
             path: 'editar-sede',
-            loadComponent: () => import('./administracion/pages/sedes/pages/editar-sede/editar-sede').then(m => m.EditarSede)
+            loadComponent: () => import('./administracion/pages/sedes/pages/editar-sede/editar-sede').then(m => m.EditarSede),
+            canDeactivate: [pendingChangesGuard]
           }
         ]
       },
@@ -115,25 +112,25 @@ export const routes: Routes = [
     path: 'ventas',
     component: Main,
     children: [
-      { 
-        path: '', 
-        redirectTo: 'dashboard-ventas', 
-        pathMatch: 'full' 
+      {
+        path: '',
+        redirectTo: 'dashboard-ventas',
+        pathMatch: 'full'
       },
       { path: 'dashboard-ventas', loadComponent: () => import('./ventas/pages/dashboard-ventas/dashboard-ventas').then(m => m. DashboardVentas)
       },
       { path: 'generar-venta', loadComponent: () => import('./ventas/pages/generar-venta/generar-venta').then(m => m.GenerarVenta)
       },
-      { 
-        path: 'historial-ventas', loadComponent: () => import('./ventas/pages/historial-ventas/historial-ventas').then(m => m.HistorialVentas) 
+      {
+        path: 'historial-ventas', loadComponent: () => import('./ventas/pages/historial-ventas/historial-ventas').then(m => m.HistorialVentas)
       },
       {
         path: 'imprimir-comprobante',
         loadComponent: () => import('./ventas/pages/imprimir-comprobante/imprimir-comprobante').then(m => m.ImprimirComprobante)
       },
-      { 
-        path: 'ver-detalle/:id', 
-        loadComponent: () => import('./ventas/pages/detalles-venta/detalle-venta').then(m => m.DetalleVenta) 
+      {
+        path: 'ver-detalle/:id',
+        loadComponent: () => import('./ventas/pages/detalles-venta/detalle-venta').then(m => m.DetalleVenta)
       },
     ]
   }
