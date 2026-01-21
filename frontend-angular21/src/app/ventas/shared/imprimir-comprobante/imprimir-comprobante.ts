@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { SedeService, Sede } from '../../core/services/sede.service';
+import { SedeService, Sede } from '../../../core/services/sede.service';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { ButtonModule } from 'primeng/button';
