@@ -11,7 +11,6 @@ import { InputText } from 'primeng/inputtext';
 import { InputNumber } from 'primeng/inputnumber';
 import { Divider } from 'primeng/divider';
 import { Tag } from 'primeng/tag';
-import { Message } from 'primeng/message';
 import { Toast } from 'primeng/toast';
 import { ConfirmDialog } from 'primeng/confirmdialog';
 import { AutoComplete } from 'primeng/autocomplete';
@@ -26,13 +25,14 @@ import {
   VentasService,
   ComprobanteVenta,
   DetalleComprobante,
-} from '../../core/services/ventas.service';
-import { ClientesService, Cliente } from '../../core/services/clientes.service';
-import { ComprobantesService } from '../../core/services/comprobantes.service';
-import { PosService } from '../../core/services/pos.service';
-import { ProductosService, Producto } from '../../core/services/productos.service';
+} from '../../../core/services/ventas.service';
+import { ClientesService, Cliente } from '../../../core/services/clientes.service';
+import { ComprobantesService } from '../../../core/services/comprobantes.service';
+import { PosService } from '../../../core/services/pos.service';
+import { ProductosService, Producto } from '../../../core/services/productos.service';
+import { EmpleadosService, Empleado } from '../../../core/services/empleados.service';
+import { PromocionesService, Promocion } from '../../../core/services/promociones.service';
 import { MessageService, ConfirmationService } from 'primeng/api';
-import { SedeService, Sede } from '../../core/services/sede.service';
 
 @Component({
   selector: 'app-crear-venta',
@@ -47,7 +47,6 @@ import { SedeService, Sede } from '../../core/services/sede.service';
     InputNumber,
     Divider,
     Tag,
-    Message,
     Toast,
     ConfirmDialog,
     AutoComplete,
@@ -68,6 +67,11 @@ export class GenerarVenta implements OnInit, OnDestroy {
 
   private subscriptions = new Subscription();
   private readonly STORAGE_KEY = 'generar_venta_estado';
+  private clickEnBotonBuscar = false;
+  private seleccionandoDelAutocomplete = false;
+
+  empleadoActual: Empleado | null = null;
+  nombreResponsable: string = '';
 
   activeStep = 0;
   steps = ['Comprobante y Cliente', 'Productos', 'Venta y Pago', 'Confirmación'];
@@ -110,7 +114,6 @@ export class GenerarVenta implements OnInit, OnDestroy {
   familiasDisponibles: { label: string; value: string | null }[] = [];
 
   sedeSeleccionada: string = '';
-  sedesDisponibles: { label: string; value: string }[] = [];
 
   opcionesTipoPrecio = [
     { label: 'Unidad', value: 'UNIDAD' },
@@ -139,6 +142,9 @@ export class GenerarVenta implements OnInit, OnDestroy {
   bancoSeleccionado: string = '';
   numeroOperacion: string = '';
   bancosDisponibles: string[] = [];
+  codigoPromocion: string = '';
+  promocionAplicada: Promocion | null = null;
+  descuentoPromocion: number = 0;
 
   comprobanteGenerado: ComprobanteVenta | null = null;
   loading = false;
@@ -150,13 +156,47 @@ export class GenerarVenta implements OnInit, OnDestroy {
     private comprobantesService: ComprobantesService,
     private posService: PosService,
     private productosService: ProductosService,
-    private sedeService: SedeService,
     private messageService: MessageService,
     private confirmationService: ConfirmationService,
+    private empleadosService: EmpleadosService,
+    private promocionesService: PromocionesService,
   ) {}
 
   ngOnInit(): void {
-    this.cargarSedes();
+    this.empleadoActual = this.empleadosService.getEmpleadoActual();
+    this.nombreResponsable = this.empleadosService.getNombreCompletoEmpleadoActual();
+
+    if (!this.empleadoActual) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error de autenticación',
+        detail: 'No hay un empleado autenticado',
+        life: 3000,
+      });
+      this.router.navigate(['/login']);
+      return;
+    }
+
+    if (!this.empleadosService.puedeRealizarVentas()) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Acceso denegado',
+        detail: 'No tiene permisos para realizar ventas',
+        life: 3000,
+      });
+      this.router.navigate(['/almacen/dashboard']);
+      return;
+    }
+
+    this.sedeSeleccionada = this.empleadoActual.id_sede;
+
+    this.messageService.add({
+      severity: 'success',
+      summary: `Bienvenido ${this.nombreResponsable}`,
+      detail: `Sede: ${this.empleadoActual.nombre_sede}`,
+      life: 3000,
+    });
+
     this.cargarProductos();
     this.cargarFamilias();
     this.bancosDisponibles = this.posService.getBancosDisponibles();
@@ -177,7 +217,6 @@ export class GenerarVenta implements OnInit, OnDestroy {
       mostrarFormulario: this.mostrarFormulario,
       nuevoCliente: this.nuevoCliente,
       productosSeleccionados: this.productosSeleccionados,
-      sedeSeleccionada: this.sedeSeleccionada,
       familiaSeleccionada: this.familiaSeleccionada,
       tipoVenta: this.tipoVenta,
       departamento: this.departamento,
@@ -185,6 +224,9 @@ export class GenerarVenta implements OnInit, OnDestroy {
       montoRecibido: this.montoRecibido,
       bancoSeleccionado: this.bancoSeleccionado,
       numeroOperacion: this.numeroOperacion,
+      codigoPromocion: this.codigoPromocion,
+      promocionAplicada: this.promocionAplicada,
+      descuentoPromocion: this.descuentoPromocion,
       comprobanteGenerado: this.comprobanteGenerado,
     };
 
@@ -209,7 +251,6 @@ export class GenerarVenta implements OnInit, OnDestroy {
         this.mostrarFormulario = estado.mostrarFormulario || false;
         this.nuevoCliente = estado.nuevoCliente || this.nuevoCliente;
         this.productosSeleccionados = estado.productosSeleccionados || [];
-        this.sedeSeleccionada = estado.sedeSeleccionada || '';
         this.familiaSeleccionada = estado.familiaSeleccionada || null;
         this.tipoVenta = estado.tipoVenta || 'PRESENCIAL';
         this.departamento = estado.departamento || '';
@@ -217,6 +258,9 @@ export class GenerarVenta implements OnInit, OnDestroy {
         this.montoRecibido = estado.montoRecibido || 0;
         this.bancoSeleccionado = estado.bancoSeleccionado || '';
         this.numeroOperacion = estado.numeroOperacion || '';
+        this.codigoPromocion = estado.codigoPromocion || '';
+        this.promocionAplicada = estado.promocionAplicada || null;
+        this.descuentoPromocion = estado.descuentoPromocion || 0;
         this.comprobanteGenerado = estado.comprobanteGenerado || null;
 
         this.messageService.add({
@@ -233,52 +277,6 @@ export class GenerarVenta implements OnInit, OnDestroy {
 
   private limpiarEstado(): void {
     sessionStorage.removeItem(this.STORAGE_KEY);
-  }
-
-  cargarSedes(): void {
-    const sub = this.sedeService.getSedes().subscribe({
-      next: (sedes) => {
-        this.sedesDisponibles = sedes.map((sede) => ({
-          label: sede.nombre,
-          value: sede.id_sede,
-        }));
-
-        if (this.sedesDisponibles.length > 0 && !this.sedeSeleccionada) {
-          this.sedeSeleccionada = this.sedesDisponibles[0].value;
-        }
-      },
-      error: (error) => {
-        console.error('Error al cargar sedes:', error);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudieron cargar las sedes',
-          life: 3000,
-        });
-      },
-    });
-    this.subscriptions.add(sub);
-  }
-
-  onSedeChange(): void {
-    if (!this.sedeSeleccionada) return;
-
-    this.cargarProductos();
-    this.cargarFamilias();
-
-    this.familiaSeleccionada = null;
-    this.productoSeleccionadoBusqueda = '';
-    this.productoTemp = null;
-
-    const sedeNombre =
-      this.sedesDisponibles.find((s) => s.value === this.sedeSeleccionada)?.label || 'sede';
-
-    this.messageService.add({
-      severity: 'info',
-      summary: 'Sede cambiada',
-      detail: `Productos de ${sedeNombre}`,
-      life: 2000,
-    });
   }
 
   buscarClienteAutoComplete(event: any): void {
@@ -324,36 +322,60 @@ export class GenerarVenta implements OnInit, OnDestroy {
     this.nuevoCliente.tipo_doc = this.tipoComprobante === '03' ? 'DNI' : 'RUC';
   }
 
+  onNumeroDocumentoChange(): void {
+    if (this.clienteEncontrado && this.numeroDocumento !== this.clienteEncontrado.num_doc) {
+      this.clienteEncontrado = null;
+      this.busquedaRealizada = false;
+      this.mostrarFormulario = false;
+    }
+  }
+
   onBlurAutoComplete(): void {
-    if (this.clienteAutoComplete && typeof this.clienteAutoComplete === 'string') {
-      const documentoIngresado = this.clienteAutoComplete.trim();
+    setTimeout(() => {
+      if (this.clickEnBotonBuscar) {
+        this.clickEnBotonBuscar = false;
+        return;
+      }
 
-      const longitudRequerida = this.tipoComprobante === '03' ? 8 : 11;
+      if (this.seleccionandoDelAutocomplete) {
+        this.seleccionandoDelAutocomplete = false;
+        return;
+      }
 
-      if (documentoIngresado.length === longitudRequerida && /^\d+$/.test(documentoIngresado)) {
-        const cliente = this.clientesService.buscarPorDocumento(documentoIngresado);
+      if (this.clienteEncontrado) {
+        return;
+      }
 
-        if (cliente) {
-          this.clienteEncontrado = cliente;
-          this.busquedaRealizada = true;
-          this.mostrarFormulario = false;
+      if (this.clienteAutoComplete && typeof this.clienteAutoComplete === 'string') {
+        const documentoIngresado = this.clienteAutoComplete.trim();
 
-          const nombreCliente =
-            this.tipoComprobante === '03'
-              ? `${cliente.apellidos || ''} ${cliente.nombres || ''}`.trim()
-              : cliente.razon_social || 'Sin nombre';
+        const longitudRequerida = this.tipoComprobante === '03' ? 8 : 11;
 
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Cliente encontrado',
-            detail: nombreCliente,
-            life: 2000,
-          });
-        } else {
-          this.abrirFormularioNuevoCliente();
+        if (documentoIngresado.length === longitudRequerida && /^\d+$/.test(documentoIngresado)) {
+          const cliente = this.clientesService.buscarPorDocumento(documentoIngresado);
+
+          if (cliente) {
+            this.clienteEncontrado = cliente;
+            this.busquedaRealizada = true;
+            this.mostrarFormulario = false;
+
+            const nombreCliente =
+              this.tipoComprobante === '03'
+                ? `${cliente.apellidos || ''} ${cliente.nombres || ''}`.trim()
+                : cliente.razon_social || 'Sin nombre';
+
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Cliente encontrado',
+              detail: nombreCliente,
+              life: 2000,
+            });
+          } else {
+            this.abrirFormularioNuevoCliente();
+          }
         }
       }
-    }
+    }, 100);
   }
 
   abrirFormularioNuevoCliente(): void {
@@ -398,6 +420,8 @@ export class GenerarVenta implements OnInit, OnDestroy {
   }
 
   onSelectCliente(event: any): void {
+    this.seleccionandoDelAutocomplete = true;
+
     const cliente: Cliente = event.value;
 
     this.numeroDocumento = cliente.num_doc;
@@ -429,6 +453,8 @@ export class GenerarVenta implements OnInit, OnDestroy {
   }
 
   buscarCliente(): void {
+    this.clickEnBotonBuscar = true;
+
     if (!this.numeroDocumento.trim()) {
       this.messageService.add({
         severity: 'warn',
@@ -680,16 +706,90 @@ export class GenerarVenta implements OnInit, OnDestroy {
     });
   }
 
+obtenerSeveridadStock(stock: number | undefined): 'success' | 'warn' | 'danger' {
+  if (!stock || stock === 0) return 'danger';
+  if (stock <= 5) return 'warn';
+  if (stock <= 20) return 'warn';
+  return 'success';
+}
+
+  onCodigoPromocionChange(): void {
+    if (!this.codigoPromocion.trim()) {
+      this.limpiarPromocion();
+    }
+  }
+
+  aplicarPromocion(): void {
+    if (!this.codigoPromocion.trim()) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Código requerido',
+        detail: 'Ingrese un código de promoción',
+        life: 3000,
+      });
+      return;
+    }
+
+    const resultado = this.promocionesService.aplicarPromocion(this.codigoPromocion, {
+      subtotal: this.calcularSubtotal(),
+      tipoComprobante: this.tipoComprobante,
+      idCliente: this.clienteEncontrado?.id_cliente,
+      idSede: this.sedeSeleccionada,
+    });
+
+    if (!resultado.exito) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error en promoción',
+        detail: resultado.mensaje,
+        life: 3000,
+      });
+      return;
+    }
+
+    this.promocionAplicada = resultado.promocion!;
+    this.descuentoPromocion = resultado.descuento!;
+
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Promoción aplicada',
+      detail: `${resultado.mensaje} - Descuento: S/ ${this.descuentoPromocion.toFixed(2)}`,
+      life: 3000,
+    });
+
+    this.guardarEstado();
+  }
+
+  limpiarPromocion(): void {
+    const habiaPromocion = this.promocionAplicada !== null;
+
+    this.codigoPromocion = '';
+    this.promocionAplicada = null;
+    this.descuentoPromocion = 0;
+
+    if (habiaPromocion) {
+      this.messageService.add({
+        severity: 'info',
+        summary: 'Promoción removida',
+        detail: 'Se eliminó el descuento aplicado',
+        life: 2000,
+      });
+    }
+
+    this.guardarEstado();
+  }
+
   calcularSubtotal(): number {
     return this.productosSeleccionados.reduce((sum, p) => sum + p.valor_unit * p.cantidad, 0);
   }
 
   calcularIGV(): number {
-    return this.productosSeleccionados.reduce((sum, p) => sum + p.igv, 0);
+    const subtotalConDescuento = this.calcularSubtotal() - this.descuentoPromocion;
+    return subtotalConDescuento * 0.18;
   }
 
   calcularTotal(): number {
-    return this.calcularSubtotal() + this.calcularIGV();
+    return this.calcularSubtotal() - this.descuentoPromocion + this.calcularIGV();
   }
 
   calcularVuelto(): number {
@@ -787,6 +887,16 @@ export class GenerarVenta implements OnInit, OnDestroy {
         ? `${this.clienteEncontrado!.apellidos} ${this.clienteEncontrado!.nombres}`
         : this.clienteEncontrado!.razon_social || '';
 
+    const subtotal = this.calcularSubtotal();
+    const subtotalConDescuento = subtotal - this.descuentoPromocion;
+    const igv = this.calcularIGV();
+    const total = this.calcularTotal();
+
+    const detalles = this.productosSeleccionados.map((detalle) => ({
+      ...detalle,
+      id_det_com: 0,
+    }));
+
     const nuevoComprobante: Omit<
       ComprobanteVenta,
       'id' | 'id_comprobante' | 'hash_cpe' | 'xml_cpe' | 'cdr_cpe' | 'numero'
@@ -799,26 +909,38 @@ export class GenerarVenta implements OnInit, OnDestroy {
         this.tipoComprobante === '01' ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) : null,
       moneda: 'PEN',
       tipo_op: '0101',
-      subtotal: this.calcularSubtotal(),
-      igv: this.calcularIGV(),
+      subtotal: subtotalConDescuento,
+      igv: igv,
       isc: 0,
-      total: this.calcularTotal(),
+      total: total,
       estado: true,
-      responsable: 'ADMIN',
+      responsable: this.nombreResponsable,
       id_sede: this.sedeSeleccionada,
-      detalles: this.productosSeleccionados,
+      id_empleado: this.empleadoActual!.id_empleado,
+      detalles: detalles,
       cliente_nombre: nombreCliente,
       cliente_doc: this.clienteEncontrado!.num_doc,
+      codigo_promocion: this.promocionAplicada?.codigo,
+      descuento_promocion: this.descuentoPromocion > 0 ? this.descuentoPromocion : undefined,
+      descripcion_promocion: this.promocionAplicada?.descripcion,
+      id_promocion: this.promocionAplicada?.id_promocion,
     };
 
     setTimeout(() => {
       this.comprobanteGenerado = this.ventasService.crearComprobante(nuevoComprobante);
 
+      if (this.promocionAplicada && this.comprobanteGenerado) {
+        this.promocionesService.registrarUsoPromocion(
+          this.promocionAplicada.codigo,
+          this.comprobanteGenerado.id_comprobante,
+        );
+      }
+
       this.posService.registrarPago({
         id_comprobante: this.comprobanteGenerado.id_comprobante,
         fec_pago: new Date(),
         med_pago: this.tipoPago as 'EFECTIVO' | 'TARJETA' | 'YAPE' | 'PLIN' | 'TRANSFERENCIA',
-        monto: this.calcularTotal(),
+        monto: total,
         banco: this.bancoSeleccionado || undefined,
         num_operacion: this.numeroOperacion || undefined,
       });
