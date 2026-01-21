@@ -498,12 +498,12 @@
                     label="Agregar al Carrito"
                     icon="pi pi-plus"
                     (onClick)="agregarProducto()"
-                    [disabled]="cantidadTemp > productoTemp.stock"
+                    [disabled]="cantidadTemp > (productoTemp.stock ?? 0)"
                     styleClass="w-full btn-agregar-producto"
                   />
 
                   <small
-                    *ngIf="cantidadTemp > productoTemp.stock"
+                    *ngIf="cantidadTemp > (productoTemp.stock ?? 0)"
                     class="text-red-500 mt-2 block text-center"
                   >
                     <i class="pi pi-exclamation-triangle"></i>

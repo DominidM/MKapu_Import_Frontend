@@ -25,13 +25,13 @@ import {
   VentasService,
   ComprobanteVenta,
   DetalleComprobante,
-} from '../../core/services/ventas.service';
-import { ClientesService, Cliente } from '../../core/services/clientes.service';
-import { ComprobantesService } from '../../core/services/comprobantes.service';
-import { PosService } from '../../core/services/pos.service';
-import { ProductosService, Producto } from '../../core/services/productos.service';
-import { EmpleadosService, Empleado } from '../../core/services/empleados.service';
-import { PromocionesService, Promocion } from '../../core/services/promociones.service';
+} from '../../../core/services/ventas.service';
+import { ClientesService, Cliente } from '../../../core/services/clientes.service';
+import { ComprobantesService } from '../../../core/services/comprobantes.service';
+import { PosService } from '../../../core/services/pos.service';
+import { ProductosService, Producto } from '../../../core/services/productos.service';
+import { EmpleadosService, Empleado } from '../../../core/services/empleados.service';
+import { PromocionesService, Promocion } from '../../../core/services/promociones.service';
 import { MessageService, ConfirmationService } from 'primeng/api';
 
 @Component({
@@ -706,11 +706,12 @@ export class GenerarVenta implements OnInit, OnDestroy {
     });
   }
 
-  obtenerSeveridadStock(stock: number): 'success' | 'warn' | 'danger' {
-    if (stock > 20) return 'success';
-    if (stock > 5) return 'warn';
-    return 'danger';
-  }
+obtenerSeveridadStock(stock: number | undefined): 'success' | 'warn' | 'danger' {
+  if (!stock || stock === 0) return 'danger';
+  if (stock <= 5) return 'warn';
+  if (stock <= 20) return 'warn';
+  return 'success';
+}
 
   onCodigoPromocionChange(): void {
     if (!this.codigoPromocion.trim()) {

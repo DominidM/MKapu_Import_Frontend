@@ -63,14 +63,14 @@ export const routes: Routes = [
           }
         ]
       },
-      {
+      /*{
         path: 'historial-ventas-general',
         loadComponent: () => import('./administracion/pages/historial-ventas-general/historial-ventas-general').then(m => m.HistorialVentasGeneral)
       },
       {
         path: 'generar-venta',
         loadComponent: () => import('./administracion/pages/generar-venta-admin/generar-venta-admin').then(m => m.GenerarVentaAdmin)
-      }
+      }*/
     ]
   },
 
@@ -96,7 +96,7 @@ export const routes: Routes = [
       { path: 'generar-venta', loadComponent: () => import('./ventas/pages/generar-venta/generar-venta').then(m => m.GenerarVenta)
       },
       { 
-        path: 'historial-ventas', loadComponent: () => import('./ventas/pages/historial-ventas/historial-ventas').then(m => m.HistorialVentas) 
+        path: 'historial-ventas', loadComponent: () => import('./ventas/shared/historial-ventas/historial-ventas').then(m => m.HistorialVentas) 
       },
       {
         path: 'imprimir-comprobante',
@@ -104,7 +104,7 @@ export const routes: Routes = [
       },
       { 
         path: 'ver-detalle/:id', 
-        loadComponent: () => import('./ventas/shared/detalles-venta/detalle-venta').then(m => m.DetalleVenta) 
+        loadComponent: () => import('./ventas/pages/detalles-venta/detalle-venta').then(m => m.DetalleVenta) 
       },
     ]
   }

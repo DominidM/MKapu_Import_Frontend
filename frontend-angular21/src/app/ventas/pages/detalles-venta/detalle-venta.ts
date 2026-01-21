@@ -12,11 +12,11 @@ import { TableModule } from 'primeng/table';
 import { Skeleton } from 'primeng/skeleton';
 import { Tooltip } from 'primeng/tooltip';
 
-import { VentasService, ComprobanteVenta } from '../../core/services/ventas.service';
-import { PosService, Pago } from '../../core/services/pos.service';
-import { ClientesService, Cliente } from '../../core/services/clientes.service';
-import { SedeService, Sede } from '../../core/services/sede.service';
-import { PromocionesService, Promocion } from '../../core/services/promociones.service';
+import { VentasService, ComprobanteVenta } from '../../../core/services/ventas.service';
+import { PosService, Pago } from '../../../core/services/pos.service';
+import { ClientesService, Cliente } from '../../../core/services/clientes.service';
+import { SedeService, Sede } from '../../../core/services/sede.service';
+import { PromocionesService, Promocion } from '../../../core/services/promociones.service';
 
 @Component({
   selector: 'app-detalle-venta',

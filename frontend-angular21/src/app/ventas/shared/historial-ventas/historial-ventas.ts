@@ -15,9 +15,9 @@ import { DatePicker } from 'primeng/datepicker';
 import { Tooltip } from 'primeng/tooltip';
 import { AutoComplete } from 'primeng/autocomplete';
 
-import { VentasService, ComprobanteVenta } from '../../core/services/ventas.service';
-import { SedeService, Sede } from '../../core/services/sede.service';
-import { EmpleadosService, Empleado } from '../../core/services/empleados.service';
+import { VentasService, ComprobanteVenta } from '../../../core/services/ventas.service';
+import { SedeService, Sede } from '../../../core/services/sede.service';
+import { EmpleadosService, Empleado } from '../../../core/services/empleados.service';
 import { MessageService, ConfirmationService } from 'primeng/api';
 
 interface FiltroVentas {
