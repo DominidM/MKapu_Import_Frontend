@@ -28,6 +28,10 @@ export const routes: Routes = [
             path: 'nueva-transferencia',
             loadComponent: () => import('./administracion/pages/reportes/pages/nueva-transferencia/nueva-transferencia').then(m => m.NuevaTransferencia)
           },
+          {
+            path: 'detalle-transferencia',
+            loadComponent: () => import('./administracion/pages/reportes/pages/detalle-transferencia/detalle-transferencia').then(m => m.DetalleTransferencia)
+          },
         ]
 
       },

@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { SelectModule } from 'primeng/select';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { ButtonModule } from 'primeng/button';
@@ -29,6 +29,7 @@ interface TransferProducto {
   imports: [
     CommonModule,
     FormsModule,
+    RouterModule,
     SelectModule,
     InputNumberModule,
     ButtonModule,
@@ -229,6 +230,17 @@ export class NuevaTransferencia {
       return;
     }
     this.cantidad = Math.min(nuevaCantidad, Math.max(this.stockDisponible, 1));
+  }
+
+  onCantidadChange(valor: number | null): void {
+    if (valor === null) {
+      this.cantidad = 1;
+      return;
+    }
+    const normalizado = Math.max(1, Math.min(valor, Math.max(this.stockDisponible, 1)));
+    if (normalizado !== valor) {
+      this.cantidad = normalizado;
+    }
   }
 
   nextStep(): void {

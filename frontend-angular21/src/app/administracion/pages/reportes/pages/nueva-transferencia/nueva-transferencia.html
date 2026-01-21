@@ -13,6 +13,16 @@
           <h2 class="transfer-title mb-0">{{ subtituloKicker }}</h2>
         </div>
       </div>
+      <div class="flex align-items-center gap-2">
+        <p-button
+          label="Volver"
+          icon="pi pi-arrow-left"
+          severity="secondary"
+          [outlined]="true"
+          styleClass="transfer-header-btn"
+          [routerLink]="['/admin/transferencia']"
+        ></p-button>
+      </div>
     </div>
   </p-card>
 </div>
@@ -150,13 +160,17 @@
                 (onClick)="ajustarCantidad(-1)"
               ></p-button>
 
-              <p-inputnumber
-                class="transfer-qty"
-                [min]="1"
-                [max]="stockDisponible"
-                [useGrouping]="false"
-                [(ngModel)]="cantidad"
-              ></p-inputnumber>
+            <p-inputnumber
+              class="transfer-qty"
+              [min]="1"
+              [max]="stockDisponible"
+              [minFractionDigits]="0"
+              [maxFractionDigits]="0"
+              [useGrouping]="false"
+              [(ngModel)]="cantidad"
+              (ngModelChange)="onCantidadChange($event)"
+              (onInput)="onCantidadChange($event.value)"
+            ></p-inputnumber>
 
               <p-button
                 icon="pi pi-plus"
