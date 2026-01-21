@@ -1,14 +1,26 @@
-
-
-
 <div class="main-container">
-  <div class="sidebar">
+
+  <!-- SIDEBAR DESKTOP -->
+  <div class="sidebar sidebar-desktop">
     <app-sidebar></app-sidebar>
   </div>
 
+  <!-- SIDEBAR MOBILE (DRAWER) -->
+  <p-drawer
+    [(visible)]="mobileSidebarVisible"
+    position="left"
+    [modal]="true"
+    [dismissible]="true"
+    [showCloseIcon]="false"
+    styleClass="sidebar-mobile"
+  >
+    <app-sidebar></app-sidebar>
+  </p-drawer>
+
   <div class="right-section">
+
     <div class="header">
-      <app-header></app-header>
+      <app-header (toggleSidebar)="openMobileSidebar()"></app-header>
     </div>
 
     <div class="content">

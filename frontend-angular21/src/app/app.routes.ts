@@ -40,10 +40,18 @@ export const routes: Routes = [
       {   path: 'gestion-productos',
           loadComponent: () => import('./administracion/pages/gestion-productos/productos-listado/gestion-listado').then(m => m.GestionListado),
           children: [
-            { path: '', redirectTo: '', pathMatch: 'full' },
-            { path: 'ver-detalle-producto/:id', loadComponent: () => import('./administracion/pages/gestion-productos/productos-detalles/productos-detalles').then(m => m.ProductosDetalles) },
-            { path: 'crear-producto', loadComponent: () => import('./administracion/pages/gestion-productos/productos-formulario/productos-formulario').then(m => m.ProductosFormulario) },
-            { path: 'editar-producto/:id', loadComponent: () => import('./administracion/pages/gestion-productos/productos-formulario/productos-formulario').then(m => m.ProductosFormulario) }
+            { 
+              path: '', redirectTo: '', pathMatch: 'full' 
+            },
+            { 
+              path: 'ver-detalle-producto/:id', loadComponent: () => import('./administracion/pages/gestion-productos/productos-detalles/productos-detalles').then(m => m.ProductosDetalles) 
+            },
+            { 
+              path: 'crear-producto', loadComponent: () => import('./administracion/pages/gestion-productos/productos-formulario/productos-formulario').then(m => m.ProductosFormulario) 
+            },
+            { 
+              path: 'editar-producto/:id', loadComponent: () => import('./administracion/pages/gestion-productos/productos-formulario/productos-formulario').then(m => m.ProductosFormulario) 
+            }
       ]},
       {
         path: 'sedes',
@@ -79,6 +87,19 @@ export const routes: Routes = [
           }
         ]
       },
+      {
+        path: 'ingresos-almacen',
+        children: [
+          {
+            path: '',
+            loadComponent: () => import('./administracion/pages/ingresos-almacen/pages/ingresos-almacen/ingresos-almacen').then(m => m.IngresosAlmacen)
+          },
+          {
+            path: 'ingresos-agregar',
+            loadComponent: () => import('./administracion/pages/ingresos-almacen/pages/ingresos-agregar/ingresos-agregar').then(m => m.IngresosAgregar)
+          },
+        ]
+      },
     ]
   },
 
@@ -94,11 +115,26 @@ export const routes: Routes = [
     path: 'ventas',
     component: Main,
     children: [
-      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-      { path: 'administracion', loadComponent: () => import('./administracion/pages/administracion/administracion').then(m => m.Administracion) },
-      { path: 'almacen', loadComponent: () => import('./almacen/pages/almacen/almacen').then(m => m.Almacen) },
-      { path: 'ventas', loadComponent: () => import('./ventas/pages/ventas/ventas').then(m => m.Ventas) },
-      { path: 'cliente', loadComponent: () => import('./ventas/pages/clientes/clientes').then(m => m.Clientes) },
+      { 
+        path: '', 
+        redirectTo: 'dashboard-ventas', 
+        pathMatch: 'full' 
+      },
+      { path: 'dashboard-ventas', loadComponent: () => import('./ventas/pages/dashboard-ventas/dashboard-ventas').then(m => m. DashboardVentas)
+      },
+      { path: 'generar-venta', loadComponent: () => import('./ventas/pages/generar-venta/generar-venta').then(m => m.GenerarVenta)
+      },
+      { 
+        path: 'historial-ventas', loadComponent: () => import('./ventas/pages/historial-ventas/historial-ventas').then(m => m.HistorialVentas) 
+      },
+      {
+        path: 'imprimir-comprobante',
+        loadComponent: () => import('./ventas/pages/imprimir-comprobante/imprimir-comprobante').then(m => m.ImprimirComprobante)
+      },
+      { 
+        path: 'ver-detalle/:id', 
+        loadComponent: () => import('./ventas/pages/detalles-venta/detalle-venta').then(m => m.DetalleVenta) 
+      },
     ]
   }
 ];

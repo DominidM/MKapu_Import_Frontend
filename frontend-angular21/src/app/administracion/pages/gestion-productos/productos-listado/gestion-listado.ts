@@ -39,6 +39,7 @@ export class GestionListado implements OnInit, OnDestroy, AfterViewInit {
   private destroy$ = new Subject<void>();
 
   tituloKicker = 'ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS ACTIVOS';
+  subtituloKicker = 'GESTION DE PRODUCTOS'
   iconoCabecera = 'pi pi-building';
 
   productos: Producto[] = [];

@@ -1,7 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { AutoCompleteModule } from 'primeng/autocomplete';
@@ -13,6 +13,7 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 
 @Component({
   selector: 'app-transferencia',
+  standalone: true,
   imports: [
     CommonModule,
     FormsModule,
@@ -29,141 +30,107 @@ import { ConfirmationService, MessageService } from 'primeng/api';
   styleUrl: './transferencia.css',
   providers: [ConfirmationService, MessageService]
 })
-export class Transferencia {
-  transferencias = [
-    {
-      codigo: 'TRF-1001',
-      producto: 'Cable HDMI 2m',
-      origen: 'Flores 15',
-      destino: 'Lurin',
-      cantidad: 20,
-      estado: 'En transito',
-      fecha: '12/09/2024'
-    },
-    {
-      codigo: 'TRF-1002',
-      producto: 'Teclado Mecanico RGB',
-      origen: 'Callao',
-      destino: 'Ate',
-      cantidad: 12,
-      estado: 'Pendiente',
-      fecha: '13/09/2024'
-    },
-    {
-      codigo: 'TRF-1003',
-      producto: 'Mouse Inalambrico',
-      origen: 'Lurin',
-      destino: 'Flores 15',
-      cantidad: 30,
-      estado: 'Completada',
-      fecha: '14/09/2024'
-    },
-    {
-      codigo: 'TRF-1004',
-      producto: 'Impresora Termica',
-      origen: 'Ate',
-      destino: 'Callao',
-      cantidad: 4,
-      estado: 'En transito',
-      fecha: '15/09/2024'
-    }
-  ];
-  filteredTransferencias = [...this.transferencias];
-  transferenciaSuggestions = [...this.transferencias];
+export class Transferencia implements OnInit {
+
+  transferencias: any[] = [];
+  filteredTransferencias: any[] = [];
+  transferenciaSuggestions: any[] = [];
   searchTerm = '';
 
   constructor(
     private confirmationService: ConfirmationService,
-    private messageService: MessageService
+    private messageService: MessageService,
+    private router: Router
   ) {}
 
+  // 🔥 SIEMPRE SE EJECUTA AL ENTRAR A LA RUTA
+  ngOnInit(): void {
+    this.cargarTransferencias();
+  }
+
+  // 🔁 TAMBIÉN CUANDO REGRESAS DESDE OTRA PÁGINA
+  ionViewWillEnter(): void {
+    this.cargarTransferencias();
+  }
+
+  cargarTransferencias(): void {
+    const data = localStorage.getItem('transferencias');
+    this.transferencias = data ? JSON.parse(data) : [];
+
+    this.filteredTransferencias = [...this.transferencias];
+    this.transferenciaSuggestions = [...this.transferencias];
+  }
+
   onSearch(event: { query: string }): void {
-    this.updateFilteredTransferencias(event.query);
+    this.filtrar(event.query);
   }
 
   onSearchChange(term: string | { producto?: string } | null): void {
-    this.updateFilteredTransferencias(this.getSearchValue(term));
+    this.filtrar(this.obtenerValor(term));
   }
 
-  onSelectTransferencia(event: { value?: { producto?: string } } | null): void {
-    const value = this.getSearchValue(event?.value ?? this.searchTerm);
+  onSelectTransferencia(event: any): void {
+    const value = this.obtenerValor(event?.value ?? this.searchTerm);
     this.searchTerm = value;
-    this.updateFilteredTransferencias(value);
+    this.filtrar(value);
   }
 
   clearSearch(): void {
     this.searchTerm = '';
-    this.updateFilteredTransferencias('');
+    this.filtrar('');
   }
 
-  confirmDelete(transferencia: { codigo: string; producto: string }): void {
+  confirmDelete(transferencia: any): void {
     this.confirmationService.confirm({
-      header: 'Confirmacion',
-      message: `¿Seguro que deseas eliminar la transferencia ${transferencia.codigo}?`,
+      message: `¿Eliminar la transferencia ${transferencia.codigo}?`,
+      header: 'Confirmación',
       icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'Eliminar',
-      rejectLabel: 'Cancelar',
-      acceptButtonProps: {
-        severity: 'danger'
-      },
-      rejectButtonProps: {
-        severity: 'secondary',
-        outlined: true
-      },
       accept: () => {
-        this.transferencias = this.transferencias.filter(item => item.codigo !== transferencia.codigo);
-        this.updateFilteredTransferencias(this.searchTerm);
+        this.transferencias = this.transferencias.filter(
+          t => t.codigo !== transferencia.codigo
+        );
+
+        localStorage.setItem(
+          'transferencias',
+          JSON.stringify(this.transferencias)
+        );
+
+        this.cargarTransferencias();
+
         this.messageService.add({
           severity: 'success',
-          summary: 'Transferencia eliminada',
-          detail: `Se elimino la transferencia ${transferencia.codigo}.`
+          summary: 'Eliminada',
+          detail: 'Transferencia eliminada correctamente'
         });
       }
     });
   }
 
-  getEstadoSeverity(estado: string): 'success' | 'warn' | 'danger' | 'secondary' {
+  getEstadoSeverity(estado: string) {
     switch (estado.toLowerCase()) {
-      case 'completada':
-        return 'success';
-      case 'en transito':
-        return 'secondary';
-      case 'pendiente':
-        return 'warn';
-      default:
-        return 'secondary';
+      case 'completada': return 'success';
+      case 'pendiente': return 'warn';
+      case 'en transito': return 'secondary';
+      default: return 'secondary';
     }
   }
 
-  private updateFilteredTransferencias(term: string): void {
-    const value = term?.trim().toLowerCase();
+  filtrar(valor: string): void {
+    const v = valor.toLowerCase();
 
-    if (!value) {
-      this.filteredTransferencias = [...this.transferencias];
-      this.transferenciaSuggestions = [...this.transferencias];
-      return;
-    }
-
-    this.filteredTransferencias = this.transferencias.filter(transferencia =>
-      [
-        transferencia.codigo,
-        transferencia.producto,
-        transferencia.origen,
-        transferencia.destino
-      ].some(field => field.toLowerCase().includes(value))
+    this.filteredTransferencias = this.transferencias.filter(t =>
+      [t.codigo, t.producto, t.origen, t.destino]
+        .some(campo => campo.toLowerCase().includes(v))
     );
+
     this.transferenciaSuggestions = [...this.filteredTransferencias];
   }
 
-  private getSearchValue(term: string | { producto?: string } | null): string {
-    if (!term) {
-      return '';
-    }
-
-    if (typeof term === 'string') {
-      return term;
-    }
-
+  obtenerValor(term: any): string {
+    if (!term) return '';
+    if (typeof term === 'string') return term;
     return term.producto ?? '';
   }
+
+  
 }

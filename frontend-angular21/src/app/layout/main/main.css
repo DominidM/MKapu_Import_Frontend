@@ -39,3 +39,20 @@
   
   padding: 16px;
 }
+
+/* Sidebar desktop */
+.sidebar-desktop {
+  width: 250px;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .sidebar-desktop {
+    display: none;
+  }
+}
+
+/* Drawer mobile */
+.sidebar-mobile {
+  width: 250px;
+}
