@@ -16,6 +16,7 @@ import { VentasService, ComprobanteVenta } from '../../core/services/ventas.serv
 import { PosService, Pago } from '../../core/services/pos.service';
 import { ClientesService, Cliente } from '../../core/services/clientes.service';
 import { SedeService, Sede } from '../../core/services/sede.service';
+import { PromocionesService, Promocion } from '../../core/services/promociones.service';
 
 @Component({
   selector: 'app-detalle-venta',
@@ -29,6 +30,7 @@ export class DetalleVenta implements OnInit, OnDestroy {
   cliente: Cliente | null = null;
   pagos: Pago[] = [];
   sedes: Sede[] = [];
+  promocion: Promocion | null = null;
 
   historialCompras: ComprobanteVenta[] = [];
   totalComprasCliente: number = 0;
@@ -53,6 +55,7 @@ export class DetalleVenta implements OnInit, OnDestroy {
     private posService: PosService,
     private clientesService: ClientesService,
     private sedeService: SedeService,
+    private promocionesService: PromocionesService,
   ) {}
 
   ngOnInit(): void {
@@ -99,6 +102,7 @@ export class DetalleVenta implements OnInit, OnDestroy {
     this.cliente = null;
     this.pagos = [];
     this.historialCompras = [];
+    this.promocion = null;
 
     const resultado = this.ventasService.getComprobantePorIdNumerico(id);
     this.comprobante = resultado || null;
@@ -113,6 +117,12 @@ export class DetalleVenta implements OnInit, OnDestroy {
     this.cliente = this.clientesService.getClientePorId(this.comprobante.id_cliente) || null;
 
     this.pagos = this.posService.getPagosPorComprobante(this.comprobante.id_comprobante);
+
+    if (this.comprobante.id_promocion) {
+      this.promocion = this.promocionesService.getPromocionPorId(this.comprobante.id_promocion);
+    } else if (this.comprobante.codigo_promocion) {
+      this.promocion = this.promocionesService.buscarPorCodigo(this.comprobante.codigo_promocion);
+    }
 
     this.cargarHistorialCliente();
 
@@ -152,7 +162,6 @@ export class DetalleVenta implements OnInit, OnDestroy {
 
   verDetalleHistorial(idComprobante: number): void {
     window.scrollTo({ top: 0, behavior: 'smooth' });
-
     this.router.navigate(['/ventas/ver-detalle', idComprobante]);
   }
 
@@ -240,5 +249,43 @@ export class DetalleVenta implements OnInit, OnDestroy {
 
   calcularTotalItem(cantidad: number, precio: number): number {
     return cantidad * precio;
+  }
+
+  tienePromocion(): boolean {
+    return !!(
+      this.comprobante?.codigo_promocion &&
+      this.comprobante?.descuento_promocion &&
+      this.comprobante.descuento_promocion > 0
+    );
+  }
+
+  getDescripcionPromocion(): string {
+    if (this.comprobante?.descripcion_promocion) {
+      return this.comprobante.descripcion_promocion;
+    }
+    
+    if (this.promocion?.descripcion) {
+      return this.promocion.descripcion;
+    }
+
+    return 'Descuento especial';
+  }
+
+  getCodigoPromocion(): string {
+    return this.comprobante?.codigo_promocion || '';
+  }
+
+  getDescuentoPromocion(): number {
+    return this.comprobante?.descuento_promocion || 0;
+  }
+
+  getSubtotalAntesDescuento(): number {
+    if (!this.comprobante) return 0;
+    
+    if (this.tienePromocion()) {
+      return this.comprobante.subtotal + (this.comprobante.descuento_promocion || 0);
+    }
+    
+    return this.comprobante.subtotal;
   }
 }

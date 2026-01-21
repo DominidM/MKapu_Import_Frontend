@@ -1,3 +1,4 @@
+<!-- CABECERA -->
 <div class="p-2">
   <p-card styleClass="ventas-header-card mb-4 ventas-header-bordered">
     <div class="flex align-items-center justify-content-between flex-wrap gap-2">
@@ -35,8 +36,11 @@
   </p-card>
 </div>
 
+<!-- PROCESO VENTA -->
 <div class="p-2">
   <p-card styleClass="wizard-card">
+
+    <!-- CABECERA VENTA -->
     <div class="wizard-steps">
       <div
         *ngFor="let step of steps; let i = index"
@@ -55,6 +59,8 @@
     <p-divider styleClass="wizard-divider" />
 
     <div class="wizard-content">
+      
+      <!-- COMPROBANTE Y CLIENTE -->
       <div *ngIf="activeStep === 0" class="step-content">
         <div class="step-header">
           <i class="pi pi-file-edit step-icon"></i>
@@ -88,12 +94,14 @@
 
           <p-divider styleClass="section-divider" />
 
+          <!-- CLIENTE -->
           <div class="cliente-section">
             <label class="section-label">
               <i class="pi pi-users"></i>
               Datos del Cliente
             </label>
 
+            <!-- BUSCAR CLIENTE -->
             <div class="buscar-cliente-section">
               <label class="input-label">{{ tipoComprobante === '03' ? 'DNI' : 'RUC' }}</label>
 
@@ -129,6 +137,7 @@
                             </div>
                             <small class="text-600">DNI: {{ cliente.num_doc }}</small>
                           </div>
+
                           <div *ngIf="tipoComprobante === '01'">
                             <div class="font-bold">{{ cliente.razon_social }}</div>
                             <small class="text-600">RUC: {{ cliente.num_doc }}</small>
@@ -158,9 +167,11 @@
               </div>
             </div>
 
+            <!-- CLIENTE CAMPOS -->
             <div *ngIf="clienteEncontrado" class="cliente-encontrado-card mt-3">
               <p-card styleClass="cliente-card-success">
                 <div class="cliente-content">
+
                   <div class="cliente-cabecera-row">
                     <div class="cliente-row">
                       <h4 class="cliente-nombre">
@@ -215,6 +226,7 @@
               </p-card>
             </div>
 
+            <!-- CREAR CLIENTE -->
             <div *ngIf="mostrarFormulario" class="nuevo-cliente-form mt-3">
               <p-divider align="center">
                 <span class="divider-text">
@@ -224,6 +236,7 @@
               </p-divider>
 
               <div class="form-grid">
+
                 <div class="form-field" *ngIf="tipoComprobante === '03'">
                   <label>Nombres *</label>
                   <input
@@ -300,6 +313,7 @@
         </div>
       </div>
 
+      <!-- PRODUCTOS -->
       <div *ngIf="activeStep === 1" class="step-content">
         <div class="step-header">
           <i class="pi pi-box step-icon"></i>
@@ -307,8 +321,10 @@
         </div>
 
         <div class="productos-container">
+
           <div class="seccion-busquedas">
             <div class="filtros-productos">
+
               <div class="buscar-producto-auto">
                 <label class="font-semibold mb-2 block">Buscar producto</label>
                 <p-autocomplete
@@ -327,6 +343,7 @@
                 >
                   <ng-template let-producto pTemplate="item">
                     <div class="producto-suggestion-mejorado">
+
                       <div class="suggestion-row-1">
                         <span class="suggestion-codigo-nuevo">{{ producto.codigo }}</span>
                         <p-tag
@@ -338,16 +355,9 @@
 
                       <div class="suggestion-row-2">
                         <span class="suggestion-nombre-nuevo">{{ producto.nombre }}</span>
-                        <div class="flex align-items-center gap-2">
-                          <span class="suggestion-precio-nuevo">
-                            S/. {{ producto.precioUnidad | number: '1.2-2' }}
-                          </span>
-                          <p-tag
-                            [value]="'Stock: ' + producto.stock"
-                            [severity]="obtenerSeveridadStock(producto.stock)"
-                            styleClass="suggestion-stock-tag"
-                          />
-                        </div>
+                        <span class="suggestion-precio-nuevo">
+                          S/. {{ producto.precioUnidad | number: '1.2-2' }}
+                        </span>
                       </div>
                     </div>
                   </ng-template>
@@ -380,9 +390,36 @@
                   </ng-template>
                 </p-select>
               </div>
+
+              <div class="sede-selector">
+                <label class="font-semibold mb-2 block">Sede</label>
+                <p-select
+                  [(ngModel)]="sedeSeleccionada"
+                  [options]="sedesDisponibles"
+                  (onChange)="onSedeChange()"
+                  placeholder="Seleccione una sede"
+                  optionLabel="label"
+                  optionValue="value"
+                  styleClass="w-full"
+                >
+                  <ng-template pTemplate="selectedItem" let-option>
+                    <div class="sede-option" *ngIf="option">
+                      <i class="pi pi-building"></i>
+                      <span>{{ option.label }}</span>
+                    </div>
+                  </ng-template>
+                  <ng-template let-option pTemplate="item">
+                    <div class="sede-option">
+                      <i class="pi pi-building"></i>
+                      <span>{{ option.label }}</span>
+                    </div>
+                  </ng-template>
+                </p-select>
+              </div>
             </div>
           </div>
 
+          <!-- SECCIÓN: PRODUCTOS DISPONIBLES Y AGREGAR -->
           <div class="seccion-productos-agregar">
             <div class="columna-productos-disponibles">
               <div class="columna-header">
@@ -403,15 +440,6 @@
                     <p-tag [value]="producto.familia" severity="info" />
                   </div>
                   <div class="producto-nombre mb-2">{{ producto.nombre }}</div>
-
-                  <div class="producto-stock mb-2">
-                    <p-tag
-                      [value]="'Stock: ' + producto.stock"
-                      [severity]="obtenerSeveridadStock(producto.stock)"
-                      icon="pi pi-box"
-                    />
-                  </div>
-
                   <div class="producto-precios">
                     <small>
                       <strong>Unidad:</strong> S/. {{ producto.precioUnidad | number: '1.2-2' }}
@@ -433,6 +461,7 @@
               </div>
             </div>
 
+            <!-- CARRITO  -->
             <div class="columna-agregar-carrito">
               <div class="columna-header">
                 <h4>
@@ -445,14 +474,6 @@
                   <div class="producto-seleccionado mb-3">
                     <strong class="block mb-1">{{ productoTemp.nombre }}</strong>
                     <small class="text-600">{{ productoTemp.codigo }}</small>
-
-                    <div class="mt-2">
-                      <p-tag
-                        [value]="'Stock disponible: ' + productoTemp.stock"
-                        [severity]="obtenerSeveridadStock(productoTemp.stock)"
-                        icon="pi pi-box"
-                      />
-                    </div>
                   </div>
 
                   <div class="form-field mb-3">
@@ -471,13 +492,9 @@
                     <p-inputNumber
                       [(ngModel)]="cantidadTemp"
                       [min]="1"
-                      [max]="productoTemp.stock"
                       [showButtons]="true"
                       styleClass="w-full"
                     />
-                    <small class="text-600 mt-1 block"
-                      >Máximo: {{ productoTemp.stock }} unidades</small
-                    >
                   </div>
 
                   <div class="precio-display mb-3">
@@ -498,17 +515,8 @@
                     label="Agregar al Carrito"
                     icon="pi pi-plus"
                     (onClick)="agregarProducto()"
-                    [disabled]="cantidadTemp > productoTemp.stock"
                     styleClass="w-full btn-agregar-producto"
                   />
-
-                  <small
-                    *ngIf="cantidadTemp > productoTemp.stock"
-                    class="text-red-500 mt-2 block text-center"
-                  >
-                    <i class="pi pi-exclamation-triangle"></i>
-                    Stock insuficiente
-                  </small>
                 </div>
 
                 <div *ngIf="!productoTemp" class="no-seleccion">
@@ -519,6 +527,7 @@
             </div>
           </div>
 
+          <!-- CARRITO DE COMPRAS -->
           <div class="seccion-carrito-completo">
             <div class="carrito-header">
               <h4>
@@ -528,6 +537,7 @@
             </div>
 
             <div class="carrito-contenido">
+
               <div *ngIf="productosSeleccionados.length > 0" class="carrito-tabla">
                 <p-table
                   [value]="productosSeleccionados"
@@ -581,6 +591,7 @@
 
                 <div class="carrito-totales-box">
                   <div class="totales-contenido">
+
                     <div class="total-line">
                       <span class="label">Subtotal (Base imponible):</span>
                       <span class="total-valor"
@@ -611,6 +622,7 @@
         </div>
       </div>
 
+      <!-- VENTA Y PAGO -->
       <div *ngIf="activeStep === 2" class="step-content">
         <div class="step-header">
           <i class="pi pi-credit-card step-icon"></i>
@@ -618,6 +630,7 @@
         </div>
 
         <div class="content-centrado">
+
           <div class="tipo-venta-section mb-4">
             <label class="section-label">
               <i class="pi pi-send"></i>
@@ -653,62 +666,6 @@
 
           <p-divider styleClass="section-divider" />
 
-          <div class="tipo-venta-section mb-4">
-            <label class="section-label">
-              <i class="pi pi-ticket"></i>
-              Promociones
-            </label>
-
-            <div class="buscar-cliente-section">
-              <label class="input-label">Código Promocional</label>
-              <div class="flex gap-2 align-items-stretch">
-                <div class="flex-1">
-                  <input
-                    pInputText
-                    [(ngModel)]="codigoPromocion"
-                    (ngModelChange)="onCodigoPromocionChange()"
-                    placeholder="Ingrese código promocional"
-                    [disabled]="!!promocionAplicada"
-                    [ngStyle]="{ height: '42px', width: '100%' }"
-                  />
-                </div>
-                <p-button
-                  *ngIf="!promocionAplicada"
-                  label="Aplicar"
-                  icon="pi pi-check"
-                  (onClick)="aplicarPromocion()"
-                  [disabled]="!codigoPromocion.trim()"
-                  styleClass="btn-buscar-cliente"
-                  [ngStyle]="{ 'flex-shrink': '0', width: 'auto', 'min-width': '140px' }"
-                />
-                <p-button
-                  *ngIf="promocionAplicada"
-                  icon="pi pi-times"
-                  (onClick)="limpiarPromocion()"
-                  styleClass="p-button-danger btn-remover-promo"
-                  pTooltip="Remover promoción"
-                />
-              </div>
-
-              <div *ngIf="promocionAplicada" class="mt-3">
-                <div class="monto-destacado-box promo-aplicada">
-                  <i class="pi pi-check-circle promo-icon"></i>
-                  <span class="promo-texto">{{ promocionAplicada.descripcion }}</span>
-                  <strong class="promo-descuento">
-                    - S/ {{ descuentoPromocion.toFixed(2) }}
-                  </strong>
-                </div>
-              </div>
-
-              <small class="promocion-ayuda mt-2 block">
-                <i class="pi pi-info-circle"></i>
-                Códigos válidos: VERANO2026, DESCUENTO10, PROMO50
-              </small>
-            </div>
-          </div>
-
-          <p-divider styleClass="section-divider" />
-
           <div class="tipo-pago-section">
             <label class="section-label">
               <i class="pi pi-wallet"></i>
@@ -732,6 +689,7 @@
             </div>
 
             <div class="pago-detalles-wrapper">
+
               <div *ngIf="tipoPago === 'EFECTIVO'" class="pago-detalles-animated">
                 <div class="monto-destacado-box">
                   <i class="pi pi-tag"></i>
@@ -774,6 +732,7 @@
                 </div>
 
                 <div class="campos-pago-grid">
+
                   <div class="campo-pago-item">
                     <div class="campo-pago-header">
                       <i class="pi pi-building"></i>
@@ -795,7 +754,7 @@
                     <input
                       pInputText
                       [(ngModel)]="numeroOperacion"
-                      placeholder="Ingrese número de operación"
+                      placeholder="Ej: 001234567890"
                       class="w-full input-operacion"
                     />
                   </div>
@@ -808,27 +767,25 @@
               >
                 <div class="monto-destacado-box">
                   <i class="pi pi-tag"></i>
-                  <span>Total a Pagar:</span>
+                  <span>Monto a Pagar:</span>
                   <strong class="monto-destacado"
                     >S/. {{ calcularTotal() | number: '1.2-2' }}</strong
                   >
                 </div>
 
-                <div class="pago-header-inline">
-                  <i class="pi pi-mobile"></i>
-                  <span>Detalles de Pago - {{ tipoPago }}</span>
-                </div>
+                <p-message
+                  [severity]="'info'"
+                  [text]="'Pago mediante ' + tipoPago"
+                  styleClass="w-full"
+                />
 
-                <div class="campo-pago-item">
-                  <div class="campo-pago-header">
-                    <i class="pi pi-hashtag"></i>
-                    <span>N° de Operación *</span>
-                  </div>
+                <div class="form-field">
+                  <label class="input-label">Número de Operación (Opcional)</label>
                   <input
                     pInputText
                     [(ngModel)]="numeroOperacion"
                     placeholder="Ingrese número de operación"
-                    class="w-full input-operacion"
+                    class="w-full"
                   />
                 </div>
               </div>
@@ -837,7 +794,9 @@
         </div>
       </div>
 
+      <!-- CONFIRMACIÓN -->
       <div *ngIf="activeStep === 3" class="step-content">
+
         <div *ngIf="!comprobanteGenerado">
           <div class="step-header">
             <i class="pi pi-check-circle step-icon"></i>
@@ -852,6 +811,7 @@
               </h4>
 
               <div class="resumen-grid mb-4">
+
                 <div class="resumen-item">
                   <span class="label">
                     <i class="pi pi-user"></i>
@@ -949,6 +909,7 @@
           </div>
         </div>
 
+        <!-- VENTA REALIZADA -->
         <div *ngIf="comprobanteGenerado" class="venta-exitosa">
           <div class="success-animation">
             <i class="pi pi-check-circle"></i>
@@ -1010,6 +971,7 @@
             </p-card>
           </div>
 
+          <!-- BOTONES -->
           <div class="action-buttons-final mt-4">
             <p-button
               label="Imprimir Comprobante"
@@ -1038,6 +1000,7 @@
 
     <p-divider styleClass="wizard-divider" />
 
+    <!-- NAVEGACION -->
     <div *ngIf="activeStep < 3 || !comprobanteGenerado" class="step-actions">
       <p-button
         *ngIf="activeStep > 0"

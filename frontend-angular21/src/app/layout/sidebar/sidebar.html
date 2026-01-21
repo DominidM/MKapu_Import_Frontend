@@ -166,6 +166,26 @@
             Clientes
           </a>
         </div>
+        <div *ngIf="activeMenu === 'ventas'" class="ml-4">
+          <a
+            class="flex px-4 py-2 cursor-pointer hover:surface-400"
+            routerLinkActive="bg-primary text-black border-round"
+            [routerLink]="'/admin/historial-ventas-general'"
+            style="text-decoration: none; color: white;"
+          >
+            Historial de Ventas General
+          </a>
+        </div>
+        <div *ngIf="activeMenu === 'ventas'" class="ml-4">
+          <a
+            class="flex px-4 py-2 cursor-pointer hover:surface-400"
+            routerLinkActive="bg-primary text-black border-round"
+            [routerLink]="'/admin/generar-venta'"
+            style="text-decoration: none; color: white;"
+          >
+            Generar Venta
+          </a>
+        </div>
         <div
           class="flex align-items-center px-4 py-2 gap-2 cursor-pointer hover:surface-400"
           (click)="toggleMenu('admin')"

@@ -27,7 +27,7 @@ export const routes: Routes = [
             },
             { 
               path: 'editar-producto/:id', loadComponent: () => import('./administracion/pages/gestion-productos/productos-formulario/productos-formulario').then(m => m.ProductosFormulario) 
-            }
+            },
       ]},
       {
         path: 'sedes',
@@ -63,6 +63,14 @@ export const routes: Routes = [
           }
         ]
       },
+      {
+        path: 'historial-ventas-general',
+        loadComponent: () => import('./administracion/pages/historial-ventas-general/historial-ventas-general').then(m => m.HistorialVentasGeneral)
+      },
+      {
+        path: 'generar-venta',
+        loadComponent: () => import('./administracion/pages/generar-venta-admin/generar-venta-admin').then(m => m.GenerarVentaAdmin)
+      }
     ]
   },
 
@@ -92,11 +100,11 @@ export const routes: Routes = [
       },
       {
         path: 'imprimir-comprobante',
-        loadComponent: () => import('./ventas/pages/imprimir-comprobante/imprimir-comprobante').then(m => m.ImprimirComprobante)
+        loadComponent: () => import('./ventas/shared/imprimir-comprobante/imprimir-comprobante').then(m => m.ImprimirComprobante)
       },
       { 
         path: 'ver-detalle/:id', 
-        loadComponent: () => import('./ventas/pages/detalles-venta/detalle-venta').then(m => m.DetalleVenta) 
+        loadComponent: () => import('./ventas/shared/detalles-venta/detalle-venta').then(m => m.DetalleVenta) 
       },
     ]
   }

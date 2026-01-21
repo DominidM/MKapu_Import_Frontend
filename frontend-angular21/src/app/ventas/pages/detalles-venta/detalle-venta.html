@@ -34,6 +34,7 @@
   </p-card>
 </div>
 
+
 <!-- LOADING STATE -->
 <div *ngIf="loading" class="p-2">
   <div class="loading-container">
@@ -47,12 +48,15 @@
   </div>
 </div>
 
+
 <!-- CONTENIDO PRINCIPAL -->
 <div *ngIf="!loading && comprobante">
   
   <!-- INFORMACIÓN DEL COMPROBANTE -->
   <div class="p-2">
     <p-card class="comprobante-card mb-4">
+      
+      <!-- HEADER DEL COMPROBANTE -->
       <div class="comprobante-header">
         <div class="comprobante-tipo">
           <span class="tipo-icon">
@@ -60,100 +64,136 @@
           </span>
           <div>
             <h2>{{ getTipoComprobanteLabel() }} ELECTRÓNICA</h2>
-            <p class="serie-numero">{{ formatearSerieNumero(comprobante.serie, comprobante.numero) }}</p>
+            <p class="serie-numero">
+              {{ formatearSerieNumero(comprobante.serie, comprobante.numero) }}
+            </p>
           </div>
         </div>
         <div class="comprobante-estado">
-          <p-tag [value]="getEstadoLabel()" [severity]="getEstadoSeverity()" [rounded]="true"></p-tag>
+          <p-tag
+            [value]="getEstadoLabel()"
+            [severity]="getEstadoSeverity()"
+            [rounded]="true"
+          ></p-tag>
         </div>
       </div>
 
-      <div class="info-grid">
-        <div class="info-section">
-          <h3><i class="pi pi-user"></i> Cliente</h3>
-          <div class="info-row">
-            <span class="label">Nombre completo:</span>
-            <span class="value">{{ comprobante.cliente_nombre }}</span>
-          </div>
-          <div class="info-row">
-            <span class="label">Tipo documento:</span>
-            <span class="value">{{ getTipoDocumento() }}</span>
-          </div>
-          <div class="info-row">
-            <span class="label">N° Documento:</span>
-            <span class="value">{{ comprobante.cliente_doc }}</span>
-          </div>
-          <div class="info-row" *ngIf="cliente?.direccion">
-            <span class="label">Dirección:</span>
-            <span class="value">{{ cliente?.direccion }}</span>
-          </div>
-          <div class="info-row" *ngIf="cliente?.email">
-            <span class="label">Email:</span>
-            <span class="value">{{ cliente?.email }}</span>
-          </div>
-          <div class="info-row" *ngIf="cliente?.telefono">
-            <span class="label">Teléfono:</span>
-            <span class="value">{{ cliente?.telefono }}</span>
-          </div>
-        </div>
-
-        <div class="info-section">
-          <h3><i class="pi pi-file-edit"></i> Comprobante</h3>
-          <div class="info-row">
-            <span class="label">Fecha emisión:</span>
-            <span class="value">{{ comprobante.fec_emision | date: 'dd/MM/yyyy HH:mm' }}</span>
-          </div>
-          <div class="info-row" *ngIf="comprobante.fec_venc">
-            <span class="label">Fecha vencimiento:</span>
-            <span class="value">{{ comprobante.fec_venc | date: 'dd/MM/yyyy' }}</span>
-          </div>
-          <div class="info-row">
-            <span class="label">Moneda:</span>
-            <span class="value">{{ comprobante.moneda === 'PEN' ? 'Soles (S/.)' : 'Dólares ($)' }}</span>
-          </div>
-          <div class="info-row">
-            <span class="label">Responsable:</span>
-            <span class="value">{{ comprobante.responsable }}</span>
-          </div>
-          <div class="info-row">
-            <span class="label">Sede:</span>
-            <span class="value">{{ getSede(comprobante) }}</span>
-          </div>
-          <div class="info-row">
-            <span class="label">Estado SUNAT:</span>
-            <span class="value sunat-ok">{{ comprobante.cdr_cpe }}</span>
-          </div>
-        </div>
-
-        <div class="info-section">
-          <h3><i class="pi pi-wallet"></i> Información de Pago</h3>
-          <div *ngIf="pagos.length > 0">
-            <div *ngFor="let pago of pagos" class="pago-item">
-              <div class="info-row">
-                <span class="label">Medio de pago:</span>
-                <span class="value">
-                  <i [class]="getIconoMedioPago(pago.med_pago)"></i>
-                  {{ pago.med_pago }}
-                </span>
-              </div>
-              <div class="info-row">
-                <span class="label">Monto pagado:</span>
-                <span class="value amount">S/. {{ pago.monto | number: '1.2-2' }}</span>
-              </div>
-              <div class="info-row" *ngIf="pago.banco">
-                <span class="label">Banco:</span>
-                <span class="value">{{ pago.banco }}</span>
-              </div>
-              <div class="info-row" *ngIf="pago.num_operacion">
-                <span class="label">N° Operación:</span>
-                <span class="value">{{ pago.num_operacion }}</span>
-              </div>
+      <div class="info-grid-wrapper">
+        <div class="info-grid">
+          
+          <div class="info-section">
+            <h3><i class="pi pi-user"></i> Cliente</h3>
+            <div class="info-row">
+              <span class="label">Nombre completo:</span>
+              <span class="value">{{ comprobante.cliente_nombre }}</span>
+            </div>
+            <div class="info-row">
+              <span class="label">Tipo documento:</span>
+              <span class="value">{{ getTipoDocumento() }}</span>
+            </div>
+            <div class="info-row">
+              <span class="label">N° Documento:</span>
+              <span class="value">{{ comprobante.cliente_doc }}</span>
+            </div>
+            <div class="info-row" *ngIf="cliente?.direccion">
+              <span class="label">Dirección:</span>
+              <span class="value">{{ cliente?.direccion }}</span>
+            </div>
+            <div class="info-row" *ngIf="cliente?.email">
+              <span class="label">Email:</span>
+              <span class="value">{{ cliente?.email }}</span>
+            </div>
+            <div class="info-row" *ngIf="cliente?.telefono">
+              <span class="label">Teléfono:</span>
+              <span class="value">{{ cliente?.telefono }}</span>
             </div>
           </div>
-          <div *ngIf="pagos.length === 0" class="no-data">
-            <i class="pi pi-info-circle"></i>
-            <span>Sin información de pago</span>
+
+          <div class="info-section">
+            <h3><i class="pi pi-file-edit"></i> Comprobante</h3>
+            <div class="info-row">
+              <span class="label">Fecha emisión:</span>
+              <span class="value">{{ comprobante.fec_emision | date: 'dd/MM/yyyy HH:mm' }}</span>
+            </div>
+            <div class="info-row" *ngIf="comprobante.fec_venc">
+              <span class="label">Fecha vencimiento:</span>
+              <span class="value">{{ comprobante.fec_venc | date: 'dd/MM/yyyy' }}</span>
+            </div>
+            <div class="info-row">
+              <span class="label">Moneda:</span>
+              <span class="value">{{
+                comprobante.moneda === 'PEN' ? 'Soles (S/.)' : 'Dólares ($)'
+              }}</span>
+            </div>
+            <div class="info-row">
+              <span class="label">Responsable:</span>
+              <span class="value">{{ comprobante.responsable }}</span>
+            </div>
+            <div class="info-row">
+              <span class="label">Sede:</span>
+              <span class="value">{{ getSede(comprobante) }}</span>
+            </div>
+            <div class="info-row">
+              <span class="label">Estado SUNAT:</span>
+              <span class="value sunat-ok">{{ comprobante.cdr_cpe }}</span>
+            </div>
           </div>
+
+          <div class="info-section">
+            <h3><i class="pi pi-wallet"></i> Información de Pago</h3>
+            
+            <div *ngIf="pagos.length > 0">
+              <div *ngFor="let pago of pagos" class="pago-item">
+                <div class="info-row">
+                  <span class="label">Medio de pago:</span>
+                  <span class="value">
+                    <i [class]="getIconoMedioPago(pago.med_pago)"></i>
+                    {{ pago.med_pago }}
+                  </span>
+                </div>
+                <div class="info-row">
+                  <span class="label">Monto pagado:</span>
+                  <span class="value amount">S/. {{ pago.monto | number: '1.2-2' }}</span>
+                </div>
+                <div class="info-row" *ngIf="pago.banco">
+                  <span class="label">Banco:</span>
+                  <span class="value">{{ pago.banco }}</span>
+                </div>
+                <div class="info-row" *ngIf="pago.num_operacion">
+                  <span class="label">N° Operación:</span>
+                  <span class="value">{{ pago.num_operacion }}</span>
+                </div>
+              </div>
+            </div>
+            
+            <div *ngIf="pagos.length === 0" class="no-data">
+              <i class="pi pi-info-circle"></i>
+              <span>Sin información de pago</span>
+            </div>
+
+            <div class="promocion-integrada" *ngIf="tienePromocion()">
+              <div class="promocion-header">
+                <i class="pi pi-ticket"></i>
+                <span>Promoción Aplicada</span>
+              </div>
+              <div class="promocion-body">
+                <div class="promocion-info-row">
+                  <span class="promocion-label">Código:</span>
+                  <span class="promocion-codigo-badge">{{ getCodigoPromocion() }}</span>
+                </div>
+                <div class="promocion-info-row">
+                  <span class="promocion-label">Descripción:</span>
+                  <span class="promocion-text">{{ getDescripcionPromocion() }}</span>
+                </div>
+                <div class="promocion-info-row">
+                  <span class="promocion-label">Descuento:</span>
+                  <span class="promocion-descuento">-S/. {{ getDescuentoPromocion() | number: '1.2-2' }}</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
         </div>
       </div>
     </p-card>
@@ -168,7 +208,11 @@
             <span class="icon-shopping"><i class="pi pi-shopping-cart"></i></span>
             Productos Vendidos
           </h3>
-          <p-tag [value]="comprobante.detalles.length + ' items'" severity="success" [rounded]="true"></p-tag>
+          <p-tag
+            [value]="comprobante.detalles.length + ' items'"
+            severity="success"
+            [rounded]="true"
+          ></p-tag>
         </div>
       </ng-template>
 
@@ -190,8 +234,12 @@
         </ng-template>
         <ng-template pTemplate="body" let-item>
           <tr>
-            <td><span class="codigo-producto">{{ item.cod_prod }}</span></td>
-            <td><strong>{{ item.descripcion }}</strong></td>
+            <td>
+              <span class="codigo-producto">{{ item.cod_prod }}</span>
+            </td>
+            <td>
+              <strong>{{ item.descripcion }}</strong>
+            </td>
             <td style="text-align: center">{{ item.cantidad }}</td>
             <td style="text-align: right">S/. {{ item.valor_unit | number: '1.2-2' }}</td>
             <td style="text-align: right">S/. {{ item.pre_uni | number: '1.2-2' }}</td>
@@ -208,14 +256,27 @@
             <span class="label">Subtotal (Base imponible):</span>
             <span class="value">S/. {{ comprobante.subtotal | number: '1.2-2' }}</span>
           </div>
+          
+          <div class="total-row descuento-row" *ngIf="tienePromocion()">
+            <span class="label">
+              <i class="pi pi-ticket"></i>
+              Descuento ({{ getCodigoPromocion() }}):
+            </span>
+            <span class="value descuento-valor">
+              -S/. {{ getDescuentoPromocion() | number: '1.2-2' }}
+            </span>
+          </div>
+          
           <div class="total-row">
             <span class="label">IGV (18%):</span>
             <span class="value">S/. {{ comprobante.igv | number: '1.2-2' }}</span>
           </div>
+          
           <div class="total-row" *ngIf="comprobante.isc > 0">
             <span class="label">ISC:</span>
             <span class="value">S/. {{ comprobante.isc | number: '1.2-2' }}</span>
           </div>
+          
           <div class="total-row total-final">
             <span class="label">TOTAL A PAGAR:</span>
             <span class="value">S/. {{ comprobante.total | number: '1.2-2' }}</span>
@@ -274,9 +335,9 @@
           <ng-template pTemplate="header">
             <tr>
               <th style="width: 15%">Comprobante</th>
-              <th style="width: 15%">Fecha</th>
-              <th style="width: 15%">Sede</th>
-              <th style="width: 12%; text-align: center">Tipo</th>
+              <th style="width: 12%">Fecha</th>
+              <th style="width: 20%">Responsable</th>
+              <th style="width: 10%; text-align: center">Tipo</th>
               <th style="width: 13%; text-align: right">Total</th>
               <th style="width: 30%; text-align: center">Acciones</th>
             </tr>
@@ -285,7 +346,12 @@
             <tr>
               <td>{{ formatearSerieNumero(venta.serie, venta.numero) }}</td>
               <td>{{ venta.fec_emision | date: 'dd/MM/yyyy' }}</td>
-              <td>{{ getSede(venta) }}</td>
+              <td>
+                <div class="responsable-cell">
+                  <i class="pi pi-user"></i>
+                  <span>{{ venta.responsable }}</span>
+                </div>
+              </td>
               <td style="text-align: center">
                 <p-tag
                   [value]="venta.tipo_comprobante === '03' ? 'BOLETA' : 'FACTURA'"
@@ -355,10 +421,12 @@
         </p-table>
       </div>
 
+      <!-- SIN HISTORIAL -->
       <div *ngIf="historialCompras.length === 0" class="no-data">
         <i class="pi pi-info-circle"></i>
         <span>Este cliente no tiene compras anteriores</span>
       </div>
     </p-card>
   </div>
+
 </div>
