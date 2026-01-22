@@ -36,7 +36,7 @@ import { ConfirmationService, MessageService } from 'primeng/api';
   providers:[ConfirmationService, MessageService],
 })
 export class Clientes {
-  
+
   clientes = [
     {
       nro_documento: '74283915',
@@ -44,8 +44,8 @@ export class Clientes {
       nombres: 'Carlos Alberto',
       apellidos: 'Torres',
       direccion: 'Av. Las Flores 15-16, Urb. Las Flores',
-      email:'abc@gmail.com', 
-      telefono: '987654321', 
+      email: 'abc@gmail.com',
+      telefono: '987654321',
     },
     {
       nro_documento: '60827493',
@@ -53,8 +53,8 @@ export class Clientes {
       nombres: 'María Fernanda',
       apellidos: 'Rios',
       direccion: 'Av. Las Flores 15-16, Urb. Las Flores',
-      email:'abc@gmail.com', 
-      telefono: '987654321', 
+      email: 'abc@gmail.com',
+      telefono: '987654321',
     },
     {
       nro_documento: '91536248',
@@ -62,8 +62,8 @@ export class Clientes {
       nombres: 'José Luis',
       apellidos: 'Quispe',
       direccion: 'Av. Las Flores 15-16, Urb. Las Flores',
-      email:'abc@gmail.com', 
-      telefono: '987654321', 
+      email: 'abc@gmail.com',
+      telefono: '987654321',
     },
     {
       nro_documento: '48392076',
@@ -71,10 +71,11 @@ export class Clientes {
       nombres: 'Ana Paula',
       apellidos: 'Huaman',
       direccion: 'Av. Las Flores 15-16, Urb. Las Flores',
-      email:'abc@gmail.com', 
-      telefono: '987654321', 
+      email: 'abc@gmail.com',
+      telefono: '987654321',
     },
   ];
+
   filteredClientes = [...this.clientes];
   clienteSuggestions = [...this.clientes];
   searchTerm = '';
@@ -84,17 +85,18 @@ export class Clientes {
     private messageService: MessageService
   ) {}
 
-
   onSearch(event: { query: string }): void {
     this.updateFilteredClientes(event.query);
   }
 
-  onSearchChange(term: string): void {
-    this.updateFilteredClientes(term);
+  onSearchChange(term: string | { nombres?: string } | null): void {
+    this.updateFilteredClientes(this.getSearchValue(term));
   }
 
-  onSelectCliente(): void {
-    this.updateFilteredClientes(this.searchTerm);
+  onSelectCliente(event: { value?: { nombres?: string } } | null): void {
+    const value = this.getSearchValue(event?.value ?? this.searchTerm);
+    this.searchTerm = value;
+    this.updateFilteredClientes(value);
   }
 
   clearSearch(): void {
@@ -102,7 +104,7 @@ export class Clientes {
     this.updateFilteredClientes('');
   }
 
-private updateFilteredClientes(term: string): void {
+  private updateFilteredClientes(term: string): void {
     const value = term?.trim().toLowerCase();
 
     if (!value) {
@@ -112,36 +114,21 @@ private updateFilteredClientes(term: string): void {
     }
 
     this.filteredClientes = this.clientes.filter(cliente =>
-      [cliente.nro_documento, cliente.nombres, cliente.apellidos].some(field =>
-        field.toLowerCase().includes(value)
-      )
+      [
+        cliente.nro_documento,
+        cliente.nombres,
+        cliente.apellidos,
+      ].some(field => field.toLowerCase().includes(value))
     );
+
     this.clienteSuggestions = [...this.filteredClientes];
   }
-  confirmDelete(cliente: { nro_documento: string; nombres: string; apellidos: string; }): void {
-    this.confirmationService.confirm({
-      header: 'Confirmacion',
-      message: `¿Seguro que deseas eliminar al cliente ${cliente.nombres}?`,
-      icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'Eliminar',
-      rejectLabel: 'Cancelar',
-      acceptButtonProps: {
-        severity: 'danger',
-      },
-      rejectButtonProps: {
-        severity: 'secondary',
-        outlined: true,
-      },
-      accept: () => {
-        this.clientes = this.clientes.filter(item => item.nro_documento !== cliente.nro_documento);
-        this.updateFilteredClientes(this.searchTerm);
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Cliente eliminado',
-          detail: `Se elimino el cliente ${cliente.nombres}.`,
-        });
-      },
-    });
+
+  private getSearchValue(term: string | { nombres?: string } | null): string {
+    if (!term) return '';
+    if (typeof term === 'string') return term;
+    return term.nombres ?? '';
   }
 }
+
 

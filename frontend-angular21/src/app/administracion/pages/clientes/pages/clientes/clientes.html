@@ -22,11 +22,11 @@
             <div class="clientes-search-container flex-1">
                 <span class="clientes-search-label">Buscar Sede</span>
                 <p-autoComplete class="clientes-search-input" [(ngModel)]="searchTerm"
-                    [suggestions]="clienteSuggestions" (completeMethod)="onSearch($event)"
-                    (ngModelChange)="onSearchChange($event)" (onSelect)="onSelectCliente()"
-                    placeholder="Escribe nurmero de DNI, nombres o apellidos..."
-                    style="background: transparent; color: var(--text-color);"
+                    [suggestions]="clienteSuggestions" field="nombres" (completeMethod)="onSearch($event)"
+                    (ngModelChange)="onSearchChange($event)" (onSelect)="onSelectCliente($event)"
+                    placeholder="Escribe número de DNI, nombres o apellidos..."
                     [inputStyle]="{ width: '100%', background: 'transparent', color: 'var(--text-color)' }">
+
                     <ng-template let-item pTemplate="item">
                         <div class="flex flex-column gap-1">
                             <span class="font-medium">{{ item.nombres }} {{ item.apellidos }}</span>
@@ -37,7 +37,7 @@
             </div>
             <div class="flex align-items-center gap-2 clientes-filter-actions">
                 <p-button label="Limpiar Filtros" icon="pi pi-filter-slash" severity="danger"
-                    styleClass="clientes-pill clientes-pill-danger"></p-button>
+                    styleClass="clientes-pill clientes-pill-danger" (click)="clearSearch()"></p-button>
             </div>
         </div>
     </p-card>
@@ -54,7 +54,7 @@
             <p-button icon="pi pi-id-card" text severity="secondary" styleClass="clientes-icon-btn"></p-button>
         </div>
         <div class="card">
-            <p-table [value]="clientes" [paginator]="true" [rows]="5" [rowsPerPageOptions]="[5, 10, 20]"
+            <p-table [value]="filteredClientes" [paginator]="true" [rows]="5" [rowsPerPageOptions]="[5, 10, 20]"
                 [tableStyle]="{'min-width': '60rem'}">
                 <ng-template #header>
                     <tr>
