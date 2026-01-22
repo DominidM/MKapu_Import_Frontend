@@ -1,0 +1,95 @@
+.transfer-header-card {
+    border-radius: 12px;
+  }
+  
+  .transfer-kicker {
+    font-size: 0.75rem;
+    color: #9aa4b2;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  
+  .transfer-title {
+    font-size: 1.4rem;
+    font-weight: 600;
+  }
+  
+  .inventory-title-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: #f4c430;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #000;
+    font-size: 1.3rem;
+  }
+  
+  /* ====== TUS COLORES ====== */
+  
+  .rol-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid transparent;
+    border-radius: 6px;
+    padding: 1rem;
+    cursor: pointer;
+    height: 100%;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+  }
+  
+  .rol-card:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 1px var(--primary-color),
+                0 2px 6px rgba(0, 0, 0, 0.45);
+  }
+  
+  .rol-card.selected {
+    border-color: var(--primary-color);
+    background: rgba(255, 193, 7, 0.08);
+  }
+  
+  .rol-icon {
+    font-size: 3rem;
+    margin-bottom: 0.25rem;
+    color: var(--primary-color);
+  }
+  
+  .field {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .field label {
+    width: 150px;
+    font-size: 1rem;
+    white-space: nowrap;
+  }
+  
+  .field input,
+  .field .p-inputtext,
+  .field .p-password {
+    flex: 1;
+  }
+  
+  .field .p-password .p-inputtext {
+    padding-right: 2rem;
+  }
+  
+  ::ng-deep .field .p-password .p-password-icon {
+    right: 0.5rem;
+  }
+  
+  .helper-text {
+    font-size: 0.75rem;
+    color: #9aa4b2;
+  }
+  
+  .header-card {
+    border-radius: 14px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  }
+  
