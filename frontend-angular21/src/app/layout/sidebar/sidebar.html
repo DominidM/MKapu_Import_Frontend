@@ -14,48 +14,36 @@
     <div class="flex-1 overflow-auto p-2">
 
       <div class="mt-2" *ngIf="role === 'ventas'">
-        <a
-          class="flex align-items-center px-4 py-2 gap-2 cursor-pointer hover:surface-400"
-          [routerLink]="'/ventas/dashboard-ventas'"
-          routerLinkActive="bg-primary text-black border-round"
-          style="text-decoration: none; color: white;"
-        >
+        <a class="flex align-items-center px-4 py-2 gap-2 cursor-pointer hover:surface-400"
+          [routerLink]="'/ventas/dashboard-ventas'" routerLinkActive="bg-primary text-black border-round"
+          style="text-decoration: none; color: white;">
           <i class="pi pi-bookmark"></i>
           <span>Dashboard</span>
         </a>
       </div>
 
       <div class="mt-2" *ngIf="role === 'ventas'">
-        <a
-          class="flex align-items-center px-4 py-2 gap-2 cursor-pointer hover:surface-400"
-          [routerLink]="'/ventas/generar-venta'"
-          routerLinkActive="bg-primary text-black border-round"
-          style="text-decoration: none; color: white;"
-        >
+        <a class="flex align-items-center px-4 py-2 gap-2 cursor-pointer hover:surface-400"
+          [routerLink]="'/ventas/generar-venta'" routerLinkActive="bg-primary text-black border-round"
+          style="text-decoration: none; color: white;">
           <i class="pi pi-bookmark"></i>
           <span>Generar Venta</span>
         </a>
       </div>
 
       <div class="mt-2" *ngIf="role === 'ventas'">
-        <a
-          class="flex align-items-center px-4 py-2 gap-2 cursor-pointer hover:surface-400"
-          [routerLink]="'/ventas/historial-ventas'"
-          routerLinkActive="bg-primary text-black border-round"
-          style="text-decoration: none; color: white;"
-        >
+        <a class="flex align-items-center px-4 py-2 gap-2 cursor-pointer hover:surface-400"
+          [routerLink]="'/ventas/historial-ventas'" routerLinkActive="bg-primary text-black border-round"
+          style="text-decoration: none; color: white;">
           <i class="pi pi-bookmark"></i>
           <span>Historial Ventas</span>
         </a>
       </div>
 
       <div class="mt-2" *ngIf="role === 'almacen'">
-        <a
-          class="flex align-items-center px-4 py-2 gap-2 cursor-pointer hover:surface-400"
-          [routerLink]="'/almacen/dashboard'"
-          routerLinkActive="bg-primary text-black border-round"
-          style="text-decoration: none; color: white;"
-        >
+        <a class="flex align-items-center px-4 py-2 gap-2 cursor-pointer hover:surface-400"
+          [routerLink]="'/almacen/dashboard'" routerLinkActive="bg-primary text-black border-round"
+          style="text-decoration: none; color: white;">
           <i class="pi pi-chart-line"></i>
           <span>Dashboard</span>
         </a>
@@ -64,61 +52,57 @@
 
       <div class="mt-2" *ngIf="role === 'admin'">
 
-  <!-- DASHBOARD ADMIN -->
-  <a class="flex align-items-center px-4 py-2 gap-2 hover:surface-400"
-     routerLink="/admin/dashboard"
-     routerLinkActive="bg-primary text-black border-round"
-     style="color:white;text-decoration:none">
-    <i class="pi pi-home"></i>
-    <span>Dashboard</span>
-  </a>
+        <!-- DASHBOARD ADMIN -->
+        <a class="flex align-items-center px-4 py-2 gap-2 hover:surface-400" routerLink="/admin/dashboard"
+          routerLinkActive="bg-primary text-black border-round" style="color:white;text-decoration:none">
+          <i class="pi pi-home"></i>
+          <span>Dashboard</span>
+        </a>
 
-  <!-- ================== VENTAS ================== -->
-  <div class="mt-3 font-bold text-xs px-4 text-gray-400">VENTAS</div>
+        <!-- ================== VENTAS ================== -->
+        <div class="mt-3 font-bold text-xs px-4 text-gray-400">VENTAS</div>
 
-  <a class="flex px-4 py-2 gap-2 hover:surface-400"
-     routerLink="/ventas/dashboard-ventas"
-     routerLinkActive="bg-primary text-black border-round"
-     style="color:white;text-decoration:none">
-    <i class="pi pi-chart-line"></i>
-    <span>Dashboard Ventas</span>
-  </a>
+        <a class="flex px-4 py-2 gap-2 hover:surface-400" routerLink="/ventas/dashboard-ventas"
+          routerLinkActive="bg-primary text-black border-round" style="color:white;text-decoration:none">
+          <i class="pi pi-chart-line"></i>
+          <span>Dashboard Ventas</span>
+        </a>
 
-  <a class="flex px-4 py-2 gap-2 hover:surface-400"
-     routerLink="/ventas/generar-venta"
-     routerLinkActive="bg-primary text-black border-round"
-     style="color:white;text-decoration:none">
-    <i class="pi pi-plus-circle"></i>
-    <span>Crear Venta</span>
-  </a>
+        <a class="flex px-4 py-2 gap-2 hover:surface-400" routerLink="/ventas/generar-venta"
+          routerLinkActive="bg-primary text-black border-round" style="color:white;text-decoration:none">
+          <i class="pi pi-plus-circle"></i>
+          <span>Crear Venta</span>
+        </a>
 
-  <a class="flex px-4 py-2 gap-2 hover:surface-400"
-     routerLink="/ventas/historial-ventas"
-     routerLinkActive="bg-primary text-black border-round"
-     style="color:white;text-decoration:none">
-    <i class="pi pi-list"></i>
-    <span>Historial Ventas</span>
-  </a>
+        <a class="flex px-4 py-2 gap-2 hover:surface-400" routerLink="/ventas/historial-ventas"
+          routerLinkActive="bg-primary text-black border-round" style="color:white;text-decoration:none">
+          <i class="pi pi-list"></i>
+          <span>Historial Ventas</span>
+        </a>
 
-  <a class="flex px-4 py-2 gap-2 hover:surface-400"
-     routerLink="/admin/clientes"
-     routerLinkActive="bg-primary text-black border-round"
-     style="color:white;text-decoration:none">
-    <i class="pi pi-id-card"></i>
-    <span>Clientes</span>
-  </a>
+        <div *ngIf="activeMenu === 'reportes'" class="ml-4">
+          <a class="flex px-4 py-2 cursor-pointer hover:surface-400"
+            routerLinkActive="bg-primary text-black border-round" style="text-decoration: none; color: white;">
+            Reporte Ventas
+          </a>
+          <a class="flex px-4 py-2 cursor-pointer hover:surface-400"
+            routerLinkActive="bg-primary text-black border-round" [routerLink]="'/admin/transferencia'"
+            style="text-decoration: none; color: white;">
+            Reporte Inventario
+          </a>
+        </div>
 
-  <!-- ================== ALMACÉN ================== -->
-  <div class="mt-3 font-bold text-xs px-4 text-gray-400">ALMACÉN</div>
+        <a class="flex px-4 py-2 gap-2 hover:surface-400" routerLink="/almacen/dashboard"
+          routerLinkActive="bg-primary text-black border-round" style="color:white;text-decoration:none">
+          <i class="pi pi-box"></i>
+          <span>Dashboard Almacén</span>
+        </a>
 
-  <a class="flex px-4 py-2 gap-2 hover:surface-400"
-     routerLink="/almacen/dashboard"
-     routerLinkActive="bg-primary text-black border-round"
-     style="color:white;text-decoration:none">
-    <i class="pi pi-box"></i>
-    <span>Dashboard Almacén</span>
-  </a>
-
+        <a class="flex px-4 py-2 gap-2 hover:surface-400" routerLink="/admin/ingresos-almacen"
+          routerLinkActive="bg-primary text-black border-round" style="color:white;text-decoration:none">
+          <i class="pi pi-download"></i>
+          <span>Ingresos Almacén</span>
+        </a>
 
   <a class="flex px-4 py-2 gap-2 hover:surface-400"
      routerLink="/admin/ingresos-almacen"
@@ -187,42 +171,29 @@
     <span>Transferencias</span>
   </a>
 
-  <a class="flex px-4 py-2 gap-2 hover:surface-400"
-     routerLink="/admin/transferencia/reporte-inventario"
-     routerLinkActive="bg-primary text-black border-round"
-     style="color:white;text-decoration:none">
-    <i class="pi pi-file"></i>
-    <span>Reporte Inventario</span>
-  </a>
 
-  <!-- ================== ADMINISTRACIÓN ================== -->
-  <div class="mt-3 font-bold text-xs px-4 text-gray-400">ADMINISTRACIÓN</div>
+        <!-- ================== ADMINISTRACIÓN ================== -->
+        <div class="mt-3 font-bold text-xs px-4 text-gray-400">ADMINISTRACIÓN</div>
 
-  <a class="flex px-4 py-2 gap-2 hover:surface-400"
-     routerLink="/admin/usuarios"
-     routerLinkActive="bg-primary text-black border-round"
-     style="color:white;text-decoration:none">
-    <i class="pi pi-user-plus"></i>
-    <span>Usuarios</span>
-  </a>
+        <a class="flex px-4 py-2 gap-2 hover:surface-400" routerLink="/admin/usuarios"
+          routerLinkActive="bg-primary text-black border-round" style="color:white;text-decoration:none">
+          <i class="pi pi-user-plus"></i>
+          <span>Usuarios</span>
+        </a>
 
-  <a class="flex px-4 py-2 gap-2 hover:surface-400"
-     routerLink="/admin/gestion-productos"
-     routerLinkActive="bg-primary text-black border-round"
-     style="color:white;text-decoration:none">
-    <i class="pi pi-tags"></i>
-    <span>Productos</span>
-  </a>
+        <a class="flex px-4 py-2 gap-2 hover:surface-400" routerLink="/admin/gestion-productos"
+          routerLinkActive="bg-primary text-black border-round" style="color:white;text-decoration:none">
+          <i class="pi pi-tags"></i>
+          <span>Productos</span>
+        </a>
 
-  <a class="flex px-4 py-2 gap-2 hover:surface-400"
-     routerLink="/admin/sedes"
-     routerLinkActive="bg-primary text-black border-round"
-     style="color:white;text-decoration:none">
-    <i class="pi pi-building"></i>
-    <span>Sedes</span>
-  </a>
+        <a class="flex px-4 py-2 gap-2 hover:surface-400" routerLink="/admin/sedes"
+          routerLinkActive="bg-primary text-black border-round" style="color:white;text-decoration:none">
+          <i class="pi pi-building"></i>
+          <span>Sedes</span>
+        </a>
 
-</div>
+      </div>
 
 
 
@@ -232,21 +203,13 @@
 
     <div class="mt-auto border-top-1 surface-border p-3 flex align-items-center gap-2">
 
-      <p-avatar
-        image="https://primefaces.org/cdn/primeng/images/demo/avatar/amyelsner.png"
-        shape="circle"
-      ></p-avatar>
+      <p-avatar image="https://primefaces.org/cdn/primeng/images/demo/avatar/amyelsner.png" shape="circle"></p-avatar>
 
       <span class="font-bold">
         {{ role ? (role | titlecase) : 'Invitado' }}
       </span>
 
-      <p-button
-        class="ml-auto"
-        icon="pi pi-sign-out"
-        severity="danger"
-        (onClick)="confirm2($event)"
-      ></p-button>
+      <p-button class="ml-auto" icon="pi pi-sign-out" severity="danger" (onClick)="confirm2($event)"></p-button>
     </div>
 
   </div>

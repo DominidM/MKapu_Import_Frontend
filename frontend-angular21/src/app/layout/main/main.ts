@@ -23,6 +23,6 @@ mobileSidebarVisible = false;
 openMobileSidebar() {
   this.mobileSidebarVisible = true;
 }
-
+  
 
 }

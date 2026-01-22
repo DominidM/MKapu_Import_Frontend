@@ -1,0 +1,364 @@
+<p-toast position="top-right"></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="p-2">
+  <p-card styleClass="transfer-header-card">
+    <div class="flex align-items-center justify-content-between flex-wrap gap-2">
+      <div class="flex align-items-center gap-3">
+        <span class="transfer-title-icon">
+          <i [class]="iconoCabecera"></i>
+        </span>
+        <div>
+          <p class="transfer-kicker mb-0">{{ tituloKicker }}</p>
+          <h2 class="transfer-title mb-0">{{ subtituloKicker }}</h2>
+        </div>
+      </div>
+      <div class="flex align-items-center gap-2">
+        <p-button
+          label="Volver"
+          icon="pi pi-arrow-left"
+          severity="secondary"
+          [outlined]="true"
+          styleClass="transfer-header-btn"
+          [routerLink]="['/admin/transferencia']"
+        ></p-button>
+      </div>
+    </div>
+  </p-card>
+</div>
+
+<div class="p-2">
+  <p-card styleClass="wizard-card">
+    <div class="wizard-steps">
+      <div
+        *ngFor="let step of steps; let i = index"
+        class="wizard-step"
+        [class.active]="activeStep === i"
+        [class.completed]="activeStep > i"
+      >
+        <div class="step-number">
+          <i *ngIf="activeStep > i" class="pi pi-check"></i>
+          <span *ngIf="activeStep <= i">{{ i + 1 }}</span>
+        </div>
+        <div class="step-title">{{ step }}</div>
+      </div>
+    </div>
+
+    <p-divider styleClass="wizard-divider" />
+
+    <div class="wizard-content">
+      <div *ngIf="activeStep === 0" class="step-content">
+        <div class="step-header">
+          <i class="pi pi-warehouse step-icon"></i>
+          <h3>Producto y sedes</h3>
+        </div>
+
+        <div class="transfer-grid">
+          <div class="transfer-field">
+            <label class="field-label">Producto</label>
+            <p-autocomplete
+              class="w-full"
+              [(ngModel)]="productoQuery"
+              [suggestions]="productosSugeridos"
+              (completeMethod)="buscarProducto($event)"
+              (onSelect)="onSelectProducto($event)"
+              (onClear)="onClearProducto()"
+              [forceSelection]="true"
+              [dropdown]="true"
+              optionLabel="nombre"
+              placeholder="Buscar por codigo o nombre"
+              emptyMessage="Sin resultados"
+            >
+              <ng-template let-producto pTemplate="item">
+                <div class="transfer-suggestion">
+                  <div class="transfer-suggestion-title">{{ producto.nombre }}</div>
+                  <div class="transfer-suggestion-meta">{{ producto.sku }} · {{ producto.marca }}</div>
+                </div>
+              </ng-template>
+            </p-autocomplete>
+          </div>
+        </div>
+
+        <p-card *ngIf="productoSeleccionado" styleClass="transfer-subcard">
+          <div class="transfer-product-title">{{ productoSeleccionado.nombre }}</div>
+          <div class="transfer-meta">
+            <span>SKU: {{ productoSeleccionado.sku }}</span>
+            <span>Categoria: {{ productoSeleccionado.categoria }}</span>
+            <span>Marca: {{ productoSeleccionado.marca }}</span>
+          </div>
+        </p-card>
+
+        <div class="transfer-grid">
+          <div class="transfer-field">
+            <label class="field-label">Sede origen</label>
+            <p-select
+              class="w-full"
+              [options]="sedes"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Seleccione sede origen"
+              [(ngModel)]="sedeOrigen"
+            ></p-select>
+            <p-card *ngIf="sedeOrigen && productoSeleccionado" styleClass="stock-mini-card">
+              <div class="stock-mini-row">
+                <span class="stock-mini-label">Stock disponible</span>
+                <span class="stock-badge" [ngClass]="getStockClassForSede(productoSeleccionado, sedeOrigen)">
+                  {{ stockDisponible }} un.
+                </span>
+              </div>
+            </p-card>
+          </div>
+
+          <div class="transfer-field">
+            <label class="field-label">Sede destino</label>
+            <p-select
+              class="w-full"
+              [options]="sedes"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Seleccione sede destino"
+              [(ngModel)]="sedeDestino"
+            ></p-select>
+            <p-card *ngIf="sedeDestino && productoSeleccionado" styleClass="stock-mini-card">
+              <div class="stock-mini-row">
+                <span class="stock-mini-label">Stock actual</span>
+                <span
+                  class="stock-badge"
+                  [ngClass]="getStockClassForSede(productoSeleccionado, sedeDestino)"
+                >
+                  {{ productoSeleccionado.stockPorSede[sedeDestino] || 0 }} un.
+                </span>
+              </div>
+            </p-card>
+          </div>
+        </div>
+
+      </div>
+
+      <div *ngIf="activeStep === 1" class="step-content">
+        <div class="step-header">
+          <i class="pi pi-box step-icon"></i>
+          <h3>Cantidad y motivo</h3>
+        </div>
+
+        <div class="transfer-panels">
+          <div class="transfer-panel">
+            <div class="transfer-panel-title">
+              <i class="pi pi-sort-amount-up-alt"></i>
+              Cantidad a transferir
+            </div>
+            <div class="transfer-panel-helper">
+              <i class="pi pi-database"></i>
+              <span>Disponible: {{ stockDisponible }} uds</span>
+            </div>
+            <div class="transfer-qty-row">
+              <p-button
+                icon="pi pi-minus"
+                severity="secondary"
+                [rounded]="true"
+                [outlined]="true"
+                (onClick)="ajustarCantidad(-1)"
+              ></p-button>
+
+            <p-inputnumber
+              class="transfer-qty"
+              [min]="1"
+              [max]="stockDisponible"
+              [minFractionDigits]="0"
+              [maxFractionDigits]="0"
+              [useGrouping]="false"
+              [(ngModel)]="cantidad"
+              (ngModelChange)="onCantidadChange($event)"
+              (onInput)="onCantidadChange($event.value)"
+            ></p-inputnumber>
+
+              <p-button
+                icon="pi pi-plus"
+                severity="secondary"
+                [rounded]="true"
+                [outlined]="true"
+                (onClick)="ajustarCantidad(1)"
+              ></p-button>
+            </div>
+            <div class="helper-text">Ajusta la cantidad con controles rapidos.</div>
+          </div>
+
+          <div class="transfer-panel">
+            <div class="transfer-panel-title">
+              <i class="pi pi-flag"></i>
+              Motivo de transferencia
+            </div>
+            <div class="transfer-motivo-row">
+              <i class="pi pi-briefcase transfer-motivo-icon"></i>
+              <p-select
+                class="w-full"
+                [options]="motivos"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Seleccione un motivo"
+                [(ngModel)]="motivo"
+              ></p-select>
+            </div>
+
+            <div class="transfer-panel-note">
+              <i class="pi pi-info-circle"></i>
+              <span>Usa el motivo para clasificar el movimiento.</span>
+            </div>
+
+            <div class="transfer-field mt-3">
+              <label class="field-label">Observacion (opcional)</label>
+              <textarea
+                pTextarea
+                class="w-full transfer-textarea"
+                [autoResize]="true"
+                rows="3"
+                placeholder="Detalle adicional"
+                [(ngModel)]="observacion"
+              ></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="activeStep === 2" class="step-content">
+        <div class="step-header">
+          <i class="pi pi-calendar step-icon"></i>
+          <h3>Fechas y responsable</h3>
+        </div>
+
+        <div class="transfer-panels">
+          <div class="transfer-panel">
+            <div class="transfer-panel-title">
+              <i class="pi pi-send"></i>
+              Fechas de traslado
+            </div>
+            <div class="transfer-panel-note">
+              <i class="pi pi-clock"></i>
+              <span>Define la ventana de envio y llegada.</span>
+            </div>
+            <div class="transfer-grid">
+              <div class="transfer-field">
+                <label class="field-label">Fecha de envio</label>
+                <p-datepicker
+                  class="w-full"
+                  dateFormat="dd/mm/yy"
+                  placeholder="dd/mm/aaaa"
+                  [showIcon]="true"
+                  [minDate]="today"
+                  [(ngModel)]="fechaEnvio"
+                ></p-datepicker>
+              </div>
+
+              <div class="transfer-field">
+                <label class="field-label">Fecha estimada de llegada</label>
+                <p-datepicker
+                  class="w-full"
+                  dateFormat="dd/mm/yy"
+                  placeholder="dd/mm/aaaa"
+                  [showIcon]="true"
+                  [minDate]="today"
+                  [(ngModel)]="fechaLlegada"
+                ></p-datepicker>
+              </div>
+            </div>
+          </div>
+
+          <div class="transfer-panel">
+            <div class="transfer-panel-title">
+              <i class="pi pi-user"></i>
+              Responsable
+            </div>
+            <div class="transfer-panel-note">
+              <i class="pi pi-id-card"></i>
+              <span>Selecciona quien lidera la transferencia.</span>
+            </div>
+            <p-select
+              class="w-full"
+              [options]="responsables"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Seleccione responsable"
+              [(ngModel)]="responsable"
+            ></p-select>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="activeStep === 3" class="step-content">
+        <div class="step-header">
+          <i class="pi pi-check-circle step-icon"></i>
+          <h3>Confirmacion</h3>
+        </div>
+
+        <div class="recap-grid">
+          <p-card styleClass="recap-card">
+            <div class="recap-label"><i class="pi pi-box"></i> Producto</div>
+            <div class="recap-value">{{ productoSeleccionado?.nombre || '-' }}</div>
+            <div class="recap-meta">SKU: {{ productoSeleccionado?.sku || '-' }}</div>
+          </p-card>
+
+          <p-card styleClass="recap-card">
+            <div class="recap-label"><i class="pi pi-map-marker"></i> Origen</div>
+            <div class="recap-value">{{ getSedeLabel(sedeOrigen) }}</div>
+            <div class="recap-meta">Stock: {{ stockDisponible }} uds</div>
+          </p-card>
+
+          <p-card styleClass="recap-card">
+            <div class="recap-label"><i class="pi pi-flag"></i> Motivo</div>
+            <div class="recap-value">{{ getMotivoLabel(motivo) }}</div>
+            <div class="recap-meta">Responsable: {{ getResponsableLabel(responsable) }}</div>
+          </p-card>
+
+          <p-card styleClass="recap-card">
+            <div class="recap-label"><i class="pi pi-map-marker"></i> Destino</div>
+            <div class="recap-value">{{ getSedeLabel(sedeDestino) }}</div>
+            <div class="recap-meta">Stock: {{ getStockForSede(productoSeleccionado, sedeDestino) }} uds</div>
+          </p-card>
+
+          <p-card styleClass="recap-card">
+            <div class="recap-label"><i class="pi pi-sort-amount-up-alt"></i> Cantidad</div>
+            <div class="recap-value">{{ cantidad }} uds</div>
+            <div class="recap-meta">Disponible: {{ stockDisponible }} uds</div>
+          </p-card>
+
+          <p-card styleClass="recap-card">
+            <div class="recap-label"><i class="pi pi-calendar"></i> Fechas</div>
+            <div class="recap-value">{{ fechaEnvio ? (fechaEnvio | date:'dd/MM/yyyy') : '-' }}</div>
+            <div class="recap-meta">Llegada: {{ fechaLlegada ? (fechaLlegada | date:'dd/MM/yyyy') : '-' }}</div>
+          </p-card>
+
+          <p-card *ngIf="observacion" styleClass="recap-card recap-card-wide">
+            <div class="recap-label"><i class="pi pi-comment"></i> Observacion</div>
+            <div class="recap-value">{{ observacion }}</div>
+          </p-card>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-actions">
+      <p-button
+        label="Anterior"
+        severity="secondary"
+        [outlined]="true"
+        (onClick)="prevStep()"
+        [disabled]="activeStep === 0"
+      ></p-button>
+
+      <p-button
+        *ngIf="activeStep < steps.length - 1"
+        label="Siguiente"
+        icon="pi pi-arrow-right"
+        styleClass="wizard-primary"
+        (onClick)="nextStep()"
+      ></p-button>
+
+      <p-button
+        *ngIf="activeStep === steps.length - 1"
+        label="Confirmar transferencia"
+        icon="pi pi-check"
+        styleClass="wizard-primary"
+        (onClick)="confirmarTransferencia()"
+      ></p-button>
+    </div>
+  </p-card>
+</div>

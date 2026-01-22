@@ -15,11 +15,49 @@
           label="Nueva Transferencia"
           icon="pi pi-plus"
           styleClass="transferencia-pill"
-          [routerLink]="['/admin/transferencia/reporte-inventario']"
+          [routerLink]="['/admin/transferencia/nueva-transferencia']"
         ></p-button>
       </div>
     </div>
   </p-card>
+
+  <div class="transferencia-metrics">
+    <p-card styleClass="metric-card metric-pendiente">
+      <div class="metric-header">
+        <span class="metric-title">Solicitudes Pendientes</span>
+        <span class="metric-icon metric-icon-warning"><i class="pi pi-clock"></i></span>
+      </div>
+      <div class="metric-value">12</div>
+      <div class="metric-sub">+ 2 nuevas hoy</div>
+    </p-card>
+
+    <p-card styleClass="metric-card metric-transito">
+      <div class="metric-header">
+        <span class="metric-title">En Transito</span>
+        <span class="metric-icon metric-icon-info"><i class="pi pi-truck"></i></span>
+      </div>
+      <div class="metric-value">5</div>
+      <div class="metric-sub">En ruta a destino</div>
+    </p-card>
+
+    <p-card styleClass="metric-card metric-recibidos">
+      <div class="metric-header">
+        <span class="metric-title">Recibidos Hoy</span>
+        <span class="metric-icon metric-icon-success"><i class="pi pi-check-circle"></i></span>
+      </div>
+      <div class="metric-value">28</div>
+      <div class="metric-sub">+ 5% vs ayer</div>
+    </p-card>
+
+    <p-card styleClass="metric-card metric-incidencia">
+      <div class="metric-header">
+        <span class="metric-title">Incidencias</span>
+        <span class="metric-icon metric-icon-danger"><i class="pi pi-exclamation-triangle"></i></span>
+      </div>
+      <div class="metric-value">1</div>
+      <div class="metric-sub">Atencion requerida</div>
+    </p-card>
+  </div>
 
   <p-card>
     <div class="flex flex-column lg:flex-row lg:align-items-center lg:justify-content-between gap-3">
@@ -44,6 +82,18 @@
             </div>
           </ng-template>
         </p-autoComplete>
+      </div>
+      <div class="transferencia-search-container transferencia-status-filter">
+        <span class="transferencia-search-label">Estado</span>
+        <p-select
+          class="transferencia-search-input"
+          [options]="estadoOptions"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Todos"
+          [(ngModel)]="estadoFilter"
+          (onChange)="filtrar(searchTerm)"
+        ></p-select>
       </div>
       <div class="flex align-items-center gap-2 transferencia-filter-actions">
         <p-button
@@ -83,42 +133,42 @@
         <tr>
           <th>CODIGO</th>
           <th>PRODUCTO</th>
-          <th>SEDE ORIGEN</th>
-          <th>SEDE DESTINO</th>
+          <th>RUTA (ORIGEN -> DESTINO)</th>
           <th>CANTIDAD</th>
+          <th>ESTADO</th>
           <th>ACCIONES</th>
         </tr>
       </ng-template>
       <ng-template pTemplate="body" let-transferencia>
         <tr>
-          <td>{{ transferencia.codigo }}</td>
           <td>
-            <div class="flex flex-column gap-1">
-              <span class="font-medium">{{ transferencia.producto }}</span>
-              <small class="text-500">{{ transferencia.fecha }}</small>
+            <div class="transferencia-code">
+              <div class="transferencia-code-main">{{ transferencia.codigo }}</div>
+              <div class="transferencia-code-meta">{{ transferencia.fechaEnvio }} · {{ transferencia.fechaLlegada }}</div>
             </div>
           </td>
           <td>
-            <span class="inline-flex align-items-center gap-2">
-              <i class="pi pi-map-marker text-500"></i>
-              {{ transferencia.origen }}
-            </span>
-          </td>
-          <td>
-            <span class="inline-flex align-items-center gap-2">
-              <i class="pi pi-map-marker text-500"></i>
-              {{ transferencia.destino }}
-            </span>
-          </td>
-          <td>
-            <div class="flex flex-column gap-2">
-              <span class="font-medium">{{ transferencia.cantidad }} uds</span>
-              <p-tag
-                [value]="transferencia.estado"
-                [severity]="getEstadoSeverity(transferencia.estado)"
-                styleClass="transferencia-tag"
-              ></p-tag>
+            <div class="transferencia-producto">
+              <span class="transferencia-producto-nombre">{{ transferencia.producto }}</span>
+              <span class="transferencia-producto-meta">Responsable: {{ transferencia.responsable }}</span>
             </div>
+          </td>
+          <td>
+            <div class="transferencia-ruta">
+              <span class="transferencia-ruta-sede">{{ transferencia.origen }}</span>
+              <i class="pi pi-arrow-right transferencia-ruta-icon"></i>
+              <span class="transferencia-ruta-sede transferencia-ruta-destino">{{ transferencia.destino }}</span>
+            </div>
+          </td>
+          <td>
+            <span class="transferencia-cantidad">{{ transferencia.cantidad }}</span>
+          </td>
+          <td>
+            <p-tag
+              [value]="transferencia.estado"
+              [severity]="getEstadoSeverity(transferencia.estado)"
+              styleClass="transferencia-tag"
+            ></p-tag>
           </td>
           <td>
             <div class="flex align-items-center gap-2">
@@ -127,7 +177,7 @@
                 text
                 severity="secondary"
                 styleClass="transferencia-icon-btn transferencia-icon-warn"
-                [routerLink]="['/admin/transferencia/reporte-inventario']"
+                [routerLink]="['/admin/transferencia/detalle-transferencia']"
                 [queryParams]="{ codigo: transferencia.codigo }"
               ></p-button>
               <p-button

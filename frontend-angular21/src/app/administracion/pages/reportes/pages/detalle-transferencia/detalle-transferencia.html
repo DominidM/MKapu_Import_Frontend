@@ -1,0 +1,129 @@
+<div class="detalle-transferencia-page">
+  <p-card styleClass="detalle-header-card">
+    <div class="flex align-items-center justify-content-between flex-wrap gap-3">
+      <div class="flex align-items-center gap-3">
+        <span class="detalle-title-icon">
+          <i class="pi pi-truck"></i>
+        </span>
+        <div>
+          <p class="detalle-kicker">ADMINISTRADOR - REPORTES - TRANSFERENCIAS</p>
+          <h2 class="detalle-title">DETALLE DE TRANSFERENCIA</h2>
+        </div>
+      </div>
+      <div class="flex gap-2">
+        <p-button
+          label="Volver"
+          icon="pi pi-arrow-left"
+          severity="secondary"
+          styleClass="detalle-pill"
+          (onClick)="volver()"
+        ></p-button>
+      </div>
+    </div>
+  </p-card>
+
+  <p-card *ngIf="transferencia" styleClass="detalle-summary-card">
+    <div class="summary-left">
+      <div class="summary-code">{{ transferencia.codigo }}</div>
+      <div class="summary-product">{{ transferencia.producto }}</div>
+      <div class="summary-meta">Responsable: {{ transferencia.responsable }}</div>
+    </div>
+    <div class="summary-right">
+      <p-tag
+        [value]="transferencia.estado"
+        [severity]="getEstadoSeverity(transferencia.estado)"
+        styleClass="detalle-tag"
+      ></p-tag>
+      <div class="summary-dates">
+        <span>Envio: {{ transferencia.fechaEnvio }}</span>
+        <span>Llegada: {{ transferencia.fechaLlegada }}</span>
+      </div>
+    </div>
+  </p-card>
+
+  <div class="detalle-grid" *ngIf="transferencia">
+    <p-card styleClass="detalle-card detalle-card-wide">
+      <div class="detalle-card-title">
+        <i class="pi pi-info-circle"></i>
+        Datos generales
+      </div>
+      <div class="detalle-data-grid">
+        <div class="detalle-data-item">
+          <span class="data-label">Codigo</span>
+          <span class="data-value">{{ transferencia.codigo }}</span>
+        </div>
+        <div class="detalle-data-item">
+          <span class="data-label">Producto</span>
+          <span class="data-value">{{ transferencia.producto }}</span>
+        </div>
+        <div class="detalle-data-item">
+          <span class="data-label">Estado</span>
+          <span class="data-value">{{ transferencia.estado }}</span>
+        </div>
+        <div class="detalle-data-item">
+          <span class="data-label">Cantidad</span>
+          <span class="data-value">{{ transferencia.cantidad }} unidades</span>
+        </div>
+        <div class="detalle-data-item">
+          <span class="data-label">Responsable</span>
+          <span class="data-value">{{ transferencia.responsable }}</span>
+        </div>
+        <div class="detalle-data-item">
+          <span class="data-label">Fechas</span>
+          <span class="data-value">{{ transferencia.fechaEnvio }} → {{ transferencia.fechaLlegada }}</span>
+        </div>
+      </div>
+    </p-card>
+
+    <p-card styleClass="detalle-card">
+      <div class="detalle-card-title">
+        <i class="pi pi-map-marker"></i>
+        Ruta
+      </div>
+      <div class="detalle-route">
+        <div>
+          <span class="route-label">Origen</span>
+          <div class="route-value">{{ transferencia.origen }}</div>
+        </div>
+        <i class="pi pi-arrow-right route-icon"></i>
+        <div>
+          <span class="route-label">Destino</span>
+          <div class="route-value route-destino">{{ transferencia.destino }}</div>
+        </div>
+      </div>
+    </p-card>
+
+    <p-card styleClass="detalle-card">
+      <div class="detalle-card-title">
+        <i class="pi pi-box"></i>
+        Operativo
+      </div>
+      <div class="detalle-cantidad">{{ transferencia.cantidad }} unidades</div>
+      <div class="detalle-meta">Transferencia de inventario</div>
+    </p-card>
+
+    <p-card styleClass="detalle-card">
+      <div class="detalle-card-title">
+        <i class="pi pi-calendar"></i>
+        Fechas
+      </div>
+      <div class="detalle-meta">
+        <div>Envio: {{ transferencia.fechaEnvio }}</div>
+        <div>Llegada: {{ transferencia.fechaLlegada }}</div>
+      </div>
+    </p-card>
+
+    <p-card styleClass="detalle-card" *ngIf="transferencia.observacion">
+      <div class="detalle-card-title">
+        <i class="pi pi-comment"></i>
+        Observacion
+      </div>
+      <div class="detalle-observacion">{{ transferencia.observacion }}</div>
+    </p-card>
+  </div>
+
+  <p-card *ngIf="!transferencia" styleClass="detalle-empty">
+    <div class="detalle-empty-title">No se encontro la transferencia</div>
+    <div class="detalle-empty-text">Revisa el codigo e intenta nuevamente.</div>
+  </p-card>
+</div>
