@@ -60,23 +60,16 @@ export const routes: Routes = [
           },
           {
             path: 'nueva-transferencia',
-<<<<<<< HEAD
             loadComponent: () => import('./administracion/pages/reportes/pages/nueva-transferencia/nueva-transferencia').then(m => m.NuevaTransferencia)
           },
           {
             path: 'detalle-transferencia',
             loadComponent: () => import('./administracion/pages/reportes/pages/detalle-transferencia/detalle-transferencia').then(m => m.DetalleTransferencia)
           },
-=======
-            loadComponent: () =>
-              import('./administracion/pages/reportes/pages/nueva-transferencia/nueva-transferencia')
-                .then(m => m.NuevaTransferencia)
-          }
->>>>>>> bbd8e1ce0d912f5ac6195240ceda6143845f3203
         ]
       },
 
-<<<<<<< HEAD
+
       {   path: 'gestion-productos',
           loadComponent: () => import('./administracion/pages/gestion-productos/productos-listado/gestion-listado').then(m => m.GestionListado),
           children: [
@@ -93,42 +86,7 @@ export const routes: Routes = [
               path: 'editar-producto/:id', loadComponent: () => import('./administracion/pages/gestion-productos/productos-formulario/productos-formulario').then(m => m.ProductosFormulario) 
             },
       ]},
-=======
-      /* =======================
-         GESTIÓN PRODUCTOS
-      ======================= */
-      {
-        path: 'gestion-productos',
-        loadComponent: () =>
-          import('./administracion/pages/gestion-productos/productos-listado/gestion-listado')
-            .then(m => m.GestionListado),
-        children: [
-          { path: '', redirectTo: '', pathMatch: 'full' },
-          {
-            path: 'ver-detalle-producto/:id',
-            loadComponent: () =>
-              import('./administracion/pages/gestion-productos/productos-detalles/productos-detalles')
-                .then(m => m.ProductosDetalles)
-          },
-          {
-            path: 'crear-producto',
-            loadComponent: () =>
-              import('./administracion/pages/gestion-productos/productos-formulario/productos-formulario')
-                .then(m => m.ProductosFormulario)
-          },
-          {
-            path: 'editar-producto/:id',
-            loadComponent: () =>
-              import('./administracion/pages/gestion-productos/productos-formulario/productos-formulario')
-                .then(m => m.ProductosFormulario)
-          }
-        ]
-      },
 
-      /* =======================
-         SEDES
-      ======================= */
->>>>>>> bbd8e1ce0d912f5ac6195240ceda6143845f3203
       {
         path: 'sedes',
         children: [
@@ -182,12 +140,6 @@ export const routes: Routes = [
         ]
       },
 
-<<<<<<< HEAD
-=======
-      /* =======================
-         INGRESOS ALMACÉN
-      ======================= */
->>>>>>> bbd8e1ce0d912f5ac6195240ceda6143845f3203
       {
         path: 'ingresos-almacen',
         children: [
@@ -238,32 +190,16 @@ export const routes: Routes = [
           import('./ventas/pages/dashboard-ventas/dashboard-ventas')
             .then(m => m.DashboardVentas)
       },
-<<<<<<< HEAD
+      {
+        path: 'generar-ventas', loadComponent: () => import('./ventas/pages/generar-venta/generar-venta').then(m => m.GenerarVenta)  
+      },
       { 
         path: 'historial-ventas', loadComponent: () => import('./ventas/shared/historial-ventas/historial-ventas').then(m => m.HistorialVentas) 
       },
       {
         path: 'imprimir-comprobante',
         loadComponent: () => import('./ventas/shared/imprimir-comprobante/imprimir-comprobante').then(m => m.ImprimirComprobante)
-=======
-      {
-        path: 'generar-venta',
-        loadComponent: () =>
-          import('./ventas/pages/generar-venta/generar-venta')
-            .then(m => m.GenerarVenta)
-      },
-      {
-        path: 'historial-ventas',
-        loadComponent: () =>
-          import('./ventas/pages/historial-ventas/historial-ventas')
-            .then(m => m.HistorialVentas)
-      },
-      {
-        path: 'imprimir-comprobante',
-        loadComponent: () =>
-          import('./ventas/pages/imprimir-comprobante/imprimir-comprobante')
-            .then(m => m.ImprimirComprobante)
->>>>>>> bbd8e1ce0d912f5ac6195240ceda6143845f3203
+
       },
       {
         path: 'ver-detalle/:id',
