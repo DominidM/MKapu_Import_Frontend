@@ -378,7 +378,7 @@ export class ProductosService {
         anexo: 'TV-004',
         nombre: 'Smart TV LED 55" 4K RAF',
         descripcion: 'Televisor LED 55 pulgadas 4K UHD Smart TV con WiFi integrado',
-        sede: 'SAN BORJA',
+        sede: 'VES',
         familia: 'Televisores',
         precioCompra: 1230.00,
         precioVenta: 1625.00,
@@ -395,8 +395,6 @@ export class ProductosService {
 
     this.productosSubject.next(datosIniciales);
   }
-
-  // ========== MÉTODOS DE CONSULTA ==========
 
   getProductos(sede?: string, estado: 'Activo' | 'Eliminado' = 'Activo'): Producto[] {
     let productos = this.productosSubject.value.filter(p => p.estado === estado);
@@ -446,8 +444,6 @@ export class ProductosService {
     return this.getProductos(sede, 'Eliminado');
   }
 
-  // ========== MÉTODOS DE SEDES Y FAMILIAS ==========
-
   getSedes(): string[] {
     return [...new Set(this.productosSubject.value.map(p => p.sede))].sort();
   }
@@ -469,13 +465,9 @@ export class ProductosService {
     return productos;
   }
 
-  // ========== MÉTODOS DE UNIDADES DE MEDIDA ==========
-
   getUnidadesMedida(): string[] {
     return ['UND', 'KG', 'LT', 'MT', 'CJ', 'PQ'];
   }
-
-  // ========== MÉTODOS CRUD ==========
 
   crearProducto(productoData: Omit<Producto, 'id'>): Producto {
     const productos = [...this.productosSubject.value];
@@ -532,8 +524,6 @@ export class ProductosService {
     return this.actualizarProducto(id, { estado: 'Activo' });
   }
 
-  // ========== MÉTODOS DE STOCK ==========
-
   actualizarStock(id: number, cantidad: number): boolean {
     const producto = this.productosSubject.value.find(p => p.id === id);
     if (producto && (producto.stock || 0) >= cantidad) {
@@ -542,12 +532,79 @@ export class ProductosService {
     return false;
   }
 
+  descontarStock(id: number, cantidad: number): boolean {
+    const producto = this.productosSubject.value.find(p => p.id === id);
+    if (!producto) return false;
+    
+    const stockActual = producto.stock || 0;
+    if (stockActual < cantidad) return false;
+    
+    return this.actualizarProducto(id, { stock: stockActual - cantidad });
+  }
+
+  devolverStock(id: number, cantidad: number): boolean {
+    const producto = this.productosSubject.value.find(p => p.id === id);
+    if (!producto) return false;
+    
+    const stockActual = producto.stock || 0;
+    return this.actualizarProducto(id, { stock: stockActual + cantidad });
+  }
+
+  incrementarStock(id: number, cantidad: number): boolean {
+    return this.devolverStock(id, cantidad);
+  }
+
+  establecerStock(id: number, nuevoStock: number): boolean {
+    if (nuevoStock < 0) return false;
+    return this.actualizarProducto(id, { stock: nuevoStock });
+  }
+
   getStockDisponible(id: number): number {
     const producto = this.productosSubject.value.find(p => p.id === id);
     return producto?.stock || 0;
   }
 
-  // ========== MÉTODOS DE VALIDACIÓN ==========
+  verificarStockDisponible(id: number, cantidadRequerida: number): boolean {
+    const stockActual = this.getStockDisponible(id);
+    return stockActual >= cantidadRequerida;
+  }
+
+  getProductosBajoStock(limite: number = 10, sede?: string): Producto[] {
+    let productos = this.getProductos(sede, 'Activo');
+    return productos.filter(p => (p.stock || 0) <= limite);
+  }
+
+  getProductosSinStock(sede?: string): Producto[] {
+    return this.getProductosBajoStock(0, sede);
+  }
+
+  actualizarStockMultiple(actualizaciones: { id: number; cantidad: number }[]): boolean {
+    try {
+      actualizaciones.forEach(({ id, cantidad }) => {
+        if (!this.descontarStock(id, cantidad)) {
+          throw new Error(`No se pudo descontar stock del producto ${id}`);
+        }
+      });
+      return true;
+    } catch (error) {
+      console.error('Error al actualizar stock múltiple:', error);
+      return false;
+    }
+  }
+
+  devolverStockMultiple(devoluciones: { id: number; cantidad: number }[]): boolean {
+    try {
+      devoluciones.forEach(({ id, cantidad }) => {
+        if (!this.devolverStock(id, cantidad)) {
+          throw new Error(`No se pudo devolver stock del producto ${id}`);
+        }
+      });
+      return true;
+    } catch (error) {
+      console.error('Error al devolver stock múltiple:', error);
+      return false;
+    }
+  }
 
   existeCodigo(codigo: string, sede?: string): boolean {
     if (sede) {
@@ -555,8 +612,6 @@ export class ProductosService {
     }
     return this.productosSubject.value.some(p => p.codigo === codigo);
   }
-
-  // ========== MÉTODOS DE ESTADÍSTICAS ==========
 
   getTotalProductos(estado: 'Activo' | 'Eliminado' = 'Activo'): number {
     return this.getProductos(undefined, estado).length;
@@ -591,8 +646,6 @@ export class ProductosService {
       total: this.getTotalProductosPorSede(sede)
     }));
   }
-
-  // ========== MÉTODOS DE COMPARATIVAS ==========
 
   getProductosConVariasSedes(): string[] {
     const codigosPorSedes = new Map<string, Set<string>>();
@@ -683,8 +736,6 @@ export class ProductosService {
     return productos.length > 0 ? 
       productos.reduce((sum, p) => sum + p.precioVenta, 0) / productos.length : 0;
   }
-
-  // ========== MÉTODOS DE CÁLCULO ==========
 
   getMargenGanancia(producto: Producto): number {
     return producto.precioVenta - producto.precioCompra;

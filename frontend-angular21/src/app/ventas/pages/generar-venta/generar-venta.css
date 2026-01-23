@@ -608,7 +608,7 @@
 
 .filtros-productos {
   display: grid;
-  grid-template-columns: 1fr 225px;
+  grid-template-columns: 1fr 474px;
   gap: 1.5rem;
   align-items: end;
   margin-bottom: 1.5rem;
@@ -803,7 +803,7 @@
   display: grid;
   grid-template-columns: 1fr 500px;
   gap: 1.5rem;
-  height: 650px;
+  height: 725px;
 }
 
 .columna-productos-disponibles,
