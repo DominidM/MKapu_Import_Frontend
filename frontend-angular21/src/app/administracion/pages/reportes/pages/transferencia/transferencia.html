@@ -1,7 +1,7 @@
 <div class="transferencia-page">
   <p-card styleClass="transferencia-header-card">
-    <div class="flex align-items-center justify-content-between flex-wrap gap-3">
-      <div class="flex align-items-center gap-3">
+    <div class="transferencia-header-row">
+      <div class="transferencia-header-title">
         <span class="transferencia-title-icon">
           <i class="pi pi-sync"></i>
         </span>
@@ -10,7 +10,7 @@
           <h2 class="transferencia-title">GESTION DE TRANSFERENCIAS</h2>
         </div>
       </div>
-      <div class="flex justify-items-end gap-2">
+      <div class="transferencia-header-actions">
         <p-button
           label="Nueva Transferencia"
           icon="pi pi-plus"
@@ -59,12 +59,12 @@
     </p-card>
   </div>
 
-  <p-card>
-    <div class="flex flex-column lg:flex-row lg:align-items-center lg:justify-content-between gap-3">
+  <p-card styleClass="transferencia-filter-card">
+    <div class="transferencia-filter-row">
       <div class="transferencia-search-container flex-1">
         <span class="transferencia-search-label">Buscar Transferencia</span>
         <p-autoComplete
-          class="transferencia-search-input"
+          styleClass="transferencia-search-input w-full"
           [(ngModel)]="searchTerm"
           [suggestions]="transferenciaSuggestions"
           field="producto"
@@ -86,7 +86,7 @@
       <div class="transferencia-search-container transferencia-status-filter">
         <span class="transferencia-search-label">Estado</span>
         <p-select
-          class="transferencia-search-input"
+          styleClass="transferencia-search-input w-full"
           [options]="estadoOptions"
           optionLabel="label"
           optionValue="value"
@@ -95,7 +95,7 @@
           (onChange)="filtrar(searchTerm)"
         ></p-select>
       </div>
-      <div class="flex align-items-center gap-2 transferencia-filter-actions">
+      <div class="transferencia-filter-actions">
         <p-button
           label="Limpiar Filtros"
           icon="pi pi-filter-slash"
@@ -121,14 +121,15 @@
       <p-button icon="pi pi-sliders-h" text severity="secondary" styleClass="transferencia-icon-btn"></p-button>
     </div>
 
-    <p-table
-      [value]="filteredTransferencias"
-      styleClass="transferencia-table"
-      [paginator]="true"
-      [rows]="10"
-      [rowsPerPageOptions]="[10, 25, 50]"
-      [tableStyle]="{ 'min-width': '60rem' }"
-    >
+    <div class="transferencia-table-scroll">
+      <p-table
+        [value]="filteredTransferencias"
+        styleClass="transferencia-table"
+        [paginator]="true"
+        [rows]="10"
+        [rowsPerPageOptions]="[10, 25, 50]"
+        [tableStyle]="{ 'min-width': '60rem' }"
+      >
       <ng-template pTemplate="header">
         <tr>
           <th>CODIGO</th>
@@ -171,7 +172,7 @@
             ></p-tag>
           </td>
           <td>
-            <div class="flex align-items-center gap-2">
+            <div class="transferencia-actions">
               <p-button
                 icon="pi pi-eye"
                 text
@@ -180,18 +181,37 @@
                 [routerLink]="['/admin/transferencia/detalle-transferencia']"
                 [queryParams]="{ codigo: transferencia.codigo }"
               ></p-button>
-              <p-button
-                icon="pi pi-trash"
-                text
-                severity="danger"
-                styleClass="transferencia-icon-btn"
-                (click)="confirmDelete(transferencia)"
-              ></p-button>
             </div>
           </td>
         </tr>
       </ng-template>
-    </p-table>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="6" class="transferencia-empty">
+            <div class="transferencia-empty-inner">
+              <div class="transferencia-empty-icon">
+                <i class="pi pi-inbox"></i>
+              </div>
+              <div class="transferencia-empty-title">No se encontraron transferencias</div>
+              <div class="transferencia-empty-text">
+                Ajusta los filtros o prueba con otro termino de busqueda.
+              </div>
+              <div class="transferencia-empty-actions">
+                <p-button
+                  label="Limpiar filtros"
+                  icon="pi pi-filter-slash"
+                  severity="secondary"
+                  [outlined]="true"
+                  styleClass="transferencia-empty-btn"
+                  (click)="clearSearch()"
+                ></p-button>
+              </div>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+      </p-table>
+    </div>
     <p-confirmdialog />
   </p-card>
 </div>

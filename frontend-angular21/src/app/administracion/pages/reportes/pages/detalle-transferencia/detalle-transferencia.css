@@ -216,3 +216,39 @@
     grid-column: span 1;
   }
 }
+
+@media (max-width: 640px) {
+  .detalle-header-card .p-card-body {
+    padding: 0.9rem 1rem;
+  }
+
+  .detalle-title-icon {
+    width: 34px;
+    height: 34px;
+    font-size: 14px;
+  }
+
+  .detalle-title {
+    font-size: 1rem;
+  }
+
+  .detalle-summary-card .p-card-body {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .summary-right {
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  .detalle-route {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.4rem;
+  }
+
+  .route-icon {
+    transform: rotate(90deg);
+  }
+}

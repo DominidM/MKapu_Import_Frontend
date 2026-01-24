@@ -1,11 +1,25 @@
 :host {
   display: block;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .transferencia-page {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.transferencia-page > p-card,
+.transferencia-metrics > p-card {
+  display: block;
+  width: 100%;
+}
+
+:host ::ng-deep .transferencia-page * {
+  box-sizing: border-box;
 }
 
 .transferencia-metrics {
@@ -180,6 +194,26 @@
   padding: 1rem 1.25rem;
 }
 
+.transferencia-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.transferencia-header-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.transferencia-header-actions {
+  display: flex;
+  justify-content: flex-end;
+  width: auto;
+}
+
 .transferencia-title-icon {
   width: 40px;
   height: 40px;
@@ -210,6 +244,19 @@
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
+  min-width: 0;
+}
+
+.transferencia-filter-card .p-card-body {
+  padding: 1rem 1.25rem;
+}
+
+.transferencia-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
 }
 
 .transferencia-status-filter {
@@ -251,6 +298,8 @@
   flex: 1;
   border: none;
   box-shadow: none;
+  width: 100%;
+  min-width: 0;
 }
 
 .transferencia-search-input:focus {
@@ -270,6 +319,18 @@
 .transferencia-icon-warn {
   background: #fff7ed;
   color: #b45309;
+}
+
+.transferencia-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.transferencia-table .p-datatable-thead > tr > th:last-child,
+.transferencia-table .p-datatable-tbody > tr > td:last-child {
+  text-align: center;
 }
 
 .transferencia-section-icon {
@@ -372,4 +433,183 @@
   font-weight: 700;
   background: transparent;
   color: #111827;
+}
+
+:host-context(.app-dark) .transferencia-title,
+:host-context(.app-dark) .transferencia-search-label {
+  color: #e2e8f0;
+}
+
+:host-context(.app-dark) .transferencia-table .p-datatable-thead > tr > th {
+  color: #cbd5f5;
+  background: #12161b;
+  border-bottom-color: #2f3540;
+}
+
+:host-context(.app-dark) .transferencia-table .p-datatable-tbody > tr > td {
+  color: #e2e8f0;
+  border-color: #2f3540;
+}
+
+:host-context(.app-dark) .transferencia-code,
+:host-context(.app-dark) .transferencia-producto-nombre,
+:host-context(.app-dark) .transferencia-ruta,
+:host-context(.app-dark) .transferencia-cantidad {
+  color: #f8fafc;
+}
+
+:host-context(.app-dark) .transferencia-code-meta,
+:host-context(.app-dark) .transferencia-producto-meta,
+:host-context(.app-dark) .transferencia-ruta-icon {
+  color: #94a3b8;
+}
+
+.transferencia-empty {
+  padding: 2.5rem 1rem;
+  text-align: center;
+  border-bottom: 1px solid #E2E8F0;
+}
+
+.transferencia-empty-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.transferencia-empty-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, #fff7d6, #fffbeb);
+  color: #b45309;
+  font-size: 1.4rem;
+  box-shadow: 0 8px 18px rgba(251, 191, 36, 0.2);
+}
+
+.transferencia-empty-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.transferencia-empty-text {
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.transferencia-empty-actions {
+  margin-top: 0.35rem;
+}
+
+.transferencia-empty-btn {
+  border-radius: 999px;
+  padding: 0.35rem 1.1rem;
+}
+
+:host-context(.app-dark) .transferencia-empty {
+  border-bottom-color: #2f3540;
+}
+
+:host-context(.app-dark) .transferencia-empty-icon {
+  background: linear-gradient(135deg, #2a2414, #342c18);
+  color: #fbbf24;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+}
+
+:host-context(.app-dark) .transferencia-empty-title {
+  color: #f8fafc;
+}
+
+:host-context(.app-dark) .transferencia-empty-text {
+  color: #94a3b8;
+}
+
+.transferencia-table-scroll {
+  width: 100%;
+  overflow-x: auto;
+  max-width: 100%;
+  display: block;
+}
+
+@media (max-width: 768px) {
+  :host {
+    max-width: 100%;
+  }
+
+  .transferencia-page {
+    gap: 12px;
+    padding: 0 0.75rem;
+    margin: 0;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  :host ::ng-deep .transferencia-page .p-card,
+  :host ::ng-deep .transferencia-page .p-card-body {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .transferencia-header-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.6rem;
+  }
+
+  .transferencia-header-title,
+  .transferencia-header-actions {
+    width: 100%;
+  }
+
+  .transferencia-header-actions .transferencia-pill {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .transferencia-metrics {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .transferencia-filter-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .transferencia-search-container,
+  .transferencia-status-filter,
+  .transferencia-filter-actions {
+    width: 100%;
+  }
+
+  .transferencia-status-filter {
+    min-width: 0;
+  }
+
+  :host ::ng-deep .transferencia-search-container .p-autocomplete,
+  :host ::ng-deep .transferencia-search-container .p-autocomplete-input,
+  :host ::ng-deep .transferencia-status-filter .p-select,
+  :host ::ng-deep .transferencia-status-filter .p-select-label,
+  :host ::ng-deep .transferencia-filter-actions .p-button {
+    width: 100%;
+  }
+
+  .transferencia-table-scroll {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  :host ::ng-deep .transferencia-table {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  :host ::ng-deep .transferencia-table .p-datatable-wrapper {
+    overflow-x: auto;
+    max-width: 100%;
+  }
 }
