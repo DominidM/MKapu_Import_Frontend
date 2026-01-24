@@ -35,10 +35,17 @@ export interface ComprobanteVenta {
   cdr_cpe: string;
   responsable: string;
   id_sede: string;
+  id_empleado?: string;
   detalles: DetalleComprobante[];
   cliente_nombre?: string;
   cliente_doc?: string;
+  // ✅ CAMPOS DE PROMOCIÓN
+  codigo_promocion?: string;
+  descuento_promocion?: number;
+  descripcion_promocion?: string;
+  id_promocion?: string; // Para referencia
 }
+
 
 export interface VentaWizard {
   tipoComprobante: '01' | '03';
@@ -60,6 +67,7 @@ export interface FiltrosVenta {
   estado?: boolean;
   cliente?: string;
   responsable?: string;
+  empleado?: string; // ✅ AGREGADO
 }
 
 @Injectable({
@@ -100,8 +108,9 @@ export class VentasService {
         hash_cpe: 'HASH-CPE-2026-0001-1736516400000',
         xml_cpe: '<?xml version="1.0"?>',
         cdr_cpe: 'CDR-ACEPTADO',
-        responsable: 'ADMIN',
+        responsable: 'Juan Carlos Pérez García',
         id_sede: 'SEDE001',
+        id_empleado: 'EMP-001', // ✅ AGREGADO
         cliente_nombre: 'Juan Pérez García',
         cliente_doc: '12345678',
         detalles: [
@@ -138,8 +147,9 @@ export class VentasService {
         hash_cpe: 'HASH-CPE-2026-0002-1736530200000',
         xml_cpe: '<?xml version="1.0"?>',
         cdr_cpe: 'CDR-ACEPTADO',
-        responsable: 'CAJERO01',
+        responsable: 'María Elena Rodríguez López',
         id_sede: 'SEDE002',
+        id_empleado: 'EMP-006', // ✅ AGREGADO
         cliente_nombre: 'Empresa Ejemplo SAC',
         cliente_doc: '20123456789',
         detalles: [
@@ -176,8 +186,9 @@ export class VentasService {
         hash_cpe: 'HASH-CPE-2026-0003-1736594100000',
         xml_cpe: '<?xml version="1.0"?>',
         cdr_cpe: 'CDR-ACEPTADO',
-        responsable: 'ADMIN',
+        responsable: 'Diana Carolina Quispe Mamani',
         id_sede: 'SEDE003',
+        id_empleado: 'EMP-008', // ✅ AGREGADO
         cliente_nombre: 'María López Sánchez',
         cliente_doc: '87654321',
         detalles: [
@@ -214,8 +225,9 @@ export class VentasService {
         hash_cpe: 'HASH-CPE-2026-0004-1736621100000',
         xml_cpe: '<?xml version="1.0"?>',
         cdr_cpe: 'CDR-ACEPTADO',
-        responsable: 'CAJERO02',
+        responsable: 'Luis Fernando Gutiérrez Ramos',
         id_sede: 'SEDE001',
+        id_empleado: 'EMP-005', // ✅ AGREGADO
         cliente_nombre: 'Inversiones Del Sur SAC',
         cliente_doc: '20987654321',
         detalles: [
@@ -252,8 +264,9 @@ export class VentasService {
         hash_cpe: 'HASH-CPE-2026-0005-1736684400000',
         xml_cpe: '<?xml version="1.0"?>',
         cdr_cpe: 'CDR-ACEPTADO',
-        responsable: 'ADMIN',
+        responsable: 'Ana Patricia Morales Vega',
         id_sede: 'SEDE002',
+        id_empleado: 'EMP-004', // ✅ AGREGADO
         cliente_nombre: 'Carlos Ramírez Torres',
         cliente_doc: '23456789',
         detalles: [
@@ -290,8 +303,9 @@ export class VentasService {
         hash_cpe: 'HASH-CPE-2026-0006-1736693400000',
         xml_cpe: '<?xml version="1.0"?>',
         cdr_cpe: 'CDR-ANULADO',
-        responsable: 'CAJERO01',
+        responsable: 'Roberto Carlos Vega Mendoza',
         id_sede: 'SEDE003',
+        id_empleado: 'EMP-011', // ✅ AGREGADO
         cliente_nombre: 'Ana Flores Medina',
         cliente_doc: '34567890',
         detalles: [
@@ -328,8 +342,9 @@ export class VentasService {
         hash_cpe: 'HASH-CPE-2026-0007-1736761200000',
         xml_cpe: '<?xml version="1.0"?>',
         cdr_cpe: 'CDR-ACEPTADO',
-        responsable: 'ADMIN',
+        responsable: 'Juan Carlos Pérez García',
         id_sede: 'SEDE001',
+        id_empleado: 'EMP-001', // ✅ AGREGADO
         cliente_nombre: 'Constructora Lima SAC',
         cliente_doc: '20456789123',
         detalles: [
@@ -366,8 +381,9 @@ export class VentasService {
         hash_cpe: 'HASH-CPE-2026-0008-1736786400000',
         xml_cpe: '<?xml version="1.0"?>',
         cdr_cpe: 'CDR-ACEPTADO',
-        responsable: 'CAJERO02',
+        responsable: 'Rosa María Flores Pérez',
         id_sede: 'SEDE002',
+        id_empleado: 'EMP-006', // ✅ AGREGADO
         cliente_nombre: 'Pedro Castro Vega',
         cliente_doc: '45678901',
         detalles: [
@@ -416,8 +432,9 @@ export class VentasService {
         hash_cpe: 'HASH-CPE-2026-0009-1736851800000',
         xml_cpe: '<?xml version="1.0"?>',
         cdr_cpe: 'CDR-ACEPTADO',
-        responsable: 'ADMIN',
+        responsable: 'Sofía Alejandra Torres Lima',
         id_sede: 'SEDE003',
+        id_empleado: 'EMP-012', // ✅ AGREGADO
         cliente_nombre: 'Luis Gonzales Ruiz',
         cliente_doc: '56789012',
         detalles: [
@@ -454,8 +471,9 @@ export class VentasService {
         hash_cpe: 'HASH-CPE-2026-0010-1736867100000',
         xml_cpe: '<?xml version="1.0"?>',
         cdr_cpe: 'CDR-ACEPTADO',
-        responsable: 'CAJERO01',
+        responsable: 'María Elena Rodríguez López',
         id_sede: 'SEDE001',
+        id_empleado: 'EMP-002', // ✅ AGREGADO
         cliente_nombre: 'Comercial Norte SAC',
         cliente_doc: '20567890123',
         detalles: [
@@ -492,8 +510,9 @@ export class VentasService {
         hash_cpe: 'HASH-CPE-2026-0011-1736933400000',
         xml_cpe: '<?xml version="1.0"?>',
         cdr_cpe: 'CDR-ACEPTADO',
-        responsable: 'ADMIN',
+        responsable: 'Carmen Julia Ríos Castillo',
         id_sede: 'SEDE002',
+        id_empleado: 'EMP-008', // ✅ AGREGADO
         cliente_nombre: 'Rosa Martínez Luna',
         cliente_doc: '67890123',
         detalles: [
@@ -530,8 +549,9 @@ export class VentasService {
         hash_cpe: 'HASH-CPE-2026-0012-1736959200000',
         xml_cpe: '<?xml version="1.0"?>',
         cdr_cpe: 'CDR-ACEPTADO',
-        responsable: 'CAJERO02',
+        responsable: 'Diana Carolina Quispe Mamani',
         id_sede: 'SEDE003',
+        id_empleado: 'EMP-008', // ✅ AGREGADO
         cliente_nombre: 'Miguel Díaz Campos',
         cliente_doc: '78901234',
         detalles: [
@@ -640,6 +660,16 @@ export class VentasService {
     return this.comprobantesSubject.value.filter((c) => c.responsable === responsable);
   }
 
+  // ✅ NUEVO MÉTODO: Filtrar por empleado
+  getComprobantesPorEmpleado(idEmpleado: string): ComprobanteVenta[] {
+    return this.comprobantesSubject.value.filter((c) => c.id_empleado === idEmpleado);
+  }
+
+  // ✅ NUEVO MÉTODO: Filtrar por sede
+  getComprobantesPorSede(idSede: string): ComprobanteVenta[] {
+    return this.comprobantesSubject.value.filter((c) => c.id_sede === idSede);
+  }
+
   buscarPorSerieNumero(serie: string, numero: number): ComprobanteVenta | undefined {
     return this.comprobantesSubject.value.find((c) => c.serie === serie && c.numero === numero);
   }
@@ -665,6 +695,11 @@ export class VentasService {
 
     if (filtros.responsable) {
       comprobantes = comprobantes.filter((c) => c.responsable === filtros.responsable);
+    }
+
+    // ✅ NUEVO FILTRO: Por empleado
+    if (filtros.empleado) {
+      comprobantes = comprobantes.filter((c) => c.id_empleado === filtros.empleado);
     }
 
     return comprobantes;
@@ -785,5 +820,31 @@ export class VentasService {
     fechaEmision.setHours(0, 0, 0, 0);
 
     return comprobante.estado && fechaEmision.getTime() === hoy.getTime();
+  }
+
+  // ✅ NUEVO MÉTODO: Estadísticas por empleado
+  getEstadisticasPorEmpleado(idEmpleado: string) {
+    const ventas = this.getComprobantesPorEmpleado(idEmpleado).filter(c => c.estado);
+    
+    return {
+      totalVentas: ventas.length,
+      totalMonto: ventas.reduce((sum, c) => sum + c.total, 0),
+      promedio: ventas.length > 0 ? ventas.reduce((sum, c) => sum + c.total, 0) / ventas.length : 0,
+      boletas: ventas.filter(c => c.tipo_comprobante === '03').length,
+      facturas: ventas.filter(c => c.tipo_comprobante === '01').length,
+    };
+  }
+
+  // ✅ NUEVO MÉTODO: Estadísticas por sede
+  getEstadisticasPorSede(idSede: string) {
+    const ventas = this.getComprobantesPorSede(idSede).filter(c => c.estado);
+    
+    return {
+      totalVentas: ventas.length,
+      totalMonto: ventas.reduce((sum, c) => sum + c.total, 0),
+      promedio: ventas.length > 0 ? ventas.reduce((sum, c) => sum + c.total, 0) / ventas.length : 0,
+      boletas: ventas.filter(c => c.tipo_comprobante === '03').length,
+      facturas: ventas.filter(c => c.tipo_comprobante === '01').length,
+    };
   }
 }

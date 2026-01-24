@@ -11,8 +11,8 @@
                 </div>
             </div>
             <div class="flex align-items-center gap-2">
-                <p-button [routerLink]="['/admin/ingresos-almacen/ingresos-agregar']" label="Agregar Ingresos" icon="pi pi-plus"
-                    styleClass="clientes-pill"></p-button>
+                <p-button [routerLink]="['/admin/ingresos-almacen/ingresos-agregar']" label="Agregar Ingresos"
+                    icon="pi pi-plus" styleClass="clientes-pill"></p-button>
             </div>
         </div>
     </p-card>
@@ -22,22 +22,22 @@
             <div class="clientes-search-container flex-1">
                 <span class="clientes-search-label">Buscar Ingresos</span>
                 <p-autoComplete class="clientes-search-input" [(ngModel)]="searchTerm"
-                    [suggestions]="clienteSuggestions" (completeMethod)="onSearch($event)"
-                    (ngModelChange)="onSearchChange($event)" (onSelect)="onSelectCliente()"
-                    placeholder="Escribe nurmero de guia, fecha de entrada o proveedor..."
-                    style="background: transparent; color: var(--text-color);"
+                    [suggestions]="ingresoSuggestions" field="nro_guia" (completeMethod)="onSearch($event)"
+                    (ngModelChange)="onSearchChange($event)" (onSelect)="onSelectIngreso($event)"
+                    placeholder="Escribe número de guía, fecha o proveedor..."
                     [inputStyle]="{ width: '100%', background: 'transparent', color: 'var(--text-color)' }">
                     <ng-template let-item pTemplate="item">
                         <div class="flex flex-column gap-1">
-                            <span class="font-medium">{{ item.nombres }} {{ item.apellidos }}</span>
-                            <small class="text-500">{{ item.nro_documento }}</small>
+                            <span class="font-medium">{{ item.nro_guia }}</span>
+                            <small class="text-500">{{ item.proveedor }}</small>
                         </div>
                     </ng-template>
                 </p-autoComplete>
+
             </div>
             <div class="flex align-items-center gap-2 clientes-filter-actions">
                 <p-button label="Limpiar Filtros" icon="pi pi-filter-slash" severity="danger"
-                    styleClass="clientes-pill clientes-pill-danger"></p-button>
+                    styleClass="clientes-pill clientes-pill-danger" (click)="clearSearch()"></p-button>
             </div>
         </div>
     </p-card>
@@ -54,15 +54,15 @@
             <p-button icon="pi pi-id-card" text severity="secondary" styleClass="clientes-icon-btn"></p-button>
         </div>
         <div class="card">
-            <p-table [value]="ingresos" [paginator]="true" [rows]="5" [rowsPerPageOptions]="[5, 10, 20]"
-                [tableStyle]="{'min-width': '60rem'}">
+            <p-table [value]="filteredIngresos" [paginator]="true" [rows]="5" [rowsPerPageOptions]="[5, 10, 20]"
+                [tableStyle]="{ 'min-width': '60rem' }">
                 <ng-template #header>
                     <tr>
                         <th>N° Guía</th>
                         <th>Fecha Entrada</th>
                         <th>Proveedor</th>
                         <th>N° Productos</th>
-                        <th>Cant. Total	</th>
+                        <th>Cant. Total </th>
                         <th>Valor Total</th>
                         <th>Acciones</th>
                     </tr>

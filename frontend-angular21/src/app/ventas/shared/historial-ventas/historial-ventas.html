@@ -1,6 +1,3 @@
-<!-- ========================================= -->
-<!-- CABECERA -->
-<!-- ========================================= -->
 <div class="p-2">
   <p-card styleClass="ventas-header-card mb-4 ventas-header-bordered">
     <div class="flex align-items-center justify-content-between flex-wrap gap-2">
@@ -26,9 +23,6 @@
   </p-card>
 </div>
 
-<!-- ========================================= -->
-<!-- ESTADÍSTICAS -->
-<!-- ========================================= -->
 <div class="p-2">
   <div class="ventas-header-bordered mb-4">
     <div class="seccion-estadisticas">
@@ -67,15 +61,11 @@
   </div>
 </div>
 
-<!-- ========================================= -->
-<!-- FILTROS - 2 LÍNEAS -->
-<!-- ========================================= -->
 <div class="p-2">
   <div class="filtros-container mb-4">
     <div class="seccion-filtros">
       <h3><i class="pi pi-filter"></i> Filtros de búsqueda</h3>
 
-      <!-- LÍNEA 1: Cliente + Separador + Fechas -->
       <div class="filtros-linea-1">
         <div class="filtro-item filtro-cliente-50">
           <label>Cliente (DNI/RUC)</label>
@@ -123,7 +113,6 @@
         </div>
       </div>
 
-      <!-- LÍNEA 2: Familia + Tipo + Estado + Sede + Botón -->
       <div class="filtros-linea-2">
         <div class="filtro-item filtro-compacto">
           <label>Tipo</label>
@@ -153,20 +142,6 @@
           </p-select>
         </div>
 
-        <div class="filtro-item filtro-compacto">
-          <label>Sede</label>
-          <p-select
-            [(ngModel)]="filtros.sede"
-            [options]="sedesOptions"
-            placeholder="Todas"
-            optionLabel="label"
-            optionValue="value"
-            (onChange)="aplicarFiltros()"
-            styleClass="w-full"
-          >
-          </p-select>
-        </div>
-
         <div class="filtro-item filtro-boton-limpiar">
           <label>&nbsp;</label>
           <p-button
@@ -183,23 +158,11 @@
   </div>
 </div>
 
-<!-- ========================================= -->
-<!-- TABLA -->
-<!-- ========================================= -->
 <div class="p-2">
   <p-card styleClass="tarjeta-principal">
     <div class="seccion-tabla">
       <div class="tabla-header">
         <h3><i class="pi pi-list"></i> Listado de comprobantes</h3>
-        <p-button
-          label="Exportar Excel"
-          icon="pi pi-file-excel"
-          (onClick)="exportarExcel()"
-          severity="success"
-          [outlined]="true"
-          size="small"
-        >
-        </p-button>
       </div>
 
       <p-table
@@ -216,13 +179,13 @@
       >
         <ng-template pTemplate="header">
           <tr>
-            <th pSortableColumn="tipo_comprobante">Tipo <p-sortIcon field="tipo_comprobante" /></th>
             <th pSortableColumn="numero">N° Comprobante <p-sortIcon field="numero" /></th>
+            <th pSortableColumn="tipo_comprobante">Tipo <p-sortIcon field="tipo_comprobante" /></th>
             <th pSortableColumn="fec_emision">Fecha Emisión <p-sortIcon field="fec_emision" /></th>
             <th pSortableColumn="cliente_nombre">Cliente</th>
             <th pSortableColumn="cliente_doc">Documento</th>
+            <th pSortableColumn="responsable">Responsable <p-sortIcon field="responsable" /></th>
             <th pSortableColumn="total" class="text-right">Total <p-sortIcon field="total" /></th>
-            <th pSortableColumn="sede">Sede <p-sortIcon field="sede" /></th>
             <th>Estado</th>
             <th class="text-center">Acciones</th>
           </tr>
@@ -231,22 +194,22 @@
         <ng-template pTemplate="body" let-comprobante>
           <tr>
             <td>
+              <strong>{{ getNumeroFormateado(comprobante) }}</strong>
+            </td>
+            <td>
               <p-tag
                 [value]="getTipoComprobanteLabel(comprobante.tipo_comprobante)"
                 [severity]="comprobante.tipo_comprobante === '03' ? 'info' : 'warn'"
               ></p-tag>
             </td>
-            <td>
-              <strong>{{ getNumeroFormateado(comprobante) }}</strong>
-            </td>
             <td>{{ comprobante.fec_emision | date: 'dd/MM/yyyy HH:mm' }}</td>
             <td>{{ comprobante.cliente_nombre }}</td>
             <td>{{ comprobante.cliente_doc }}</td>
+            <td>
+              <span class="responsable-text">{{ comprobante.responsable }}</span>
+            </td>
             <td class="text-right">
               <strong>S/. {{ comprobante.total | number: '1.2-2' }}</strong>
-            </td>
-            <td>
-              <strong>{{ getSede(comprobante) }}</strong>
             </td>
             <td>
               <p-tag
