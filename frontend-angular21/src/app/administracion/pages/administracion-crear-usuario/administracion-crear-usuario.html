@@ -58,14 +58,14 @@
       <div class="flex align-items-center gap-2 mb-3">
         <i class="pi pi-user"></i>
         <strong>Usuarios</strong>
-        <p-tag
-          [value]="usuariosFiltrados.length + ' Usuarios'"
+        <p-tag 
+          [value]="totalusers + ' Usuarios'"
           severity="info"
         ></p-tag>
       </div>
   
       <p-table
-        [value]="usuariosFiltrados"
+        [value]="users"
         responsiveLayout="scroll"
         class="p-datatable-sm"
         [rows]="5"
@@ -84,7 +84,7 @@
         <ng-template pTemplate="body" let-user>
           <tr>
             <td>
-              <strong>{{ user.nombre }}</strong>
+              <strong>{{ user.usu_nom }}</strong>
               <div class="helper-text">DNI: {{ user.dni }}</div>
             </td>
   
@@ -93,8 +93,8 @@
   
             <td>
               <p-tag
-                [value]="user.estado"
-                [severity]="user.estado === 'Activo' ? 'success' : 'danger'"
+                [value]="user.activo"
+                [severity]="user.activo == true ? 'success' : 'danger'"
               ></p-tag>
             </td>
   

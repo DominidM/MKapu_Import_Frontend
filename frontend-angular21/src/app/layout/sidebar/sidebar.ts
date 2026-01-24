@@ -9,6 +9,7 @@ import { ConfirmDialog } from 'primeng/confirmdialog';
 import { ToastModule } from 'primeng/toast';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../core/services/auth.service';
+import { Auth } from '../../auth/services/auth.service';
 
 
 @Component({
@@ -41,15 +42,20 @@ export class Sidebar implements OnInit {
     private confirmationService: ConfirmationService,
     private messageService: MessageService,
     private router: Router,
-    private authService: AuthService
+    private authService: AuthService,
+    private auth: Auth
   ) {}
 
   ngOnInit(): void {
-    this.role = this.authService.getRole();
+    this.role = this.auth.getRole();
   }
 
   toggleMenu(menu: string) {
     this.activeMenu = this.activeMenu === menu ? null : menu;
+  }
+
+  getRole(){
+
   }
 
   confirm2(event: Event) {
@@ -68,7 +74,7 @@ export class Sidebar implements OnInit {
         outlined: true
       },
       accept: () => {
-        this.authService.logout();
+        this.auth.logout();
 
         this.messageService.add({
           severity: 'success',
