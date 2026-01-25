@@ -15,7 +15,7 @@ import { AuthService } from '../../core/services/auth.service';
     selector: 'app-sidebar',
     standalone: true,
     imports: [
-      CommonModule,          // ✅ REQUIRED for ngClass, ngIf, ngFor
+      CommonModule,
       ButtonModule,
       AvatarModule,
       DrawerModule,

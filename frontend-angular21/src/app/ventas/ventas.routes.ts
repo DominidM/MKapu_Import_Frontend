@@ -1,4 +1,3 @@
-// src/app/ventas/ventas.routes.ts
 import { Routes } from '@angular/router';
 
 export const VENTAS_ROUTES: Routes = [
