@@ -68,6 +68,7 @@ export class AdministracionCrearUsuario implements OnInit{
   ) {}
 
   ngOnInit(): void {
+      console.log("crear usuarios");
       this.getUsuarios();      
   }
 
