@@ -18,6 +18,8 @@ import { AutoComplete } from 'primeng/autocomplete';
 import { VentasService, ComprobanteVenta } from '../../../core/services/ventas.service';
 import { SedeService, Sede } from '../../../core/services/sede.service';
 import { EmpleadosService, Empleado } from '../../../core/services/empleados.service';
+import { ComprobantesService } from '../../../core/services/comprobantes.service';
+import { PosService } from '../../../core/services/pos.service';
 import { MessageService, ConfirmationService } from 'primeng/api';
 
 interface FiltroVentas {
@@ -26,7 +28,7 @@ interface FiltroVentas {
   fechaInicio: Date | null;
   fechaFin: Date | null;
   busqueda: string;
-  familiaProducto: string | null;
+  tipoPago: string | null;
 }
 
 @Component({
@@ -70,31 +72,12 @@ export class HistorialVentas implements OnInit, OnDestroy {
     fechaInicio: null,
     fechaFin: null,
     busqueda: '',
-    familiaProducto: null,
+    tipoPago: null,
   };
 
-  tiposComprobante = [
-    { label: 'Todos', value: null },
-    { label: 'Boleta', value: '03' },
-    { label: 'Factura', value: '01' },
-  ];
-
-  estadosComprobante = [
-    { label: 'Todos', value: null },
-    { label: 'Emitido', value: 'EMITIDO' },
-    { label: 'Cancelado', value: 'CANCELADO' },
-    { label: 'Reembolsado', value: 'REEMBOLSADO' },
-  ];
-
-  familiasProducto = [
-    { label: 'Todas', value: null },
-    { label: 'Bebidas', value: 'bebidas' },
-    { label: 'Comidas', value: 'comidas' },
-    { label: 'Postres', value: 'postres' },
-    { label: 'Entradas', value: 'entradas' },
-    { label: 'Platos Principales', value: 'platos' },
-    { label: 'Guarniciones', value: 'guarniciones' },
-  ];
+  tiposComprobante: any[] = [];
+  estadosComprobante: any[] = [];
+  tiposPago: any[] = [];
 
   sugerenciasBusqueda: string[] = [];
   todasLasSugerencias: string[] = [];
@@ -105,17 +88,25 @@ export class HistorialVentas implements OnInit, OnDestroy {
   totalVentas: number = 0;
   totalBoletas: number = 0;
   totalFacturas: number = 0;
+  cantidadVentas: number = 0;
+
+  inicioSemana: Date = new Date();
+  finSemana: Date = new Date();
 
   constructor(
     private router: Router,
     private ventasService: VentasService,
     private sedeService: SedeService,
     private empleadosService: EmpleadosService,
+    private comprobantesService: ComprobantesService,
+    private posService: PosService,
     private messageService: MessageService,
     private confirmationService: ConfirmationService,
   ) {}
 
   ngOnInit(): void {
+    this.calcularRangoSemana();
+    this.cargarOpcionesFiltros();
     this.cargarEmpleadoActual();
     this.cargarSedes();
     this.cargarComprobantes();
@@ -123,6 +114,33 @@ export class HistorialVentas implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.subscriptions.unsubscribe();
+  }
+
+
+  calcularRangoSemana(): void {
+    const hoy = new Date();
+    const diaSemana = hoy.getDay();
+    
+    const diasDesdeInicio = diaSemana === 0 ? 6 : diaSemana - 1;
+    
+    this.inicioSemana = new Date(hoy);
+    this.inicioSemana.setDate(hoy.getDate() - diasDesdeInicio);
+    this.inicioSemana.setHours(0, 0, 0, 0);
+    
+    this.finSemana = new Date(this.inicioSemana);
+    this.finSemana.setDate(this.inicioSemana.getDate() + 6);
+    this.finSemana.setHours(23, 59, 59, 999);
+
+    console.log('📅 Semana actual:', {
+      inicio: this.inicioSemana.toLocaleDateString('es-PE'),
+      fin: this.finSemana.toLocaleDateString('es-PE'),
+    });
+  }
+
+  cargarOpcionesFiltros(): void {
+    this.tiposComprobante = this.comprobantesService.getTiposComprobanteOptions();
+    this.estadosComprobante = this.comprobantesService.getEstadosComprobanteOptions();
+    this.tiposPago = this.posService.getTiposPagoOptions();
   }
 
   cargarEmpleadoActual(): void {
@@ -135,7 +153,7 @@ export class HistorialVentas implements OnInit, OnDestroy {
         detail: 'No hay un empleado autenticado. Redirigiendo...',
         life: 3000,
       });
-      
+
       setTimeout(() => {
         this.router.navigate(['/login']);
       }, 1000);
@@ -154,9 +172,10 @@ export class HistorialVentas implements OnInit, OnDestroy {
     const sub = this.sedeService.getSedes().subscribe({
       next: (sedes) => {
         this.sedes = sedes;
-        
+
         if (this.empleadoActual?.id_sede) {
-          this.sedeActual = this.sedes.find(s => s.id_sede === this.empleadoActual!.id_sede) || null;
+          this.sedeActual =
+            this.sedes.find((s) => s.id_sede === this.empleadoActual!.id_sede) || null;
         }
       },
       error: (error) => {
@@ -179,21 +198,22 @@ export class HistorialVentas implements OnInit, OnDestroy {
 
     if (this.empleadoActual?.id_sede) {
       this.comprobantes = todosComprobantes
-        .filter(c => c.id_sede === this.empleadoActual!.id_sede)
+        .filter((c) => c.id_sede === this.empleadoActual!.id_sede)
         .sort((a, b) => new Date(b.fec_emision).getTime() - new Date(a.fec_emision).getTime());
-      
+
       console.log(`📍 Filtrando ventas por sede: ${this.empleadoActual.nombre_sede}`);
       console.log(`📊 Total de ventas en esta sede: ${this.comprobantes.length}`);
     } else {
-      this.comprobantes = todosComprobantes
-        .sort((a, b) => new Date(b.fec_emision).getTime() - new Date(a.fec_emision).getTime());
+      this.comprobantes = todosComprobantes.sort(
+        (a, b) => new Date(b.fec_emision).getTime() - new Date(a.fec_emision).getTime(),
+      );
       console.warn('⚠️ No hay empleado logueado, mostrando todas las ventas');
     }
 
     this.comprobantesFiltrados = [...this.comprobantes];
     this.cargarSugerenciasBusqueda();
     this.calcularEstadisticas();
-    
+
     this.loading = false;
 
     if (this.comprobantes.length === 0) {
@@ -247,7 +267,8 @@ export class HistorialVentas implements OnInit, OnDestroy {
       resultado = resultado.filter((c) => this.getEstadoComprobante(c) === this.filtros.estado);
     }
 
-    if (this.filtros.familiaProducto) {
+    if (this.filtros.tipoPago) {
+      resultado = resultado.filter((c) => c.tipo_pago === this.filtros.tipoPago);
     }
 
     if (this.filtros.fechaInicio) {
@@ -299,7 +320,7 @@ export class HistorialVentas implements OnInit, OnDestroy {
       fechaInicio: null,
       fechaFin: null,
       busqueda: '',
-      familiaProducto: null,
+      tipoPago: null,
     };
     this.aplicarFiltros();
 
@@ -311,41 +332,52 @@ export class HistorialVentas implements OnInit, OnDestroy {
     });
   }
 
+  /**
+   * Calcula estadísticas SOLO de la semana actual
+   */
   calcularEstadisticas(): void {
-    this.totalVentas = this.comprobantesFiltrados.reduce((sum, c) => sum + c.total, 0);
-    this.totalBoletas = this.comprobantesFiltrados.filter(
-      (c) => c.tipo_comprobante === '03'
-    ).length;
-    this.totalFacturas = this.comprobantesFiltrados.filter(
-      (c) => c.tipo_comprobante === '01'
-    ).length;
+    // Filtrar comprobantes de la semana actual
+    const ventasSemana = this.comprobantesFiltrados.filter((c) => {
+      const fechaVenta = new Date(c.fec_emision);
+      return fechaVenta >= this.inicioSemana && fechaVenta <= this.finSemana;
+    });
+
+    // Calcular totales de la semana
+    this.totalVentas = ventasSemana.reduce((sum, c) => sum + c.total, 0);
+    this.cantidadVentas = ventasSemana.length;
+    this.totalBoletas = ventasSemana.filter((c) => c.tipo_comprobante === '03').length;
+    this.totalFacturas = ventasSemana.filter((c) => c.tipo_comprobante === '01').length;
+
+    console.log('📊 Estadísticas de la semana:', {
+      total: this.totalVentas,
+      cantidad: this.cantidadVentas,
+      boletas: this.totalBoletas,
+      facturas: this.totalFacturas,
+    });
   }
 
   getEstadoComprobante(comprobante: ComprobanteVenta): string {
-    if (!comprobante.estado) return 'CANCELADO';
-    if (comprobante.hash_cpe) return 'EMITIDO';
-    return 'EMITIDO';
+    return this.comprobantesService.getEstadoComprobante(comprobante);
   }
 
   getSeverityEstado(estado: string): 'success' | 'danger' | 'warn' | 'info' {
-    switch (estado) {
-      case 'EMITIDO':
-        return 'success';
-      case 'CANCELADO':
-        return 'danger';
-      case 'REEMBOLSADO':
-        return 'warn';
-      default:
-        return 'info';
-    }
+    return this.comprobantesService.getSeverityEstado(estado);
   }
 
   getTipoComprobanteLabel(tipo: string): string {
-    return tipo === '03' ? 'Boleta' : 'Factura';
+    return this.comprobantesService.getTipoComprobanteLabel(tipo as '01' | '03');
   }
 
   getNumeroFormateado(comprobante: ComprobanteVenta): string {
-    return `${comprobante.serie}-${comprobante.numero.toString().padStart(8, '0')}`;
+    return this.comprobantesService.getNumeroFormateado(comprobante.serie, comprobante.numero);
+  }
+
+  getTipoPagoLabel(tipoPago: string): string {
+    return this.posService.getTipoPagoLabel(tipoPago);
+  }
+
+  getSeverityTipoPago(tipoPago: string): 'success' | 'info' | 'warn' | 'secondary' {
+    return this.posService.getSeverityTipoPago(tipoPago);
   }
 
   getSede(comprobante: ComprobanteVenta): string {

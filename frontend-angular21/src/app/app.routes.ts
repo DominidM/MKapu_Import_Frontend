@@ -2,6 +2,8 @@ import { Routes } from '@angular/router';
 import { Login } from './auth/pages/login/login';
 import { Main } from './layout/main/main';
 import { pendingChangesGuard } from './core/guards/pending-changes.guard';
+import { VENTAS_ROUTES } from './ventas/ventas.routes';
+
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -176,37 +178,11 @@ export const routes: Routes = [
     ]
   },
 
-  /* =======================
-     VENTAS
-  ======================= */
+
   {
     path: 'ventas',
     component: Main,
-    children: [
-      { path: '', redirectTo: 'dashboard-ventas', pathMatch: 'full' },
-      {
-        path: 'dashboard-ventas',
-        loadComponent: () =>
-          import('./ventas/pages/dashboard-ventas/dashboard-ventas')
-            .then(m => m.DashboardVentas)
-      },
-      {
-        path: 'generar-ventas', loadComponent: () => import('./ventas/pages/generar-venta/generar-venta').then(m => m.GenerarVenta)  
-      },
-      { 
-        path: 'historial-ventas', loadComponent: () => import('./ventas/shared/historial-ventas/historial-ventas').then(m => m.HistorialVentas) 
-      },
-      {
-        path: 'imprimir-comprobante',
-        loadComponent: () => import('./ventas/shared/imprimir-comprobante/imprimir-comprobante').then(m => m.ImprimirComprobante)
-
-      },
-      {
-        path: 'ver-detalle/:id',
-        loadComponent: () =>
-          import('./ventas/pages/detalles-venta/detalle-venta')
-            .then(m => m.DetalleVenta)
-      }
-    ]
+    children: VENTAS_ROUTES
   }
+
 ];

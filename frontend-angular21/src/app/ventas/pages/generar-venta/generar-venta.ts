@@ -1,8 +1,8 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, NavigationEnd } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { Subscription } from 'rxjs';
+import { Subscription, filter } from 'rxjs';
 
 import { Card } from 'primeng/card';
 import { Button } from 'primeng/button';
@@ -69,12 +69,6 @@ export class GenerarVenta implements OnInit, OnDestroy {
   private readonly STORAGE_KEY = 'generar_venta_estado';
   private clickEnBotonBuscar = false;
   private seleccionandoDelAutocomplete = false;
-
-  private readonly MAPEO_SEDE_ID_A_NOMBRE: { [key: string]: string } = {
-    SEDE001: 'LAS FLORES',
-    SEDE002: 'LURIN',
-    SEDE003: 'VES',
-  };
 
   empleadoActual: Empleado | null = null;
   nombreResponsable: string = '';
@@ -215,30 +209,9 @@ export class GenerarVenta implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.empleadoActual = this.empleadosService.getEmpleadoActual();
+
+    this.empleadoActual = this.empleadosService.getEmpleadoActual()!;
     this.nombreResponsable = this.empleadosService.getNombreCompletoEmpleadoActual();
-
-    if (!this.empleadoActual) {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Error de autenticación',
-        detail: 'No hay un empleado autenticado',
-        life: 3000,
-      });
-      this.router.navigate(['/login']);
-      return;
-    }
-
-    if (!this.empleadosService.puedeRealizarVentas()) {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Acceso denegado',
-        detail: 'No tiene permisos para realizar ventas',
-        life: 3000,
-      });
-      this.router.navigate(['/almacen/dashboard']);
-      return;
-    }
 
     this.sedeIdSeleccionada = this.empleadoActual.id_sede;
     this.sedeNombreSeleccionada = this.empleadoActual.nombre_sede!;
@@ -255,9 +228,21 @@ export class GenerarVenta implements OnInit, OnDestroy {
     this.bancosDisponibles = this.posService.getBancosDisponibles();
 
     this.restaurarEstado();
+
+    this.subscriptions.add(
+      this.router.events
+        .pipe(filter((event) => event instanceof NavigationEnd))
+        .subscribe((event: NavigationEnd) => {
+          if (event.url === '/ventas/generar-ventas') {
+
+            this.restaurarEstado();
+          }
+        })
+    );
   }
 
   ngOnDestroy(): void {
+
     this.subscriptions.unsubscribe();
   }
 
@@ -287,7 +272,10 @@ export class GenerarVenta implements OnInit, OnDestroy {
 
     try {
       sessionStorage.setItem(this.STORAGE_KEY, JSON.stringify(estado));
-    } catch (error) {}
+
+    } catch (error) {
+      console.error('Error al guardar estado:', error);
+    }
   }
 
   private restaurarEstado(): void {
@@ -296,6 +284,8 @@ export class GenerarVenta implements OnInit, OnDestroy {
 
       if (estadoGuardado) {
         const estado = JSON.parse(estadoGuardado);
+
+        console.log('📂 Restaurando estado de generar-venta:', estado);
 
         this.activeStep = estado.activeStep || 0;
         this.tipoComprobante = estado.tipoComprobante || '03';
@@ -320,14 +310,21 @@ export class GenerarVenta implements OnInit, OnDestroy {
         this.sedeNombreSeleccionada =
           estado.sedeNombreSeleccionada || this.empleadoActual!.nombre_sede!;
 
-        this.messageService.add({
-          severity: 'info',
-          summary: 'Estado restaurado',
-          detail: 'Se recuperó la venta en progreso',
-          life: 2000,
-        });
+
+        if (estado.activeStep > 0 || estado.productosSeleccionados?.length > 0) {
+          this.messageService.add({
+            severity: 'info',
+            summary: 'Estado restaurado',
+            detail: 'Se recuperó la venta en progreso',
+            life: 2000,
+          });
+        }
+      } else {
+        console.log('ℹ️ No hay estado guardado para restaurar');
       }
-    } catch (error) {}
+    } catch (error) {
+      console.error('❌ Error al restaurar estado:', error);
+    }
   }
 
   private limpiarEstado(): void {
@@ -1139,6 +1136,7 @@ export class GenerarVenta implements OnInit, OnDestroy {
       fec_venc:
         this.tipoComprobante === '01' ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) : null,
       moneda: 'PEN',
+      tipo_pago: this.tipoPago,
       tipo_op: '0101',
       subtotal: subtotalConDescuento,
       igv: igv,
@@ -1188,14 +1186,25 @@ export class GenerarVenta implements OnInit, OnDestroy {
     }, 1500);
   }
 
-  imprimirComprobante() {
-    this.guardarEstado();
+  imprimirComprobante(): void {
+    if (!this.comprobanteGenerado) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Sin comprobante',
+        detail: 'No hay comprobante para imprimir',
+        life: 3000
+      });
+      return;
+    }
 
+    this.guardarEstado();
+    
+    
     this.router.navigate(['/ventas/imprimir-comprobante'], {
       state: {
         comprobante: this.comprobanteGenerado,
-        rutaRetorno: '/ventas/generar-venta',
-      },
+        rutaRetorno: '/ventas/generar-venta'
+      }
     });
   }
 

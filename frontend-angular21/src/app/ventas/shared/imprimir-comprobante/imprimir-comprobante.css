@@ -1,3 +1,5 @@
+/* imprimir-comprobante.css */
+
 .contenedor-carga {
   min-height: 100vh;
   display: flex;
@@ -8,10 +10,62 @@
   gap: 2rem;
 }
 
-:host-context(.dark-mode) .contenedor-carga {
+:host-context(.dark-mode) .contenedor-carga,
+:host-context(.app-dark) .contenedor-carga {
   background: #0a0a0a;
 }
 
+/* 🔄 LOADING */
+.mensaje-carga {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  color: #666;
+}
+
+.mensaje-carga h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+/* ❌ ERROR STATE */
+.mensaje-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  text-align: center;
+  padding: 2rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  max-width: 400px;
+}
+
+.mensaje-error h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #dc2626;
+}
+
+.mensaje-error p {
+  margin: 0;
+  color: #6b7280;
+}
+
+:host-context(.app-dark) .mensaje-error {
+  background: #18181b;
+  color: #e5e7eb;
+}
+
+:host-context(.app-dark) .mensaje-error h3 {
+  color: #f87171;
+}
+
+/* 📄 VISTA PREVIA */
 .vista-previa-comprobante {
   background: white;
   border: 1px solid #d1d5db;
@@ -24,6 +78,24 @@
   font-family: 'Courier New', monospace;
 }
 
+:host-context(.app-dark) .vista-previa-comprobante {
+  background: #18181b;
+  border-color: #3f3f46;
+  color: #e5e7eb;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 🏢 HEADER */
 .comprobante-header {
   text-align: center;
   margin-bottom: 1.5rem;
@@ -37,11 +109,19 @@
   text-transform: uppercase;
 }
 
+:host-context(.app-dark) .comprobante-header h2 {
+  color: #f3f4f6;
+}
+
 .razon-social {
   margin: 0.25rem 0;
   font-size: 0.85rem;
   color: #525252;
   font-weight: 400;
+}
+
+:host-context(.app-dark) .razon-social {
+  color: #9ca3af;
 }
 
 .ruc {
@@ -51,6 +131,11 @@
   font-weight: 600;
 }
 
+:host-context(.app-dark) .ruc {
+  color: #d1d5db;
+}
+
+/* 🎫 TIPO COMPROBANTE */
 .comprobante-tipo {
   text-align: center;
   margin-bottom: 1.5rem;
@@ -58,6 +143,11 @@
   background: #f5f5f5;
   border-radius: 8px;
   border: 2px solid #d1d5db;
+}
+
+:host-context(.app-dark) .comprobante-tipo {
+  background: #27272a;
+  border-color: #3f3f46;
 }
 
 .tipo-label {
@@ -69,6 +159,10 @@
   letter-spacing: 1px;
 }
 
+:host-context(.app-dark) .tipo-label {
+  color: #e5e7eb;
+}
+
 .serie-numero {
   margin: 0;
   font-size: 1.25rem;
@@ -77,12 +171,22 @@
   letter-spacing: 2px;
 }
 
+:host-context(.app-dark) .serie-numero {
+  color: #f3f4f6;
+}
+
+/* ➖ DIVIDER */
 .divider {
   height: 1px;
   background: repeating-linear-gradient(to right, #a3a3a3 0, #a3a3a3 3px, transparent 3px, transparent 6px);
   margin: 1rem 0;
 }
 
+:host-context(.app-dark) .divider {
+  background: repeating-linear-gradient(to right, #52525b 0, #52525b 3px, transparent 3px, transparent 6px);
+}
+
+/* 👤 DATOS CLIENTE */
 .datos-cliente {
   margin-bottom: 1.5rem;
 }
@@ -95,6 +199,10 @@
   border-bottom: 1px solid #e5e5e5;
 }
 
+:host-context(.app-dark) .dato-row {
+  border-bottom-color: #3f3f46;
+}
+
 .dato-row:last-child {
   border-bottom: none;
 }
@@ -104,12 +212,21 @@
   color: #525252;
 }
 
+:host-context(.app-dark) .dato-row .label {
+  color: #9ca3af;
+}
+
 .dato-row .valor {
   font-weight: 600;
   color: #000;
   text-align: right;
 }
 
+:host-context(.app-dark) .dato-row .valor {
+  color: #e5e7eb;
+}
+
+/* 🛒 PRODUCTOS */
 .productos-lista {
   margin-bottom: 1.5rem;
 }
@@ -129,6 +246,12 @@
   border: 1px solid #b3b3b3;
 }
 
+:host-context(.app-dark) .productos-header {
+  background: #27272a;
+  color: #d1d5db;
+  border-color: #3f3f46;
+}
+
 .producto-item {
   display: grid;
   grid-template-columns: 2fr 0.6fr 0.8fr 0.8fr;
@@ -137,6 +260,10 @@
   font-size: 0.8rem;
   border-bottom: 1px solid #f0f0f0;
   align-items: center;
+}
+
+:host-context(.app-dark) .producto-item {
+  border-bottom-color: #27272a;
 }
 
 .producto-item:last-child {
@@ -151,11 +278,20 @@
   white-space: nowrap;
 }
 
+:host-context(.app-dark) .producto-nombre {
+  color: #e5e7eb;
+}
+
 .cantidad,
 .precio-unit {
   text-align: center;
   color: #525252;
   font-weight: 500;
+}
+
+:host-context(.app-dark) .cantidad,
+:host-context(.app-dark) .precio-unit {
+  color: #9ca3af;
 }
 
 .subtotal {
@@ -164,6 +300,30 @@
   color: #000;
 }
 
+:host-context(.app-dark) .subtotal {
+  color: #e5e7eb;
+}
+
+/* 📭 NO PRODUCTOS */
+.no-productos {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 2rem;
+  color: #9ca3af;
+  font-size: 0.875rem;
+}
+
+.no-productos i {
+  font-size: 2rem;
+}
+
+.no-productos p {
+  margin: 0;
+}
+
+/* 💰 TOTALES */
 .totales-section {
   margin-bottom: 1.5rem;
 }
@@ -180,9 +340,17 @@
   color: #525252;
 }
 
+:host-context(.app-dark) .total-row .label {
+  color: #9ca3af;
+}
+
 .total-row .valor {
   font-weight: 700;
   color: #000;
+}
+
+:host-context(.app-dark) .total-row .valor {
+  color: #e5e7eb;
 }
 
 .total-final {
@@ -192,11 +360,19 @@
   font-size: 1.1rem !important;
 }
 
+:host-context(.app-dark) .total-final {
+  border-top-color: #52525b;
+}
+
 .total-final .label {
   font-size: 1.1rem;
   font-weight: 800;
   color: #000 !important;
   text-transform: uppercase;
+}
+
+:host-context(.app-dark) .total-final .label {
+  color: #f3f4f6 !important;
 }
 
 .total-final .valor {
@@ -205,6 +381,11 @@
   color: #000 !important;
 }
 
+:host-context(.app-dark) .total-final .valor {
+  color: #f3f4f6 !important;
+}
+
+/* 💳 FORMA PAGO */
 .forma-pago {
   display: flex;
   justify-content: space-between;
@@ -217,8 +398,17 @@
   border: 1px solid #d1d5db;
 }
 
+:host-context(.app-dark) .forma-pago {
+  background: #27272a;
+  border-color: #3f3f46;
+}
+
 .forma-pago .label {
   color: #525252;
+}
+
+:host-context(.app-dark) .forma-pago .label {
+  color: #9ca3af;
 }
 
 .forma-pago .valor {
@@ -226,10 +416,19 @@
   font-weight: 700;
 }
 
+:host-context(.app-dark) .forma-pago .valor {
+  color: #e5e7eb;
+}
+
+/* 🎉 FOOTER */
 .comprobante-footer {
   text-align: center;
   padding-top: 1rem;
   border-top: 1px dashed #9ca3af;
+}
+
+:host-context(.app-dark) .comprobante-footer {
+  border-top-color: #52525b;
 }
 
 .comprobante-footer p {
@@ -239,12 +438,21 @@
   color: #000;
 }
 
+:host-context(.app-dark) .comprobante-footer p {
+  color: #e5e7eb;
+}
+
 .comprobante-footer .small {
   font-size: 0.75rem;
   color: #737373;
   font-weight: 400;
 }
 
+:host-context(.app-dark) .comprobante-footer .small {
+  color: #a1a1aa;
+}
+
+/* 🎛️ BOTONES */
 .botones-control {
   display: flex;
   gap: 1.75rem;
@@ -259,18 +467,23 @@
   animation: slideInUp 0.4s ease 0.3s backwards;
 }
 
-:host-context(.app-dark) {
-  .contenedor-carga {
-    background: #0a0a0a;
-  }
+:host-context(.app-dark) .botones-control {
+  background: linear-gradient(135deg, #27272a 0%, #18181b 100%) !important;
+  border-color: #3f3f46 !important;
+}
 
-  .botones-control {
-    background: linear-gradient(135deg, #27272a 0%, #18181b 100%) !important;
-    border-color: #3f3f46 !important;
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-
+/* 📱 RESPONSIVE */
 @media (max-width: 768px) {
   .vista-previa-comprobante {
     max-width: 100%;
@@ -287,7 +500,6 @@
     flex-direction: column;
     width: 100%;
     padding: 1rem;
+    gap: 1rem;
   }
-
 }
-
