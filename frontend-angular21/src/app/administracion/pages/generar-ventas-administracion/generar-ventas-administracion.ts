@@ -16,7 +16,6 @@ import { ConfirmDialog } from 'primeng/confirmdialog';
 import { AutoComplete } from 'primeng/autocomplete';
 import { Select } from 'primeng/select';
 import { Tooltip } from 'primeng/tooltip';
-
 import { TableModule } from 'primeng/table';
 import { StepperModule } from 'primeng/stepper';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
@@ -32,10 +31,11 @@ import { PosService } from '../../../core/services/pos.service';
 import { ProductosService, Producto } from '../../../core/services/productos.service';
 import { EmpleadosService, Empleado } from '../../../core/services/empleados.service';
 import { PromocionesService, Promocion } from '../../../core/services/promociones.service';
+import { SedeService, Sede } from '../../../core/services/sede.service';
 import { MessageService, ConfirmationService } from 'primeng/api';
 
 @Component({
-  selector: 'app-crear-venta',
+  selector: 'app-generar-ventas-administracion',
   standalone: true,
   imports: [
     CommonModule,
@@ -57,21 +57,25 @@ import { MessageService, ConfirmationService } from 'primeng/api';
     ProgressSpinnerModule,
   ],
   providers: [MessageService, ConfirmationService],
-  templateUrl: './generar-venta.html',
-  styleUrls: ['./generar-venta.css'],
+  templateUrl: './generar-ventas-administracion.html',
+  styleUrl: './generar-ventas-administracion.css',
 })
-export class GenerarVenta implements OnInit, OnDestroy {
-  tituloKicker = 'VENTAS - GENERAR VENTAS';
-  subtituloKicker = 'GENERAR NUEVA VENTA';
+export class GenerarVentasAdministracion implements OnInit, OnDestroy {
+  tituloKicker = 'ADMINISTRACIÓN - GENERAR VENTAS';
+  subtituloKicker = 'GENERAR NUEVA VENTA (ADMIN)';
   iconoCabecera = 'pi pi-shopping-cart';
 
   private subscriptions = new Subscription();
-  private readonly STORAGE_KEY = 'generar_venta_estado';
+  private readonly STORAGE_KEY = 'generar_venta_admin_estado';
   private clickEnBotonBuscar = false;
   private seleccionandoDelAutocomplete = false;
 
   empleadoActual: Empleado | null = null;
   nombreResponsable: string = '';
+
+  // 🔥 NUEVO: Sedes disponibles y selección
+  sedesDisponibles: { label: string; value: string }[] = [];
+  sedeSeleccionada: string | null = null;
 
   activeStep = 0;
   steps = ['Comprobante y Cliente', 'Productos', 'Venta y Pago', 'Confirmación'];
@@ -149,9 +153,9 @@ export class GenerarVenta implements OnInit, OnDestroy {
 
   comprobanteGenerado: ComprobanteVenta | null = null;
   loading = false;
-
   tieneSugerencias: boolean = false;
 
+  // GETTERS
   get textoBotonCliente(): string {
     const documentoActual =
       typeof this.clienteAutoComplete === 'string'
@@ -206,10 +210,10 @@ export class GenerarVenta implements OnInit, OnDestroy {
     private confirmationService: ConfirmationService,
     private empleadosService: EmpleadosService,
     private promocionesService: PromocionesService,
+    private sedeService: SedeService,
   ) {}
 
   ngOnInit(): void {
-
     this.empleadoActual = this.empleadosService.getEmpleadoActual()!;
     this.nombreResponsable = this.empleadosService.getNombreCompletoEmpleadoActual();
 
@@ -219,22 +223,20 @@ export class GenerarVenta implements OnInit, OnDestroy {
     this.messageService.add({
       severity: 'success',
       summary: `Bienvenido ${this.nombreResponsable}`,
-      detail: `Sede: ${this.empleadoActual.nombre_sede}`,
+      detail: `Modo: Administración - Sede: ${this.empleadoActual.nombre_sede}`,
       life: 3000,
     });
 
-    this.cargarProductos();
-    this.cargarFamilias();
+    this.cargarSedes();
     this.bancosDisponibles = this.posService.getBancosDisponibles();
-
     this.restaurarEstado();
 
     this.subscriptions.add(
       this.router.events
         .pipe(filter((event) => event instanceof NavigationEnd))
         .subscribe((event: NavigationEnd) => {
-          if (event.url === '/ventas/generar-ventas') {
-
+          if (event.url === '/admin/generar-ventas-administracion') {
+            console.log('🔄 Detectada navegación de retorno a generar-ventas-administracion');
             this.restaurarEstado();
           }
         })
@@ -242,10 +244,85 @@ export class GenerarVenta implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-
     this.subscriptions.unsubscribe();
   }
 
+  private cargarSedes(): void {
+    this.sedeService.getSedes().subscribe({
+      next: (sedes: Sede[]) => {
+        this.sedesDisponibles = sedes.map((sede) => ({
+          label: sede.nombre,
+          value: sede.nombre,
+        }));
+
+        this.sedeSeleccionada = this.sedeNombreSeleccionada;
+
+        this.cargarProductos();
+        this.cargarFamilias();
+      },
+      error: (err) => {
+        console.error('Error al cargar sedes:', err);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudieron cargar las sedes',
+          life: 3000,
+        });
+      },
+    });
+  }
+
+  onSedeChange(): void {
+    if (this.sedeSeleccionada) {
+      if (this.productosSeleccionados.length > 0) {
+        this.confirmationService.confirm({
+          message: 'Al cambiar de sede se vaciará el carrito. ¿Desea continuar?',
+          header: 'Confirmar cambio de sede',
+          icon: 'pi pi-exclamation-triangle',
+          acceptLabel: 'Sí, cambiar',
+          rejectLabel: 'Cancelar',
+          accept: () => {
+            this.productosSeleccionados.forEach((item) => {
+              this.productosService.devolverStock(Number(item.id_producto), item.cantidad);
+            });
+            this.productosSeleccionados = [];
+            this.productoTemp = null;
+
+            this.sedeNombreSeleccionada = this.sedeSeleccionada!;
+            this.cargarProductos();
+            this.cargarFamilias();
+
+            this.messageService.add({
+              severity: 'info',
+              summary: 'Sede cambiada',
+              detail: `Ahora mostrando productos de ${this.sedeSeleccionada}`,
+              life: 3000,
+            });
+
+            this.guardarEstado();
+          },
+          reject: () => {
+            this.sedeSeleccionada = this.sedeNombreSeleccionada;
+          },
+        });
+      } else {
+        this.sedeNombreSeleccionada = this.sedeSeleccionada;
+        this.cargarProductos();
+        this.cargarFamilias();
+
+        this.messageService.add({
+          severity: 'info',
+          summary: 'Sede cambiada',
+          detail: `Ahora mostrando productos de ${this.sedeSeleccionada}`,
+          life: 3000,
+        });
+
+        this.guardarEstado();
+      }
+    }
+  }
+
+  // MÉTODOS DE ESTADO
   private guardarEstado(): void {
     const estado = {
       activeStep: this.activeStep,
@@ -256,6 +333,7 @@ export class GenerarVenta implements OnInit, OnDestroy {
       nuevoCliente: this.nuevoCliente,
       productosSeleccionados: this.productosSeleccionados,
       familiaSeleccionada: this.familiaSeleccionada,
+      sedeSeleccionada: this.sedeSeleccionada,
       tipoVenta: this.tipoVenta,
       departamento: this.departamento,
       tipoPago: this.tipoPago,
@@ -272,9 +350,9 @@ export class GenerarVenta implements OnInit, OnDestroy {
 
     try {
       sessionStorage.setItem(this.STORAGE_KEY, JSON.stringify(estado));
-
+      console.log('💾 Estado guardado en sessionStorage (Admin)');
     } catch (error) {
-      console.error('Error al guardar estado:', error);
+      console.error('❌ Error al guardar estado:', error);
     }
   }
 
@@ -285,7 +363,7 @@ export class GenerarVenta implements OnInit, OnDestroy {
       if (estadoGuardado) {
         const estado = JSON.parse(estadoGuardado);
 
-        console.log('📂 Restaurando estado de generar-venta:', estado);
+        console.log('📂 Restaurando estado de generar-ventas-administracion:', estado);
 
         this.activeStep = estado.activeStep || 0;
         this.tipoComprobante = estado.tipoComprobante || '03';
@@ -295,6 +373,7 @@ export class GenerarVenta implements OnInit, OnDestroy {
         this.nuevoCliente = estado.nuevoCliente || this.nuevoCliente;
         this.productosSeleccionados = estado.productosSeleccionados || [];
         this.familiaSeleccionada = estado.familiaSeleccionada || null;
+        this.sedeSeleccionada = estado.sedeSeleccionada || this.sedeNombreSeleccionada;
         this.tipoVenta = estado.tipoVenta || 'PRESENCIAL';
         this.departamento = estado.departamento || '';
         this.tipoPago = estado.tipoPago || 'EFECTIVO';
@@ -310,6 +389,9 @@ export class GenerarVenta implements OnInit, OnDestroy {
         this.sedeNombreSeleccionada =
           estado.sedeNombreSeleccionada || this.empleadoActual!.nombre_sede!;
 
+        console.log('✅ Estado restaurado correctamente');
+        console.log('📍 Step actual:', this.activeStep);
+        console.log('📄 Comprobante generado:', this.comprobanteGenerado);
 
         if (estado.activeStep > 0 || estado.productosSeleccionados?.length > 0) {
           this.messageService.add({
@@ -329,8 +411,10 @@ export class GenerarVenta implements OnInit, OnDestroy {
 
   private limpiarEstado(): void {
     sessionStorage.removeItem(this.STORAGE_KEY);
+    console.log('🗑️ Estado limpiado del sessionStorage (Admin)');
   }
 
+  // MÉTODOS DE VALIDACIÓN
   validarSoloNumeros(event: any): void {
     const input = event.target as HTMLInputElement;
     const valor = input.value;
@@ -357,6 +441,7 @@ export class GenerarVenta implements OnInit, OnDestroy {
     input.value = valorFinal;
   }
 
+  // MÉTODOS DE CLIENTE
   buscarClienteAutoComplete(event: any): void {
     let query = event.query.toLowerCase();
 
@@ -733,9 +818,10 @@ export class GenerarVenta implements OnInit, OnDestroy {
     };
   }
 
+  // MÉTODOS DE PRODUCTOS
   cargarProductos(): void {
     this.productosDisponibles = this.productosService.getProductos(
-      this.sedeNombreSeleccionada,
+      this.sedeSeleccionada || this.sedeNombreSeleccionada,
       'Activo',
     );
 
@@ -941,6 +1027,7 @@ export class GenerarVenta implements OnInit, OnDestroy {
     return 'success';
   }
 
+  // MÉTODOS DE PROMOCIONES
   onCodigoPromocionChange(): void {
     if (!this.codigoPromocion.trim()) {
       this.limpiarPromocion();
@@ -1007,6 +1094,7 @@ export class GenerarVenta implements OnInit, OnDestroy {
     this.guardarEstado();
   }
 
+  // MÉTODOS DE CÁLCULO
   calcularSubtotal(): number {
     return this.productosSeleccionados.reduce((sum, p) => sum + p.valor_unit * p.cantidad, 0);
   }
@@ -1024,6 +1112,7 @@ export class GenerarVenta implements OnInit, OnDestroy {
     return this.posService.calcularVuelto(this.montoRecibido, this.calcularTotal());
   }
 
+  // MÉTODOS DE NAVEGACIÓN (STEPS)
   nextStep(): void {
     if (this.validarStepActual()) {
       this.activeStep++;
@@ -1094,6 +1183,7 @@ export class GenerarVenta implements OnInit, OnDestroy {
     }
   }
 
+  // MÉTODOS DE GENERACIÓN DE VENTA
   generarVenta(): void {
     this.confirmationService.confirm({
       message: '¿Confirmar la generación de esta venta?',
@@ -1192,19 +1282,18 @@ export class GenerarVenta implements OnInit, OnDestroy {
         severity: 'warn',
         summary: 'Sin comprobante',
         detail: 'No hay comprobante para imprimir',
-        life: 3000
+        life: 3000,
       });
       return;
     }
 
     this.guardarEstado();
-    
-    
-    this.router.navigate(['/ventas/imprimir-comprobante'], {
+
+    this.router.navigate(['/admin/imprimir-comprobante-administracion'], {
       state: {
         comprobante: this.comprobanteGenerado,
-        rutaRetorno: '/ventas/generar-venta'
-      }
+        rutaRetorno: '/admin/generar-ventas-administracion',
+      },
     });
   }
 
@@ -1233,7 +1322,7 @@ export class GenerarVenta implements OnInit, OnDestroy {
 
   verListado(): void {
     if (this.comprobanteGenerado) {
-      this.router.navigate(['/ventas/historial-ventas']);
+      this.router.navigate(['/admin/historial-ventas-administracion']);
       return;
     }
 
@@ -1250,12 +1339,12 @@ export class GenerarVenta implements OnInit, OnDestroy {
           });
 
           this.limpiarEstado();
-          this.router.navigate(['/ventas/historial-ventas']);
+          this.router.navigate(['/admin/historial-ventas-administracion']);
         },
       });
     } else {
       this.limpiarEstado();
-      this.router.navigate(['/ventas/historial-ventas']);
+      this.router.navigate(['/admin/historial-ventas-administracion']);
     }
   }
 }

@@ -608,7 +608,7 @@
 
 .filtros-productos {
   display: grid;
-  grid-template-columns: 1fr 474px;
+  grid-template-columns: 1fr 225px 225px;
   gap: 1.5rem;
   align-items: end;
   margin-bottom: 1.5rem;

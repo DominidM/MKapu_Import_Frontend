@@ -8,17 +8,17 @@ import { ComprobanteStorage } from '../../../core/utils/storage.helper';
 import { PDFHelper, ComprobantePDF, ComprobanteItemPDF } from '../../../core/utils/pdf.helper';
 
 @Component({
-  selector: 'app-imprimir-comprobante',
-  templateUrl: './imprimir-comprobante.html',
-  styleUrls: ['./imprimir-comprobante.css'],
+  selector: 'app-imprimir-comprobante-administracion',
+  templateUrl: './imprimir-comprobante-administracion.html',
+  styleUrls: ['./imprimir-comprobante-administracion.css'],
   standalone: true,
   imports: [CommonModule, ButtonModule]
 })
-export class ImprimirComprobante implements OnInit {
+export class ImprimirComprobanteAdministracion implements OnInit {
   comprobante: any | null = null;
   sede: Sede | null = null;
   cargando: boolean = true;
-  rutaRetorno: string = '/ventas/historial-ventas';
+  rutaRetorno: string = '/administracion/historial-ventas-administracion';
 
   constructor(
     private router: Router,
@@ -41,7 +41,7 @@ export class ImprimirComprobante implements OnInit {
     
     if (state && state['comprobante']) {
       this.comprobante = state['comprobante'];
-      this.rutaRetorno = state['rutaRetorno'] || '/ventas/historial-ventas';
+      this.rutaRetorno = state['rutaRetorno'] || '/administracion/historial-ventas-administracion';
       ComprobanteStorage.guardar(this.comprobante, this.rutaRetorno);
     } else {
       this.comprobante = ComprobanteStorage.obtenerComprobante();

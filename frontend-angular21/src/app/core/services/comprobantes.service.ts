@@ -156,4 +156,59 @@ export class ComprobantesService {
     const decimales = Math.round((numero - entero) * 100);
     return `${entero} CON ${String(decimales).padStart(2, '0')}/100 SOLES`;
   }
+
+  getTiposComprobanteOptions() {
+    return [
+      { label: 'Todos', value: null },
+      { label: 'Boleta', value: '03' },
+      { label: 'Factura', value: '01' },
+    ];
+  }
+
+  getTiposComprobanteOptionsParaGenerar() {
+    return [
+      { label: 'Boleta', value: '03', icon: 'pi pi-file' },
+      { label: 'Factura', value: '01', icon: 'pi pi-file-edit' },
+    ];
+  }
+
+  getEstadosComprobanteOptions() {
+    return [
+      { label: 'Todos', value: null },
+      { label: 'Emitido', value: 'EMITIDO' },
+      { label: 'Cancelado', value: 'CANCELADO' },
+      { label: 'Reembolsado', value: 'REEMBOLSADO' },
+    ];
+  }
+
+  getTipoComprobanteLabel(tipo: '01' | '03'): string {
+    return tipo === '03' ? 'Boleta' : 'Factura';
+  }
+
+  getNumeroFormateado(serie: string, numero: number): string {
+    return `${serie}-${numero.toString().padStart(8, '0')}`;
+  }
+
+  getSeverityEstado(estado: string): 'success' | 'danger' | 'warn' | 'info' {
+    switch (estado) {
+      case 'EMITIDO':
+        return 'success';
+      case 'CANCELADO':
+        return 'danger';
+      case 'REEMBOLSADO':
+        return 'warn';
+      default:
+        return 'info';
+    }
+  }
+
+  getEstadoComprobante(comprobante: any): string {
+    if (!comprobante.estado) return 'CANCELADO';
+    if (comprobante.hash_cpe) return 'EMITIDO';
+    return 'EMITIDO';
+  }
+
+  getSeverityTipoComprobante(tipo: '01' | '03'): 'primary' | 'secondary' {
+    return tipo === '01' ? 'primary' : 'secondary';
+  }
 }

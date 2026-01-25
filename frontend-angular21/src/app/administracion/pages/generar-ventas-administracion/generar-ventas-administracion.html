@@ -375,7 +375,8 @@
         <div class="productos-container">
           <div class="seccion-busquedas">
             <div class="filtros-productos">
-              <div class="buscar-producto-auto">
+
+                <div class="buscar-producto-auto">
                 <label class="font-semibold mb-2 block">Buscar producto</label>
                 <p-autocomplete
                   [(ngModel)]="productoSeleccionadoBusqueda"
@@ -401,7 +402,6 @@
                           styleClass="suggestion-tag-nuevo"
                         />
                       </div>
-
                       <div class="suggestion-row-2">
                         <span class="suggestion-nombre-nuevo">{{ producto.nombre }}</span>
                         <div class="flex align-items-center gap-2">
@@ -441,6 +441,32 @@
                   <ng-template let-option pTemplate="item">
                     <div class="familia-option">
                       <i class="pi pi-tag"></i>
+                      <span>{{ option.label }}</span>
+                    </div>
+                  </ng-template>
+                </p-select>
+              </div>
+
+              <div class="sede-selector">
+                <label class="font-semibold mb-2 block">Sede</label>
+                <p-select
+                  [(ngModel)]="sedeSeleccionada"
+                  [options]="sedesDisponibles"
+                  (onChange)="onSedeChange()"
+                  placeholder="Seleccione sede"
+                  styleClass="w-full"
+                  optionLabel="label"
+                  optionValue="value"
+                >
+                  <ng-template pTemplate="selectedItem" let-option>
+                    <div class="sede-option" *ngIf="option">
+                      <i class="pi pi-building"></i>
+                      <span>{{ option.label }}</span>
+                    </div>
+                  </ng-template>
+                  <ng-template let-option pTemplate="item">
+                    <div class="sede-option">
+                      <i class="pi pi-building"></i>
                       <span>{{ option.label }}</span>
                     </div>
                   </ng-template>

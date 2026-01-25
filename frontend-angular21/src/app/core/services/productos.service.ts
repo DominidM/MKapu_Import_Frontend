@@ -9,16 +9,16 @@ export interface Producto {
   descripcion?: string;
   sede: string;
   familia: string;
-  
+
   precioCompra: number;
   precioVenta: number;
   precioUnidad: number;
   precioCaja: number;
   precioMayorista: number;
-  
+
   unidadMedida: string;
   stock?: number;
-  
+
   estado: 'Activo' | 'Eliminado';
   fechaCreacion: Date;
   fechaActualizacion: Date;
@@ -56,7 +56,7 @@ export interface ComparativaProducto {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class ProductosService {
   private productosSubject = new BehaviorSubject<Producto[]>([]);
@@ -76,16 +76,16 @@ export class ProductosService {
         descripcion: 'Televisor LED 55 pulgadas 4K UHD Smart TV con WiFi integrado',
         sede: 'LAS FLORES',
         familia: 'Televisores',
-        precioCompra: 1200.00,
-        precioVenta: 1599.00,
-        precioUnidad: 1599.00,
-        precioCaja: 15200.00,
-        precioMayorista: 1450.00,
+        precioCompra: 1200.0,
+        precioVenta: 1599.0,
+        precioUnidad: 1599.0,
+        precioCaja: 15200.0,
+        precioMayorista: 1450.0,
         unidadMedida: 'UND',
         stock: 15,
         estado: 'Activo',
         fechaCreacion: new Date('2024-01-15'),
-        fechaActualizacion: new Date('2026-01-10')
+        fechaActualizacion: new Date('2026-01-10'),
       },
       {
         id: 2,
@@ -95,16 +95,16 @@ export class ProductosService {
         descripcion: 'Lavadora automática carga frontal 10kg con 15 programas',
         sede: 'LURIN',
         familia: 'Lavarropas',
-        precioCompra: 650.00,
-        precioVenta: 899.00,
-        precioUnidad: 899.00,
-        precioCaja: 8500.00,
-        precioMayorista: 820.00,
+        precioCompra: 650.0,
+        precioVenta: 899.0,
+        precioUnidad: 899.0,
+        precioCaja: 8500.0,
+        precioMayorista: 820.0,
         unidadMedida: 'UND',
         stock: 20,
         estado: 'Activo',
         fechaCreacion: new Date('2024-02-10'),
-        fechaActualizacion: new Date('2026-01-10')
+        fechaActualizacion: new Date('2026-01-10'),
       },
       {
         id: 3,
@@ -114,16 +114,16 @@ export class ProductosService {
         descripcion: 'Refrigeradora No Frost 12 pies cúbicos con dispensador',
         sede: 'LAS FLORES',
         familia: 'Refrigeradores',
-        precioCompra: 950.00,
-        precioVenta: 1299.00,
-        precioUnidad: 1299.00,
-        precioCaja: 12300.00,
-        precioMayorista: 1180.00,
+        precioCompra: 950.0,
+        precioVenta: 1299.0,
+        precioUnidad: 1299.0,
+        precioCaja: 12300.0,
+        precioMayorista: 1180.0,
         unidadMedida: 'UND',
         stock: 12,
         estado: 'Activo',
         fechaCreacion: new Date('2024-01-20'),
-        fechaActualizacion: new Date('2026-01-10')
+        fechaActualizacion: new Date('2026-01-10'),
       },
       {
         id: 4,
@@ -133,16 +133,16 @@ export class ProductosService {
         descripcion: 'Horno microondas con tecnología inverter 900W',
         sede: 'LAS FLORES',
         familia: 'Microondas',
-        precioCompra: 220.00,
-        precioVenta: 299.00,
-        precioUnidad: 299.00,
-        precioCaja: 2800.00,
-        precioMayorista: 275.00,
+        precioCompra: 220.0,
+        precioVenta: 299.0,
+        precioUnidad: 299.0,
+        precioCaja: 2800.0,
+        precioMayorista: 275.0,
         unidadMedida: 'UND',
         stock: 30,
         estado: 'Activo',
         fechaCreacion: new Date('2024-03-05'),
-        fechaActualizacion: new Date('2026-01-10')
+        fechaActualizacion: new Date('2026-01-10'),
       },
       {
         id: 5,
@@ -152,16 +152,16 @@ export class ProductosService {
         descripcion: 'Aspiradora industrial potencia 2000W con filtro HEPA',
         sede: 'LURIN',
         familia: 'Electrodomésticos',
-        precioCompra: 400.00,
-        precioVenta: 549.00,
-        precioUnidad: 549.00,
-        precioCaja: 5200.00,
-        precioMayorista: 500.00,
+        precioCompra: 400.0,
+        precioVenta: 549.0,
+        precioUnidad: 549.0,
+        precioCaja: 5200.0,
+        precioMayorista: 500.0,
         unidadMedida: 'UND',
         stock: 18,
         estado: 'Activo',
         fechaCreacion: new Date('2024-02-25'),
-        fechaActualizacion: new Date('2026-01-10')
+        fechaActualizacion: new Date('2026-01-10'),
       },
       {
         id: 6,
@@ -171,16 +171,16 @@ export class ProductosService {
         descripcion: 'Cafetera automática programable 12 tazas',
         sede: 'LAS FLORES',
         familia: 'Cocina',
-        precioCompra: 280.00,
-        precioVenta: 379.00,
-        precioUnidad: 379.00,
-        precioCaja: 3600.00,
-        precioMayorista: 345.00,
+        precioCompra: 280.0,
+        precioVenta: 379.0,
+        precioUnidad: 379.0,
+        precioCaja: 3600.0,
+        precioMayorista: 345.0,
         unidadMedida: 'UND',
         stock: 25,
         estado: 'Activo',
         fechaCreacion: new Date('2024-03-12'),
-        fechaActualizacion: new Date('2026-01-10')
+        fechaActualizacion: new Date('2026-01-10'),
       },
       {
         id: 7,
@@ -190,16 +190,16 @@ export class ProductosService {
         descripcion: 'Licuadora profesional 5 velocidades jarra de vidrio',
         sede: 'LAS FLORES',
         familia: 'Cocina',
-        precioCompra: 135.00,
-        precioVenta: 189.00,
-        precioUnidad: 189.00,
-        precioCaja: 1800.00,
-        precioMayorista: 170.00,
+        precioCompra: 135.0,
+        precioVenta: 189.0,
+        precioUnidad: 189.0,
+        precioCaja: 1800.0,
+        precioMayorista: 170.0,
         unidadMedida: 'UND',
         stock: 40,
         estado: 'Activo',
         fechaCreacion: new Date('2024-04-01'),
-        fechaActualizacion: new Date('2026-01-10')
+        fechaActualizacion: new Date('2026-01-10'),
       },
       {
         id: 8,
@@ -209,16 +209,16 @@ export class ProductosService {
         descripcion: 'Horno eléctrico 45L con control de temperatura',
         sede: 'LAS FLORES',
         familia: 'Cocina',
-        precioCompra: 370.00,
-        precioVenta: 499.00,
-        precioUnidad: 499.00,
-        precioCaja: 4700.00,
-        precioMayorista: 460.00,
+        precioCompra: 370.0,
+        precioVenta: 499.0,
+        precioUnidad: 499.0,
+        precioCaja: 4700.0,
+        precioMayorista: 460.0,
         unidadMedida: 'UND',
         stock: 15,
         estado: 'Activo',
         fechaCreacion: new Date('2024-03-18'),
-        fechaActualizacion: new Date('2026-01-10')
+        fechaActualizacion: new Date('2026-01-10'),
       },
       {
         id: 9,
@@ -228,16 +228,16 @@ export class ProductosService {
         descripcion: 'Aire acondicionado split 12000 BTU inverter',
         sede: 'LURIN',
         familia: 'Climatización',
-        precioCompra: 1400.00,
-        precioVenta: 1899.00,
-        precioUnidad: 1899.00,
-        precioCaja: 18200.00,
-        precioMayorista: 1750.00,
+        precioCompra: 1400.0,
+        precioVenta: 1899.0,
+        precioUnidad: 1899.0,
+        precioCaja: 18200.0,
+        precioMayorista: 1750.0,
         unidadMedida: 'UND',
         stock: 10,
         estado: 'Activo',
         fechaCreacion: new Date('2024-01-30'),
-        fechaActualizacion: new Date('2026-01-10')
+        fechaActualizacion: new Date('2026-01-10'),
       },
       {
         id: 10,
@@ -247,16 +247,16 @@ export class ProductosService {
         descripcion: 'Ventilador de pie industrial 16 pulgadas 3 velocidades',
         sede: 'LAS FLORES',
         familia: 'Climatización',
-        precioCompra: 190.00,
-        precioVenta: 259.00,
-        precioUnidad: 259.00,
-        precioCaja: 2450.00,
-        precioMayorista: 235.00,
+        precioCompra: 190.0,
+        precioVenta: 259.0,
+        precioUnidad: 259.0,
+        precioCaja: 2450.0,
+        precioMayorista: 235.0,
         unidadMedida: 'UND',
         stock: 35,
         estado: 'Activo',
         fechaCreacion: new Date('2024-04-10'),
-        fechaActualizacion: new Date('2026-01-10')
+        fechaActualizacion: new Date('2026-01-10'),
       },
       {
         id: 11,
@@ -266,16 +266,16 @@ export class ProductosService {
         descripcion: 'Plancha a vapor vertical y horizontal 2000W',
         sede: 'LAS FLORES',
         familia: 'Electrodomésticos',
-        precioCompra: 95.00,
-        precioVenta: 129.00,
-        precioUnidad: 129.00,
-        precioCaja: 1200.00,
-        precioMayorista: 115.00,
+        precioCompra: 95.0,
+        precioVenta: 129.0,
+        precioUnidad: 129.0,
+        precioCaja: 1200.0,
+        precioMayorista: 115.0,
         unidadMedida: 'UND',
         stock: 45,
         estado: 'Activo',
         fechaCreacion: new Date('2024-04-20'),
-        fechaActualizacion: new Date('2026-01-10')
+        fechaActualizacion: new Date('2026-01-10'),
       },
       {
         id: 12,
@@ -285,16 +285,16 @@ export class ProductosService {
         descripcion: 'Batidora eléctrica de mano 5 velocidades con turbo',
         sede: 'LAS FLORES',
         familia: 'Cocina',
-        precioCompra: 110.00,
-        precioVenta: 149.00,
-        precioUnidad: 149.00,
-        precioCaja: 1400.00,
-        precioMayorista: 135.00,
+        precioCompra: 110.0,
+        precioVenta: 149.0,
+        precioUnidad: 149.0,
+        precioCaja: 1400.0,
+        precioMayorista: 135.0,
         unidadMedida: 'UND',
         stock: 50,
         estado: 'Activo',
         fechaCreacion: new Date('2024-04-15'),
-        fechaActualizacion: new Date('2026-01-10')
+        fechaActualizacion: new Date('2026-01-10'),
       },
       {
         id: 13,
@@ -304,16 +304,16 @@ export class ProductosService {
         descripcion: 'Termo eléctrico 1.5 litros acero inoxidable',
         sede: 'LAS FLORES',
         familia: 'Cocina',
-        precioCompra: 72.00,
-        precioVenta: 99.00,
-        precioUnidad: 99.00,
-        precioCaja: 920.00,
-        precioMayorista: 88.00,
+        precioCompra: 72.0,
+        precioVenta: 99.0,
+        precioUnidad: 99.0,
+        precioCaja: 920.0,
+        precioMayorista: 88.0,
         unidadMedida: 'UND',
         stock: 60,
         estado: 'Activo',
         fechaCreacion: new Date('2024-04-25'),
-        fechaActualizacion: new Date('2026-01-10')
+        fechaActualizacion: new Date('2026-01-10'),
       },
       {
         id: 14,
@@ -323,16 +323,16 @@ export class ProductosService {
         descripcion: 'Sandwichera antiadherente placas desmontables',
         sede: 'LAS FLORES',
         familia: 'Cocina',
-        precioCompra: 88.00,
-        precioVenta: 119.00,
-        precioUnidad: 119.00,
-        precioCaja: 1100.00,
-        precioMayorista: 105.00,
+        precioCompra: 88.0,
+        precioVenta: 119.0,
+        precioUnidad: 119.0,
+        precioCaja: 1100.0,
+        precioMayorista: 105.0,
         unidadMedida: 'UND',
         stock: 35,
         estado: 'Activo',
         fechaCreacion: new Date('2024-04-28'),
-        fechaActualizacion: new Date('2026-01-10')
+        fechaActualizacion: new Date('2026-01-10'),
       },
       {
         id: 15,
@@ -342,16 +342,16 @@ export class ProductosService {
         descripcion: 'Extractor de cocina 90cm acero inoxidable',
         sede: 'LURIN',
         familia: 'Climatización',
-        precioCompra: 260.00,
-        precioVenta: 349.00,
-        precioUnidad: 349.00,
-        precioCaja: 3300.00,
-        precioMayorista: 320.00,
+        precioCompra: 260.0,
+        precioVenta: 349.0,
+        precioUnidad: 349.0,
+        precioCaja: 3300.0,
+        precioMayorista: 320.0,
         unidadMedida: 'UND',
         stock: 22,
         estado: 'Activo',
         fechaCreacion: new Date('2024-03-22'),
-        fechaActualizacion: new Date('2026-01-10')
+        fechaActualizacion: new Date('2026-01-10'),
       },
       {
         id: 16,
@@ -361,16 +361,16 @@ export class ProductosService {
         descripcion: 'Televisor LED 55 pulgadas 4K UHD Smart TV con WiFi integrado',
         sede: 'LURIN',
         familia: 'Televisores',
-        precioCompra: 1250.00,
-        precioVenta: 1650.00,
-        precioUnidad: 1650.00,
-        precioCaja: 15700.00,
-        precioMayorista: 1500.00,
+        precioCompra: 1250.0,
+        precioVenta: 1650.0,
+        precioUnidad: 1650.0,
+        precioCaja: 15700.0,
+        precioMayorista: 1500.0,
         unidadMedida: 'UND',
         stock: 12,
         estado: 'Activo',
         fechaCreacion: new Date('2024-01-16'),
-        fechaActualizacion: new Date('2026-01-10')
+        fechaActualizacion: new Date('2026-01-10'),
       },
       {
         id: 17,
@@ -378,36 +378,34 @@ export class ProductosService {
         anexo: 'TV-004',
         nombre: 'Smart TV LED 55" 4K RAF',
         descripcion: 'Televisor LED 55 pulgadas 4K UHD Smart TV con WiFi integrado',
-        sede: 'SAN BORJA',
+        sede: 'VES',
         familia: 'Televisores',
-        precioCompra: 1230.00,
-        precioVenta: 1625.00,
-        precioUnidad: 1625.00,
-        precioCaja: 15500.00,
-        precioMayorista: 1475.00,
+        precioCompra: 1230.0,
+        precioVenta: 1625.0,
+        precioUnidad: 1625.0,
+        precioCaja: 15500.0,
+        precioMayorista: 1475.0,
         unidadMedida: 'UND',
         stock: 18,
         estado: 'Activo',
         fechaCreacion: new Date('2024-01-17'),
-        fechaActualizacion: new Date('2026-01-10')
-      }
+        fechaActualizacion: new Date('2026-01-10'),
+      },
     ];
 
     this.productosSubject.next(datosIniciales);
   }
 
-  // ========== MÉTODOS DE CONSULTA ==========
-
   getProductos(sede?: string, estado: 'Activo' | 'Eliminado' = 'Activo'): Producto[] {
-    let productos = this.productosSubject.value.filter(p => p.estado === estado);
+    let productos = this.productosSubject.value.filter((p) => p.estado === estado);
     if (sede) {
-      productos = productos.filter(p => p.sede === sede);
+      productos = productos.filter((p) => p.sede === sede);
     }
     return productos;
   }
 
   getProductoPorId(id: number): Producto | null {
-    return this.productosSubject.value.find(p => p.id === id) || null;
+    return this.productosSubject.value.find((p) => p.id === id) || null;
   }
 
   getProductoById(id: number): Producto | null {
@@ -415,30 +413,29 @@ export class ProductosService {
   }
 
   getProductoPorCodigo(codigo: string): Producto | undefined {
-    return this.productosSubject.value.find(p => p.codigo === codigo && p.estado === 'Activo');
+    return this.productosSubject.value.find((p) => p.codigo === codigo && p.estado === 'Activo');
   }
 
   getProductosPorCodigo(codigo: string, incluirEliminados: boolean = false): Producto[] {
-    let productos = this.productosSubject.value.filter(p => p.codigo === codigo);
+    let productos = this.productosSubject.value.filter((p) => p.codigo === codigo);
     if (!incluirEliminados) {
-      productos = productos.filter(p => p.estado === 'Activo');
+      productos = productos.filter((p) => p.estado === 'Activo');
     }
     return productos;
   }
 
   buscarProductos(termino: string, sede?: string): Producto[] {
     const busqueda = termino.toLowerCase();
-    let productos = this.productosSubject.value.filter(p => 
-      p.estado === 'Activo' && (
-        p.nombre.toLowerCase().includes(busqueda) ||
-        p.codigo.toLowerCase().includes(busqueda)
-      )
+    let productos = this.productosSubject.value.filter(
+      (p) =>
+        p.estado === 'Activo' &&
+        (p.nombre.toLowerCase().includes(busqueda) || p.codigo.toLowerCase().includes(busqueda)),
     );
-    
+
     if (sede) {
-      productos = productos.filter(p => p.sede === sede);
+      productos = productos.filter((p) => p.sede === sede);
     }
-    
+
     return productos;
   }
 
@@ -446,49 +443,43 @@ export class ProductosService {
     return this.getProductos(sede, 'Eliminado');
   }
 
-  // ========== MÉTODOS DE SEDES Y FAMILIAS ==========
-
   getSedes(): string[] {
-    return [...new Set(this.productosSubject.value.map(p => p.sede))].sort();
+    return [...new Set(this.productosSubject.value.map((p) => p.sede))].sort();
   }
 
   getFamilias(sede?: string): string[] {
     const productos = sede ? this.getProductos(sede) : this.getProductos();
-    return [...new Set(productos.map(p => p.familia))].sort();
+    return [...new Set(productos.map((p) => p.familia))].sort();
   }
 
   getProductosPorFamilia(familia: string, sede?: string): Producto[] {
-    let productos = this.productosSubject.value.filter(p => 
-      p.familia === familia && p.estado === 'Activo'
+    let productos = this.productosSubject.value.filter(
+      (p) => p.familia === familia && p.estado === 'Activo',
     );
-    
+
     if (sede) {
-      productos = productos.filter(p => p.sede === sede);
+      productos = productos.filter((p) => p.sede === sede);
     }
-    
+
     return productos;
   }
-
-  // ========== MÉTODOS DE UNIDADES DE MEDIDA ==========
 
   getUnidadesMedida(): string[] {
     return ['UND', 'KG', 'LT', 'MT', 'CJ', 'PQ'];
   }
 
-  // ========== MÉTODOS CRUD ==========
-
   crearProducto(productoData: Omit<Producto, 'id'>): Producto {
     const productos = [...this.productosSubject.value];
-    const nuevoId = Math.max(...productos.map(p => p.id), 0) + 1;
-    
+    const nuevoId = Math.max(...productos.map((p) => p.id), 0) + 1;
+
     const nuevoProducto: Producto = {
       ...productoData,
       id: nuevoId,
       fechaCreacion: new Date(),
       fechaActualizacion: new Date(),
-      estado: 'Activo'
+      estado: 'Activo',
     };
-    
+
     productos.push(nuevoProducto);
     this.productosSubject.next(productos);
     return nuevoProducto;
@@ -506,13 +497,13 @@ export class ProductosService {
 
   actualizarProducto(id: number, cambios: Partial<Producto>): boolean {
     const productos = [...this.productosSubject.value];
-    const index = productos.findIndex(p => p.id === id);
-    
+    const index = productos.findIndex((p) => p.id === id);
+
     if (index !== -1) {
-      productos[index] = { 
-        ...productos[index], 
-        ...cambios, 
-        fechaActualizacion: new Date() 
+      productos[index] = {
+        ...productos[index],
+        ...cambios,
+        fechaActualizacion: new Date(),
       };
       this.productosSubject.next(productos);
       return true;
@@ -532,31 +523,94 @@ export class ProductosService {
     return this.actualizarProducto(id, { estado: 'Activo' });
   }
 
-  // ========== MÉTODOS DE STOCK ==========
-
   actualizarStock(id: number, cantidad: number): boolean {
-    const producto = this.productosSubject.value.find(p => p.id === id);
+    const producto = this.productosSubject.value.find((p) => p.id === id);
     if (producto && (producto.stock || 0) >= cantidad) {
       return this.actualizarProducto(id, { stock: (producto.stock || 0) - cantidad });
     }
     return false;
   }
 
+  descontarStock(id: number, cantidad: number): boolean {
+    const producto = this.productosSubject.value.find((p) => p.id === id);
+    if (!producto) return false;
+
+    const stockActual = producto.stock || 0;
+    if (stockActual < cantidad) return false;
+
+    return this.actualizarProducto(id, { stock: stockActual - cantidad });
+  }
+
+  devolverStock(id: number, cantidad: number): boolean {
+    const producto = this.productosSubject.value.find((p) => p.id === id);
+    if (!producto) return false;
+
+    const stockActual = producto.stock || 0;
+    return this.actualizarProducto(id, { stock: stockActual + cantidad });
+  }
+
+  incrementarStock(id: number, cantidad: number): boolean {
+    return this.devolverStock(id, cantidad);
+  }
+
+  establecerStock(id: number, nuevoStock: number): boolean {
+    if (nuevoStock < 0) return false;
+    return this.actualizarProducto(id, { stock: nuevoStock });
+  }
+
   getStockDisponible(id: number): number {
-    const producto = this.productosSubject.value.find(p => p.id === id);
+    const producto = this.productosSubject.value.find((p) => p.id === id);
     return producto?.stock || 0;
   }
 
-  // ========== MÉTODOS DE VALIDACIÓN ==========
+  verificarStockDisponible(id: number, cantidadRequerida: number): boolean {
+    const stockActual = this.getStockDisponible(id);
+    return stockActual >= cantidadRequerida;
+  }
+
+  getProductosBajoStock(limite: number = 10, sede?: string): Producto[] {
+    let productos = this.getProductos(sede, 'Activo');
+    return productos.filter((p) => (p.stock || 0) <= limite);
+  }
+
+  getProductosSinStock(sede?: string): Producto[] {
+    return this.getProductosBajoStock(0, sede);
+  }
+
+  actualizarStockMultiple(actualizaciones: { id: number; cantidad: number }[]): boolean {
+    try {
+      actualizaciones.forEach(({ id, cantidad }) => {
+        if (!this.descontarStock(id, cantidad)) {
+          throw new Error(`No se pudo descontar stock del producto ${id}`);
+        }
+      });
+      return true;
+    } catch (error) {
+      console.error('Error al actualizar stock múltiple:', error);
+      return false;
+    }
+  }
+
+  devolverStockMultiple(devoluciones: { id: number; cantidad: number }[]): boolean {
+    try {
+      devoluciones.forEach(({ id, cantidad }) => {
+        if (!this.devolverStock(id, cantidad)) {
+          throw new Error(`No se pudo devolver stock del producto ${id}`);
+        }
+      });
+      return true;
+    } catch (error) {
+      console.error('Error al devolver stock múltiple:', error);
+      return false;
+    }
+  }
 
   existeCodigo(codigo: string, sede?: string): boolean {
     if (sede) {
-      return this.productosSubject.value.some(p => p.codigo === codigo && p.sede === sede);
+      return this.productosSubject.value.some((p) => p.codigo === codigo && p.sede === sede);
     }
-    return this.productosSubject.value.some(p => p.codigo === codigo);
+    return this.productosSubject.value.some((p) => p.codigo === codigo);
   }
-
-  // ========== MÉTODOS DE ESTADÍSTICAS ==========
 
   getTotalProductos(estado: 'Activo' | 'Eliminado' = 'Activo'): number {
     return this.getProductos(undefined, estado).length;
@@ -582,24 +636,22 @@ export class ProductosService {
     return this.getTotalProductosPorSede(sede, 'Eliminado');
   }
 
-  getResumenPorSedes(): {sede: string, activos: number, eliminados: number, total: number}[] {
+  getResumenPorSedes(): { sede: string; activos: number; eliminados: number; total: number }[] {
     const sedes = this.getSedes();
-    return sedes.map(sede => ({
+    return sedes.map((sede) => ({
       sede,
       activos: this.getTotalProductosActivosPorSede(sede),
       eliminados: this.getTotalProductosEliminadosPorSede(sede),
-      total: this.getTotalProductosPorSede(sede)
+      total: this.getTotalProductosPorSede(sede),
     }));
   }
 
-  // ========== MÉTODOS DE COMPARATIVAS ==========
-
   getProductosConVariasSedes(): string[] {
     const codigosPorSedes = new Map<string, Set<string>>();
-    
+
     this.productosSubject.value
-      .filter(p => p.estado === 'Activo')
-      .forEach(p => {
+      .filter((p) => p.estado === 'Activo')
+      .forEach((p) => {
         if (!codigosPorSedes.has(p.codigo)) {
           codigosPorSedes.set(p.codigo, new Set());
         }
@@ -617,28 +669,29 @@ export class ProductosService {
 
   getComparativaPorCodigo(codigo: string): ComparativaProducto | null {
     const variantes = this.getProductosPorCodigo(codigo);
-    
+
     if (variantes.length === 0) return null;
 
-    const preciosCompra = variantes.map(v => v.precioCompra);
-    const preciosVenta = variantes.map(v => v.precioVenta);
-    const preciosUnidad = variantes.map(v => v.precioUnidad);
-    const preciosCaja = variantes.map(v => v.precioCaja);
-    const preciosMayorista = variantes.map(v => v.precioMayorista);
+    const preciosCompra = variantes.map((v) => v.precioCompra);
+    const preciosVenta = variantes.map((v) => v.precioVenta);
+    const preciosUnidad = variantes.map((v) => v.precioUnidad);
+    const preciosCaja = variantes.map((v) => v.precioCaja);
+    const preciosMayorista = variantes.map((v) => v.precioMayorista);
 
     const precioPromedioCompra = preciosCompra.reduce((a, b) => a + b, 0) / preciosCompra.length;
     const precioPromedioVenta = preciosVenta.reduce((a, b) => a + b, 0) / preciosVenta.length;
     const precioPromedioUnidad = preciosUnidad.reduce((a, b) => a + b, 0) / preciosUnidad.length;
     const precioCajaPromedio = preciosCaja.reduce((a, b) => a + b, 0) / preciosCaja.length;
-    const precioMayoristaPromedio = preciosMayorista.reduce((a, b) => a + b, 0) / preciosMayorista.length;
+    const precioMayoristaPromedio =
+      preciosMayorista.reduce((a, b) => a + b, 0) / preciosMayorista.length;
 
     const precioMinimoVenta = Math.min(...preciosVenta);
     const precioMaximoVenta = Math.max(...preciosVenta);
 
-    const varianteMasBarata = variantes.find(v => v.precioVenta === precioMinimoVenta)!;
-    const varianteMasCara = variantes.find(v => v.precioVenta === precioMaximoVenta)!;
+    const varianteMasBarata = variantes.find((v) => v.precioVenta === precioMinimoVenta)!;
+    const varianteMasCara = variantes.find((v) => v.precioVenta === precioMaximoVenta)!;
 
-    const variantesConDiferencia = variantes.map(v => ({
+    const variantesConDiferencia = variantes.map((v) => ({
       id: v.id,
       sede: v.sede,
       precioCompra: v.precioCompra,
@@ -652,9 +705,10 @@ export class ProductosService {
       diferenciaPrecioUnidad: v.precioUnidad - precioPromedioUnidad,
       diferenciaPrecioCaja: v.precioCaja - precioCajaPromedio,
       diferenciaPrecioMayorista: v.precioMayorista - precioMayoristaPromedio,
-      porcentajeDiferencia: precioPromedioVenta > 0 
-        ? ((v.precioVenta - precioPromedioVenta) / precioPromedioVenta) * 100 
-        : 0
+      porcentajeDiferencia:
+        precioPromedioVenta > 0
+          ? ((v.precioVenta - precioPromedioVenta) / precioPromedioVenta) * 100
+          : 0,
     }));
 
     return {
@@ -670,7 +724,7 @@ export class ProductosService {
       precioMinimoVenta,
       precioMaximoVenta,
       sedeMasBarata: varianteMasBarata.sede,
-      sedeMasCara: varianteMasCara.sede
+      sedeMasCara: varianteMasCara.sede,
     };
   }
 
@@ -680,19 +734,40 @@ export class ProductosService {
 
   getPrecioPromedioPorProducto(codigo: string): number {
     const productos = this.getComparativaPorProducto(codigo);
-    return productos.length > 0 ? 
-      productos.reduce((sum, p) => sum + p.precioVenta, 0) / productos.length : 0;
+    return productos.length > 0
+      ? productos.reduce((sum, p) => sum + p.precioVenta, 0) / productos.length
+      : 0;
   }
-
-  // ========== MÉTODOS DE CÁLCULO ==========
 
   getMargenGanancia(producto: Producto): number {
     return producto.precioVenta - producto.precioCompra;
   }
 
   getPorcentajeMargen(producto: Producto): number {
-    return producto.precioCompra > 0 
-      ? ((producto.precioVenta - producto.precioCompra) / producto.precioCompra) * 100 
+    return producto.precioCompra > 0
+      ? ((producto.precioVenta - producto.precioCompra) / producto.precioCompra) * 100
       : 0;
+  }
+
+  getFamiliasOptions() {
+    return [
+      { label: 'Todas', value: null },
+      { label: 'Televisores', value: 'Televisores' },
+      { label: 'Lavarropas', value: 'Lavarropas' },
+      { label: 'Refrigeradores', value: 'Refrigeradores' },
+      { label: 'Microondas', value: 'Microondas' },
+      { label: 'Electrodomésticos', value: 'Electrodomésticos' },
+      { label: 'Cocina', value: 'Cocina' },
+      { label: 'Climatización', value: 'Climatización' },
+    ];
+  }
+
+  getFamiliasDisponibles(sede?: string): { label: string; value: string | null }[] {
+    const familiasUnicas = this.getFamilias(sede);
+
+    return [
+      { label: 'Todas', value: null },
+      ...familiasUnicas.map((f) => ({ label: f, value: f })),
+    ];
   }
 }
