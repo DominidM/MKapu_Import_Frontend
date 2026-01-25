@@ -28,8 +28,15 @@ export class Auth {
     return !!localStorage.getItem('token');
   }
 
-  getRole(): any { 
-    return localStorage.getItem('role');
+  getRole(): string | null {
+    const userStr = localStorage.getItem('user');
+
+    if (!userStr) {
+      return null;
+    }
+
+    const user = JSON.parse(userStr);
+    return user.rol_nombre ?? null;
   }
 
   logout() {

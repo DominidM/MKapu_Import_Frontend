@@ -48,6 +48,7 @@ export class Sidebar implements OnInit {
 
   ngOnInit(): void {
     this.role = this.auth.getRole();
+    console.log("role", this.role)
   }
 
   toggleMenu(menu: string) {
@@ -55,7 +56,7 @@ export class Sidebar implements OnInit {
   }
 
   getRole(){
-
+    this.role = this.auth.getRole();
   }
 
   confirm2(event: Event) {
