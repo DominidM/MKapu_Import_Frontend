@@ -22,10 +22,13 @@ export interface ComprobantePDF {
   igv: number;
   total: number;
   tipo_pago: string;
+  descuento?: number;
+  tipo_venta?: string;
+  atendido_por?: string;
+  motivo?: string;
 }
 
 export class PDFHelper {
-  
   static generarTicketVenta(comprobante: ComprobantePDF, sede: Sede): jsPDF | null {
     if (!comprobante || !sede) {
       console.error('Faltan datos para generar PDF');
@@ -35,7 +38,7 @@ export class PDFHelper {
     const doc = new jsPDF({
       orientation: 'portrait',
       unit: 'mm',
-      format: [80, 297]
+      format: [80, 297],
     });
 
     let y = 8;
@@ -47,93 +50,71 @@ export class PDFHelper {
     doc.setTextColor(0, 0, 0);
     doc.setDrawColor(0, 0, 0);
 
-    // 🏢 HEADER
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.text(sede.nombre.toUpperCase(), centerX, y, { align: 'center' });
-    y += 5.5;
+    y += 5;
 
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(82, 82, 82);
-    doc.text(sede.razon_social, centerX, y, { align: 'center' });
-    y += 3.5;
 
-    doc.setFontSize(7.5);
-    doc.text(`RUC: ${sede.ruc}`, centerX, y, { align: 'center' });
-    y += 6;
+    const dibujarTextoGrueso = (
+      texto: string,
+      x: number,
+      yPos: number,
+      fontSize: number,
+      alineacion: 'center' | 'right' | 'left' = 'center',
+    ) => {
+      doc.setFontSize(fontSize);
+      doc.setFont('helvetica', 'bold');
+      doc.text(texto, x, yPos, { align: alineacion });
+      doc.text(texto, x + 0.3, yPos, { align: alineacion });
+      doc.text(texto, x, yPos + 0.1, { align: alineacion });
+      doc.text(texto, x + 0.3, yPos + 0.1, { align: alineacion });
+    };
+
+    const palabras = sede.razon_social.split(' ');
+    dibujarTextoGrueso(palabras[0].toUpperCase(), centerX, y, 26, 'center');
+    y += 5;
+
+    if (palabras[1]) {
+      const segundaPalabra =
+        palabras[1].charAt(0).toUpperCase() + palabras[1].slice(1).toLowerCase();
+      dibujarTextoGrueso(segundaPalabra, centerX - 8, y, 13, 'center'); // Movi 8mm a la izquierda
+    }
+    y += 5;
+
 
     this.dibujarLineaPunteada(doc, leftMargin, y, rightMargin, y, 1.5);
-    y += 6;
+    y += 7;
 
-    // 🎫 TIPO DE COMPROBANTE
-    const tipoText = comprobante.tipo_comprobante === '03' ? 'BOLETA DE VENTA' : 'FACTURA ELECTRÓNICA';
-    const numeroFormateado = comprobante.numero.toString().padStart(8, '0');
-    const serieNumero = `${comprobante.serie}-${numeroFormateado}`;
-
-    doc.setFillColor(245, 245, 245);
-    doc.setDrawColor(200, 200, 200);
-    doc.setLineWidth(0.3);
-    doc.rect(leftMargin + 2, y - 2, rightMargin - leftMargin - 4, 10, 'FD');
-
-    doc.setFontSize(8);
+    const tipoText =
+      comprobante.tipo_comprobante === '03' ? 'NOTA DE VENTA' : 'FACTURA ELECTRÓNICA';
+    doc.setFontSize(9);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(0, 0, 0);
-    doc.text(tipoText, centerX, y + 2, { align: 'center' });
-
-    doc.setFontSize(12);
-    doc.text(serieNumero, centerX, y + 7, { align: 'center' });
-    y += 12;
+    doc.text(tipoText, centerX, y, { align: 'center' });
+    y += 5;
 
     this.dibujarLineaPunteada(doc, leftMargin, y, rightMargin, y, 1.5);
     y += 6;
 
-    // 📍 DATOS DE LA SEDE
     doc.setFontSize(7);
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(82, 82, 82);
-    
-    doc.text('RUC:', leftMargin + 2, y);
-    doc.setTextColor(38, 38, 38);
-    doc.text(sede.ruc, leftMargin + 17, y);
-    y += 3.5;
+    doc.setTextColor(0, 0, 0);
+    doc.text(sede.ruc, centerX, y, { align: 'center' });
+    y += 3;
 
-    doc.setTextColor(82, 82, 82);
-    doc.text('Dirección:', leftMargin + 2, y);
-    doc.setTextColor(38, 38, 38);
-    const direccion = sede.direccion.length > 35 
-      ? sede.direccion.substring(0, 35) + '...' 
-      : sede.direccion;
-    doc.text(direccion, leftMargin + 17, y);
-    y += 3.5;
+    const razonSocialCompleta = `${sede.razon_social.toUpperCase()} S.A.C.`;
+    doc.setFont('helvetica', 'bold');
+    doc.text(razonSocialCompleta, centerX, y, { align: 'center' });
+    y += 3;
 
-    doc.setTextColor(82, 82, 82);
-    doc.text('Teléfono:', leftMargin + 2, y);
-    doc.setTextColor(38, 38, 38);
-    doc.text(sede.telefono, leftMargin + 17, y);
+    doc.setFont('helvetica', 'normal');
+    const direccionCompleta = `${sede.direccion}, ${sede.distrito} - ${sede.provincia}`;
+    doc.text(direccionCompleta, centerX, y, { align: 'center' });
+    y += 3;
+
+    doc.text(`Celular: ${sede.telefono}`, centerX, y, { align: 'center' });
     y += 4;
 
-    this.dibujarLineaPunteada(doc, leftMargin, y, rightMargin, y, 1);
-    y += 4.5;
-
-    // 👤 DATOS DEL CLIENTE
-    doc.setFontSize(7);
-    doc.setFont('helvetica', 'normal');
-
-    doc.setTextColor(82, 82, 82);
-    doc.text('Cliente:', leftMargin + 2, y);
-    doc.setTextColor(0, 0, 0);
-    const nombreCliente = comprobante.cliente_nombre.length > 30 
-      ? comprobante.cliente_nombre.substring(0, 30) + '...' 
-      : comprobante.cliente_nombre;
-    doc.text(nombreCliente, leftMargin + 17, y);
-    y += 3.5;
-
-    doc.setTextColor(82, 82, 82);
-    doc.text('Documento:', leftMargin + 2, y);
-    doc.setTextColor(0, 0, 0);
-    doc.text(comprobante.cliente_doc, leftMargin + 17, y);
-    y += 3.5;
+    this.dibujarLineaPunteada(doc, leftMargin, y, rightMargin, y, 1.5);
+    y += 5;
 
     const fecha = new Date(comprobante.fecha);
     const dia = fecha.getDate().toString().padStart(2, '0');
@@ -141,137 +122,143 @@ export class PDFHelper {
     const anio = fecha.getFullYear();
     const horas = fecha.getHours().toString().padStart(2, '0');
     const minutos = fecha.getMinutes().toString().padStart(2, '0');
-    const fechaFormateada = `${dia}/${mes}/${anio} ${horas}:${minutos}`;
-
-    doc.setTextColor(82, 82, 82);
-    doc.text('Fecha:', leftMargin + 2, y);
-    doc.setTextColor(0, 0, 0);
-    doc.text(fechaFormateada, leftMargin + 17, y);
-    y += 6;
-
-    this.dibujarLineaPunteada(doc, leftMargin, y, rightMargin, y, 1);
-    y += 6;
-
-    // 🛒 PRODUCTOS
-    const productos = comprobante.items.map(item => [
-      item.descripcion.substring(0, 25),
-      item.cantidad.toString(),
-      item.precio_unitario.toFixed(2),
-      item.subtotal.toFixed(2)
-    ]);
-
-    autoTable(doc, {
-      startY: y,
-      head: [['DESC', 'CANT', 'P.U.', 'TOTAL']],
-      body: productos,
-      theme: 'plain',
-      styles: {
-        fontSize: 7,
-        cellPadding: 2,
-        lineColor: [200, 200, 200],
-        lineWidth: 0.15,
-        textColor: [0, 0, 0],
-        halign: 'left',
-        overflow: 'linebreak'
-      },
-      headStyles: {
-        fontStyle: 'bold',
-        fillColor: [235, 235, 235],
-        textColor: [38, 38, 38],
-        halign: 'left',
-        fontSize: 7,
-        lineColor: [180, 180, 180],
-        lineWidth: 0.2,
-        cellPadding: 2.5
-      },
-      columnStyles: {
-        0: { cellWidth: 30, halign: 'left' },
-        1: { cellWidth: 13, halign: 'center' },
-        2: { cellWidth: 13, halign: 'right' },
-        3: { cellWidth: 14, halign: 'right', fontStyle: 'bold' }
-      },
-      margin: { left: leftMargin, right: 5 },
-      tableWidth: 70
-    });
-
-    y = (doc as any).lastAutoTable.finalY + 3;
-
-    this.dibujarLineaPunteada(doc, leftMargin, y, rightMargin, y, 1);
-    y += 6;
-
-    // 💰 TOTALES
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'normal');
-
-    doc.setTextColor(82, 82, 82);
-    doc.text('SUBTOTAL:', leftMargin + 2, y);
-    doc.setTextColor(0, 0, 0);
-    doc.setFont('helvetica', 'bold');
-    doc.text(`S/. ${comprobante.subtotal.toFixed(2)}`, rightMargin - 2, y, { align: 'right' });
-    y += 4;
-
-    if (comprobante.igv > 0) {
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(82, 82, 82);
-      doc.text('IGV (18%):', leftMargin + 2, y);
-      doc.setTextColor(0, 0, 0);
-      doc.setFont('helvetica', 'bold');
-      doc.text(`S/. ${comprobante.igv.toFixed(2)}`, rightMargin - 2, y, { align: 'right' });
-      y += 4;
-    }
-
-    y += 3;
-
-    doc.setDrawColor(0, 0, 0);
-    doc.setLineWidth(0.25);
-    doc.line(leftMargin + 2, y, rightMargin - 2, y);
-    y += 6;
-
-    doc.setFontSize(13);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(0, 0, 0);
-    doc.text('TOTAL:', leftMargin + 2, y);
-    doc.text(`S/. ${comprobante.total.toFixed(2)}`, rightMargin - 2, y, { align: 'right' });
-    y += 3.5;
-
-    doc.setLineWidth(0.25);
-    doc.line(leftMargin + 2, y, rightMargin - 2, y);
-    y += 6;
-
-    // 💳 FORMA DE PAGO
-    const formasPago: { [key: string]: string } = {
-      '01': 'EFECTIVO', '02': 'TARJETA', '03': 'YAPE', '04': 'PLIN', '05': 'TRANSFERENCIA',
-      'EFECTIVO': 'EFECTIVO', 'TARJETA': 'TARJETA', 'YAPE': 'YAPE', 'PLIN': 'PLIN', 'TRANSFERENCIA': 'TRANSFERENCIA'
-    };
-    const formaPago = formasPago[comprobante.tipo_pago] || 'EFECTIVO';
-
-    doc.setFillColor(245, 245, 245);
-    doc.setDrawColor(200, 200, 200);
-    doc.setLineWidth(0.3);
-    doc.rect(leftMargin + 2, y - 3, rightMargin - leftMargin - 4, 6.5, 'FD');
-
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(38, 38, 38);
-    doc.text('PAGO:', leftMargin + 4, y + 1);
-    doc.text(formaPago, rightMargin - 4, y + 1, { align: 'right' });
-
-    y += 8;
-
-    this.dibujarLineaPunteada(doc, leftMargin, y, rightMargin, y, 1);
-    y += 5;
-
-    // 🎉 FOOTER
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(0, 0, 0);
-    doc.text('¡Gracias por su compra!', centerX, y, { align: 'center' });
-    y += 3.5;
+    const fechaHora = `${dia}/${mes}/${anio} ${horas}:${minutos}`;
 
     doc.setFontSize(7);
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(115, 115, 115);
-    doc.text('Conserve su comprobante', centerX, y, { align: 'center' });
+    doc.text(fechaHora, centerX, y, { align: 'center' });
+    y += 3;
+
+    const numeroFormateado = comprobante.numero.toString().padStart(8, '0');
+    const serieNumero = `${comprobante.serie}-${numeroFormateado}`;
+    doc.setFont('helvetica', 'bold');
+    doc.text(serieNumero, centerX, y, { align: 'center' });
+    y += 3;
+
+    this.dibujarLineaPunteada(doc, leftMargin, y, rightMargin, y, 1.5);
+    y += 5;
+
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'normal');
+    doc.text(comprobante.cliente_nombre.toUpperCase(), centerX, y, { align: 'center' });
+    y += 3;
+
+    doc.text(comprobante.cliente_doc, centerX, y, { align: 'center' });
+    y += 3;
+
+    this.dibujarLineaPunteada(doc, leftMargin, y, rightMargin, y, 1.5);
+    y += 5;
+
+    const tipoVenta = comprobante.tipo_venta || 'RECOJO EN TIENDA';
+    doc.setFont('helvetica', 'bold');
+    doc.text(tipoVenta, centerX, y, { align: 'center' });
+    y += 3;
+
+    this.dibujarLineaPunteada(doc, leftMargin, y, rightMargin, y, 1.5);
+    y += 5;
+
+    // 19. PRODUCTOS SIN BORDES CON LÍNEAS DE IGUALES
+
+    // Línea superior (=====)
+    this.dibujarLineasIguales(doc, leftMargin, y, rightMargin);
+    y += 4.5;
+
+    // Encabezados
+    doc.setFontSize(6.5);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(0, 0, 0);
+    doc.text('Descripción', leftMargin + 2, y);
+    doc.text('Cant', leftMargin + 42, y, { align: 'center' });
+    doc.text('P.Und', leftMargin + 52, y, { align: 'center' });
+    doc.text('P.Total', rightMargin - 2, y, { align: 'right' });
+    y += 3.5;
+
+    // Línea separadora (=====)
+    this.dibujarLineasIguales(doc, leftMargin, y, rightMargin);
+    y += 6;
+
+    // Productos SIN BORDES
+    doc.setFont('helvetica', 'normal');
+    comprobante.items.forEach((item) => {
+      doc.setFontSize(6.5);
+      const descripcion = item.descripcion.substring(0, 28);
+      doc.text(descripcion, leftMargin + 2, y);
+      doc.text(item.cantidad.toString(), leftMargin + 42, y, { align: 'center' });
+      doc.text(item.precio_unitario.toFixed(2), leftMargin + 52, y, { align: 'center' });
+      doc.text(item.subtotal.toFixed(2), rightMargin - 2, y, { align: 'right' });
+      y += 3.5;
+    });
+
+    this.dibujarLineaPunteada(doc, leftMargin, y, rightMargin, y, 1.5);
+    y += 5;
+
+    if (comprobante.descuento && comprobante.descuento > 0) {
+      doc.setFontSize(7);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Descuento Gral.:', leftMargin + 2, y);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`S/ ${comprobante.descuento.toFixed(2)}`, rightMargin - 2, y, { align: 'right' });
+      y += 4;
+
+      this.dibujarLineaPunteada(doc, leftMargin, y, rightMargin, y, 1.5);
+      y += 5;
+    }
+
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Total', leftMargin + 2, y);
+    doc.text(`S/ ${comprobante.total.toFixed(2)}`, rightMargin - 2, y, { align: 'right' });
+    y += 4;
+
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Pago', leftMargin + 2, y);
+    doc.text(`S/ ${comprobante.total.toFixed(2)}`, rightMargin - 2, y, { align: 'right' });
+    y += 5;
+
+    this.dibujarLineaPunteada(doc, leftMargin, y, rightMargin, y, 1.5);
+    y += 5;
+
+    if (comprobante.motivo) {
+      doc.setFontSize(7);
+      doc.setFont('helvetica', 'normal');
+      doc.text(comprobante.motivo.toUpperCase(), centerX, y, { align: 'center' });
+      y += 5;
+
+      this.dibujarLineaPunteada(doc, leftMargin, y, rightMargin, y, 1.5);
+      y += 5;
+    }
+
+    if (comprobante.atendido_por) {
+      doc.setFontSize(7);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Atendido por:', centerX, y, { align: 'center' });
+      y += 3;
+      doc.setFont('helvetica', 'bold');
+      doc.text(comprobante.atendido_por.toUpperCase(), centerX, y, { align: 'center' });
+      y += 5;
+
+      this.dibujarLineaPunteada(doc, leftMargin, y, rightMargin, y, 1.5);
+      y += 5;
+    }
+
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'bold');
+    doc.text('**GRACIAS POR SU COMPRA**', centerX, y, { align: 'center' });
+    y += 4;
+
+    doc.setFontSize(6);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(80, 80, 80);
+
+    const mensajeGarantia =
+      'Toda falla de fábrica tiene una garantía hasta 2 meses después de su compra (solo venta por unidad), debe acercarse a nuestro establecimiento para presentar su solicitud de garantía.';
+
+    const lineasGarantia = doc.splitTextToSize(mensajeGarantia, rightMargin - leftMargin - 4);
+    lineasGarantia.forEach((linea: string) => {
+      doc.text(linea, centerX, y, { align: 'center' });
+      y += 3;
+    });
 
     return doc;
   }
@@ -293,7 +280,7 @@ export class PDFHelper {
     y1: number,
     x2: number,
     y2: number,
-    espaciado: number = 1
+    espaciado: number = 1,
   ): void {
     const longitudPunto = 1;
     let x = x1;
@@ -303,6 +290,21 @@ export class PDFHelper {
       const finPunto = Math.min(x + longitudPunto, x2);
       doc.line(x, y1, finPunto, y1);
       x += longitudPunto + espaciado;
+    }
+  }
+
+  private static dibujarLineasIguales(doc: jsPDF, x1: number, y1: number, x2: number): void {
+    const espacioLetra = 1.25;
+    let x = x1;
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.3);
+    doc.setFont('helvetica', 'normal'); // Cambié a 'normal' para que no sea negrita
+    doc.setFontSize(5);
+    doc.setTextColor(100, 100, 100); // Gris suave para que se vea más suave
+
+    while (x < x2) {
+      doc.text('=', x, y1 + 0.5);
+      x += espacioLetra;
     }
   }
 }
