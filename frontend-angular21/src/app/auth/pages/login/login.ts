@@ -1,63 +1,58 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { ThemeService } from '../../../core/services/theme.service';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { PasswordModule } from 'primeng/password';
-import { FormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { IftaLabelModule } from 'primeng/iftalabel';
 import { InputTextModule } from 'primeng/inputtext';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
-
+import { Auth } from '../../services/auth.service';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CardModule, ButtonModule,PasswordModule, FormsModule, IftaLabelModule, InputTextModule, ToastModule],
+  imports: [CardModule, ButtonModule,PasswordModule, FormsModule, IftaLabelModule, InputTextModule, ToastModule, ReactiveFormsModule],
   templateUrl: './login.html',
   styleUrl: './login.css',
   providers: [MessageService]
 })
 export class Login {
 
-  password: string = "";
-  usuario: string = "";
+  private fb = inject(FormBuilder);
+  private authService = inject(AuthService);
+  private router = inject(Router);
+  private auth = inject(Auth)
 
- constructor(private themeService: ThemeService, private messageService: MessageService, private router: Router, private authService: AuthService) {}
+  loginForm: FormGroup = this.fb.group({
+    username: ['', [Validators.required]],
+    password: ['', [Validators.required]]
+  });
+
+ constructor(private themeService: ThemeService, private messageService: MessageService) {}
 
   toggleTheme(): void {
     this.themeService.toggleTheme();
   }
 
-  prueba(): void{
 
-    const success = this.authService.login(this.usuario, this.password);
-
-    if(success)
-    {
-      const role = this.authService.getRole();
-
-      this.messageService.add({
-        severity: 'success',
-        summary: 'Login Correcto',
-        detail: 'Bienvenido al sistema'
-      });
-
-      setTimeout(() => {
-        if (role === 'admin') this.router.navigate(['/admin/dashboard']);
-        if (role === 'almacen') this.router.navigate(['/almacen/dashboard']);
-        if (role === 'ventas') this.router.navigate(['/ventas/dashboard-ventas']);
-      }, 1000);
-    }
-    else
-    {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Login Incorrecto',
-        detail: 'Usuario o contraseña incorrecta'
-      });
+  onSubmit(): void{
+    if(this.loginForm.valid){
+      console.log("este es el form: ", this.loginForm.value)
+      this.auth.loginUser(this.loginForm.value).subscribe({
+        next: (data) => {
+          console.log('Login exitoso:', data);
+          this.router.navigate(['/admin/dashboard']);
+        },
+        error: (err) => {
+          console.error('Error al logearse:', err);
+          alert('Credenciales incorrectas');
+        }
+      })
     }
   }
+
 }
