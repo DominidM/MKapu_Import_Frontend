@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, EventEmitter, Output } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { ToolbarModule } from 'primeng/toolbar';
 import { InputTextModule } from 'primeng/inputtext';
@@ -15,7 +15,7 @@ export class Header {
   value1: string = "";
 
   constructor(public themeService: ThemeService) {} // público para usarlo en template
-
+  @Output() toggleSidebar = new EventEmitter<void>();
   toggleTheme(): void {
     this.themeService.toggleTheme();
   }

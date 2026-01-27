@@ -1,57 +1,78 @@
 <div class="flex justify-content-end p-1">
-    <p-button
-        (onClick)="toggleTheme()"
-        icon="pi pi-moon"
-    />
+  <p-button
+      (onClick)="toggleTheme()"
+      icon="pi pi-moon"
+  />
 </div>
 
 <div class="flex align-items-center justify-content-center h-screen">
-    <p-card [style]="{ width: '25rem', overflow: 'hidden', padding: '2rem'}" styleClass="login-card">
-        <ng-template #header>
-          <div class="flex justify-content-center mb-3">
-            <img
-              src="/images/logo.jpg"
-              alt="Logo MKapu"
-              class="img-custom"
-            />
+
+  <!-- FORMULARIO -->
+  <form (ngSubmit)="prueba()" class="w-full flex justify-content-center">
+
+      <p-card [style]="{ width: '25rem', overflow: 'hidden', padding: '2rem'}" styleClass="login-card">
+
+          <ng-template #header>
+              <div class="flex justify-content-center mb-3">
+                  <img
+                      src="/images/logo.jpg"
+                      alt="Logo MKapu"
+                      class="img-custom"
+                  />
+              </div>
+          </ng-template>
+
+          <ng-template #title>
+              BIENVENIDO A MKAPU
+          </ng-template>
+
+          <ng-template #subtitle>
+              Sistema de gestión para MKapu Import
+          </ng-template>
+
+          <div class="flex flex-column gap-3 mt-4">
+
+              <p-iftalabel>
+                  <input
+                      type="text"
+                      pInputText
+                      class="w-full"
+                      [(ngModel)]="usuario"
+                      name="usuario"
+                      required
+                  />
+                  <label>Usuario</label>
+              </p-iftalabel>
+
+              <p-iftalabel>
+                  <p-password
+                      [(ngModel)]="password"
+                      name="password"
+                      [toggleMask]="true"
+                      styleClass="w-full"
+                      inputStyleClass="w-full"
+                      required
+                  ></p-password>
+                  <label>Contraseña</label>
+              </p-iftalabel>
+
           </div>
-        </ng-template>
-       
-        <ng-template #title>
-          BIENVENIDO A MKAPU
-        </ng-template>
-        <ng-template #subtitle>
-          Sistema de gestión para MKapu Import
-        </ng-template>
-        <div class="flex flex-column gap-3 mt-4">
 
-            <p-iftalabel>
-              <input
-                type="text"
-                pInputText
-                class="w-full"
-                [(ngModel)]="usuario"
-              />
-              <label>Usuario</label>
-            </p-iftalabel>
+          <ng-template #footer>
+              <div class="flex gap-4 mt-1">
+                  <p-button
+                      label="Iniciar Sesión"
+                      class="w-full"
+                      styleClass="w-full"
+                      type="submit"
+                      
+                  />
+              </div>
+          </ng-template>
 
-            <p-iftalabel>
-              <p-password
-                [(ngModel)]="password"
-                [toggleMask]="true"
-                styleClass="w-full"
-                inputStyleClass="w-full"
-              ></p-password>
-              <label>Contraseña</label>
-            </p-iftalabel>
+      </p-card>
 
-          </div>
-        <ng-template #footer>
-            <div class="flex gap-4 mt-1">
-                <p-button label="Iniciar Sesión" class="w-full" styleClass="w-full" (onClick)="prueba()"/>
-            </div>
-        </ng-template>
-    </p-card>
+  </form>
 </div>
 
 <p-toast position="top-right"></p-toast>

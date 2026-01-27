@@ -1,4 +1,5 @@
 .img-custom {
+    
     width: 70px;          /* tamaño base */
     height: auto;          /* mantiene proporción */
     display: block;
@@ -7,4 +8,8 @@
     transform: scale(0.7);  
     margin-top: 20px;
     border-radius: 50%;
+}
+.sidebar-root {
+  background-color: var(--surface-900);
+  color: var(--surface-0);
 }
