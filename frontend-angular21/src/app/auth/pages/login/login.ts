@@ -9,13 +9,12 @@ import { InputTextModule } from 'primeng/inputtext';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { Router } from '@angular/router';
-import { AuthService } from '../../../core/services/auth.service';
-import { Auth } from '../../services/auth.service';
+import { AuthService } from '../../services/auth.service';  // ✅ auth/services
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CardModule, ButtonModule,PasswordModule, FormsModule, IftaLabelModule, InputTextModule, ToastModule, ReactiveFormsModule],
+  imports: [CardModule, ButtonModule, PasswordModule, FormsModule, IftaLabelModule, InputTextModule, ToastModule, ReactiveFormsModule],
   templateUrl: './login.html',
   styleUrl: './login.css',
   providers: [MessageService]
@@ -25,34 +24,58 @@ export class Login {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
-  private auth = inject(Auth)
+  private messageService = inject(MessageService);
 
   loginForm: FormGroup = this.fb.group({
     username: ['', [Validators.required]],
     password: ['', [Validators.required]]
   });
 
- constructor(private themeService: ThemeService, private messageService: MessageService) {}
+  isLoading = false;
+
+  constructor(private themeService: ThemeService) {}
 
   toggleTheme(): void {
     this.themeService.toggleTheme();
   }
 
-
-  onSubmit(): void{
-    if(this.loginForm.valid){
-      console.log("este es el form: ", this.loginForm.value)
-      this.auth.loginUser(this.loginForm.value).subscribe({
-        next: (data) => {
-          console.log('Login exitoso:', data);
-          this.router.navigate(['/admin/dashboard']);
-        },
-        error: (err) => {
-          console.error('Error al logearse:', err);
-          alert('Credenciales incorrectas');
-        }
-      })
+  onSubmit(): void {
+    if (this.loginForm.invalid) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Formulario inválido',
+        detail: 'Por favor, complete todos los campos'
+      });
+      return;
     }
-  }
 
+    this.isLoading = true;
+    const { username, password } = this.loginForm.value;
+
+    console.log('este es el form:', { username, password });
+
+    this.authService.login(username, password).subscribe({
+      next: (data) => {
+        console.log('Login exitoso:', data);
+
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Bienvenido',
+          detail: 'Inicio de sesión exitoso'
+        });
+      },
+      error: (err) => {
+        console.error('Error al logearse:', err);
+        this.isLoading = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error de autenticación',
+          detail: err.error?.message || 'Credenciales incorrectas'
+        });
+      },
+      complete: () => {
+        this.isLoading = false;
+      }
+    });
+  }
 }

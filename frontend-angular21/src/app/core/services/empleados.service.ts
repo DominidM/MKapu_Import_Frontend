@@ -1,4 +1,9 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable, of } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
+import { environment } from '../../../enviroments/enviroment';
+import { UserRole } from '../constants/roles.constants';
 
 export interface Empleado {
   id_empleado: string;
@@ -11,22 +16,34 @@ export interface Empleado {
   id_sede: string;
   nombre_sede?: string;
   usuario: string;
-  password: string;
+  password?: string;
   estado: boolean;
   fecha_contratacion: Date;
+}
+
+interface ApiEmpleado {
+  id_usuario: number;
+  usu_nom: string;
+  ape_pat: string;
+  ape_mat: string;
+  nombreCompleto: string;
+  dni: string;
+  email: string;
+  celular: string;
+  activo: boolean;
+  id_sede: number;
+  sedeNombre: string;
 }
 
 @Injectable({
   providedIn: 'root',
 })
 export class EmpleadosService {
+  private http = inject(HttpClient);
+  private apiUrl = environment.apiUrl || 'http://localhost:3000';
   private empleadoActual: Empleado | null = null;
 
-  // Datos mock de empleados asociados a las sedes reales
-  private empleados: Empleado[] = [
-    // ==========================================
-    // SEDE LAS FLORES (SEDE001) - San Juan de Lurigancho
-    // ==========================================
+  private empleadosMock: Empleado[] = [
     {
       id_empleado: 'EMP-001',
       nombres: 'Juan Carlos',
@@ -72,154 +89,6 @@ export class EmpleadosService {
       estado: true,
       fecha_contratacion: new Date('2023-06-10'),
     },
-    {
-      id_empleado: 'EMP-004',
-      nombres: 'Ana Patricia',
-      apellidos: 'Morales Vega',
-      dni: '78945612',
-      email: 'ana.morales@mkapapu.com',
-      telefono: '923456789',
-      cargo: 'VENTAS',
-      id_sede: 'SEDE001',
-      nombre_sede: 'LAS FLORES',
-      usuario: 'amorales',
-      password: 'ventas123',
-      estado: true,
-      fecha_contratacion: new Date('2024-02-15'),
-    },
-
-    // ==========================================
-    // SEDE LURÍN (SEDE002)
-    // ==========================================
-    {
-      id_empleado: 'EMP-005',
-      nombres: 'Luis Fernando',
-      apellidos: 'Gutiérrez Ramos',
-      dni: '65432178',
-      email: 'luis.gutierrez@mkapapu.com',
-      telefono: '954123456',
-      cargo: 'ADMIN',
-      id_sede: 'SEDE002',
-      nombre_sede: 'LURIN',
-      usuario: 'lgutierrez',
-      password: 'admin123',
-      estado: true,
-      fecha_contratacion: new Date('2023-04-10'),
-    },
-    {
-      id_empleado: 'EMP-006',
-      nombres: 'Rosa María',
-      apellidos: 'Flores Pérez',
-      dni: '32165498',
-      email: 'rosa.flores@mkapapu.com',
-      telefono: '965874123',
-      cargo: 'VENTAS',
-      id_sede: 'SEDE002',
-      nombre_sede: 'LURIN',
-      usuario: 'rflores',
-      password: 'ventas123',
-      estado: true,
-      fecha_contratacion: new Date('2023-07-22'),
-    },
-    {
-      id_empleado: 'EMP-007',
-      nombres: 'Pedro José',
-      apellidos: 'Chávez Torres',
-      dni: '14785236',
-      email: 'pedro.chavez@mkapapu.com',
-      telefono: '978451236',
-      cargo: 'ALMACENERO',
-      id_sede: 'SEDE002',
-      nombre_sede: 'LURIN',
-      usuario: 'pchavez',
-      password: 'almacen123',
-      estado: true,
-      fecha_contratacion: new Date('2023-08-05'),
-    },
-    {
-      id_empleado: 'EMP-008',
-      nombres: 'Carmen Julia',
-      apellidos: 'Ríos Castillo',
-      dni: '96325874',
-      email: 'carmen.rios@mkapapu.com',
-      telefono: '945123678',
-      cargo: 'VENTAS',
-      id_sede: 'SEDE002',
-      nombre_sede: 'LURIN',
-      usuario: 'crios',
-      password: 'ventas123',
-      estado: true,
-      fecha_contratacion: new Date('2024-01-18'),
-    },
-
-    // ==========================================
-    // SEDE VES (SEDE003) - Villa El Salvador
-    // ==========================================
-    {
-      id_empleado: 'EMP-009',
-      nombres: 'Diana Carolina',
-      apellidos: 'Quispe Mamani',
-      dni: '85274136',
-      email: 'diana.quispe@mkapapu.com',
-      telefono: '912347856',
-      cargo: 'VENTAS',
-      id_sede: 'SEDE003',
-      nombre_sede: 'VES',
-      usuario: 'dquispe',
-      password: 'ventas123',
-      estado: true,
-      fecha_contratacion: new Date('2024-01-10'),
-    },
-    {
-      id_empleado: 'EMP-010',
-      nombres: 'Jorge Luis',
-      apellidos: 'Huamán Ccahuana',
-      dni: '96385274',
-      email: 'jorge.huaman@mkapapu.com',
-      telefono: '987456321',
-      cargo: 'ALMACENERO',
-      id_sede: 'SEDE003',
-      nombre_sede: 'VES',
-      usuario: 'jhuaman',
-      password: 'almacen123',
-      estado: true,
-      fecha_contratacion: new Date('2024-03-15'),
-    },
-    {
-      id_empleado: 'EMP-011',
-      nombres: 'Roberto Carlos',
-      apellidos: 'Vega Mendoza',
-      dni: '74185296',
-      email: 'roberto.vega@mkapapu.com',
-      telefono: '956789123',
-      cargo: 'ADMIN',
-      id_sede: 'SEDE003',
-      nombre_sede: 'VES',
-      usuario: 'rvega',
-      password: 'admin123',
-      estado: true,
-      fecha_contratacion: new Date('2023-09-12'),
-    },
-    {
-      id_empleado: 'EMP-012',
-      nombres: 'Sofía Alejandra',
-      apellidos: 'Torres Lima',
-      dni: '85296374',
-      email: 'sofia.torres@mkapapu.com',
-      telefono: '934567891',
-      cargo: 'VENTAS',
-      id_sede: 'SEDE003',
-      nombre_sede: 'VES',
-      usuario: 'storres',
-      password: 'ventas123',
-      estado: true,
-      fecha_contratacion: new Date('2024-04-20'),
-    },
-
-    // ==========================================
-    // USUARIOS DE PRUEBA (credenciales simples)
-    // Por defecto en SEDE LAS FLORES
-    // ==========================================
     {
       id_empleado: 'EMP-099',
       nombres: 'Admin',
@@ -275,7 +144,12 @@ export class EmpleadosService {
     const sesionGuardada = localStorage.getItem('empleado_sesion');
 
     if (sesionGuardada) {
-      this.empleadoActual = JSON.parse(sesionGuardada);
+      try {
+        this.empleadoActual = JSON.parse(sesionGuardada);
+      } catch (error) {
+        console.error('Error al recuperar sesión de empleado:', error);
+        localStorage.removeItem('empleado_sesion');
+      }
     }
   }
 
@@ -283,6 +157,41 @@ export class EmpleadosService {
     if (this.empleadoActual) {
       localStorage.setItem('empleado_sesion', JSON.stringify(this.empleadoActual));
     }
+  }
+
+  cargoToRoleId(cargo: Empleado['cargo']): UserRole {
+    const map = {
+      'ADMIN': UserRole.ADMIN,
+      'VENTAS': UserRole.VENTAS,
+      'ALMACENERO': UserRole.ALMACEN
+    };
+    return map[cargo];
+  }
+
+  roleIdToCargo(roleId: UserRole): Empleado['cargo'] {
+    const map = {
+      [UserRole.ADMIN]: 'ADMIN' as const,
+      [UserRole.VENTAS]: 'VENTAS' as const,
+      [UserRole.ALMACEN]: 'ALMACENERO' as const
+    };
+    return map[roleId];
+  }
+
+  private transformApiEmpleado(apiEmp: ApiEmpleado): Empleado {
+    return {
+      id_empleado: `EMP-${apiEmp.id_usuario}`,
+      nombres: apiEmp.usu_nom,
+      apellidos: `${apiEmp.ape_pat} ${apiEmp.ape_mat}`,
+      dni: apiEmp.dni,
+      email: apiEmp.email,
+      telefono: apiEmp.celular,
+      cargo: 'VENTAS',
+      id_sede: `SEDE${String(apiEmp.id_sede).padStart(3, '0')}`,
+      nombre_sede: apiEmp.sedeNombre,
+      usuario: apiEmp.email,
+      estado: apiEmp.activo,
+      fecha_contratacion: new Date()
+    };
   }
 
   getEmpleadoActual(): Empleado | null {
@@ -298,20 +207,26 @@ export class EmpleadosService {
     return `${this.empleadoActual.nombres} ${this.empleadoActual.apellidos}`;
   }
 
-  getEmpleados(): Empleado[] {
-    return this.empleados;
+  getEmpleados(): Observable<Empleado[]> {
+    return this.http.get<{ users: ApiEmpleado[], total: number }>(`${this.apiUrl}/users`).pipe(
+      map(response => response.users.map(emp => this.transformApiEmpleado(emp))),
+      catchError(error => {
+        console.warn('API no disponible, usando datos mock:', error);
+        return of(this.empleadosMock);
+      })
+    );
   }
 
   getEmpleadosPorSede(idSede: string): Empleado[] {
-    return this.empleados.filter((emp) => emp.id_sede === idSede && emp.estado);
+    return this.empleadosMock.filter((emp) => emp.id_sede === idSede && emp.estado);
   }
 
   getEmpleadosPorCargo(cargo: Empleado['cargo']): Empleado[] {
-    return this.empleados.filter((emp) => emp.cargo === cargo && emp.estado);
+    return this.empleadosMock.filter((emp) => emp.cargo === cargo && emp.estado);
   }
 
-  login(usuario: string, password: string): boolean {
-    const empleado = this.empleados.find(
+  loginMock(usuario: string, password: string): boolean {
+    const empleado = this.empleadosMock.find(
       (emp) => emp.usuario === usuario && emp.password === password && emp.estado
     );
 
@@ -358,7 +273,7 @@ export class EmpleadosService {
   }
 
   cambiarEmpleado(idEmpleado: string): boolean {
-    const empleado = this.empleados.find(
+    const empleado = this.empleadosMock.find(
       (emp) => emp.id_empleado === idEmpleado && emp.estado
     );
 
@@ -379,5 +294,33 @@ export class EmpleadosService {
     };
     return etiquetas[cargo];
   }
-}
 
+  sincronizarDesdeAuth(): void {
+    const userStr = localStorage.getItem('user');
+    
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        
+        this.empleadoActual = {
+          id_empleado: `EMP-${user.userId}`,
+          nombres: user.username,
+          apellidos: '',
+          dni: '',
+          email: user.email || '',
+          telefono: '',
+          cargo: this.roleIdToCargo(user.roleId),
+          id_sede: 'SEDE001',
+          nombre_sede: '',
+          usuario: user.username,
+          estado: true,
+          fecha_contratacion: new Date()
+        };
+        
+        this.guardarSesion();
+      } catch (error) {
+        console.error('Error al sincronizar empleado:', error);
+      }
+    }
+  }
+}

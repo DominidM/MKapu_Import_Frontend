@@ -13,7 +13,8 @@ export const VENTAS_ROUTES: Routes = [
   },
   {
     path: 'generar-ventas',
-    loadComponent: () => import('./pages/generar-venta/generar-venta').then((m) => m.GenerarVenta),
+    loadComponent: () => 
+      import('./pages/generar-venta/generar-venta').then((m) => m.GenerarVenta),
   },
   {
     path: 'historial-ventas',
@@ -29,6 +30,7 @@ export const VENTAS_ROUTES: Routes = [
   },
   {
     path: 'ver-detalle/:id',
-    loadComponent: () => import('./shared/detalles-venta/detalle-venta').then((m) => m.DetalleVenta),
+    loadComponent: () => 
+      import('./shared/detalles-venta/detalle-venta').then((m) => m.DetalleVenta),
   },
 ];

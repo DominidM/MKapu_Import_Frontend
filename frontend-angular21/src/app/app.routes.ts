@@ -1,218 +1,26 @@
 import { Routes } from '@angular/router';
 import { Login } from './auth/pages/login/login';
 import { Main } from './layout/main/main';
-import { pendingChangesGuard } from './core/guards/pending-changes.guard';
+import { authGuard } from './core/guards/auth.guard';
+import { roleGuard } from './core/guards/role.guard';
+import { UserRole } from './core/constants/roles.constants';
+import { ADMIN_ROUTES } from './administracion/admin.routes';
 import { VENTAS_ROUTES } from './ventas/ventas.routes';
+import { ALMACEN_ROUTES } from './almacen/almacen.routes';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
   { path: 'login', component: Login },
 
+  /* =======================
+     ADMINISTRACIÓN
+  ======================= */
   {
     path: 'admin',
     component: Main,
-    children: [
-      {
-        path: 'notificaciones',
-        loadComponent: () =>
-          import('./administracion/pages/dashboard/dashboard').then((m) => m.Dashboard),
-      },
-      {
-        path: 'dashboard',
-        loadComponent: () =>
-          import('./administracion/pages/dashboard/dashboard').then((m) => m.Dashboard),
-      },
-
-      /* =======================
-         USUARIOS
-      ======================= */
-      {
-        path: 'usuarios',
-        children: [
-          {
-            path: '',
-            loadComponent: () =>
-              import('./administracion/pages/administracion-crear-usuario/administracion-crear-usuario').then(
-                (m) => m.AdministracionCrearUsuario,
-              ),
-          },
-          {
-            path: 'crear-usuario',
-            loadComponent: () =>
-              import('./administracion/pages/administracion/administracion').then(
-                (m) => m.Administracion,
-              ),
-          },
-        ],
-      },
-
-      /* =======================
-         TRANSFERENCIAS
-      ======================= */
-      {
-        path: 'transferencia',
-        children: [
-          {
-            path: '',
-            loadComponent: () =>
-              import('./administracion/pages/reportes/pages/transferencia/transferencia').then(
-                (m) => m.Transferencia,
-              ),
-          },
-          {
-            path: 'nueva-transferencia',
-            loadComponent: () =>
-              import('./administracion/pages/reportes/pages/nueva-transferencia/nueva-transferencia').then(
-                (m) => m.NuevaTransferencia,
-              ),
-          },
-          {
-            path: 'detalle-transferencia',
-            loadComponent: () =>
-              import('./administracion/pages/reportes/pages/detalle-transferencia/detalle-transferencia').then(
-                (m) => m.DetalleTransferencia,
-              ),
-          },
-        ],
-      },
-
-      {
-        path: 'gestion-productos',
-        loadComponent: () =>
-          import('./administracion/pages/gestion-productos/productos-listado/gestion-listado').then(
-            (m) => m.GestionListado,
-          ),
-        children: [
-          {
-            path: '',
-            redirectTo: '',
-            pathMatch: 'full',
-          },
-          {
-            path: 'ver-detalle-producto/:id',
-            loadComponent: () =>
-              import('./administracion/pages/gestion-productos/productos-detalles/productos-detalles').then(
-                (m) => m.ProductosDetalles,
-              ),
-          },
-          {
-            path: 'crear-producto',
-            loadComponent: () =>
-              import('./administracion/pages/gestion-productos/productos-formulario/productos-formulario').then(
-                (m) => m.ProductosFormulario,
-              ),
-          },
-          {
-            path: 'editar-producto/:id',
-            loadComponent: () =>
-              import('./administracion/pages/gestion-productos/productos-formulario/productos-formulario').then(
-                (m) => m.ProductosFormulario,
-              ),
-          },
-        ],
-      },
-
-      {
-        path: 'sedes',
-        children: [
-          {
-            path: '',
-            loadComponent: () =>
-              import('./administracion/pages/sedes/pages/sedes/sedes').then((m) => m.Sedes),
-          },
-          {
-            path: 'agregar-sede',
-            loadComponent: () =>
-              import('./administracion/pages/sedes/pages/agregar-sede/agregar-sede').then(
-                (m) => m.AgregarSede,
-              ),
-            canDeactivate: [pendingChangesGuard],
-          },
-          {
-            path: 'editar-sede',
-            loadComponent: () =>
-              import('./administracion/pages/sedes/pages/editar-sede/editar-sede').then(
-                (m) => m.EditarSede,
-              ),
-            canDeactivate: [pendingChangesGuard],
-          },
-        ],
-      },
-
-      /* =======================
-         CLIENTES
-      ======================= */
-      {
-        path: 'clientes',
-        children: [
-          {
-            path: '',
-            loadComponent: () =>
-              import('./administracion/pages/clientes/pages/clientes/clientes').then(
-                (m) => m.Clientes,
-              ),
-          },
-          {
-            path: 'agregar-cliente',
-            loadComponent: () =>
-              import('./administracion/pages/clientes/pages/agregar-cliente/agregar-cliente').then(
-                (m) => m.AgregarCliente,
-              ),
-          },
-          {
-            path: 'editar-cliente',
-            loadComponent: () =>
-              import('./administracion/pages/clientes/pages/editar-cliente/editar-cliente').then(
-                (m) => m.EditarCliente,
-              ),
-          },
-        ],
-      },
-
-      {
-        path: 'ingresos-almacen',
-        children: [
-          {
-            path: '',
-            loadComponent: () =>
-              import('./administracion/pages/ingresos-almacen/pages/ingresos-almacen/ingresos-almacen').then(
-                (m) => m.IngresosAlmacen,
-              ),
-          },
-          {
-            path: 'ingresos-agregar',
-            loadComponent: () =>
-              import('./administracion/pages/ingresos-almacen/pages/ingresos-agregar/ingresos-agregar').then(
-                (m) => m.IngresosAgregar,
-              ),
-          },
-        ],
-      },
-      {
-        path: 'generar-ventas-administracion',
-        loadComponent: () =>
-          import('./administracion/pages/generar-ventas-administracion/generar-ventas-administracion').then(
-            (m) => m.GenerarVentasAdministracion,
-          ),
-      },
-      {
-        path: 'historial-ventas-administracion',
-        loadComponent: () =>
-          import('./administracion/pages/historial-ventas-administracion/historial-ventas-administracion').then(
-            (m) => m.HistorialVentasAdministracion,
-          ),
-      },
-      {
-        path: 'detalles-ventas-administracion/:id',
-        loadComponent: () =>
-          import('./administracion/shared/detalles-ventas-administracion/detalles-ventas-administracion').then((m) => m.DetallesVentasAdministracion, 
-        ),
-      },
-      {
-        path: 'imprimir-comprobante-administracion',
-        loadComponent: () => import('./administracion/shared/imprimir-comprobante-administracion/imprimir-comprobante-administracion').then((m) => m.ImprimirComprobanteAdministracion)
-      },
-    ],
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: [UserRole.ADMIN] },
+    children: ADMIN_ROUTES,
   },
 
   /* =======================
@@ -221,17 +29,19 @@ export const routes: Routes = [
   {
     path: 'almacen',
     component: Main,
-    children: [
-      {
-        path: 'dashboard',
-        loadComponent: () => import('./almacen/pages/almacen/almacen').then((m) => m.Almacen),
-      },
-    ],
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: [UserRole.ALMACEN] },
+    children: ALMACEN_ROUTES,
   },
 
+  /* =======================
+     VENTAS
+  ======================= */
   {
     path: 'ventas',
     component: Main,
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: [UserRole.VENTAS] },
     children: VENTAS_ROUTES,
   },
 ];
