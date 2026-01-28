@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -9,24 +9,31 @@ import { PasswordModule } from 'primeng/password';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { BreadcrumbModule } from 'primeng/breadcrumb';
 import { DividerModule } from 'primeng/divider';
+import { TableModule } from 'primeng/table';
+import { TagModule } from 'primeng/tag';
+
+import { UsuarioService } from '../../services/usuario.service';
+import { UsuarioInterfaceResponse } from '../../interfaces/usuario.interface';
 
 @Component({
   selector: 'app-administracion',
   imports: [
-    CommonModule,
-    FormsModule,
-    CardModule,
-    ButtonModule,
-    InputTextModule,
-    PasswordModule,
-    RadioButtonModule,
-    BreadcrumbModule,
-    DividerModule
+    CommonModule, 
+    FormsModule, 
+    CardModule, 
+    ButtonModule, 
+    InputTextModule, 
+    PasswordModule, 
+    RadioButtonModule, 
+    BreadcrumbModule, 
+    DividerModule,
+    TableModule,
+    TagModule
   ],
   templateUrl: './administracion.html',
   styleUrls: ['./administracion.css'],
 })
-export class Administracion {
+export class Administracion implements AfterViewInit {
   breadcrumbItems = [ 
     { label: 'Inicio' },
     { label: 'Administrador' },
@@ -72,63 +79,61 @@ export class Administracion {
     confirmPassword: ''
   };
 
-  usuarios: Array<{
-    dni: string;
-    nombre: string;
-    sede: number | null;
-    correo: string;
-    username: string;
-    password: string;
-    confirmPassword: string;
-    rol: string;
-  }> = [];
+  usuarios: UsuarioInterfaceResponse[] = [];
+  cargandoUsuarios = false;
 
-  // Función para obtener label de la sede
-  getSedeLabel(sedeValue: number | null): string {
-    if (sedeValue === null) return 'Sin asignar';
-    const sede = this.sedes.find(s => s.value === sedeValue);
-    return sede ? sede.label : 'Sin asignar';
+  private usuarioService = inject(UsuarioService);
+
+  ngAfterViewInit() {
+    setTimeout(() => {
+      this.listarUsuarios();
+    }, 0);
+  }
+
+  listarUsuarios() {
+    this.cargandoUsuarios = true;
+
+    this.usuarioService.getUsuarios().subscribe({
+      next: (data) => {
+        console.log('Usuarios obtenidos:', data);
+        this.usuarios = data.users;
+        this.cargandoUsuarios = false;
+      },
+      error: (err) => {
+        console.error('Error al obtener usuarios:', err);
+        this.cargandoUsuarios = false;
+      }
+    });
   }
 
   guardarUsuario() {
-    // Validaciones simples
-    if (!this.rolSeleccionado) {
-      alert('Seleccione un rol.');
-      return;
+    console.log('Rol:', this.rolSeleccionado);
+    console.log('Usuario:', this.usuario);
+    
+    setTimeout(() => {
+      this.listarUsuarios();
+    }, 0);
+  }
+
+  getRolSeverity(rol: string): 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast' {
+    if (!rol) return 'info';
+    
+    const rolUpper = rol.toUpperCase();
+    
+    if (rolUpper === 'ADMINISTRADOR' || rolUpper === 'ADMIN') {
+      return 'success';
     }
-
-    if (!this.usuario.dni || !this.usuario.nombre || !this.usuario.username) {
-      alert('Complete todos los campos obligatorios.');
-      return;
+    if (rolUpper === 'CAJERO' || rolUpper === 'VENTAS' || rolUpper === 'VENDEDOR') {
+      return 'info';
     }
-
-    if (this.usuario.password !== this.usuario.confirmPassword) {
-      alert('Las contraseñas no coinciden.');
-      return;
+    if (rolUpper === 'ALMACEN' || rolUpper === 'ALMACENERO') {
+      return 'warn';
     }
+    
+    return 'info';
+  }
 
-    // Crear un nuevo objeto usuario
-    const nuevoUsuario = {
-      ...this.usuario,
-      rol: this.rolSeleccionado
-    };
-
-    // Agregar a la lista
-    this.usuarios.push(nuevoUsuario);
-
-    // Limpiar formulario
-    this.usuario = {
-      dni: '',
-      nombre: '',
-      sede: null,
-      correo: '',
-      username: '',
-      password: '',
-      confirmPassword: ''
-    };
-    this.rolSeleccionado = null;
-
-    alert('Usuario creado correctamente');
-    console.log('Usuarios actuales:', this.usuarios);
+  getEstadoSeverity(activo: boolean): 'success' | 'danger' {
+    return activo ? 'success' : 'danger';
   }
 }

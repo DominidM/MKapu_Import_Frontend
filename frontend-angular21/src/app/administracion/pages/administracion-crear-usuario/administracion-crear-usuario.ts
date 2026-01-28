@@ -1,5 +1,4 @@
-import { Component, OnInit } from '@angular/core';
-import { Component, OnInit } from '@angular/core';
+import { Component, AfterViewInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -10,7 +9,7 @@ import { TagModule } from 'primeng/tag';
 import { CardModule } from 'primeng/card';
 import { InputTextModule } from 'primeng/inputtext';
 import { UsuarioService } from '../../services/usuario.service';
-import { UsuarioInterfaceResponse, UsuarioResponse } from '../../interfaces/usuario.interface';
+import { UsuarioInterfaceResponse } from '../../interfaces/usuario.interface';
 
 @Component({
   selector: 'app-administracion-crear-usuario',
@@ -28,10 +27,10 @@ import { UsuarioInterfaceResponse, UsuarioResponse } from '../../interfaces/usua
   templateUrl: './administracion-crear-usuario.html',
   styleUrls: ['./administracion-crear-usuario.css']
 })
-export class AdministracionCrearUsuario implements OnInit{
+export class AdministracionCrearUsuario implements AfterViewInit {
 
   users: UsuarioInterfaceResponse[] = [];
-  totalusers: number | null = null;
+  totalusers: number = 0;  // ← Cambiar de null a 0
   filtroDni = '';
 
   usuarios = [
@@ -67,12 +66,14 @@ export class AdministracionCrearUsuario implements OnInit{
 
   constructor(
     private router: Router,
-    private usuarioService: UsuarioService
+    private usuarioService: UsuarioService,
+    private cdr: ChangeDetectorRef
   ) {}
 
-  ngOnInit(): void {
-      console.log("crear usuarios");
-      this.getUsuarios();      
+  ngAfterViewInit(): void {
+    setTimeout(() => {
+      this.getUsuarios();
+    });
   }
 
   get usuariosFiltrados() {
@@ -96,17 +97,19 @@ export class AdministracionCrearUsuario implements OnInit{
     this.router.navigate(['/admin/usuarios/crear-usuario']);
   }
 
-  getUsuarios(){
+  getUsuarios() {
     this.usuarioService.getUsuarios().subscribe({
       next: (resp) => {
-        this.users = resp.users;
-        this.totalusers = resp.total; 
-        console.log('usuarios: ', resp)
+        setTimeout(() => {
+          this.users = resp.users;
+          this.totalusers = resp.total;
+          console.log('usuarios: ', resp);
+          this.cdr.detectChanges();
+        });
       },
       error: (err) => {
         console.error('Error al obtener usuarios', err);
       } 
-    })
+    });
   }
-
 }
