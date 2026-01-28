@@ -8,12 +8,11 @@ import { environment } from '../../../enviroments/enviroment';
   providedIn: 'root',
 })
 export class UsuarioService {
-
-    private api = environment.apiUrl;
-    constructor(private http: HttpClient) {}
   
-  getUsuarios(): Observable<UsuarioResponse>{
+  private api = environment.apiUrl;
+  constructor(private http: HttpClient) {}
+
+  getUsuarios(): Observable<UsuarioResponse> {
     return this.http.get<UsuarioResponse>(`${this.api}/admin/users`);
   }
-
 }
