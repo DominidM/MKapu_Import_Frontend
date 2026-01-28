@@ -64,7 +64,6 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.5rem 2rem 1rem 2rem;
   gap: 1rem;
   overflow-x: auto;
 }
@@ -141,7 +140,6 @@
 }
 
 .wizard-content {
-  padding: 2rem;
   min-height: 420px;
   background: var(--transfer-card);
 }
@@ -180,13 +178,6 @@
   font-size: 1.4rem;
   font-weight: 600;
   color: var(--transfer-text);
-}
-
-.transfer-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-  gap: 1rem;
-  margin-bottom: 1rem;
 }
 
 .transfer-field {
@@ -306,18 +297,23 @@
   color: var(--transfer-muted);
 }
 
-.transfer-panels {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 1.25rem;
-  margin-bottom: 1rem;
-}
-
 .transfer-panel {
   border: 1px solid var(--transfer-border);
   border-radius: 0.85rem;
   padding: 1.1rem;
   background: var(--transfer-card);
+  overflow: visible;
+}
+
+.transfer-panel-grid {
+  row-gap: 1.5rem;
+  margin-left: -1rem;
+  margin-right: -1rem;
+}
+
+.transfer-panel-grid > [class*='col-'] {
+  padding-left: 1rem;
+  padding-right: 1rem;
 }
 
 .transfer-panel-title {
@@ -378,6 +374,7 @@
 
 .transfer-qty {
   flex: 1;
+  min-width: 0;
 }
 
 .helper-text {
@@ -398,12 +395,6 @@
 .transfer-summary-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 1rem;
-}
-
-.recap-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
 }
 
@@ -456,13 +447,6 @@
   border-bottom: none;
 }
 
-.step-actions {
-  display: flex;
-  justify-content: space-between;
-  padding: 1.5rem 2rem 2rem;
-  gap: 1rem;
-}
-
 :host ::ng-deep .wizard-primary.p-button {
   background: var(--transfer-accent);
   border-color: var(--transfer-accent);
@@ -475,25 +459,3 @@
   border-color: #e69a27;
 }
 
-@media (max-width: 768px) {
-  .wizard-steps {
-    padding: 1rem 1.2rem;
-  }
-
-  .wizard-content {
-    padding: 1.25rem;
-  }
-
-  .step-actions {
-    padding: 1rem 1.2rem 1.5rem;
-    flex-direction: column;
-  }
-
-  .recap-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .recap-card-wide {
-    grid-column: span 1;
-  }
-}

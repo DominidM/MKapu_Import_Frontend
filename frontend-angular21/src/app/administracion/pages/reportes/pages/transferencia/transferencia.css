@@ -1,17 +1,25 @@
 :host {
   display: block;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .transferencia-page {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.transferencia-metrics {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
+.transferencia-page > p-card,
+.transferencia-metrics p-card {
+  display: block;
+  width: 100%;
+}
+
+:host ::ng-deep .transferencia-page * {
+  box-sizing: border-box;
 }
 
 .metric-card .p-card-body {
@@ -207,9 +215,11 @@
 }
 
 .transferencia-search-container {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
+  min-width: 0;
+}
+
+.transferencia-filter-card .p-card-body {
+  padding: 1rem 1.25rem;
 }
 
 .transferencia-status-filter {
@@ -243,14 +253,12 @@
   color: #1f2937;
 }
 
-.transferencia-filter-actions {
-  align-self: flex-end;
-}
-
 .transferencia-search-input {
   flex: 1;
   border: none;
   box-shadow: none;
+  width: 100%;
+  min-width: 0;
 }
 
 .transferencia-search-input:focus {
@@ -270,6 +278,18 @@
 .transferencia-icon-warn {
   background: #fff7ed;
   color: #b45309;
+}
+
+.transferencia-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.transferencia-table .p-datatable-thead > tr > th:last-child,
+.transferencia-table .p-datatable-tbody > tr > td:last-child {
+  text-align: center;
 }
 
 .transferencia-section-icon {
@@ -372,4 +392,103 @@
   font-weight: 700;
   background: transparent;
   color: #111827;
+}
+
+:host-context(.app-dark) .transferencia-title,
+:host-context(.app-dark) .transferencia-search-label {
+  color: #e2e8f0;
+}
+
+:host-context(.app-dark) .transferencia-table .p-datatable-thead > tr > th {
+  color: #cbd5f5;
+  background: #12161b;
+  border-bottom-color: #2f3540;
+}
+
+:host-context(.app-dark) .transferencia-table .p-datatable-tbody > tr > td {
+  color: #e2e8f0;
+  border-color: #2f3540;
+}
+
+:host-context(.app-dark) .transferencia-code,
+:host-context(.app-dark) .transferencia-producto-nombre,
+:host-context(.app-dark) .transferencia-ruta,
+:host-context(.app-dark) .transferencia-cantidad {
+  color: #f8fafc;
+}
+
+:host-context(.app-dark) .transferencia-code-meta,
+:host-context(.app-dark) .transferencia-producto-meta,
+:host-context(.app-dark) .transferencia-ruta-icon {
+  color: #94a3b8;
+}
+
+.transferencia-empty {
+  padding: 2.5rem 1rem;
+  text-align: center;
+  border-bottom: 1px solid #E2E8F0;
+}
+
+.transferencia-empty-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.transferencia-empty-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, #fff7d6, #fffbeb);
+  color: #b45309;
+  font-size: 1.4rem;
+  box-shadow: 0 8px 18px rgba(251, 191, 36, 0.2);
+}
+
+.transferencia-empty-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.transferencia-empty-text {
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.transferencia-empty-actions {
+  margin-top: 0.35rem;
+}
+
+.transferencia-empty-btn {
+  border-radius: 999px;
+  padding: 0.35rem 1.1rem;
+}
+
+:host-context(.app-dark) .transferencia-empty {
+  border-bottom-color: #2f3540;
+}
+
+:host-context(.app-dark) .transferencia-empty-icon {
+  background: linear-gradient(135deg, #2a2414, #342c18);
+  color: #fbbf24;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+}
+
+:host-context(.app-dark) .transferencia-empty-title {
+  color: #f8fafc;
+}
+
+:host-context(.app-dark) .transferencia-empty-text {
+  color: #94a3b8;
+}
+
+.transferencia-table-scroll {
+  width: 100%;
+  overflow-x: auto;
+  max-width: 100%;
+  display: block;
 }

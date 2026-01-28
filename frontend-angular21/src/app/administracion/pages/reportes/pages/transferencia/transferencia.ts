@@ -11,6 +11,8 @@ import { TagModule } from 'primeng/tag';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmationService, MessageService } from 'primeng/api';
+import { ProductosService } from '../../../../../core/services/productos.service';
+import { SedeService } from '../../../../../core/services/sede.service';
 
 @Component({
   selector: 'app-transferencia',
@@ -39,6 +41,7 @@ export class Transferencia implements OnInit {
   transferenciaSuggestions: any[] = [];
   searchTerm = '';
   estadoFilter: string | null = null;
+  sedes: { label: string; value: string }[] = [];
   estadoOptions = [
     { label: 'Todos', value: null },
     { label: 'Pendiente', value: 'Pendiente' },
@@ -50,12 +53,14 @@ export class Transferencia implements OnInit {
   constructor(
     private confirmationService: ConfirmationService,
     private messageService: MessageService,
-    private router: Router
+    private router: Router,
+    private productosService: ProductosService,
+    private sedeService: SedeService
   ) {}
 
   // 🔥 SIEMPRE SE EJECUTA AL ENTRAR A LA RUTA
   ngOnInit(): void {
-    this.cargarTransferencias();
+    this.cargarSedes();
   }
 
   // 🔁 TAMBIÉN CUANDO REGRESAS DESDE OTRA PÁGINA
@@ -68,46 +73,65 @@ export class Transferencia implements OnInit {
     if (data) {
       this.transferencias = JSON.parse(data);
     } else {
-      this.transferencias = [
-        {
-          codigo: 'TRF-2025-0012',
-          producto: 'Cable HDMI 2m',
-          origen: 'Flores 15 - San Juan Lurigancho',
-          destino: 'Lurin',
-          cantidad: 40,
-          responsable: 'Jefatura de almacen',
-          estado: 'En transito',
-          fechaEnvio: '12/02/2025',
-          fechaLlegada: '14/02/2025'
-        },
-        {
-          codigo: 'TRF-2025-0013',
-          producto: 'Router WiFi AX3000',
-          origen: 'Lurin',
-          destino: 'San Borja',
-          cantidad: 15,
-          responsable: 'Supervisor de sede',
-          estado: 'Pendiente',
-          fechaEnvio: '15/02/2025',
-          fechaLlegada: '16/02/2025'
-        },
-        {
-          codigo: 'TRF-2025-0014',
-          producto: 'Monitor 24\" IPS',
-          origen: 'San Borja',
-          destino: 'Flores 15 - San Juan Lurigancho',
-          cantidad: 8,
-          responsable: 'Encargado de despacho',
-          estado: 'Completada',
-          fechaEnvio: '05/02/2025',
-          fechaLlegada: '06/02/2025'
-        }
-      ];
+      this.transferencias = this.crearTransferenciasIniciales();
       localStorage.setItem('transferencias', JSON.stringify(this.transferencias));
     }
 
     this.filteredTransferencias = [...this.transferencias];
     this.transferenciaSuggestions = [...this.transferencias];
+  }
+
+  private cargarSedes(): void {
+    this.sedeService.getSedes().subscribe({
+      next: (sedes) => {
+        this.sedes = sedes.map((sede) => ({
+          label: sede.nombre,
+          value: sede.id_sede
+        }));
+        this.cargarTransferencias();
+      },
+      error: (error) => {
+        console.error('Error al cargar sedes:', error);
+        this.cargarTransferencias();
+      }
+    });
+  }
+
+  private crearTransferenciasIniciales(): any[] {
+    const productos = this.productosService.getProductos(undefined, 'Activo');
+    const sedesDisponibles = this.sedes.length > 0 ? this.sedes : [
+      { label: 'SEDE001', value: 'SEDE001' },
+      { label: 'SEDE002', value: 'SEDE002' },
+      { label: 'SEDE003', value: 'SEDE003' }
+    ];
+    const sedeLabelMap = new Map(sedesDisponibles.map((sede) => [sede.value, sede.label]));
+    const hoy = new Date();
+
+    return productos.slice(0, 3).map((producto, index) => {
+      const origen = sedeLabelMap.get(producto.sede) || producto.sede;
+      const destino = sedesDisponibles.find((sede) => sede.value !== producto.sede)?.label || '-';
+      const fechaEnvio = this.formatearFecha(new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - (index + 2)));
+      const fechaLlegada = this.formatearFecha(new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - index));
+
+      return {
+        codigo: `TRF-${hoy.getFullYear()}-${String(index + 1).padStart(4, '0')}`,
+        producto: producto.nombre,
+        origen,
+        destino,
+        cantidad: Math.min(10 + index * 5, producto.stock ?? 0),
+        responsable: 'Jefatura de almacen',
+        estado: index === 0 ? 'En transito' : index === 1 ? 'Pendiente' : 'Completada',
+        fechaEnvio,
+        fechaLlegada
+      };
+    });
+  }
+
+  private formatearFecha(fecha: Date): string {
+    const dia = String(fecha.getDate()).padStart(2, '0');
+    const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+    const anio = fecha.getFullYear();
+    return `${dia}/${mes}/${anio}`;
   }
 
   onSearch(event: { query: string }): void {

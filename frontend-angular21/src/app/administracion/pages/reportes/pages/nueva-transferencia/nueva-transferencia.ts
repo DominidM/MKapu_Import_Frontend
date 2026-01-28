@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -11,8 +11,10 @@ import { CardModule } from 'primeng/card';
 import { DividerModule } from 'primeng/divider';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
-import { ConfirmDialog } from 'primeng/confirmdialog';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { AutoCompleteModule } from 'primeng/autocomplete';
+import { ProductosService, Producto } from '../../../../../core/services/productos.service';
+import { SedeService } from '../../../../../core/services/sede.service';
 
 interface TransferProducto {
   id: number;
@@ -38,19 +40,21 @@ interface TransferProducto {
     CardModule,
     DividerModule,
     ToastModule,
-    ConfirmDialog,
+    ConfirmDialogModule,
     AutoCompleteModule
   ],
   templateUrl: './nueva-transferencia.html',
   styleUrl: './nueva-transferencia.css',
   providers: [MessageService, ConfirmationService]
 })
-export class NuevaTransferencia {
+export class NuevaTransferencia implements OnInit {
 
   constructor(
     private messageService: MessageService,
     private confirmationService: ConfirmationService,
-    private router: Router
+    private router: Router,
+    private productosService: ProductosService,
+    private sedeService: SedeService
   ) {}
 
   tituloKicker = 'ADMINISTRACION - REPORTES';
@@ -60,11 +64,7 @@ export class NuevaTransferencia {
   activeStep = 0;
   steps = ['Producto y Sedes', 'Cantidad y Motivo', 'Fechas', 'Confirmacion'];
 
-  sedes = [
-    { label: 'Flores 15 - San Juan Lurigancho', value: 'flores-15' },
-    { label: 'Lurin', value: 'lurin' },
-    { label: 'San Borja', value: 'san-borja' },
-  ];
+  sedes: { label: string; value: string }[] = [];
 
   motivos = [
     { label: 'Reposicion', value: 'reposicion' },
@@ -79,44 +79,7 @@ export class NuevaTransferencia {
     { label: 'Encargado de despacho', value: 'despacho' },
   ];
 
-  productos: TransferProducto[] = [
-    {
-      id: 1,
-      nombre: 'Cable HDMI 2m',
-      sku: 'CBL-HDMI-2M',
-      categoria: 'Cables y Conectores',
-      marca: 'Belkin',
-      stockPorSede: {
-        'flores-15': 50,
-        'lurin': 130,
-        'san-borja': 70
-      }
-    },
-    {
-      id: 2,
-      nombre: 'Router WiFi AX3000',
-      sku: 'RTR-AX3000',
-      categoria: 'Redes',
-      marca: 'TP-Link',
-      stockPorSede: {
-        'flores-15': 22,
-        'lurin': 35,
-        'san-borja': 18
-      }
-    },
-    {
-      id: 3,
-      nombre: 'Monitor 24" IPS',
-      sku: 'MON-24IPS',
-      categoria: 'Monitores',
-      marca: 'LG',
-      stockPorSede: {
-        'flores-15': 12,
-        'lurin': 16,
-        'san-borja': 9
-      }
-    }
-  ];
+  productos: TransferProducto[] = [];
 
   productoId: number | null = null;
   productoQuery: string | null = null;
@@ -130,6 +93,10 @@ export class NuevaTransferencia {
   fechaLlegada: Date | null = null;
   responsable: string | null = null;
   readonly today = this.getToday();
+
+  ngOnInit(): void {
+    this.cargarSedes();
+  }
 
   get productoSeleccionado(): TransferProducto | null {
     return this.productos.find((producto) => producto.id === this.productoId) || null;
@@ -194,6 +161,69 @@ export class NuevaTransferencia {
     if (stock >= 50) return 'stock-badge--high';
     if (stock >= 15) return 'stock-badge--mid';
     return 'stock-badge--low';
+  }
+
+  private cargarSedes(): void {
+    this.sedeService.getSedes().subscribe({
+      next: (sedes) => {
+        this.sedes = sedes.map((sede) => ({
+          label: sede.nombre,
+          value: sede.nombre
+        }));
+        if (!this.sedeOrigen && this.sedes.length > 0) {
+          this.sedeOrigen = this.sedes[0].value;
+        }
+        this.cargarProductos(this.sedeOrigen);
+      },
+      error: (error) => {
+        console.error('Error al cargar sedes:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudieron cargar las sedes',
+        });
+        this.cargarProductos();
+      }
+    });
+  }
+
+  onSedeOrigenChange(): void {
+    this.productoId = null;
+    this.productoQuery = null;
+    this.cantidad = 1;
+    this.cargarProductos(this.sedeOrigen);
+  }
+
+  private cargarProductos(sede?: string | null): void {
+    const productos = this.productosService.getProductos(sede ?? undefined, 'Activo');
+    this.productos = this.normalizarProductos(productos);
+    this.productosSugeridos = this.productos.slice(0, 8);
+  }
+
+  private normalizarProductos(productosBase: Producto[]): TransferProducto[] {
+    const map = new Map<string, TransferProducto>();
+
+    productosBase.forEach((producto) => {
+      const clave = producto.codigo;
+      if (map.has(clave)) {
+        return;
+      }
+      const variantes = this.productosService.getProductosPorCodigo(clave);
+      const stockPorSede: Record<string, number> = {};
+      variantes.forEach((variante) => {
+        stockPorSede[variante.sede] = variante.stock ?? 0;
+      });
+      map.set(clave, {
+        id: producto.id,
+        nombre: producto.nombre,
+        sku: producto.codigo,
+        categoria: producto.familia,
+        marca: 'N/A',
+        stockPorSede
+      });
+    });
+
+    return Array.from(map.values());
   }
 
   buscarProducto(event: { query: string }): void {
