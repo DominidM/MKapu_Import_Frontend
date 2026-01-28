@@ -5,11 +5,11 @@ export interface AuthInterface {
 
 export interface AuthInterfaceResponse {
     token: string;
-    user: User;
+    user: AuthUserBackend;
 }
 
-export interface User {
-    id: string;
+export interface AuthUserBackend {
+    id: number;
     nombre_usuario: string;
     email: string;
     rol_nombre: string;
