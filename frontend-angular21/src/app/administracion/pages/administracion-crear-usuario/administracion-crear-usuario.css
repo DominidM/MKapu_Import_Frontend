@@ -1,95 +1,160 @@
-.transfer-header-card {
-    border-radius: 12px;
-  }
-  
-  .transfer-kicker {
-    font-size: 0.75rem;
-    color: #9aa4b2;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-  }
-  
-  .transfer-title {
-    font-size: 1.4rem;
-    font-weight: 600;
-  }
-  
-  .inventory-title-icon {
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    background: #f4c430;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #000;
-    font-size: 1.3rem;
-  }
-  
-  /* ====== TUS COLORES ====== */
-  
-  .rol-card {
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid transparent;
-    border-radius: 6px;
-    padding: 1rem;
-    cursor: pointer;
-    height: 100%;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
-  }
-  
-  .rol-card:hover {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 1px var(--primary-color),
-                0 2px 6px rgba(0, 0, 0, 0.45);
-  }
-  
-  .rol-card.selected {
-    border-color: var(--primary-color);
-    background: rgba(255, 193, 7, 0.08);
-  }
-  
-  .rol-icon {
-    font-size: 3rem;
-    margin-bottom: 0.25rem;
-    color: var(--primary-color);
-  }
-  
-  .field {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 1rem;
-  }
-  
-  .field label {
-    width: 150px;
-    font-size: 1rem;
-    white-space: nowrap;
-  }
-  
-  .field input,
-  .field .p-inputtext,
-  .field .p-password {
-    flex: 1;
-  }
-  
-  .field .p-password .p-inputtext {
-    padding-right: 2rem;
-  }
-  
-  ::ng-deep .field .p-password .p-password-icon {
-    right: 0.5rem;
-  }
-  
-  .helper-text {
-    font-size: 0.75rem;
-    color: #9aa4b2;
-  }
-  
-  .header-card {
-    border-radius: 14px;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
-  }
-  
+:host {
+  display: block;
+}
+
+/* ================================
+   CONTENEDOR
+================================ */
+.usuarios-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ================================
+   HEADER
+================================ */
+.usuarios-header-card .p-card-body {
+  padding: 1rem 1.25rem;
+}
+
+/* ICONO (AMARILLO COMO EJEMPLO) */
+.usuarios-title-icon {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #f5c34d; /* 🔥 amarillo exacto */
+  color: #1f2937;
+  font-size: 18px;
+}
+
+/* ================================
+   TEXTOS HEADER
+================================ */
+.usuarios-kicker {
+  margin: 0;
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.usuarios-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+/* ================================
+   BUSCADOR
+================================ */
+.usuarios-search {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 0.35rem 0.75rem;
+  background: #ffffff;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.06);
+}
+
+.usuarios-search-input {
+  flex: 1;
+  border: none;
+  box-shadow: none;
+}
+
+.usuarios-search-input:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.usuarios-clear {
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  cursor: pointer;
+}
+
+/* ================================
+   BOTONES PILL
+================================ */
+.usuarios-pill {
+  border-radius: 999px;
+  padding: 0.35rem 1rem;
+  font-size: 0.75rem;
+}
+
+.usuarios-pill-danger {
+  background: #fee2e2;
+  color: #b91c1c;
+  border-color: #fecaca;
+}
+
+.usuarios-pill-primary {
+  background: #dbeafe;
+  color: #1d4ed8;
+  border-color: #bfdbfe;
+}
+
+/* ================================
+   TABLA
+================================ */
+.usuarios-table .p-datatable-thead > tr > th {
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  color: #6b7280;
+  text-transform: uppercase;
+}
+
+.usuarios-table .p-datatable-tbody > tr > td {
+  padding: 0.75rem 1rem;
+  color: #4b5563;
+}
+
+/* ================================
+   BOTONES TABLA
+================================ */
+.usuarios-page-btn {
+  border-radius: 999px;
+  padding: 0.2rem 1rem;
+  font-size: 0.7rem;
+}
+
+.usuarios-page-pill {
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  background: #f8fafc;
+  padding: 0.35rem 0.9rem;
+  font-size: 0.7rem;
+  color: #64748b;
+}
+
+.usuarios-page-dropdown {
+  min-width: 90px;
+}
+
+/* ================================
+   FILTROS
+================================ */
+.usuarios-search-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.usuarios-search-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.usuarios-search-hint {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.usuarios-filter-actions {
+  align-self: flex-end;
+}

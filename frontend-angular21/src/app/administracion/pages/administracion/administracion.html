@@ -1,133 +1,170 @@
 <div class="p-4">
 
-    <!-- Breadcrumb -->
-    <p-breadcrumb [model]="breadcrumbItems"></p-breadcrumb>
-  
-    <h2 class="mt-3 mb-4">Crear Nuevo Usuario</h2>
-  
-    <!-- Asignación de Rol -->
-    <p-card header="Asignación de Rol" class="mb-4">
-      <div class="grid">
+  <!-- Breadcrumb -->
+  <p-breadcrumb [model]="breadcrumbItems"></p-breadcrumb>
+
+  <h2 class="mt-3 mb-4">Crear Nuevo Usuario</h2>
+
+  <!-- Asignación de Rol -->
+  <p-card header="Asignación de Rol" class="mb-4">
+    <div class="grid">
+      <div
+        class="col-12 md:col-4"
+        *ngFor="let rol of roles"
+      >
         <div
-          class="col-12 md:col-4"
-          *ngFor="let rol of roles"
+          class="rol-card"
+          [class.selected]="rolSeleccionado === rol.value"
+          (click)="rolSeleccionado = rol.value"
         >
-          <div
-            class="rol-card"
-            [class.selected]="rolSeleccionado === rol.value"
-            (click)="rolSeleccionado = rol.value"
-          >
-            <i class="pi {{ rol.icon }} rol-icon"></i>
-            <h4>{{ rol.label }}</h4>
-            <p>{{ rol.description }}</p>
-  
-            <p-radioButton
-              name="rol"
-              [value]="rol.value"
-              [(ngModel)]="rolSeleccionado">
-            </p-radioButton>
-          </div>
+          <i class="pi {{ rol.icon }} rol-icon"></i>
+          <h4>{{ rol.label }}</h4>
+          <p>{{ rol.description }}</p>
+
+          <p-radioButton
+            name="rol"
+            [value]="rol.value"
+            [(ngModel)]="rolSeleccionado">
+          </p-radioButton>
         </div>
       </div>
-    </p-card>
-  
-    <!-- Formularios -->
-    <div class="grid">
-  
-      <!-- Datos personales -->
-      <div class="col-12 md:col-6">
-        <div class="h-full">
-          <p-card header="Datos Personales" class="h-full">
-  
-            <div class="field">
-              <label class="label-width">Nombre Completo</label>
-              <input
-                pInputText
-                [(ngModel)]="usuario.nombre"
-                placeholder="Ingrese el nombre completo"
-                class="w-full" />
-            </div>
-  
-            <div class="field">
-              <label class="label-width">Sede Asignada</label>
-              <div class="flex flex-column gap-2 w-full">
-                <div
-                  class="flex align-items-center"
-                  *ngFor="let sede of sedes"
-                >
-                  <p-radioButton
-                    name="sede"
-                    [value]="sede.value"
-                    [(ngModel)]="usuario.sede">
-                  </p-radioButton>
-                  <label class="ml-2">{{ sede.label }}</label>
-                </div>
+    </div>
+  </p-card>
+
+  <!-- Formularios -->
+  <div class="grid">
+
+    <!-- Datos personales -->
+    <div class="col-12 md:col-6">
+      <div class="h-full">
+        <p-card header="Datos Personales" class="h-full">
+
+          <div class="field">
+            <label class="label-width">DNI</label>
+            <input
+              pInputText
+              [(ngModel)]="usuario.dni"
+              placeholder="Ingrese el DNI"
+              class="w-full" />
+          </div>
+
+          <div class="field">
+            <label class="label-width">Nombre Completo</label>
+            <input
+              pInputText
+              [(ngModel)]="usuario.nombre"
+              placeholder="Ingrese el nombre completo"
+              class="w-full" />
+          </div>
+
+          <div class="field">
+            <label class="label-width">Sede Asignada</label>
+            <div class="flex flex-column gap-2 w-full">
+              <div
+                class="flex align-items-center"
+                *ngFor="let sede of sedes"
+              >
+                <p-radioButton
+                  name="sede"
+                  [value]="sede.value"
+                  [(ngModel)]="usuario.sede">
+                </p-radioButton>
+                <label class="ml-2">{{ sede.label }}</label>
               </div>
             </div>
-  
-            <div class="field">
-              <label class="label-width">Correo Electrónico</label>
-              <input
-                pInputText
-                type="email"
-                [(ngModel)]="usuario.correo"
-                placeholder="correo@ejemplo.com"
-                class="w-full" />
-            </div>
-  
-          </p-card>
-        </div>
+          </div>
+
+          <div class="field">
+            <label class="label-width">Correo Electrónico</label>
+            <input
+              pInputText
+              type="email"
+              [(ngModel)]="usuario.correo"
+              placeholder="correo@ejemplo.com"
+              class="w-full" />
+          </div>
+
+        </p-card>
       </div>
-  
-      <!-- Credenciales -->
-      <div class="col-12 md:col-6">
-        <div class="h-full">
-          <p-card header="Credenciales de Acceso" class="h-full">
-  
-            <div class="field">
-              <label class="label-width">Usuario</label>
-              <input
-                pInputText
-                [(ngModel)]="usuario.username"
-                placeholder="Nombre de usuario"
-                class="w-full" />
-            </div>
-  
-            <div class="field">
-              <label class="label-width">Contraseña</label>
-              <p-password
-                [(ngModel)]="usuario.password"
-                [toggleMask]="true"
-                placeholder="Contraseña"
-                styleClass="w-full">
-              </p-password>
-            </div>
-  
-            <div class="field">
-              <label class="label-width">Confirmar Contraseña</label>
-              <p-password
-                [(ngModel)]="usuario.confirmPassword"
-                [toggleMask]="true"
-                placeholder="Confirmar contraseña"
-                styleClass="w-full">
-              </p-password>
-            </div>
-  
-          </p-card>
-        </div>
+    </div>
+
+    <!-- Credenciales -->
+    <div class="col-12 md:col-6">
+      <div class="h-full">
+        <p-card header="Credenciales de Acceso" class="h-full">
+
+          <div class="field">
+            <label class="label-width">Usuario</label>
+            <input
+              pInputText
+              [(ngModel)]="usuario.username"
+              placeholder="Nombre de usuario"
+              class="w-full" />
+          </div>
+
+          <div class="field">
+            <label class="label-width">Contraseña</label>
+            <p-password
+              [(ngModel)]="usuario.password"
+              [toggleMask]="true"
+              placeholder="Contraseña"
+              styleClass="w-full">
+            </p-password>
+          </div>
+
+          <div class="field">
+            <label class="label-width">Confirmar Contraseña</label>
+            <p-password
+              [(ngModel)]="usuario.confirmPassword"
+              [toggleMask]="true"
+              placeholder="Confirmar contraseña"
+              styleClass="w-full">
+            </p-password>
+          </div>
+
+        </p-card>
       </div>
-  
     </div>
-  
-    <!-- Botón -->
-    <div class="flex justify-content-end mt-4">
-      <button
-        pButton
-        type="button"
-        label="Crear Usuario"
-        icon="pi pi-save"
-        (click)="guardarUsuario()">
-      </button>
-    </div>
-  
+
   </div>
+
+  <!-- Botón -->
+  <div class="flex justify-content-end mt-4">
+    <button
+      pButton
+      type="button"
+      label="Crear Usuario"
+      icon="pi pi-save"
+      (click)="guardarUsuario()">
+    </button>
+  </div>
+
+  <!-- Lista de usuarios actuales -->
+  <div class="mt-5">
+    <p-card header="Usuarios Registrados">
+      <table class="w-full table-auto border-collapse border border-gray-300">
+        <thead>
+          <tr>
+            <th class="border p-2">DNI</th>
+            <th class="border p-2">Nombre</th>
+            <th class="border p-2">Correo</th>
+            <th class="border p-2">Usuario</th>
+            <th class="border p-2">Rol</th>
+            <th class="border p-2">Sede</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let u of usuarios">
+            <td class="border p-2">{{ u.dni }}</td>
+            <td class="border p-2">{{ u.nombre }}</td>
+            <td class="border p-2">{{ u.correo }}</td>
+            <td class="border p-2">{{ u.username }}</td>
+            <td class="border p-2">{{ u.rol }}</td>
+            <td class="border p-2">{{ getSedeLabel(u.sede) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </p-card>
+  </div>
+
+</div>

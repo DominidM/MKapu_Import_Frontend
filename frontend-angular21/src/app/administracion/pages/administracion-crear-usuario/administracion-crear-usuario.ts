@@ -1,7 +1,9 @@
 import { Component, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
@@ -20,7 +22,8 @@ import { UsuarioInterfaceResponse, UsuarioResponse } from '../../interfaces/usua
     ButtonModule,
     TagModule,
     CardModule,
-    InputTextModule
+    InputTextModule,
+    SelectModule
   ],
   templateUrl: './administracion-crear-usuario.html',
   styleUrls: ['./administracion-crear-usuario.css']
@@ -82,11 +85,14 @@ export class AdministracionCrearUsuario implements OnInit{
     );
   }
 
-  limpiarFiltro() {
+  limpiarFiltro(): void {
     this.filtroDni = '';
+    this.filtroRol = null;
+    this.filtroSede = null;
+    this.filtroEstado = null;
   }
 
-  nuevoUsuario() {
+  nuevoUsuario(): void {
     this.router.navigate(['/admin/usuarios/crear-usuario']);
   }
 

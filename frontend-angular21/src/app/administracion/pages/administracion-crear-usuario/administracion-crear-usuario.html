@@ -1,30 +1,41 @@
-<!-- HEADER -->
-<section class="wizard-content p-4">
-    <p-card class="header-card">
-      <div class="flex align-items-center justify-content-between">
-        
+<!-- ================================
+     ADMINISTRACIÓN DE USUARIOS
+================================ -->
+
+<div class="usuarios-page">
+
+    <!-- HEADER -->
+    <p-card styleClass="usuarios-header-card">
+      <div class="flex align-items-center justify-content-between flex-wrap gap-3">
+  
+        <!-- IZQUIERDA -->
         <div class="flex align-items-center gap-3">
-          <span class="inventory-title-icon">
+          <span class="usuarios-title-icon">
             <i class="pi pi-users"></i>
           </span>
   
           <div>
-            <p class="transfer-kicker">Administración</p>
-            <h2 class="transfer-title">Listado de Usuarios</h2>
+            <p class="usuarios-kicker">
+              ADMINISTRADOR - ADMINISTRACIÓN - USUARIOS
+            </p>
+            <h2 class="usuarios-title">
+              GESTIÓN DE USUARIOS
+            </h2>
           </div>
         </div>
   
-        <button
-          pButton
-          icon="pi pi-user-plus"
-          label="Nuevo Usuario"
-          class="wizard-primary"
-          (click)="nuevoUsuario()"
-        ></button>
+        <!-- DERECHA -->
+        <div class="flex justify-items-end gap-2">
+          <p-button
+            label="Nuevo Usuario"
+            icon="pi pi-user-plus"
+            styleClass="usuarios-pill"
+            (onClick)="nuevoUsuario()"
+          ></p-button>
+        </div>
   
       </div>
     </p-card>
-  </section>
   
   <!-- BUSCADOR -->
   <section class="wizard-content mt-3">
@@ -112,4 +123,6 @@
       </p-table>
     </p-card>
   </section>
+  
+  </div>
   
