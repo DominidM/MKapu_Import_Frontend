@@ -151,7 +151,7 @@ export class AdministracionUsuarioComponent {
       fecha_contratacion: new Date()
     };
 
-    this.empleadosService.getEmpleados().push(nuevoEmpleado);
+    //this.empleadosService.getEmpleados().push(nuevoEmpleado);
 
     this.router.navigate([
       '/admin',

@@ -10,6 +10,7 @@ import { CardModule } from 'primeng/card';
 import { InputTextModule } from 'primeng/inputtext';
 import { UsuarioService } from '../../services/usuario.service';
 import { UsuarioInterfaceResponse } from '../../interfaces/usuario.interface';
+import { SelectModule } from 'primeng/select';
 
 @Component({
   selector: 'app-administracion-crear-usuario',
@@ -86,13 +87,15 @@ export class AdministracionCrearUsuario implements AfterViewInit {
     );
   }
 
+  /*
   limpiarFiltro(): void {
     this.filtroDni = '';
     this.filtroRol = null;
     this.filtroSede = null;
     this.filtroEstado = null;
   }
-
+  */
+ 
   nuevoUsuario(): void {
     this.router.navigate(['/admin/usuarios/crear-usuario']);
   }

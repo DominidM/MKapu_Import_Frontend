@@ -48,7 +48,7 @@ export class AdministracionEditarUsuarioComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.cargarUsuarios();
+    //this.cargarUsuarios();
 
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
@@ -60,11 +60,11 @@ export class AdministracionEditarUsuarioComponent implements OnInit {
     }
   }
 
-  /* Cargar lista de usuarios */
+  /* Cargar lista de usuarios 
   cargarUsuarios(): void {
     this.usuarios = this.empleadosService.getEmpleados();
   }
-
+  */
   /* AUTOCOMPLETE */
   filtrarCargos(event: any) {
     const query = event.query.toLowerCase();
@@ -73,7 +73,7 @@ export class AdministracionEditarUsuarioComponent implements OnInit {
     );
   }
 
-  /* GUARDAR CAMBIOS */
+  /* GUARDAR CAMBIOS 
   guardarCambios(): void {
     const actualizado = this.empleadosService.actualizarEmpleado(this.usuario);
 
@@ -90,6 +90,7 @@ export class AdministracionEditarUsuarioComponent implements OnInit {
       }, 800);
     }
   }
+    */
 
   /* CANCELAR */
   cancelar(): void {
