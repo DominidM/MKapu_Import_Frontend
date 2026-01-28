@@ -201,3 +201,19 @@
   font-size: 0.85rem;
   max-width: 360px;
 }
+
+:host-context(.app-dark) .sedes-kicker {
+  color: #94a3b8;
+}
+
+:host-context(.app-dark) .sedes-title {
+  color: #f8fafc;
+}
+
+:host-context(.app-dark) .sedes-search-label {
+  color: #e2e8f0;
+}
+
+:host-context(.app-dark) .sedes-search-input {
+  color: #e2e8f0;
+}

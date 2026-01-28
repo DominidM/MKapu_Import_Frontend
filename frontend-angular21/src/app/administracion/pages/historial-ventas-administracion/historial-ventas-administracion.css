@@ -460,10 +460,44 @@
   gap: 0.5rem;
 }
 
+.tipo-pago-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+:host ::ng-deep .tipo-pago-tag {
+  font-size: 0.85rem !important;
+  padding: 0.375rem 0.75rem !important;
+  font-weight: 600 !important;
+  border-radius: 6px !important;
+}
+
+.tipo-pago-cell i.pi-money-bill {
+  color: #10B981;
+}
+
+.tipo-pago-cell i.pi-credit-card {
+  color: #3B82F6;
+}
+
+.tipo-pago-cell i.pi-mobile {
+  color: #F59E0B;
+}
+
+.tipo-pago-cell i.pi-wallet {
+  color: #6B7280;
+}
+
 .acciones-tabla {
   display: flex;
   gap: 0.25rem;
   justify-content: center;
+}
+
+.responsable-text {
+  font-size: 0.9rem;
+  color: #374151;
 }
 
 .mensaje-vacio {
@@ -776,6 +810,22 @@
   color: #71717a !important;
 }
 
+:host-context(.app-dark) .responsable-text {
+  color: #E4E4E7;
+}
+
+:host-context(.app-dark) .tipo-pago-cell i.pi-money-bill {
+  color: #4ADE80;
+}
+
+:host-context(.app-dark) .tipo-pago-cell i.pi-credit-card {
+  color: #60A5FA;
+}
+
+:host-context(.app-dark) .tipo-pago-cell i.pi-mobile {
+  color: #FBBF24;
+}
+
 :host-context(.app-dark) .ventas-icon-soft {
   background: #1a3d2b !important;
   color: #4ade80 !important;
@@ -851,6 +901,50 @@
   color: #F6AF33 !important;
 }
 
+@media (min-width: 1201px) and (max-width: 1600px) {
+  .ventas-title {
+    font-size: 1rem;
+  }
+
+  .ventas-kicker {
+    font-size: 0.6rem;
+  }
+
+  .estadistica-label {
+    font-size: 0.68rem;
+  }
+
+  .estadistica-valor {
+    font-size: 1.5rem;
+  }
+
+  .estadistica-card i {
+    font-size: 2.1rem;
+  }
+
+  .tabla-header h3 {
+    font-size: 1rem;
+  }
+
+  .seccion-filtros h3 {
+    font-size: 0.875rem;
+  }
+
+  :host ::ng-deep .p-datatable th,
+  :host ::ng-deep .p-datatable td {
+    font-size: 0.85rem !important;
+    padding: 0.65rem 0.75rem !important;
+  }
+
+  .responsable-text {
+    font-size: 0.85rem;
+  }
+
+  :host ::ng-deep .tipo-pago-tag {
+    font-size: 0.78rem !important;
+  }
+}
+
 @media (max-width: 1200px) {
   .seccion-estadisticas {
     grid-template-columns: repeat(2, 1fr);
@@ -883,12 +977,91 @@
     flex: 1 1 100%;
     min-width: 100%;
   }
+
+  :host ::ng-deep .p-datatable-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  :host ::ng-deep .p-paginator .p-paginator-first,
+  :host ::ng-deep .p-paginator .p-paginator-prev,
+  :host ::ng-deep .p-paginator .p-paginator-next,
+  :host ::ng-deep .p-paginator .p-paginator-last {
+    transform: translateX(0) !important;
+    position: static !important;
+  }
+
+  :host ::ng-deep .p-paginator .p-paginator-pages {
+    transform: translateX(0) !important;
+    position: static !important;
+  }
+}
+
+@media (max-width: 992px) {
+  .ventas-title {
+    font-size: 1rem;
+  }
+
+  .ventas-kicker {
+    font-size: 0.6rem;
+  }
+
+  .estadistica-valor {
+    font-size: 1.5rem;
+  }
+
+  .estadistica-card i {
+    font-size: 2rem;
+  }
+
+  :host ::ng-deep .p-paginator {
+    justify-content: center !important;
+    flex-wrap: wrap !important;
+  }
+
+  :host ::ng-deep .p-paginator .p-paginator-current {
+    flex: 1 1 100% !important;
+    order: 1 !important;
+    text-align: center !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  :host ::ng-deep .p-paginator .p-paginator-first,
+  :host ::ng-deep .p-paginator .p-paginator-prev,
+  :host ::ng-deep .p-paginator .p-paginator-pages,
+  :host ::ng-deep .p-paginator .p-paginator-next,
+  :host ::ng-deep .p-paginator .p-paginator-last {
+    order: 2 !important;
+  }
+
+  :host ::ng-deep .p-paginator .p-paginator-rpp-dropdown {
+    flex: 1 1 100% !important;
+    order: 3 !important;
+    justify-content: center !important;
+    margin-top: 0.5rem !important;
+    margin-left: 0 !important;
+  }
+
+  :host ::ng-deep .tipo-pago-tag {
+    font-size: 0.75rem !important;
+    padding: 0.25rem 0.5rem !important;
+  }
 }
 
 @media (max-width: 768px) {
   .cabecera-pagina {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .ventas-title-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+  }
+
+  .ventas-title {
+    font-size: 0.95rem;
   }
 
   .seccion-estadisticas {
@@ -898,6 +1071,7 @@
   .estadistica-card {
     border-right: none;
     border-bottom: 2px solid #e5e7eb;
+    padding: 1.25rem;
   }
 
   :host-context(.app-dark) .estadistica-card {
@@ -910,6 +1084,10 @@
   
   .estadistica-valor {
     font-size: 1.5rem;
+  }
+
+  .estadistica-card i {
+    font-size: 2rem;
   }
 
   .filtros-container {
@@ -932,54 +1110,64 @@
   
   .fechas-con-guion {
     width: 100%;
+    flex-direction: column;
+    height: auto !important;
+    gap: 0.5rem !important;
+  }
+
+  .fecha-separador {
+    display: none !important;
   }
   
   :host ::ng-deep .fechas-con-guion .p-datepicker {
     flex: 1;
-    width: auto !important;
+    width: 100% !important;
+  }
+
+  :host ::ng-deep .fechas-con-guion .p-datepicker .p-inputtext {
+    border-radius: 6px !important;
   }
   
   .filtros-linea-2 {
     flex-direction: column;
+    gap: 0.75rem;
   }
   
   .filtro-compacto,
   .filtro-boton-limpiar {
     width: 100%;
+    min-width: 100%;
   }
 
-  .detalle-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 992px) {
-  :host ::ng-deep .p-paginator {
-    justify-content: center !important;
+  .tabla-header h3 {
+    font-size: 1rem;
   }
 
-  :host ::ng-deep .p-paginator .p-paginator-current {
-    flex: 1 1 100% !important;
-    order: 1 !important;
-    text-align: center !important;
+  :host ::ng-deep .p-datatable-wrapper {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scroll-behavior: smooth !important;
   }
 
-  :host ::ng-deep .p-paginator .p-paginator-first,
-  :host ::ng-deep .p-paginator .p-paginator-prev,
-  :host ::ng-deep .p-paginator .p-paginator-pages,
-  :host ::ng-deep .p-paginator .p-paginator-next,
-  :host ::ng-deep .p-paginator .p-paginator-last {
-    order: 2 !important;
+  :host ::ng-deep .p-datatable table {
+    min-width: 900px !important;
   }
 
-  :host ::ng-deep .p-paginator .p-paginator-rpp-dropdown {
-    flex: 1 1 100% !important;
-    order: 3 !important;
-    justify-content: center !important;
+  :host ::ng-deep .p-datatable th,
+  :host ::ng-deep .p-datatable td {
+    padding: 0.55rem 0.5rem !important;
+    font-size: 0.78rem !important;
   }
-}
 
-@media (max-width: 768px) {
+  .acciones-tabla {
+    gap: 0.125rem;
+  }
+
+  :host ::ng-deep .acciones-tabla .p-button {
+    width: 32px !important;
+    height: 32px !important;
+  }
+
   :host ::ng-deep .p-paginator {
     padding: 0.75rem !important;
   }
@@ -989,5 +1177,167 @@
     min-width: 2rem !important;
     height: 2rem !important;
     font-size: 0.875rem !important;
+  }
+
+  :host ::ng-deep .ventas-pill {
+    padding: 0.4rem 1rem !important;
+    font-size: 0.875rem !important;
+    min-height: 38px !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .ventas-header-card .p-card-body {
+    padding: 0.75rem 1rem;
+  }
+
+  .ventas-title {
+    font-size: 0.85rem;
+  }
+
+  .ventas-kicker {
+    font-size: 0.52rem;
+  }
+
+  .ventas-title-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+  }
+
+  .estadistica-card {
+    padding: 1rem;
+  }
+
+  .estadistica-label {
+    font-size: 0.6rem;
+  }
+
+  .estadistica-valor {
+    font-size: 1.25rem;
+  }
+
+  .estadistica-card i {
+    font-size: 1.65rem;
+  }
+
+  .filtros-container {
+    padding: 0.75rem;
+  }
+
+  .seccion-filtros h3 {
+    font-size: 0.8rem;
+  }
+
+  .filtro-item label {
+    font-size: 0.6rem !important;
+  }
+
+  :host ::ng-deep .filtro-cliente-50 .p-autocomplete .p-autocomplete-input,
+  :host ::ng-deep .fechas-con-guion .p-datepicker .p-inputtext,
+  :host ::ng-deep .filtros-linea-2 .p-select,
+  :host ::ng-deep .filtros-linea-2 .p-inputtext {
+    font-size: 0.72rem !important;
+    height: 36px !important;
+    min-height: 36px !important;
+    max-height: 36px !important;
+  }
+
+  :host ::ng-deep .btn-limpiar-filtros {
+    height: 36px !important;
+    font-size: 0.72rem !important;
+  }
+
+  .tabla-header h3 {
+    font-size: 0.875rem;
+  }
+
+  :host ::ng-deep .p-datatable-wrapper {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scroll-behavior: smooth !important;
+  }
+
+  :host ::ng-deep .p-datatable table {
+    min-width: 850px !important;
+  }
+
+  :host ::ng-deep .p-datatable th,
+  :host ::ng-deep .p-datatable td {
+    padding: 0.45rem 0.4rem !important;
+    font-size: 0.72rem !important;
+  }
+
+  :host ::ng-deep .acciones-tabla .p-button {
+    width: 28px !important;
+    height: 28px !important;
+  }
+
+  :host ::ng-deep .acciones-tabla .p-button .p-button-icon {
+    font-size: 0.7rem !important;
+  }
+
+  :host ::ng-deep .tipo-pago-tag {
+    font-size: 0.68rem !important;
+    padding: 0.2rem 0.4rem !important;
+  }
+
+  .responsable-text {
+    font-size: 0.72rem;
+  }
+
+  .mensaje-vacio {
+    padding: 1.75rem 0.875rem;
+  }
+
+  .mensaje-vacio i {
+    font-size: 1.75rem;
+  }
+
+  .mensaje-vacio p {
+    font-size: 0.8rem;
+  }
+
+  :host ::ng-deep .ventas-pill {
+    padding: 0.35rem 0.85rem !important;
+    font-size: 0.78rem !important;
+    min-height: 36px !important;
+  }
+
+  :host ::ng-deep .p-paginator {
+    padding: 0.5rem !important;
+  }
+
+  :host ::ng-deep .p-paginator .p-paginator-current {
+    font-size: 0.7rem !important;
+  }
+
+  :host ::ng-deep .p-paginator .p-paginator-page,
+  :host ::ng-deep .p-paginator .p-paginator-element {
+    min-width: 1.75rem !important;
+    height: 1.75rem !important;
+    font-size: 0.7rem !important;
+  }
+}
+
+@media (max-height: 600px) and (orientation: landscape) {
+  .estadistica-card {
+    padding: 1rem;
+  }
+
+  .estadistica-valor {
+    font-size: 1.35rem;
+  }
+
+  .estadistica-card i {
+    font-size: 1.75rem;
+  }
+
+  .filtros-container {
+    padding: 0.75rem;
+  }
+
+  :host ::ng-deep .p-paginator {
+    padding: 0.75rem !important;
   }
 }

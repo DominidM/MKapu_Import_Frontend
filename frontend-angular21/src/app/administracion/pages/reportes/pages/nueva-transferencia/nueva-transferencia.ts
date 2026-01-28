@@ -11,10 +11,10 @@ import { CardModule } from 'primeng/card';
 import { DividerModule } from 'primeng/divider';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
-import { ConfirmDialog } from 'primeng/confirmdialog';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { AutoCompleteModule } from 'primeng/autocomplete';
-import { ProductosService, Producto } from '../../../../../ventas/core/services/productos.service';
-import { SedeService } from '../../../../../ventas/core/services/sede.service';
+import { ProductosService, Producto } from '../../../../../core/services/productos.service';
+import { SedeService } from '../../../../../core/services/sede.service';
 
 interface TransferProducto {
   id: number;
@@ -40,7 +40,7 @@ interface TransferProducto {
     CardModule,
     DividerModule,
     ToastModule,
-    ConfirmDialog,
+    ConfirmDialogModule,
     AutoCompleteModule
   ],
   templateUrl: './nueva-transferencia.html',
@@ -96,7 +96,6 @@ export class NuevaTransferencia implements OnInit {
 
   ngOnInit(): void {
     this.cargarSedes();
-    this.cargarProductos();
   }
 
   get productoSeleccionado(): TransferProducto | null {
@@ -169,11 +168,12 @@ export class NuevaTransferencia implements OnInit {
       next: (sedes) => {
         this.sedes = sedes.map((sede) => ({
           label: sede.nombre,
-          value: sede.id_sede
+          value: sede.nombre
         }));
         if (!this.sedeOrigen && this.sedes.length > 0) {
           this.sedeOrigen = this.sedes[0].value;
         }
+        this.cargarProductos(this.sedeOrigen);
       },
       error: (error) => {
         console.error('Error al cargar sedes:', error);
@@ -182,35 +182,45 @@ export class NuevaTransferencia implements OnInit {
           summary: 'Error',
           detail: 'No se pudieron cargar las sedes',
         });
+        this.cargarProductos();
       }
     });
   }
 
-  private cargarProductos(): void {
-    const productos = this.productosService.getProductos(undefined, 'Activo');
+  onSedeOrigenChange(): void {
+    this.productoId = null;
+    this.productoQuery = null;
+    this.cantidad = 1;
+    this.cargarProductos(this.sedeOrigen);
+  }
+
+  private cargarProductos(sede?: string | null): void {
+    const productos = this.productosService.getProductos(sede ?? undefined, 'Activo');
     this.productos = this.normalizarProductos(productos);
     this.productosSugeridos = this.productos.slice(0, 8);
   }
 
-  private normalizarProductos(productos: Producto[]): TransferProducto[] {
+  private normalizarProductos(productosBase: Producto[]): TransferProducto[] {
     const map = new Map<string, TransferProducto>();
 
-    productos.forEach((producto) => {
+    productosBase.forEach((producto) => {
       const clave = producto.codigo;
-      const existente = map.get(clave);
-
-      if (!existente) {
-        map.set(clave, {
-          id: producto.id,
-          nombre: producto.nombre,
-          sku: producto.codigo,
-          categoria: producto.familia,
-          marca: 'N/A',
-          stockPorSede: { [producto.id_sede]: producto.stock }
-        });
-      } else {
-        existente.stockPorSede[producto.id_sede] = producto.stock;
+      if (map.has(clave)) {
+        return;
       }
+      const variantes = this.productosService.getProductosPorCodigo(clave);
+      const stockPorSede: Record<string, number> = {};
+      variantes.forEach((variante) => {
+        stockPorSede[variante.sede] = variante.stock ?? 0;
+      });
+      map.set(clave, {
+        id: producto.id,
+        nombre: producto.nombre,
+        sku: producto.codigo,
+        categoria: producto.familia,
+        marca: 'N/A',
+        stockPorSede
+      });
     });
 
     return Array.from(map.values());

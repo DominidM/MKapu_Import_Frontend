@@ -1,129 +1,170 @@
-<div class="detalle-transferencia-page">
-  <p-card styleClass="detalle-header-card">
-    <div class="flex align-items-center justify-content-between flex-wrap gap-3">
+<div class="p-4" *ngIf="transferencia">
+  <div class="surface-card border-1 border-300 border-round-xl shadow-1 p-4 mb-4">
+    <div class="flex justify-content-between align-items-center flex-wrap gap-3">
       <div class="flex align-items-center gap-3">
-        <span class="detalle-title-icon">
+        <span class="transfer-title-icon">
           <i class="pi pi-truck"></i>
         </span>
         <div>
-          <p class="detalle-kicker">ADMINISTRADOR - REPORTES - TRANSFERENCIAS</p>
-          <h2 class="detalle-title">DETALLE DE TRANSFERENCIA</h2>
+          <p class="transfer-kicker mb-0">DETALLE DE TRANSFERENCIA</p>
+          <h2 class="transfer-title mb-0">{{ transferencia.codigo }}</h2>
         </div>
       </div>
-      <div class="flex gap-2">
+      <div class="flex gap-2 flex-wrap">
         <p-button
           label="Volver"
           icon="pi pi-arrow-left"
           severity="secondary"
-          styleClass="detalle-pill"
+          styleClass="transfer-pill transfer-pill-secondary"
           (onClick)="volver()"
         ></p-button>
       </div>
     </div>
-  </p-card>
-
-  <p-card *ngIf="transferencia" styleClass="detalle-summary-card">
-    <div class="summary-left">
-      <div class="summary-code">{{ transferencia.codigo }}</div>
-      <div class="summary-product">{{ transferencia.producto }}</div>
-      <div class="summary-meta">Responsable: {{ transferencia.responsable }}</div>
-    </div>
-    <div class="summary-right">
-      <p-tag
-        [value]="transferencia.estado"
-        [severity]="getEstadoSeverity(transferencia.estado)"
-        styleClass="detalle-tag"
-      ></p-tag>
-      <div class="summary-dates">
-        <span>Envio: {{ transferencia.fechaEnvio }}</span>
-        <span>Llegada: {{ transferencia.fechaLlegada }}</span>
-      </div>
-    </div>
-  </p-card>
-
-  <div class="detalle-grid" *ngIf="transferencia">
-    <p-card styleClass="detalle-card detalle-card-wide">
-      <div class="detalle-card-title">
-        <i class="pi pi-info-circle"></i>
-        Datos generales
-      </div>
-      <div class="detalle-data-grid">
-        <div class="detalle-data-item">
-          <span class="data-label">Codigo</span>
-          <span class="data-value">{{ transferencia.codigo }}</span>
-        </div>
-        <div class="detalle-data-item">
-          <span class="data-label">Producto</span>
-          <span class="data-value">{{ transferencia.producto }}</span>
-        </div>
-        <div class="detalle-data-item">
-          <span class="data-label">Estado</span>
-          <span class="data-value">{{ transferencia.estado }}</span>
-        </div>
-        <div class="detalle-data-item">
-          <span class="data-label">Cantidad</span>
-          <span class="data-value">{{ transferencia.cantidad }} unidades</span>
-        </div>
-        <div class="detalle-data-item">
-          <span class="data-label">Responsable</span>
-          <span class="data-value">{{ transferencia.responsable }}</span>
-        </div>
-        <div class="detalle-data-item">
-          <span class="data-label">Fechas</span>
-          <span class="data-value">{{ transferencia.fechaEnvio }} → {{ transferencia.fechaLlegada }}</span>
-        </div>
-      </div>
-    </p-card>
-
-    <p-card styleClass="detalle-card">
-      <div class="detalle-card-title">
-        <i class="pi pi-map-marker"></i>
-        Ruta
-      </div>
-      <div class="detalle-route">
-        <div>
-          <span class="route-label">Origen</span>
-          <div class="route-value">{{ transferencia.origen }}</div>
-        </div>
-        <i class="pi pi-arrow-right route-icon"></i>
-        <div>
-          <span class="route-label">Destino</span>
-          <div class="route-value route-destino">{{ transferencia.destino }}</div>
-        </div>
-      </div>
-    </p-card>
-
-    <p-card styleClass="detalle-card">
-      <div class="detalle-card-title">
-        <i class="pi pi-box"></i>
-        Operativo
-      </div>
-      <div class="detalle-cantidad">{{ transferencia.cantidad }} unidades</div>
-      <div class="detalle-meta">Transferencia de inventario</div>
-    </p-card>
-
-    <p-card styleClass="detalle-card">
-      <div class="detalle-card-title">
-        <i class="pi pi-calendar"></i>
-        Fechas
-      </div>
-      <div class="detalle-meta">
-        <div>Envio: {{ transferencia.fechaEnvio }}</div>
-        <div>Llegada: {{ transferencia.fechaLlegada }}</div>
-      </div>
-    </p-card>
-
-    <p-card styleClass="detalle-card" *ngIf="transferencia.observacion">
-      <div class="detalle-card-title">
-        <i class="pi pi-comment"></i>
-        Observacion
-      </div>
-      <div class="detalle-observacion">{{ transferencia.observacion }}</div>
-    </p-card>
   </div>
 
-  <p-card *ngIf="!transferencia" styleClass="detalle-empty">
-    <div class="detalle-empty-title">No se encontro la transferencia</div>
-    <div class="detalle-empty-text">Revisa el codigo e intenta nuevamente.</div>
+  <div class="grid">
+    <div class="col-12 lg:col-8">
+      <p-card styleClass="border-1 border-300 border-round-xl shadow-2 h-full">
+        <div class="flex align-items-center gap-3 mb-4">
+          <i class="pi pi-info-circle text-3xl text-primary"></i>
+          <h3 class="m-0 text-xl font-bold text-900">Informacion General</h3>
+        </div>
+
+        <p-divider></p-divider>
+
+        <div class="grid">
+          <div class="col-12 md:col-6 mb-4">
+            <label class="block text-sm font-semibold text-600 mb-2">CODIGO</label>
+            <div class="flex align-items-center gap-2 p-3 bg-primary-50 border-round-lg">
+              <i class="pi pi-tag text-primary text-xl"></i>
+              <span class="text-2xl font-black text-primary">{{ transferencia.codigo }}</span>
+            </div>
+          </div>
+
+          <div class="col-12 md:col-6 mb-4">
+            <label class="block text-sm font-semibold text-600 mb-2">ESTADO</label>
+            <div class="p-3">
+              <p-tag
+                [value]="transferencia.estado"
+                [severity]="getEstadoSeverity(transferencia.estado)"
+                styleClass="text-lg font-bold px-4 py-2"
+              ></p-tag>
+            </div>
+          </div>
+
+          <div class="col-12 mb-4">
+            <label class="block text-sm font-semibold text-600 mb-2">PRODUCTO</label>
+            <div class="p-3 surface-50 border-round-lg border-1 border-300">
+              <p class="m-0 text-xl font-semibold text-900">{{ transferencia.producto }}</p>
+            </div>
+          </div>
+
+          <div class="col-12 md:col-6 mb-4">
+            <label class="block text-sm font-semibold text-600 mb-2">RESPONSABLE</label>
+            <div class="flex align-items-center gap-3 p-3 surface-50 border-round-lg border-1 border-300">
+              <i class="pi pi-user text-2xl text-primary"></i>
+              <span class="text-lg font-bold text-900">{{ transferencia.responsable }}</span>
+            </div>
+          </div>
+
+          <div class="col-12 md:col-6 mb-4">
+            <label class="block text-sm font-semibold text-600 mb-2">CANTIDAD</label>
+            <div class="flex align-items-center gap-3 p-3 bg-orange-50 border-round-lg border-1 border-orange-200">
+              <i class="pi pi-box text-orange-600 text-2xl"></i>
+              <span class="text-lg font-bold text-orange-700">{{ transferencia.cantidad }} unidades</span>
+            </div>
+          </div>
+
+          <div class="col-12 md:col-6 mb-4">
+            <label class="block text-sm font-semibold text-600 mb-2">ORIGEN</label>
+            <div class="flex align-items-center gap-3 p-3 surface-50 border-round-lg border-1 border-300">
+              <i class="pi pi-home text-2xl text-primary"></i>
+              <span class="text-lg font-bold text-900">{{ transferencia.origen }}</span>
+            </div>
+          </div>
+
+          <div class="col-12 md:col-6 mb-4">
+            <label class="block text-sm font-semibold text-600 mb-2">DESTINO</label>
+            <div class="flex align-items-center gap-3 p-3 bg-amber-50 border-round-lg border-1 border-amber-200">
+              <i class="pi pi-map-marker text-2xl text-amber-600"></i>
+              <span class="text-lg font-bold text-amber-700">{{ transferencia.destino }}</span>
+            </div>
+          </div>
+
+          <div class="col-12 md:col-6 mb-4">
+            <label class="block text-sm font-semibold text-600 mb-2">FECHA DE ENVIO</label>
+            <div class="p-3 surface-50 border-round-lg border-1 border-300">
+              <span class="text-lg font-semibold text-900">{{ transferencia.fechaEnvio }}</span>
+            </div>
+          </div>
+
+          <div class="col-12 md:col-6 mb-4">
+            <label class="block text-sm font-semibold text-600 mb-2">FECHA DE LLEGADA</label>
+            <div class="p-3 surface-50 border-round-lg border-1 border-300">
+              <span class="text-lg font-semibold text-900">{{ transferencia.fechaLlegada }}</span>
+            </div>
+          </div>
+
+          <div class="col-12 mb-4" *ngIf="transferencia.observacion">
+            <label class="block text-sm font-semibold text-600 mb-2">OBSERVACION</label>
+            <div class="p-3 surface-50 border-round-lg border-1 border-300">
+              <p class="m-0 text-base text-700 line-height-3">{{ transferencia.observacion }}</p>
+            </div>
+          </div>
+        </div>
+      </p-card>
+    </div>
+
+    <div class="col-12 lg:col-4">
+      <p-card styleClass="border-1 border-300 border-round-xl shadow-2 h-full">
+        <div class="flex align-items-center gap-3 mb-4">
+          <i class="pi pi-chart-line text-3xl text-green-600"></i>
+          <h3 class="m-0 text-xl font-bold text-900">Resumen Operativo</h3>
+        </div>
+
+        <p-divider></p-divider>
+
+        <div class="flex flex-column gap-4">
+          <div class="p-4 bg-blue-50 border-round-xl border-2 border-blue-200">
+            <label class="block text-xs font-bold text-blue-700 mb-2 uppercase">Ruta</label>
+            <div class="flex align-items-center gap-2">
+              <i class="pi pi-map-marker text-blue-600 text-xl"></i>
+              <span class="text-lg font-bold text-blue-700">{{ transferencia.origen }} → {{ transferencia.destino }}</span>
+            </div>
+          </div>
+
+          <div class="p-4 bg-green-50 border-round-xl border-2 border-green-200">
+            <label class="block text-xs font-bold text-green-700 mb-2 uppercase">Fechas</label>
+            <div class="flex flex-column gap-1">
+              <span class="text-base font-semibold text-green-700">Envio: {{ transferencia.fechaEnvio }}</span>
+              <span class="text-base font-semibold text-green-700">Llegada: {{ transferencia.fechaLlegada }}</span>
+            </div>
+          </div>
+
+          <div class="p-4 bg-orange-50 border-round-xl border-2 border-orange-200">
+            <label class="block text-xs font-bold text-orange-700 mb-2 uppercase">Cantidad</label>
+            <div class="flex align-items-center gap-2">
+              <i class="pi pi-box text-orange-600 text-xl"></i>
+              <span class="text-2xl font-black text-orange-600">{{ transferencia.cantidad }} uds</span>
+            </div>
+          </div>
+
+          <div class="p-4 bg-purple-50 border-round-xl border-2 border-purple-200">
+            <label class="block text-xs font-bold text-purple-700 mb-2 uppercase">Responsable</label>
+            <div class="flex align-items-center gap-2">
+              <i class="pi pi-user text-purple-600 text-xl"></i>
+              <span class="text-xl font-bold text-purple-700">{{ transferencia.responsable }}</span>
+            </div>
+          </div>
+        </div>
+      </p-card>
+    </div>
+  </div>
+</div>
+
+<div class="p-4" *ngIf="!transferencia">
+  <p-card styleClass="border-1 border-300 border-round-xl shadow-1 text-center p-4">
+    <div class="text-xl font-bold text-900">No se encontro la transferencia</div>
+    <div class="text-sm text-600 mt-2">Revisa el codigo e intenta nuevamente.</div>
   </p-card>
 </div>

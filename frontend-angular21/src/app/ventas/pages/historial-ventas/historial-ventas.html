@@ -35,6 +35,14 @@
       </div>
 
       <div class="estadistica-card">
+        <i class="pi pi-shopping-cart"></i>
+        <div>
+          <span class="estadistica-label">Cantidad de Ventas</span>
+          <span class="estadistica-valor">{{ numeroVentas }}</span>
+        </div>
+      </div>
+
+      <div class="estadistica-card">
         <i class="pi pi-file"></i>
         <div>
           <span class="estadistica-label">Boletas</span>
@@ -47,14 +55,6 @@
         <div>
           <span class="estadistica-label">Facturas</span>
           <span class="estadistica-valor">{{ totalFacturas }}</span>
-        </div>
-      </div>
-
-      <div class="estadistica-card">
-        <i class="pi pi-list"></i>
-        <div>
-          <span class="estadistica-label">Total Registros</span>
-          <span class="estadistica-valor">{{ comprobantesFiltrados.length }}</span>
         </div>
       </div>
     </div>
@@ -127,7 +127,19 @@
           >
           </p-select>
         </div>
-
+        <div class="filtro-item filtro-compacto">
+          <label>Tipo de Pago</label>
+          <p-select
+            [(ngModel)]="filtros.tipoPago"
+            [options]="tiposPago"
+            placeholder="Todos"
+            optionLabel="label"
+            optionValue="value"
+            (onChange)="aplicarFiltros()"
+            styleClass="w-full"
+          >
+          </p-select>
+        </div>
         <div class="filtro-item filtro-compacto">
           <label>Estado</label>
           <p-select
@@ -171,7 +183,7 @@
         [rows]="10"
         [rowsPerPageOptions]="[10, 25, 50, 100]"
         [loading]="loading"
-        [tableStyle]="{ 'min-width': '60rem' }"
+        [tableStyle]="{ 'min-width': '70rem' }"
         styleClass="p-datatable-striped"
         currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} registros"
         [showCurrentPageReport]="true"
@@ -184,7 +196,10 @@
             <th pSortableColumn="fec_emision">Fecha Emisión <p-sortIcon field="fec_emision" /></th>
             <th pSortableColumn="cliente_nombre">Cliente</th>
             <th pSortableColumn="cliente_doc">Documento</th>
-            <th pSortableColumn="responsable">Responsable <p-sortIcon field="responsable" /></th>
+            <th pSortableColumn="tipo_pago">Tipo Pago <p-sortIcon field="tipo_pago" /></th>
+            <th pSortableColumn="total" class="text-right" style="min-width: 125px; width: 125px">
+              Total <p-sortIcon field="total" />
+            </th>
             <th pSortableColumn="total" class="text-right">Total <p-sortIcon field="total" /></th>
             <th>Estado</th>
             <th class="text-center">Acciones</th>
@@ -205,6 +220,16 @@
             <td>{{ comprobante.fec_emision | date: 'dd/MM/yyyy HH:mm' }}</td>
             <td>{{ comprobante.cliente_nombre }}</td>
             <td>{{ comprobante.cliente_doc }}</td>
+
+            <td>
+              <div class="tipo-pago-cell">
+                <p-tag
+                  [value]="getTipoPagoLabel(comprobante.tipo_pago)"
+                  [severity]="getSeverityTipoPago(comprobante.tipo_pago)"
+                  styleClass="tipo-pago-tag"
+                ></p-tag>
+              </div>
+            </td>
             <td>
               <span class="responsable-text">{{ comprobante.responsable }}</span>
             </td>
@@ -254,7 +279,7 @@
 
         <ng-template pTemplate="emptymessage">
           <tr>
-            <td colspan="9" class="text-center">
+            <td colspan="10" class="text-center">
               <div class="mensaje-vacio">
                 <i class="pi pi-inbox"></i>
                 <p>No se encontraron comprobantes</p>

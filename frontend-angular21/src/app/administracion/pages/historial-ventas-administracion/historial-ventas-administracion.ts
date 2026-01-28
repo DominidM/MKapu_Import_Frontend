@@ -18,19 +18,24 @@ import { AutoComplete } from 'primeng/autocomplete';
 import { VentasService, ComprobanteVenta } from '../../../core/services/ventas.service';
 import { SedeService, Sede } from '../../../core/services/sede.service';
 import { EmpleadosService, Empleado } from '../../../core/services/empleados.service';
+import { ComprobantesService } from '../../../core/services/comprobantes.service';
+import { PosService } from '../../../core/services/pos.service';
 import { MessageService, ConfirmationService } from 'primeng/api';
 
-interface FiltroVentas {
+import { ExcelUtils } from '../../utils/excel.utils';
+
+interface FiltroVentasAdmin {
+  sedeSeleccionada: string | null;
   tipoComprobante: string | null;
   estado: string | null;
   fechaInicio: Date | null;
   fechaFin: Date | null;
   busqueda: string;
-  familiaProducto: string | null;
+  tipoPago: string | null;
 }
 
 @Component({
-  selector: 'app-historial-ventas',
+  selector: 'app-historial-ventas-administracion',
   standalone: true,
   imports: [
     CommonModule,
@@ -47,11 +52,11 @@ interface FiltroVentas {
     AutoComplete,
   ],
   providers: [MessageService, ConfirmationService],
-  templateUrl: './historial-ventas.html',
-  styleUrls: ['./historial-ventas.css'],
+  templateUrl: './historial-ventas-administracion.html',
+  styleUrl: './historial-ventas-administracion.css',
 })
-export class HistorialVentas implements OnInit, OnDestroy {
-  tituloKicker = 'VENTAS - HISTORIAL DE VENTAS';
+export class HistorialVentasAdministracion implements OnInit, OnDestroy {
+  tituloKicker = 'ADMINISTRACIÓN - HISTORIAL DE VENTAS';
   subtituloKicker = 'CONSULTA Y GESTIÓN DE VENTAS';
   iconoCabecera = 'pi pi-list';
 
@@ -60,41 +65,24 @@ export class HistorialVentas implements OnInit, OnDestroy {
   comprobantes: ComprobanteVenta[] = [];
   comprobantesFiltrados: ComprobanteVenta[] = [];
   comprobanteSeleccionado: ComprobanteVenta | null = null;
-  sedes: Sede[] = [];
-  empleadoActual: Empleado | null = null;
-  sedeActual: Sede | null = null;
 
-  filtros: FiltroVentas = {
+  sedes: Sede[] = [];
+  sedesOptions: { label: string; value: string }[] = [];
+  empleadoActual: Empleado | null = null;
+
+  filtros: FiltroVentasAdmin = {
+    sedeSeleccionada: null,
     tipoComprobante: null,
     estado: null,
     fechaInicio: null,
     fechaFin: null,
     busqueda: '',
-    familiaProducto: null,
+    tipoPago: null,
   };
 
-  tiposComprobante = [
-    { label: 'Todos', value: null },
-    { label: 'Boleta', value: '03' },
-    { label: 'Factura', value: '01' },
-  ];
-
-  estadosComprobante = [
-    { label: 'Todos', value: null },
-    { label: 'Emitido', value: 'EMITIDO' },
-    { label: 'Cancelado', value: 'CANCELADO' },
-    { label: 'Reembolsado', value: 'REEMBOLSADO' },
-  ];
-
-  familiasProducto = [
-    { label: 'Todas', value: null },
-    { label: 'Bebidas', value: 'bebidas' },
-    { label: 'Comidas', value: 'comidas' },
-    { label: 'Postres', value: 'postres' },
-    { label: 'Entradas', value: 'entradas' },
-    { label: 'Platos Principales', value: 'platos' },
-    { label: 'Guarniciones', value: 'guarniciones' },
-  ];
+  tiposComprobante: any[] = [];
+  estadosComprobante: any[] = [];
+  tiposPago: any[] = [];
 
   sugerenciasBusqueda: string[] = [];
   todasLasSugerencias: string[] = [];
@@ -103,19 +91,27 @@ export class HistorialVentas implements OnInit, OnDestroy {
   mostrarDetalle: boolean = false;
 
   totalVentas: number = 0;
+  numeroVentas: number = 0;
   totalBoletas: number = 0;
   totalFacturas: number = 0;
+
+  inicioSemana: Date = new Date();
+  finSemana: Date = new Date();
 
   constructor(
     private router: Router,
     private ventasService: VentasService,
     private sedeService: SedeService,
     private empleadosService: EmpleadosService,
+    private comprobantesService: ComprobantesService,
+    private posService: PosService,
     private messageService: MessageService,
     private confirmationService: ConfirmationService,
   ) {}
 
   ngOnInit(): void {
+    this.calcularRangoSemana();
+    this.cargarOpcionesFiltros();
     this.cargarEmpleadoActual();
     this.cargarSedes();
     this.cargarComprobantes();
@@ -123,6 +119,32 @@ export class HistorialVentas implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.subscriptions.unsubscribe();
+  }
+
+  calcularRangoSemana(): void {
+    const hoy = new Date();
+    const diaSemana = hoy.getDay();
+
+    const diasDesdeInicio = diaSemana === 0 ? 6 : diaSemana - 1;
+
+    this.inicioSemana = new Date(hoy);
+    this.inicioSemana.setDate(hoy.getDate() - diasDesdeInicio);
+    this.inicioSemana.setHours(0, 0, 0, 0);
+
+    this.finSemana = new Date(this.inicioSemana);
+    this.finSemana.setDate(this.inicioSemana.getDate() + 6);
+    this.finSemana.setHours(23, 59, 59, 999);
+
+    console.log('📅 Semana actual:', {
+      inicio: this.inicioSemana.toLocaleDateString('es-PE'),
+      fin: this.finSemana.toLocaleDateString('es-PE'),
+    });
+  }
+
+  cargarOpcionesFiltros(): void {
+    this.tiposComprobante = this.comprobantesService.getTiposComprobanteOptions();
+    this.estadosComprobante = this.comprobantesService.getEstadosComprobanteOptions();
+    this.tiposPago = this.posService.getTiposPagoOptions();
   }
 
   cargarEmpleadoActual(): void {
@@ -135,7 +157,7 @@ export class HistorialVentas implements OnInit, OnDestroy {
         detail: 'No hay un empleado autenticado. Redirigiendo...',
         life: 3000,
       });
-      
+
       setTimeout(() => {
         this.router.navigate(['/login']);
       }, 1000);
@@ -143,9 +165,9 @@ export class HistorialVentas implements OnInit, OnDestroy {
     }
 
     this.messageService.add({
-      severity: 'info',
-      summary: 'Sede actual',
-      detail: `Mostrando ventas de: ${this.empleadoActual.nombre_sede}`,
+      severity: 'success',
+      summary: 'Modo Administración',
+      detail: 'Visualizando ventas de todas las sedes',
       life: 3000,
     });
   }
@@ -154,10 +176,16 @@ export class HistorialVentas implements OnInit, OnDestroy {
     const sub = this.sedeService.getSedes().subscribe({
       next: (sedes) => {
         this.sedes = sedes;
-        
-        if (this.empleadoActual?.id_sede) {
-          this.sedeActual = this.sedes.find(s => s.id_sede === this.empleadoActual!.id_sede) || null;
-        }
+
+        this.sedesOptions = [
+          { label: 'Todas las sedes', value: '' },
+          ...sedes.map((sede) => ({
+            label: sede.nombre,
+            value: sede.id_sede,
+          })),
+        ];
+
+        console.log('🏢 Sedes cargadas:', this.sedesOptions);
       },
       error: (error) => {
         console.error('Error al cargar sedes:', error);
@@ -177,30 +205,23 @@ export class HistorialVentas implements OnInit, OnDestroy {
 
     const todosComprobantes = this.ventasService.getComprobantes();
 
-    if (this.empleadoActual?.id_sede) {
-      this.comprobantes = todosComprobantes
-        .filter(c => c.id_sede === this.empleadoActual!.id_sede)
-        .sort((a, b) => new Date(b.fec_emision).getTime() - new Date(a.fec_emision).getTime());
-      
-      console.log(`📍 Filtrando ventas por sede: ${this.empleadoActual.nombre_sede}`);
-      console.log(`📊 Total de ventas en esta sede: ${this.comprobantes.length}`);
-    } else {
-      this.comprobantes = todosComprobantes
-        .sort((a, b) => new Date(b.fec_emision).getTime() - new Date(a.fec_emision).getTime());
-      console.warn('⚠️ No hay empleado logueado, mostrando todas las ventas');
-    }
+    this.comprobantes = todosComprobantes.sort(
+      (a, b) => new Date(b.fec_emision).getTime() - new Date(a.fec_emision).getTime(),
+    );
+
+    console.log(`📊 Total de ventas (todas las sedes): ${this.comprobantes.length}`);
 
     this.comprobantesFiltrados = [...this.comprobantes];
     this.cargarSugerenciasBusqueda();
     this.calcularEstadisticas();
-    
+
     this.loading = false;
 
     if (this.comprobantes.length === 0) {
       this.messageService.add({
         severity: 'info',
         summary: 'Sin registros',
-        detail: `No hay ventas registradas en ${this.empleadoActual?.nombre_sede || 'esta sede'}`,
+        detail: 'No hay ventas registradas en el sistema',
         life: 3000,
       });
     }
@@ -239,6 +260,12 @@ export class HistorialVentas implements OnInit, OnDestroy {
   aplicarFiltros(): void {
     let resultado = [...this.comprobantes];
 
+    // 🔥 FILTRO POR SEDE
+    if (this.filtros.sedeSeleccionada && this.filtros.sedeSeleccionada.trim()) {
+      resultado = resultado.filter((c) => c.id_sede === this.filtros.sedeSeleccionada);
+      console.log(`🏢 Filtrando por sede: ${this.getSede(resultado[0])}`);
+    }
+
     if (this.filtros.tipoComprobante) {
       resultado = resultado.filter((c) => c.tipo_comprobante === this.filtros.tipoComprobante);
     }
@@ -247,7 +274,8 @@ export class HistorialVentas implements OnInit, OnDestroy {
       resultado = resultado.filter((c) => this.getEstadoComprobante(c) === this.filtros.estado);
     }
 
-    if (this.filtros.familiaProducto) {
+    if (this.filtros.tipoPago) {
+      resultado = resultado.filter((c) => c.tipo_pago === this.filtros.tipoPago);
     }
 
     if (this.filtros.fechaInicio) {
@@ -294,12 +322,13 @@ export class HistorialVentas implements OnInit, OnDestroy {
 
   limpiarFiltros(): void {
     this.filtros = {
+      sedeSeleccionada: null,
       tipoComprobante: null,
       estado: null,
       fechaInicio: null,
       fechaFin: null,
       busqueda: '',
-      familiaProducto: null,
+      tipoPago: null,
     };
     this.aplicarFiltros();
 
@@ -312,40 +341,108 @@ export class HistorialVentas implements OnInit, OnDestroy {
   }
 
   calcularEstadisticas(): void {
-    this.totalVentas = this.comprobantesFiltrados.reduce((sum, c) => sum + c.total, 0);
-    this.totalBoletas = this.comprobantesFiltrados.filter(
-      (c) => c.tipo_comprobante === '03'
-    ).length;
-    this.totalFacturas = this.comprobantesFiltrados.filter(
-      (c) => c.tipo_comprobante === '01'
-    ).length;
+    const ventasSemana = this.comprobantesFiltrados.filter((c) => {
+      const fechaVenta = new Date(c.fec_emision);
+      return fechaVenta >= this.inicioSemana && fechaVenta <= this.finSemana;
+    });
+
+    this.totalVentas = ventasSemana.reduce((sum, c) => sum + c.total, 0);
+    this.numeroVentas = ventasSemana.length;
+    this.totalBoletas = ventasSemana.filter((c) => c.tipo_comprobante === '03').length;
+    this.totalFacturas = ventasSemana.filter((c) => c.tipo_comprobante === '01').length;
+
+    console.log('📊 Estadísticas de la semana:', {
+      montoTotal: this.totalVentas,
+      cantidadVentas: this.numeroVentas,
+      boletas: this.totalBoletas,
+      facturas: this.totalFacturas,
+    });
+  }
+
+  exportarExcel(): void {
+    if (this.comprobantesFiltrados.length === 0) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Sin datos',
+        detail: 'No hay registros para exportar',
+        life: 3000,
+      });
+      return;
+    }
+
+    // Preparar datos para exportar
+    const datosExcel = this.comprobantesFiltrados.map((c) => ({
+      'N° Comprobante': this.getNumeroFormateado(c),
+      Tipo: this.getTipoComprobanteLabel(c.tipo_comprobante),
+      'Fecha Emisión': new Date(c.fec_emision).toLocaleString('es-PE'),
+      Cliente: c.cliente_nombre,
+      Documento: c.cliente_doc,
+      'Tipo Pago': this.getTipoPagoLabel(c.tipo_pago),
+      Sede: this.getSede(c),
+      Responsable: c.responsable,
+      Total: c.total,
+      Estado: this.getEstadoComprobante(c),
+    }));
+
+    // Generar nombre de archivo
+    const nombreArchivo = ExcelUtils.generarNombreConFecha('ventas');
+
+    // Exportar
+    ExcelUtils.exportarAExcel(datosExcel, nombreArchivo, 'Comprobantes');
+
+    // Mensaje de éxito
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Exportación exitosa',
+      detail: `Archivo ${nombreArchivo}.xlsx descargado`,
+      life: 3000,
+    });
+  }
+
+  private convertirAHojaCalculo(datos: any[]): any[] {
+    return datos;
+  }
+
+  private convertirACSV(datos: any[]): string {
+    if (datos.length === 0) return '';
+
+    const headers = Object.keys(datos[0]);
+    const csvHeaders = headers.join(',');
+
+    const csvRows = datos.map((row) =>
+      headers
+        .map((header) => {
+          const value = row[header];
+          return typeof value === 'string' && value.includes(',') ? `"${value}"` : value;
+        })
+        .join(','),
+    );
+
+    return [csvHeaders, ...csvRows].join('\n');
   }
 
   getEstadoComprobante(comprobante: ComprobanteVenta): string {
-    if (!comprobante.estado) return 'CANCELADO';
-    if (comprobante.hash_cpe) return 'EMITIDO';
-    return 'EMITIDO';
+    return this.comprobantesService.getEstadoComprobante(comprobante);
   }
 
   getSeverityEstado(estado: string): 'success' | 'danger' | 'warn' | 'info' {
-    switch (estado) {
-      case 'EMITIDO':
-        return 'success';
-      case 'CANCELADO':
-        return 'danger';
-      case 'REEMBOLSADO':
-        return 'warn';
-      default:
-        return 'info';
-    }
+    return this.comprobantesService.getSeverityEstado(estado);
   }
 
   getTipoComprobanteLabel(tipo: string): string {
-    return tipo === '03' ? 'Boleta' : 'Factura';
+    return this.comprobantesService.getTipoComprobanteLabel(tipo as '01' | '03');
   }
 
   getNumeroFormateado(comprobante: ComprobanteVenta): string {
-    return `${comprobante.serie}-${comprobante.numero.toString().padStart(8, '0')}`;
+    return this.comprobantesService.getNumeroFormateado(comprobante.serie, comprobante.numero);
+  }
+
+  getTipoPagoLabel(tipoPago: string): string {
+    return this.posService.getTipoPagoLabel(tipoPago);
+  }
+
+  getSeverityTipoPago(tipoPago: string): 'success' | 'info' | 'warn' | 'secondary' {
+    return this.posService.getSeverityTipoPago(tipoPago);
   }
 
   getSede(comprobante: ComprobanteVenta): string {
@@ -359,16 +456,20 @@ export class HistorialVentas implements OnInit, OnDestroy {
   }
 
   imprimirComprobante(comprobante: ComprobanteVenta): void {
-    this.router.navigate(['/ventas/imprimir-comprobante'], {
+    this.router.navigate(['/admin/imprimir-comprobante-administracion'], {
       state: {
         comprobante: comprobante,
-        rutaRetorno: '/ventas/historial-ventas',
+        rutaRetorno: '/admin/historial-ventas-administracion',
       },
     });
   }
 
   verDetalleVenta(comprobante: ComprobanteVenta): void {
-    this.router.navigate(['/ventas/ver-detalle', comprobante.id]);
+    this.router.navigate(['/admin/detalles-ventas-administracion', comprobante.id], {
+      state: {
+        rutaRetorno: '/admin/historial-ventas-administracion',
+      },
+    });
   }
 
   anularComprobante(comprobante: ComprobanteVenta): void {
@@ -395,6 +496,6 @@ export class HistorialVentas implements OnInit, OnDestroy {
   }
 
   nuevaVenta(): void {
-    this.router.navigate(['/ventas/generar-venta']);
+    this.router.navigate(['/admin/generar-ventas-administracion']);
   }
 }

@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -7,6 +7,8 @@ import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
 import { CardModule } from 'primeng/card';
 import { InputTextModule } from 'primeng/inputtext';
+import { UsuarioService } from '../../services/usuario.service';
+import { UsuarioInterfaceResponse, UsuarioResponse } from '../../interfaces/usuario.interface';
 
 @Component({
   selector: 'app-administracion-crear-usuario',
@@ -23,8 +25,10 @@ import { InputTextModule } from 'primeng/inputtext';
   templateUrl: './administracion-crear-usuario.html',
   styleUrls: ['./administracion-crear-usuario.css']
 })
-export class AdministracionCrearUsuario {
+export class AdministracionCrearUsuario implements OnInit{
 
+  users: UsuarioInterfaceResponse[] = [];
+  totalusers: number | null = null;
   filtroDni = '';
 
   usuarios = [
@@ -58,7 +62,15 @@ export class AdministracionCrearUsuario {
     }
   ];
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private usuarioService: UsuarioService
+  ) {}
+
+  ngOnInit(): void {
+      console.log("crear usuarios");
+      this.getUsuarios();      
+  }
 
   get usuariosFiltrados() {
     if (!this.filtroDni) {
@@ -77,4 +89,18 @@ export class AdministracionCrearUsuario {
   nuevoUsuario() {
     this.router.navigate(['/admin/usuarios/crear-usuario']);
   }
+
+  getUsuarios(){
+    this.usuarioService.getUsuarios().subscribe({
+      next: (resp) => {
+        this.users = resp.users;
+        this.totalusers = resp.total; 
+        console.log('usuarios: ', resp)
+      },
+      error: (err) => {
+        console.error('Error al obtener usuarios', err);
+      } 
+    })
+  }
+
 }

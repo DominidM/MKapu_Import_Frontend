@@ -98,6 +98,7 @@
               <label class="input-label">{{ tipoComprobante === '03' ? 'DNI' : 'RUC' }}</label>
 
               <div class="flex gap-2 align-items-center">
+                <!-- AUTOCOMPLETE CON VALIDACIÓN -->
                 <div style="flex: 1; min-width: 0">
                   <p-autocomplete
                     [(ngModel)]="clienteAutoComplete"
@@ -105,19 +106,21 @@
                     (completeMethod)="buscarClienteAutoComplete($event)"
                     (onSelect)="onSelectCliente($event)"
                     (onClear)="onClearCliente()"
-                    (onBlur)="onBlurAutoComplete()"
+                    (input)="validarSoloNumeros($event)"
                     [placeholder]="
                       tipoComprobante === '03'
                         ? 'Ingrese DNI (8 dígitos)'
                         : 'Ingrese RUC (11 dígitos)'
                     "
-                    [minLength]="3"
+                    [minLength]="1"
                     [forceSelection]="false"
                     [showEmptyMessage]="true"
                     emptyMessage="No se encontraron clientes"
                     dataKey="id_cliente"
                     optionLabel="num_doc"
                     styleClass="w-full autocomplete-clientes"
+                    inputmode="numeric"
+                    pattern="[0-9]*"
                   >
                     <ng-template let-cliente pTemplate="item">
                       <div class="flex align-items-center gap-3 p-2">
@@ -143,21 +146,55 @@
                   </p-autocomplete>
                 </div>
 
+                <!-- BOTÓN DINÁMICO -->
                 <div style="flex: 0 0 200px">
                   <p-button
-                    label="Buscar"
-                    icon="pi pi-search"
-                    (onClick)="buscarCliente()"
-                    [disabled]="
-                      (!clienteAutoComplete && !numeroDocumento) ||
-                      (clienteAutoComplete?.num_doc?.length || numeroDocumento.length || 0) < 8
-                    "
+                    [label]="textoBotonCliente"
+                    [icon]="iconoBotonCliente"
+                    [severity]="severityBotonCliente"
+                    (onClick)="manejarAccionCliente()"
+                    [disabled]="!botonClienteHabilitado || clienteEncontrado !== null"
                     styleClass="w-full btn-buscar-cliente"
+                    [pTooltip]="
+                      clienteEncontrado
+                        ? 'Cliente ya seleccionado'
+                        : !botonClienteHabilitado
+                          ? 'Complete ' + (tipoComprobante === '03' ? '8' : '11') + ' dígitos'
+                          : ''
+                    "
+                    tooltipPosition="bottom"
                   />
                 </div>
               </div>
+
+              <div
+                *ngIf="clienteAutoComplete && !clienteEncontrado"
+                class="mt-2 flex align-items-center gap-2"
+              >
+                <i class="pi pi-info-circle text-500"></i>
+                <small class="text-600">
+                  {{ clienteAutoComplete?.length || 0 }} /
+                  {{ tipoComprobante === '03' ? '8' : '11' }} dígitos
+                  <span
+                    *ngIf="(clienteAutoComplete?.length || 0) < (tipoComprobante === '03' ? 8 : 11)"
+                    class="text-orange-500"
+                  >
+                    ({{ (tipoComprobante === '03' ? 8 : 11) - (clienteAutoComplete?.length || 0) }}
+                    restantes)
+                  </span>
+                  <span
+                    *ngIf="
+                      (clienteAutoComplete?.length || 0) === (tipoComprobante === '03' ? 8 : 11)
+                    "
+                    class="text-green-500"
+                  >
+                    ✓ Completo
+                  </span>
+                </small>
+              </div>
             </div>
 
+            <!-- CLIENTE ENCONTRADO -->
             <div *ngIf="clienteEncontrado" class="cliente-encontrado-card mt-3">
               <p-card styleClass="cliente-card-success">
                 <div class="cliente-content">
@@ -215,15 +252,34 @@
               </p-card>
             </div>
 
+            <!-- FORMULARIO NUEVO CLIENTE -->
             <div *ngIf="mostrarFormulario" class="nuevo-cliente-form mt-3">
               <p-divider align="center">
                 <span class="divider-text">
                   <i class="pi pi-user-plus mr-2"></i>
-                  Cliente no encontrado - Registrar nuevo
+                  Registrar nuevo cliente
                 </span>
               </p-divider>
 
               <div class="form-grid">
+                <!-- ✅ Campo DNI/RUC en el formulario también con validación -->
+                <div class="form-field full-width" *ngIf="!nuevoCliente.num_doc">
+                  <label>{{ tipoComprobante === '03' ? 'DNI' : 'RUC' }} *</label>
+                  <input
+                    pInputText
+                    [(ngModel)]="nuevoCliente.num_doc"
+                    [placeholder]="
+                      'Ingrese ' +
+                      (tipoComprobante === '03' ? 'DNI (8 dígitos)' : 'RUC (11 dígitos)')
+                    "
+                    class="w-full"
+                    [maxlength]="tipoComprobante === '03' ? 8 : 11"
+                    inputmode="numeric"
+                    pattern="[0-9]*"
+                    (input)="validarSoloNumerosFormulario($event)"
+                  />
+                </div>
+
                 <div class="form-field" *ngIf="tipoComprobante === '03'">
                   <label>Nombres *</label>
                   <input
@@ -249,7 +305,7 @@
                   <input
                     pInputText
                     [(ngModel)]="nuevoCliente.razon_social"
-                    placeholder="Ingresa Razon Social."
+                    placeholder="Ingresa Razon Social"
                     class="w-full"
                   />
                 </div>
@@ -272,6 +328,8 @@
                     placeholder="Ingrese Teléfono"
                     class="w-full"
                     maxlength="9"
+                    inputmode="numeric"
+                    pattern="[0-9]*"
                   />
                 </div>
 
@@ -286,12 +344,20 @@
                   />
                 </div>
 
-                <div class="form-field full-width">
+                <div class="form-field full-width flex gap-2">
                   <p-button
-                    label="Registrar Cliente"
-                    icon="pi pi-user-plus"
+                    label="Cancelar"
+                    icon="pi pi-times"
+                    [outlined]="true"
+                    severity="secondary"
+                    (onClick)="limpiarCliente()"
+                    styleClass="flex-1"
+                  />
+                  <p-button
+                    label="Guardar Cliente"
+                    icon="pi pi-check"
                     (onClick)="registrarNuevoCliente()"
-                    styleClass="w-full btn-registrar-cliente"
+                    styleClass="flex-1 btn-registrar-cliente"
                   />
                 </div>
               </div>
@@ -498,7 +564,7 @@
                     label="Agregar al Carrito"
                     icon="pi pi-plus"
                     (onClick)="agregarProducto()"
-                    [disabled]="cantidadTemp > (productoTemp.stock ?? 0)"
+                    [disabled]="cantidadTemp <= 0 || cantidadTemp > (productoTemp.stock ?? 0)"
                     styleClass="w-full btn-agregar-producto"
                   />
 
@@ -507,7 +573,15 @@
                     class="text-red-500 mt-2 block text-center"
                   >
                     <i class="pi pi-exclamation-triangle"></i>
-                    Stock insuficiente
+                    Stock insuficiente. Disponible: {{ productoTemp.stock }} unidades
+                  </small>
+
+                  <small
+                    *ngIf="cantidadTemp > 0 && cantidadTemp <= (productoTemp.stock ?? 0)"
+                    class="text-green-500 mt-2 block text-center"
+                  >
+                    <i class="pi pi-check-circle"></i>
+                    Stock disponible
                   </small>
                 </div>
 

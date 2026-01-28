@@ -100,7 +100,7 @@ export class EmpleadosService {
       telefono: '954123456',
       cargo: 'ADMIN',
       id_sede: 'SEDE002',
-      nombre_sede: 'LURÍN',
+      nombre_sede: 'LURIN',
       usuario: 'lgutierrez',
       password: 'admin123',
       estado: true,
@@ -115,7 +115,7 @@ export class EmpleadosService {
       telefono: '965874123',
       cargo: 'VENTAS',
       id_sede: 'SEDE002',
-      nombre_sede: 'LURÍN',
+      nombre_sede: 'LURIN',
       usuario: 'rflores',
       password: 'ventas123',
       estado: true,
@@ -130,7 +130,7 @@ export class EmpleadosService {
       telefono: '978451236',
       cargo: 'ALMACENERO',
       id_sede: 'SEDE002',
-      nombre_sede: 'LURÍN',
+      nombre_sede: 'LURIN',
       usuario: 'pchavez',
       password: 'almacen123',
       estado: true,
@@ -145,7 +145,7 @@ export class EmpleadosService {
       telefono: '945123678',
       cargo: 'VENTAS',
       id_sede: 'SEDE002',
-      nombre_sede: 'LURÍN',
+      nombre_sede: 'LURIN',
       usuario: 'crios',
       password: 'ventas123',
       estado: true,
@@ -380,3 +380,4 @@ export class EmpleadosService {
     return etiquetas[cargo];
   }
 }
+

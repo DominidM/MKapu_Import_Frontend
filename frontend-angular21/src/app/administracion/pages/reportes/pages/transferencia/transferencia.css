@@ -13,19 +13,13 @@
 }
 
 .transferencia-page > p-card,
-.transferencia-metrics > p-card {
+.transferencia-metrics p-card {
   display: block;
   width: 100%;
 }
 
 :host ::ng-deep .transferencia-page * {
   box-sizing: border-box;
-}
-
-.transferencia-metrics {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
 }
 
 .metric-card .p-card-body {
@@ -194,26 +188,6 @@
   padding: 1rem 1.25rem;
 }
 
-.transferencia-header-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-}
-
-.transferencia-header-title {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.transferencia-header-actions {
-  display: flex;
-  justify-content: flex-end;
-  width: auto;
-}
-
 .transferencia-title-icon {
   width: 40px;
   height: 40px;
@@ -241,22 +215,11 @@
 }
 
 .transferencia-search-container {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
   min-width: 0;
 }
 
 .transferencia-filter-card .p-card-body {
   padding: 1rem 1.25rem;
-}
-
-.transferencia-filter-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
 }
 
 .transferencia-status-filter {
@@ -288,10 +251,6 @@
   font-size: 0.85rem;
   font-weight: 600;
   color: #1f2937;
-}
-
-.transferencia-filter-actions {
-  align-self: flex-end;
 }
 
 .transferencia-search-input {
@@ -532,84 +491,4 @@
   overflow-x: auto;
   max-width: 100%;
   display: block;
-}
-
-@media (max-width: 768px) {
-  :host {
-    max-width: 100%;
-  }
-
-  .transferencia-page {
-    gap: 12px;
-    padding: 0 0.75rem;
-    margin: 0;
-    width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
-  }
-
-  :host ::ng-deep .transferencia-page .p-card,
-  :host ::ng-deep .transferencia-page .p-card-body {
-    width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
-  }
-
-  .transferencia-header-row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.6rem;
-  }
-
-  .transferencia-header-title,
-  .transferencia-header-actions {
-    width: 100%;
-  }
-
-  .transferencia-header-actions .transferencia-pill {
-    width: 100%;
-    justify-content: center;
-  }
-
-  .transferencia-metrics {
-    grid-template-columns: 1fr;
-    gap: 0.75rem;
-  }
-
-  .transferencia-filter-row {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .transferencia-search-container,
-  .transferencia-status-filter,
-  .transferencia-filter-actions {
-    width: 100%;
-  }
-
-  .transferencia-status-filter {
-    min-width: 0;
-  }
-
-  :host ::ng-deep .transferencia-search-container .p-autocomplete,
-  :host ::ng-deep .transferencia-search-container .p-autocomplete-input,
-  :host ::ng-deep .transferencia-status-filter .p-select,
-  :host ::ng-deep .transferencia-status-filter .p-select-label,
-  :host ::ng-deep .transferencia-filter-actions .p-button {
-    width: 100%;
-  }
-
-  .transferencia-table-scroll {
-    -webkit-overflow-scrolling: touch;
-  }
-
-  :host ::ng-deep .transferencia-table {
-    width: 100%;
-    max-width: 100%;
-  }
-
-  :host ::ng-deep .transferencia-table .p-datatable-wrapper {
-    overflow-x: auto;
-    max-width: 100%;
-  }
 }

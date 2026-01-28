@@ -11,8 +11,8 @@ import { TagModule } from 'primeng/tag';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmationService, MessageService } from 'primeng/api';
-import { ProductosService } from '../../../../../ventas/core/services/productos.service';
-import { SedeService } from '../../../../../ventas/core/services/sede.service';
+import { ProductosService } from '../../../../../core/services/productos.service';
+import { SedeService } from '../../../../../core/services/sede.service';
 
 @Component({
   selector: 'app-transferencia',
@@ -108,8 +108,8 @@ export class Transferencia implements OnInit {
     const hoy = new Date();
 
     return productos.slice(0, 3).map((producto, index) => {
-      const origen = sedeLabelMap.get(producto.id_sede) || producto.id_sede;
-      const destino = sedesDisponibles.find((sede) => sede.value !== producto.id_sede)?.label || '-';
+      const origen = sedeLabelMap.get(producto.sede) || producto.sede;
+      const destino = sedesDisponibles.find((sede) => sede.value !== producto.sede)?.label || '-';
       const fechaEnvio = this.formatearFecha(new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - (index + 2)));
       const fechaLlegada = this.formatearFecha(new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - index));
 
@@ -118,7 +118,7 @@ export class Transferencia implements OnInit {
         producto: producto.nombre,
         origen,
         destino,
-        cantidad: Math.min(10 + index * 5, producto.stock),
+        cantidad: Math.min(10 + index * 5, producto.stock ?? 0),
         responsable: 'Jefatura de almacen',
         estado: index === 0 ? 'En transito' : index === 1 ? 'Pendiente' : 'Completada',
         fechaEnvio,
