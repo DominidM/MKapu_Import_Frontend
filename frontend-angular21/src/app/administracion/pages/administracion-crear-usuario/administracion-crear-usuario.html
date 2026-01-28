@@ -1,115 +1,184 @@
-<!-- HEADER -->
-<section class="wizard-content p-4">
-    <p-card class="header-card">
-      <div class="flex align-items-center justify-content-between">
-        
+<!-- ================================
+     ADMINISTRACIÓN DE USUARIOS
+================================ -->
+
+<div class="usuarios-page">
+
+    <!-- HEADER -->
+    <p-card styleClass="usuarios-header-card">
+      <div class="flex align-items-center justify-content-between flex-wrap gap-3">
+  
+        <!-- IZQUIERDA -->
         <div class="flex align-items-center gap-3">
-          <span class="inventory-title-icon">
+          <span class="usuarios-title-icon">
             <i class="pi pi-users"></i>
           </span>
   
           <div>
-            <p class="transfer-kicker">Administración</p>
-            <h2 class="transfer-title">Listado de Usuarios</h2>
+            <p class="usuarios-kicker">
+              ADMINISTRADOR - ADMINISTRACIÓN - USUARIOS
+            </p>
+            <h2 class="usuarios-title">
+              GESTIÓN DE USUARIOS
+            </h2>
           </div>
         </div>
   
-        <button
-          pButton
-          icon="pi pi-user-plus"
-          label="Nuevo Usuario"
-          class="wizard-primary"
-          (click)="nuevoUsuario()"
-        ></button>
+        <!-- DERECHA -->
+        <div class="flex justify-items-end gap-2">
+          <p-button
+            label="Nuevo Usuario"
+            icon="pi pi-user-plus"
+            styleClass="usuarios-pill"
+            (onClick)="nuevoUsuario()"
+          ></p-button>
+        </div>
   
       </div>
     </p-card>
-  </section>
   
-  <!-- BUSCADOR -->
-  <section class="wizard-content mt-3">
-    <p-card>
-      <h4 class="mb-3">Buscar Usuario</h4>
+    <!-- ================================
+         BUSCADOR
+    ================================= -->
+    <section class="wizard-content mt-3">
+        <p-card>
+          <h4 class="mb-3">Buscar Usuario</h4>
+      
+          <div class="grid">
+      
+            <!-- DNI -->
+            <div class="col-12 md:col-3">
+              <input
+                pInputText
+                type="text"
+                maxlength="8"
+                placeholder="DNI"
+                [(ngModel)]="filtroDni"
+                class="w-full"
+              />
+            </div>
+      
+            <!-- ROL -->
+            <div class="col-12 md:col-3">
+              <p-select
+                [options]="roles"
+                placeholder="Rol"
+                [(ngModel)]="filtroRol"
+                class="w-full">
+              </p-select>
+            </div>
+      
+            <!-- SEDE -->
+            <div class="col-12 md:col-3">
+              <p-select
+                [options]="sedes"
+                placeholder="Sede"
+                [(ngModel)]="filtroSede"
+                class="w-full">
+              </p-select>
+            </div>
+      
+            <!-- ESTADO -->
+            <div class="col-12 md:col-3">
+              <p-select
+                [options]="estados"
+                placeholder="Estado"
+                [(ngModel)]="filtroEstado"
+                class="w-full">
+              </p-select>
+            </div>
+      
+          </div>
+      
+          <div class="flex justify-content-end mt-3">
+            <button
+              pButton
+              label="Limpiar filtros"
+              icon="pi pi-filter-slash"
+              severity="secondary"
+              (click)="limpiarFiltro()">
+            </button>
+          </div>
+        </p-card>
+      </section>
+      
   
-      <div class="flex align-items-center gap-3">
-        <input
-          pInputText
-          type="text"
-          maxlength="8"
-          placeholder="Ingrese DNI (8 dígitos)..."
-          [(ngModel)]="filtroDni"
-          class="w-full"
-        />
+    <!-- ================================
+         TABLA DE USUARIOS
+    ================================= -->
+    <section class="wizard-content mt-4">
+      <p-card>
   
-        <button
-          pButton
-          icon="pi pi-filter-slash"
-          label="Limpiar"
-          severity="danger"
-          (click)="limpiarFiltro()"
-        ></button>
-      </div>
-    </p-card>
-  </section>
+        <div class="flex align-items-center gap-2 mb-3">
+          <i class="pi pi-user"></i>
+          <strong>Usuarios</strong>
   
-  <!-- TABLA -->
-  <section class="wizard-content mt-4">
-    <p-card>
-      <div class="flex align-items-center gap-2 mb-3">
-        <i class="pi pi-user"></i>
-        <strong>Usuarios</strong>
-        <p-tag
-          [value]="usuariosFiltrados.length + ' Usuarios'"
-          severity="info"
-        ></p-tag>
-      </div>
+          <p-tag
+            [value]="usuariosFiltrados.length + ' Usuarios'"
+            severity="info"
+          ></p-tag>
+        </div>
   
-      <p-table
-        [value]="usuariosFiltrados"
-        responsiveLayout="scroll"
-        class="p-datatable-sm"
-        [rows]="5"
-        [paginator]="true"
-      >
-        <ng-template pTemplate="header">
-          <tr>
-            <th>Usuario</th>
-            <th>Rol</th>
-            <th>Sede</th>
-            <th>Estado</th>
-            <th style="width: 80px">Acciones</th>
-          </tr>
-        </ng-template>
+        <p-table
+          [value]="usuariosFiltrados"
+          responsiveLayout="scroll"
+          class="p-datatable-sm"
+          [rows]="5"
+          [paginator]="true"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Usuario</th>
+              <th>Rol</th>
+              <th>Sede</th>
+              <th>Estado</th>
+              <th style="width: 80px">Acciones</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-user>
+            <tr>
+          
+              <!-- USUARIO -->
+              <td>
+                <strong>{{ user.nombres }} {{ user.apellidos }}</strong>
+                <div class="helper-text">DNI: {{ user.dni }}</div>
+              </td>
+          
+              <!-- ROL -->
+              <td>
+                {{ user.cargo }}
+              </td>
+          
+              <!-- SEDE -->
+              <td>
+                {{ user.nombre_sede }}
+              </td>
+          
+              <!-- ESTADO -->
+              <td>
+                <p-tag
+                  [value]="user.estado ? 'Activo' : 'Inactivo'"
+                  [severity]="user.estado ? 'success' : 'danger'">
+                </p-tag>
+              </td>
+          
+              <!-- ACCIONES -->
+              <td class="text-center">
+                <button
+                  pButton
+                  icon="pi pi-eye"
+                  class="p-button-text p-button-sm"
+                  (click)="editarUsuario(user.id_empleado)">
+                </button>
+              </td>
+          
+            </tr>
+          </ng-template>
+          
   
-        <ng-template pTemplate="body" let-user>
-          <tr>
-            <td>
-              <strong>{{ user.nombre }}</strong>
-              <div class="helper-text">DNI: {{ user.dni }}</div>
-            </td>
+        </p-table>
+      </p-card>
+    </section>
   
-            <td>{{ user.rol }}</td>
-            <td>{{ user.sede }}</td>
-  
-            <td>
-              <p-tag
-                [value]="user.estado"
-                [severity]="user.estado === 'Activo' ? 'success' : 'danger'"
-              ></p-tag>
-            </td>
-  
-            <td class="text-center">
-              <button
-                pButton
-                icon="pi pi-eye"
-                class="p-button-text p-button-sm"
-              ></button>
-            </td>
-          </tr>
-        </ng-template>
-        
-        
-      </p-table>
-    </p-card>
-  </section>
+  </div>
   

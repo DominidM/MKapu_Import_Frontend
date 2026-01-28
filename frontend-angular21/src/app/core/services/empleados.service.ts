@@ -379,4 +379,23 @@ export class EmpleadosService {
     };
     return etiquetas[cargo];
   }
+
+  actualizarEmpleado(empleadoActualizado: Empleado): boolean {
+    const index = this.empleados.findIndex(
+      e => e.id_empleado === empleadoActualizado.id_empleado
+    );
+  
+    if (index !== -1) {
+      this.empleados[index] = { ...empleadoActualizado };
+      return true;
+    }
+  
+    return false;
+  }
+  
+  agregarEmpleado(nuevoEmpleado: Empleado): void {
+    this.empleados.push(nuevoEmpleado);
+  }
+  
+
 }

@@ -42,7 +42,15 @@ export const routes: Routes = [
               import('./administracion/pages/administracion/administracion')
             
                 .then(m => m.Administracion)
+          },
+          {
+            path: 'administracion/editar-usuario/:id',
+            loadComponent: () =>
+              import('./administracion/pages/administracion-editar-usuario/administracion-editar-usuario')
+                .then(m => m.AdministracionEditarUsuarioComponent)
           }
+          
+
         ]
       },
 
@@ -207,6 +215,8 @@ export const routes: Routes = [
           import('./ventas/pages/detalles-venta/detalle-venta')
             .then(m => m.DetalleVenta)
       }
+
+
     ]
   }
 ];
