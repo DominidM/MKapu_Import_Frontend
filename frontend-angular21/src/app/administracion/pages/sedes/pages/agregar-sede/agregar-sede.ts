@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { Component, ViewChild } from '@angular/core';
+import { FormsModule, NgForm } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
@@ -10,6 +10,9 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
+import { Message } from 'primeng/message';
+import { Observable, Subject } from 'rxjs';
+import { CanComponentDeactivate } from '../../../../../core/guards/pending-changes.guard';
 
 @Component({
   selector: 'app-agregar-sede',
@@ -24,12 +27,16 @@ import { ToastModule } from 'primeng/toast';
     InputNumberModule,
     ConfirmDialogModule,
     ToastModule,
+    Message,
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './agregar-sede.html',
   styleUrl: './agregar-sede.css',
 })
-export class AgregarSede {
+export class AgregarSede implements CanComponentDeactivate {
+  @ViewChild('sedeForm') sedeForm?: NgForm;
+
+  private allowNavigate = false;
   sede = {
     codigo: '',
     nombre: '',
@@ -38,6 +45,7 @@ export class AgregarSede {
     departamento: '',
     direccion: '',
   };
+  submitted = false;
 
   constructor(
     private confirmationService: ConfirmationService,
@@ -46,9 +54,51 @@ export class AgregarSede {
   ) {}
 
   confirmCancel(): void {
+    if (!this.sedeForm?.dirty) {
+      this.navigateWithToast();
+      return;
+    }
+
+    this.confirmDiscardChanges().subscribe(confirmed => {
+      if (confirmed) {
+        this.allowNavigate = true;
+        this.navigateWithToast();
+      }
+    });
+  }
+
+  saveSede(form: NgForm): void {
+    this.submitted = true;
+    if (form.invalid) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Campos incompletos',
+        detail: 'Completa los campos obligatorios para registrar la sede.',
+      });
+      return;
+    }
+
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Sede registrada',
+      detail: `Se registro la sede ${this.sede.nombre || this.sede.codigo}.`,
+    });
+  }
+
+  canDeactivate(): boolean | Observable<boolean> {
+    if (this.allowNavigate || !this.sedeForm?.dirty) {
+      return true;
+    }
+
+    return this.confirmDiscardChanges();
+  }
+
+  private confirmDiscardChanges(): Observable<boolean> {
+    const result = new Subject<boolean>();
+
     this.confirmationService.confirm({
-      header: 'Confirmacion',
-      message: '¿Seguro que deseas cancelar la creacion de la sede?',
+      header: 'Cambios sin guardar',
+      message: 'Tienes cambios sin guardar. ¿Deseas salir?',
       icon: 'pi pi-exclamation-triangle',
       acceptLabel: 'Salir',
       rejectLabel: 'Continuar',
@@ -60,16 +110,28 @@ export class AgregarSede {
         outlined: true,
       },
       accept: () => {
-        this.router.navigate(['/admin/sedes']);
+        this.allowNavigate = true;
+        result.next(true);
+        result.complete();
+      },
+      reject: () => {
+        result.next(false);
+        result.complete();
       },
     });
+
+    return result.asObservable();
   }
 
-  saveSede(): void {
-    this.messageService.add({
-      severity: 'success',
-      summary: 'Sede registrada',
-      detail: `Se registro la sede ${this.sede.nombre || this.sede.codigo}.`,
-    });
+  private navigateWithToast(): void {
+    sessionStorage.setItem(
+      'sedesToast',
+      JSON.stringify({
+        severity: 'info',
+        summary: 'Cancelado',
+        detail: 'Se canceló el registro de la sede.',
+      })
+    );
+    this.router.navigate(['/admin/sedes']);
   }
 }

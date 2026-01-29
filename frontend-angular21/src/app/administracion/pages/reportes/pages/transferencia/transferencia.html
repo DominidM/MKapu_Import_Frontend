@@ -1,7 +1,7 @@
-<div class="transferencia-page">
+<div class="transferencia-page flex flex-column gap-3 w-full px-3 md:px-0 pt-5 md:pt-0">
   <p-card styleClass="transferencia-header-card">
-    <div class="flex align-items-center justify-content-between flex-wrap gap-3">
-      <div class="flex align-items-center gap-3">
+    <div class="transferencia-header-row flex flex-column md:flex-row md:align-items-center md:justify-content-between gap-3">
+      <div class="transferencia-header-title flex align-items-center gap-3 w-full md:w-auto">
         <span class="transferencia-title-icon">
           <i class="pi pi-sync"></i>
         </span>
@@ -10,23 +10,69 @@
           <h2 class="transferencia-title">GESTION DE TRANSFERENCIAS</h2>
         </div>
       </div>
-      <div class="flex justify-items-end gap-2">
+      <div class="transferencia-header-actions flex w-full md:w-auto md:justify-content-end">
         <p-button
           label="Nueva Transferencia"
           icon="pi pi-plus"
-          styleClass="transferencia-pill"
-          [routerLink]="['/admin/transferencia/reporte-inventario']"
+          styleClass="transferencia-pill w-full md:w-auto"
+          [routerLink]="['/admin/transferencia/nueva-transferencia']"
         ></p-button>
       </div>
     </div>
   </p-card>
 
-  <p-card>
-    <div class="flex flex-column lg:flex-row lg:align-items-center lg:justify-content-between gap-3">
-      <div class="transferencia-search-container flex-1">
+  <div class="transferencia-metrics grid">
+    <div class="col-12 md:col-6 xl:col-3">
+      <p-card styleClass="metric-card metric-pendiente">
+      <div class="metric-header">
+        <span class="metric-title">Solicitudes Pendientes</span>
+        <span class="metric-icon metric-icon-warning"><i class="pi pi-clock"></i></span>
+      </div>
+      <div class="metric-value">12</div>
+      <div class="metric-sub">+ 2 nuevas hoy</div>
+    </p-card>
+    </div>
+
+    <div class="col-12 md:col-6 xl:col-3">
+      <p-card styleClass="metric-card metric-transito">
+      <div class="metric-header">
+        <span class="metric-title">En Transito</span>
+        <span class="metric-icon metric-icon-info"><i class="pi pi-truck"></i></span>
+      </div>
+      <div class="metric-value">5</div>
+      <div class="metric-sub">En ruta a destino</div>
+    </p-card>
+    </div>
+
+    <div class="col-12 md:col-6 xl:col-3">
+      <p-card styleClass="metric-card metric-recibidos">
+      <div class="metric-header">
+        <span class="metric-title">Recibidos Hoy</span>
+        <span class="metric-icon metric-icon-success"><i class="pi pi-check-circle"></i></span>
+      </div>
+      <div class="metric-value">28</div>
+      <div class="metric-sub">+ 5% vs ayer</div>
+    </p-card>
+    </div>
+
+    <div class="col-12 md:col-6 xl:col-3">
+      <p-card styleClass="metric-card metric-incidencia">
+      <div class="metric-header">
+        <span class="metric-title">Incidencias</span>
+        <span class="metric-icon metric-icon-danger"><i class="pi pi-exclamation-triangle"></i></span>
+      </div>
+      <div class="metric-value">1</div>
+      <div class="metric-sub">Atencion requerida</div>
+    </p-card>
+    </div>
+  </div>
+
+  <p-card styleClass="transferencia-filter-card">
+    <div class="transferencia-filter-row flex flex-column md:flex-row md:align-items-end gap-3">
+      <div class="transferencia-search-container flex flex-column gap-2 flex-1 w-full">
         <span class="transferencia-search-label">Buscar Transferencia</span>
         <p-autoComplete
-          class="transferencia-search-input"
+          styleClass="transferencia-search-input w-full"
           [(ngModel)]="searchTerm"
           [suggestions]="transferenciaSuggestions"
           field="producto"
@@ -45,12 +91,24 @@
           </ng-template>
         </p-autoComplete>
       </div>
-      <div class="flex align-items-center gap-2 transferencia-filter-actions">
+      <div class="transferencia-search-container transferencia-status-filter w-full md:w-14rem">
+        <span class="transferencia-search-label">Estado</span>
+        <p-select
+          styleClass="transferencia-search-input w-full"
+          [options]="estadoOptions"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Todos"
+          [(ngModel)]="estadoFilter"
+          (onChange)="filtrar(searchTerm)"
+        ></p-select>
+      </div>
+      <div class="transferencia-filter-actions w-full md:w-auto">
         <p-button
           label="Limpiar Filtros"
           icon="pi pi-filter-slash"
           severity="danger"
-          styleClass="transferencia-pill transferencia-pill-danger"
+          styleClass="transferencia-pill transferencia-pill-danger w-full md:w-auto"
           (click)="clearSearch()"
         ></p-button>
       </div>
@@ -60,88 +118,112 @@
   <p-toast position="top-right" />
 
   <p-card>
-    <div class="flex align-items-center justify-content-between mb-3">
-      <div class="flex align-items-center gap-2">
+    <div class="flex flex-column md:flex-row align-items-start md:align-items-center justify-content-between gap-2 mb-3">
+      <div class="flex flex-column sm:flex-row align-items-start sm:align-items-center gap-2 w-full md:w-auto">
         <span class="transferencia-section-icon">
           <i class="pi pi-truck"></i>
         </span>
         <span class="text-sm font-semibold text-700">TRANSFERENCIAS REGISTRADAS</span>
-        <p-tag [value]="'[' + filteredTransferencias.length + '] Transferencias'" severity="info"></p-tag>
+        <p-tag
+          [value]="'[' + filteredTransferencias.length + '] Transferencias'"
+          severity="info"
+          styleClass="w-full sm:w-auto"
+        ></p-tag>
       </div>
       <p-button icon="pi pi-sliders-h" text severity="secondary" styleClass="transferencia-icon-btn"></p-button>
     </div>
 
-    <p-table
-      [value]="filteredTransferencias"
-      styleClass="transferencia-table"
-      [paginator]="true"
-      [rows]="10"
-      [rowsPerPageOptions]="[10, 25, 50]"
-      [tableStyle]="{ 'min-width': '60rem' }"
-    >
+    <div class="transferencia-table-scroll">
+      <p-table
+        [value]="filteredTransferencias"
+        styleClass="transferencia-table"
+        [paginator]="true"
+        [rows]="10"
+        [rowsPerPageOptions]="[10, 25, 50]"
+        [tableStyle]="{ 'min-width': '60rem' }"
+      >
       <ng-template pTemplate="header">
         <tr>
           <th>CODIGO</th>
           <th>PRODUCTO</th>
-          <th>SEDE ORIGEN</th>
-          <th>SEDE DESTINO</th>
+          <th>RUTA (ORIGEN -> DESTINO)</th>
           <th>CANTIDAD</th>
+          <th>ESTADO</th>
           <th>ACCIONES</th>
         </tr>
       </ng-template>
       <ng-template pTemplate="body" let-transferencia>
         <tr>
-          <td>{{ transferencia.codigo }}</td>
           <td>
-            <div class="flex flex-column gap-1">
-              <span class="font-medium">{{ transferencia.producto }}</span>
-              <small class="text-500">{{ transferencia.fecha }}</small>
+            <div class="transferencia-code">
+              <div class="transferencia-code-main">{{ transferencia.codigo }}</div>
+              <div class="transferencia-code-meta">{{ transferencia.fechaEnvio }} · {{ transferencia.fechaLlegada }}</div>
             </div>
           </td>
           <td>
-            <span class="inline-flex align-items-center gap-2">
-              <i class="pi pi-map-marker text-500"></i>
-              {{ transferencia.origen }}
-            </span>
-          </td>
-          <td>
-            <span class="inline-flex align-items-center gap-2">
-              <i class="pi pi-map-marker text-500"></i>
-              {{ transferencia.destino }}
-            </span>
-          </td>
-          <td>
-            <div class="flex flex-column gap-2">
-              <span class="font-medium">{{ transferencia.cantidad }} uds</span>
-              <p-tag
-                [value]="transferencia.estado"
-                [severity]="getEstadoSeverity(transferencia.estado)"
-                styleClass="transferencia-tag"
-              ></p-tag>
+            <div class="transferencia-producto">
+              <span class="transferencia-producto-nombre">{{ transferencia.producto }}</span>
+              <span class="transferencia-producto-meta">Responsable: {{ transferencia.responsable }}</span>
             </div>
           </td>
           <td>
-            <div class="flex align-items-center gap-2">
+            <div class="transferencia-ruta">
+              <span class="transferencia-ruta-sede">{{ transferencia.origen }}</span>
+              <i class="pi pi-arrow-right transferencia-ruta-icon"></i>
+              <span class="transferencia-ruta-sede transferencia-ruta-destino">{{ transferencia.destino }}</span>
+            </div>
+          </td>
+          <td>
+            <span class="transferencia-cantidad">{{ transferencia.cantidad }}</span>
+          </td>
+          <td>
+            <p-tag
+              [value]="transferencia.estado"
+              [severity]="getEstadoSeverity(transferencia.estado)"
+              styleClass="transferencia-tag"
+            ></p-tag>
+          </td>
+          <td>
+            <div class="transferencia-actions">
               <p-button
                 icon="pi pi-eye"
                 text
                 severity="secondary"
                 styleClass="transferencia-icon-btn transferencia-icon-warn"
-                [routerLink]="['/admin/transferencia/reporte-inventario']"
+                [routerLink]="['/admin/transferencia/detalle-transferencia']"
                 [queryParams]="{ codigo: transferencia.codigo }"
-              ></p-button>
-              <p-button
-                icon="pi pi-trash"
-                text
-                severity="danger"
-                styleClass="transferencia-icon-btn"
-                (click)="confirmDelete(transferencia)"
               ></p-button>
             </div>
           </td>
         </tr>
       </ng-template>
-    </p-table>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="6" class="transferencia-empty">
+            <div class="transferencia-empty-inner">
+              <div class="transferencia-empty-icon">
+                <i class="pi pi-inbox"></i>
+              </div>
+              <div class="transferencia-empty-title">No se encontraron transferencias</div>
+              <div class="transferencia-empty-text">
+                Ajusta los filtros o prueba con otro termino de busqueda.
+              </div>
+              <div class="transferencia-empty-actions">
+                <p-button
+                  label="Limpiar filtros"
+                  icon="pi pi-filter-slash"
+                  severity="secondary"
+                  [outlined]="true"
+                  styleClass="transferencia-empty-btn w-full md:w-auto"
+                  (click)="clearSearch()"
+                ></p-button>
+              </div>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+      </p-table>
+    </div>
     <p-confirmdialog />
   </p-card>
 </div>

@@ -8,7 +8,7 @@
 <div class="flex align-items-center justify-content-center h-screen">
 
   <!-- FORMULARIO -->
-  <form (ngSubmit)="prueba()" class="w-full flex justify-content-center">
+  <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="w-full flex justify-content-center">
 
       <p-card [style]="{ width: '25rem', overflow: 'hidden', padding: '2rem'}" styleClass="login-card">
 
@@ -31,13 +31,12 @@
           </ng-template>
 
           <div class="flex flex-column gap-3 mt-4">
-
               <p-iftalabel>
                   <input
                       type="text"
                       pInputText
                       class="w-full"
-                      [(ngModel)]="usuario"
+                      formControlName="username"
                       name="usuario"
                       required
                   />
@@ -46,7 +45,7 @@
 
               <p-iftalabel>
                   <p-password
-                      [(ngModel)]="password"
+                      formControlName="password"
                       name="password"
                       [toggleMask]="true"
                       styleClass="w-full"
@@ -55,7 +54,6 @@
                   ></p-password>
                   <label>Contraseña</label>
               </p-iftalabel>
-
           </div>
 
           <ng-template #footer>

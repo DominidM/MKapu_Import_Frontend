@@ -4,6 +4,7 @@ import { Header } from "../header/header";
 import { RouterModule } from "@angular/router";
 import { ThemeService } from '../../core/services/theme.service';
 import { DrawerModule } from 'primeng/drawer';
+
 @Component({
   selector: 'app-main',
   imports: [Sidebar, Header, RouterModule, DrawerModule],
@@ -23,6 +24,6 @@ mobileSidebarVisible = false;
 openMobileSidebar() {
   this.mobileSidebarVisible = true;
 }
-
+  
 
 }
