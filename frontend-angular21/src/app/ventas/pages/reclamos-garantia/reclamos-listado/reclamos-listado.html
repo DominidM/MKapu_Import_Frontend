@@ -1,0 +1,225 @@
+<!-- ventas/pages/reclamos-garantia/reclamos-listado/reclamos-listado.html -->
+<div class="p-2">
+  <p-card styleClass="ventas-header-card mb-4 ventas-header-bordered">
+    <div class="flex align-items-center justify-content-between flex-wrap gap-2">
+      <div class="flex align-items-center gap-3">
+        <span class="ventas-title-icon">
+          <i [class]="iconoCabecera"></i>
+        </span>
+        <div>
+          <p class="ventas-kicker mb-0">{{ tituloKicker }}</p>
+          <h2 class="ventas-title mb-0">{{ subtituloKicker }}</h2>
+        </div>
+      </div>
+      <div class="flex gap-2">
+        <p-button
+          label="Nuevo Reclamo"
+          icon="pi pi-plus"
+          (onClick)="nuevoReclamo()"
+          tooltipPosition="bottom"
+          pTooltip="Registrar nuevo reclamo"
+        />
+      </div>
+    </div>
+  </p-card>
+</div>
+
+<div class="p-2">
+  <div class="ventas-header-bordered mb-4">
+    <div class="seccion-estadisticas">
+      <div class="estadistica-card">
+        <i class="pi pi-list"></i>
+        <div>
+          <span class="estadistica-label">Total Reclamos</span>
+          <span class="estadistica-valor">{{ estadisticas.total }}</span>
+        </div>
+      </div>
+
+      <div class="estadistica-card">
+        <i class="pi pi-clock"></i>
+        <div>
+          <span class="estadistica-label">Pendientes</span>
+          <span class="estadistica-valor">{{ estadisticas.pendientes }}</span>
+        </div>
+      </div>
+
+      <div class="estadistica-card">
+        <i class="pi pi-sync"></i>
+        <div>
+          <span class="estadistica-label">En Proceso</span>
+          <span class="estadistica-valor">{{ estadisticas.en_proceso }}</span>
+        </div>
+      </div>
+
+      <div class="estadistica-card">
+        <i class="pi pi-check-circle"></i>
+        <div>
+          <span class="estadistica-label">Resueltos</span>
+          <span class="estadistica-valor">{{ estadisticas.resueltos }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="p-2">
+  <div class="filtros-container mb-4">
+    <div class="seccion-filtros">
+      <h3><i class="pi pi-filter"></i> Filtros de búsqueda</h3>
+
+      <div class="filtros-linea-1">
+        <div class="filtro-item filtro-busqueda-65">
+          <label>Buscar por DNI, Cliente, Producto o Comprobante</label>
+          <input
+            pInputText
+            type="text"
+            [(ngModel)]="filtros.busqueda"
+            (ngModelChange)="aplicarFiltros()"
+            placeholder="Escriba aquí para buscar..."
+            class="w-full"
+          />
+        </div>
+
+        <div class="filtro-item filtro-compacto">
+          <label>Estado</label>
+          <p-select
+            [(ngModel)]="filtros.estado"
+            [options]="estadosOptions"
+            placeholder="Todos"
+            optionLabel="label"
+            optionValue="value"
+            (onChange)="aplicarFiltros()"
+            styleClass="w-full"
+          />
+        </div>
+
+        <div class="filtro-item filtro-boton-limpiar">
+          <label>&nbsp;</label>
+          <p-button
+            label="Limpiar"
+            icon="pi pi-filter-slash"
+            (onClick)="limpiarFiltros()"
+            severity="danger"
+            styleClass="btn-limpiar-filtros"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="p-2">
+  <p-card styleClass="tarjeta-principal">
+    <div class="seccion-tabla">
+      <div class="tabla-header">
+        <h3><i class="pi pi-shield"></i> Listado de Reclamos</h3>
+      </div>
+
+      <p-table
+        [value]="reclamosFiltrados"
+        [paginator]="true"
+        [rows]="10"
+        [rowsPerPageOptions]="[10, 25, 50]"
+        [loading]="loading"
+        [tableStyle]="{ 'min-width': '70rem' }"
+        styleClass="p-datatable-striped"
+        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} registros"
+        [showCurrentPageReport]="true"
+        paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th pSortableColumn="fecha_registro">
+              Fecha Registro <p-sortIcon field="fecha_registro" />
+            </th>
+            <th pSortableColumn="cliente_nombre">Cliente</th>
+            <th>Comprobante</th>
+            <th>Producto</th>
+            <th>Motivo</th>
+            <th pSortableColumn="estado">Estado <p-sortIcon field="estado" /></th>
+            <th>Días</th>
+            <th>Garantía</th>
+            <th class="text-center">Acciones</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-reclamo>
+          <tr>
+            <td>{{ reclamo.fecha_registro | date: 'dd/MM/yyyy' }}</td>
+            <td>
+              <div>
+                <strong>{{ reclamo.cliente_nombre }}</strong>
+                <div class="text-sm text-muted">{{ reclamo.cliente_dni }}</div>
+              </div>
+            </td>
+            <td>
+              <span class="codigo-comprobante">
+                {{ formatearComprobante(reclamo.serie_comprobante, reclamo.numero_comprobante) }}
+              </span>
+            </td>
+            <td>
+              <div>
+                <div class="codigo-producto">{{ reclamo.cod_producto }}</div>
+                <div class="text-sm">{{ reclamo.descripcion_producto }}</div>
+              </div>
+            </td>
+            <td>{{ reclamo.motivo }}</td>
+            <td>
+              <p-tag
+                [value]="getEstadoLabel(reclamo.estado)"
+                [severity]="getEstadoSeverity(reclamo.estado)"
+              />
+            </td>
+            <td>
+              <span class="dias-transcurridos">
+                {{ calcularDiasDesdeRegistro(reclamo.fecha_registro) }} días
+              </span>
+            </td>
+            <td>
+              <p-tag
+                [value]="estaEnGarantia(reclamo.fecha_compra) ? 'Vigente' : 'Vencida'"
+                [severity]="estaEnGarantia(reclamo.fecha_compra) ? 'success' : 'danger'"
+              />
+              <div class="text-sm text-muted">
+                {{ getDiasGarantiaRestantes(reclamo.fecha_compra) }} días
+              </div>
+            </td>
+            <td class="text-center">
+              <p-button
+                icon="pi pi-eye"
+                (onClick)="verDetalle(reclamo.id_reclamo)"
+                [rounded]="true"
+                [text]="true"
+                severity="secondary"
+                pTooltip="Ver detalle"
+                tooltipPosition="top"
+              />
+              <p-button
+                icon="pi pi-file-edit"
+                (onClick)="editarReclamo(reclamo.id_reclamo)"
+                [rounded]="true"
+                [text]="true"
+                severity="secondary"
+                pTooltip="Editar reclamo"
+                tooltipPosition="top"
+              />
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="9" class="text-center">
+              <div class="mensaje-vacio">
+                <i class="pi pi-inbox"></i>
+                <p>No se encontraron reclamos</p>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </p-card>
+
+  <p-toast></p-toast>
+</div>
