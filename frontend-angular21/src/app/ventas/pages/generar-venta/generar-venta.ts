@@ -13,10 +13,8 @@ import { Divider } from 'primeng/divider';
 import { Tag } from 'primeng/tag';
 import { Toast } from 'primeng/toast';
 import { ConfirmDialog } from 'primeng/confirmdialog';
-import { AutoComplete } from 'primeng/autocomplete';
 import { Select } from 'primeng/select';
 import { Tooltip } from 'primeng/tooltip';
-
 import { TableModule } from 'primeng/table';
 import { StepperModule } from 'primeng/stepper';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
@@ -33,6 +31,7 @@ import { ProductosService, Producto } from '../../../core/services/productos.ser
 import { EmpleadosService, Empleado } from '../../../core/services/empleados.service';
 import { PromocionesService, Promocion } from '../../../core/services/promociones.service';
 import { MessageService, ConfirmationService } from 'primeng/api';
+import { AutoComplete } from 'primeng/autocomplete';
 
 @Component({
   selector: 'app-crear-venta',
@@ -49,12 +48,12 @@ import { MessageService, ConfirmationService } from 'primeng/api';
     Tag,
     Toast,
     ConfirmDialog,
-    AutoComplete,
     Select,
     Tooltip,
     TableModule,
     StepperModule,
     ProgressSpinnerModule,
+    AutoComplete,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './generar-venta.html',
@@ -67,8 +66,6 @@ export class GenerarVenta implements OnInit, OnDestroy {
 
   private subscriptions = new Subscription();
   private readonly STORAGE_KEY = 'generar_venta_estado';
-  private clickEnBotonBuscar = false;
-  private seleccionandoDelAutocomplete = false;
 
   empleadoActual: Empleado | null = null;
   nombreResponsable: string = '';
@@ -83,8 +80,7 @@ export class GenerarVenta implements OnInit, OnDestroy {
   tipoComprobante: '01' | '03' = '03';
 
   numeroDocumento: string = '';
-  clienteAutoComplete: any = null;
-  clientesSugeridos: Cliente[] = [];
+  clienteAutoComplete: string = '';
   clienteEncontrado: Cliente | null = null;
   busquedaRealizada = false;
   mostrarFormulario = false;
@@ -150,34 +146,24 @@ export class GenerarVenta implements OnInit, OnDestroy {
   comprobanteGenerado: ComprobanteVenta | null = null;
   loading = false;
 
-  tieneSugerencias: boolean = false;
-
   get textoBotonCliente(): string {
-    const documentoActual =
-      typeof this.clienteAutoComplete === 'string'
-        ? this.clienteAutoComplete.trim()
-        : this.clienteAutoComplete?.num_doc || '';
-
+    const documentoActual = this.clienteAutoComplete.trim();
     const longitudRequerida = this.tipoComprobante === '03' ? 8 : 11;
     const tieneLongitudCorrecta = documentoActual.length === longitudRequerida;
-
-    if (tieneLongitudCorrecta && this.tieneSugerencias) {
-      return 'Buscar';
+    if (tieneLongitudCorrecta && this.clienteEncontrado) {
+      return 'Cliente seleccionado';
     }
-
-    return 'Registrar Cliente';
+    return tieneLongitudCorrecta ? 'Buscar' : 'Registrar Cliente';
   }
 
   get iconoBotonCliente(): string {
-    const documentoActual =
-      typeof this.clienteAutoComplete === 'string'
-        ? this.clienteAutoComplete.trim()
-        : this.clienteAutoComplete?.num_doc || '';
-
+    const documentoActual = this.clienteAutoComplete.trim();
     const longitudRequerida = this.tipoComprobante === '03' ? 8 : 11;
     const tieneLongitudCorrecta = documentoActual.length === longitudRequerida;
-
-    return tieneLongitudCorrecta && this.tieneSugerencias ? 'pi pi-search' : 'pi pi-user-plus';
+    if (tieneLongitudCorrecta && this.clienteEncontrado) {
+      return 'pi pi-check-circle';
+    }
+    return tieneLongitudCorrecta ? 'pi pi-search' : 'pi pi-user-plus';
   }
 
   get severityBotonCliente(): 'primary' {
@@ -185,13 +171,8 @@ export class GenerarVenta implements OnInit, OnDestroy {
   }
 
   get botonClienteHabilitado(): boolean {
-    const documentoActual =
-      typeof this.clienteAutoComplete === 'string'
-        ? this.clienteAutoComplete.trim()
-        : this.clienteAutoComplete?.num_doc || '';
-
+    const documentoActual = this.clienteAutoComplete.trim();
     const longitudRequerida = this.tipoComprobante === '03' ? 8 : 11;
-
     return documentoActual.length === 0 || documentoActual.length === longitudRequerida;
   }
 
@@ -209,40 +190,32 @@ export class GenerarVenta implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-
     this.empleadoActual = this.empleadosService.getEmpleadoActual()!;
     this.nombreResponsable = this.empleadosService.getNombreCompletoEmpleadoActual();
-
     this.sedeIdSeleccionada = this.empleadoActual.id_sede;
     this.sedeNombreSeleccionada = this.empleadoActual.nombre_sede!;
-
     this.messageService.add({
       severity: 'success',
       summary: `Bienvenido ${this.nombreResponsable}`,
       detail: `Sede: ${this.empleadoActual.nombre_sede}`,
       life: 3000,
     });
-
     this.cargarProductos();
     this.cargarFamilias();
     this.bancosDisponibles = this.posService.getBancosDisponibles();
-
     this.restaurarEstado();
-
     this.subscriptions.add(
       this.router.events
         .pipe(filter((event) => event instanceof NavigationEnd))
         .subscribe((event: NavigationEnd) => {
           if (event.url === '/ventas/generar-ventas') {
-
             this.restaurarEstado();
           }
-        })
+        }),
     );
   }
 
   ngOnDestroy(): void {
-
     this.subscriptions.unsubscribe();
   }
 
@@ -272,7 +245,6 @@ export class GenerarVenta implements OnInit, OnDestroy {
 
     try {
       sessionStorage.setItem(this.STORAGE_KEY, JSON.stringify(estado));
-
     } catch (error) {
       console.error('Error al guardar estado:', error);
     }
@@ -281,12 +253,8 @@ export class GenerarVenta implements OnInit, OnDestroy {
   private restaurarEstado(): void {
     try {
       const estadoGuardado = sessionStorage.getItem(this.STORAGE_KEY);
-
       if (estadoGuardado) {
         const estado = JSON.parse(estadoGuardado);
-
-        console.log('📂 Restaurando estado de generar-venta:', estado);
-
         this.activeStep = estado.activeStep || 0;
         this.tipoComprobante = estado.tipoComprobante || '03';
         this.clienteEncontrado = estado.clienteEncontrado || null;
@@ -305,25 +273,12 @@ export class GenerarVenta implements OnInit, OnDestroy {
         this.promocionAplicada = estado.promocionAplicada || null;
         this.descuentoPromocion = estado.descuentoPromocion || 0;
         this.comprobanteGenerado = estado.comprobanteGenerado || null;
-
         this.sedeIdSeleccionada = estado.sedeIdSeleccionada || this.empleadoActual!.id_sede;
         this.sedeNombreSeleccionada =
           estado.sedeNombreSeleccionada || this.empleadoActual!.nombre_sede!;
-
-
-        if (estado.activeStep > 0 || estado.productosSeleccionados?.length > 0) {
-          this.messageService.add({
-            severity: 'info',
-            summary: 'Estado restaurado',
-            detail: 'Se recuperó la venta en progreso',
-            life: 2000,
-          });
-        }
-      } else {
-        console.log('ℹ️ No hay estado guardado para restaurar');
       }
     } catch (error) {
-      console.error('❌ Error al restaurar estado:', error);
+      console.error('Error al restaurar estado:', error);
     }
   }
 
@@ -334,12 +289,9 @@ export class GenerarVenta implements OnInit, OnDestroy {
   validarSoloNumeros(event: any): void {
     const input = event.target as HTMLInputElement;
     const valor = input.value;
-
     const valorLimpio = valor.replace(/\D/g, '');
-
     const longitudMaxima = this.tipoComprobante === '03' ? 8 : 11;
     const valorFinal = valorLimpio.slice(0, longitudMaxima);
-
     this.clienteAutoComplete = valorFinal;
     input.value = valorFinal;
   }
@@ -347,49 +299,23 @@ export class GenerarVenta implements OnInit, OnDestroy {
   validarSoloNumerosFormulario(event: any): void {
     const input = event.target as HTMLInputElement;
     const valor = input.value;
-
     const valorLimpio = valor.replace(/\D/g, '');
-
     const longitudMaxima = this.tipoComprobante === '03' ? 8 : 11;
     const valorFinal = valorLimpio.slice(0, longitudMaxima);
-
     this.nuevoCliente.num_doc = valorFinal;
     input.value = valorFinal;
   }
 
-  buscarClienteAutoComplete(event: any): void {
-    let query = event.query.toLowerCase();
-
-    query = query.replace(/\D/g, '');
-
-    const todosClientes = this.clientesService.getClientes();
-
-    const tipoDocRequerido = this.tipoComprobante === '03' ? 'DNI' : 'RUC';
-
-    this.clientesSugeridos = todosClientes
-      .filter((cliente) => {
-        if (cliente.tipo_doc !== tipoDocRequerido) {
-          return false;
-        }
-
-        const matchDoc = cliente.num_doc.toLowerCase().includes(query);
-        const matchApellidos = cliente.apellidos?.toLowerCase().includes(query);
-        const matchNombres = cliente.nombres?.toLowerCase().includes(query);
-        const matchRazonSocial = cliente.razon_social?.toLowerCase().includes(query);
-
-        return matchDoc || matchApellidos || matchNombres || matchRazonSocial;
-      })
-      .slice(0, 10);
-
-    this.tieneSugerencias = this.clientesSugeridos.length > 0;
+  onInputCambioDocumento(): void {
+    if (this.clienteEncontrado && this.clienteAutoComplete !== this.clienteEncontrado.num_doc) {
+      this.clienteEncontrado = null;
+      this.busquedaRealizada = false;
+      this.mostrarFormulario = false;
+    }
   }
 
   manejarAccionCliente(): void {
-    const documentoIngresado =
-      typeof this.clienteAutoComplete === 'string'
-        ? this.clienteAutoComplete.trim()
-        : this.clienteAutoComplete?.num_doc || '';
-
+    const documentoIngresado = this.clienteAutoComplete.trim();
     const longitudRequerida = this.tipoComprobante === '03' ? 8 : 11;
 
     if (documentoIngresado.length === 0) {
@@ -407,8 +333,21 @@ export class GenerarVenta implements OnInit, OnDestroy {
       return;
     }
 
-    if (this.tieneSugerencias) {
-      this.buscarCliente();
+    const cliente = this.clientesService.buscarPorDocumento(documentoIngresado);
+    if (cliente) {
+      this.clienteEncontrado = cliente;
+      this.busquedaRealizada = true;
+      this.mostrarFormulario = false;
+      const nombreCliente =
+        this.tipoComprobante === '03'
+          ? `${cliente.apellidos || ''} ${cliente.nombres || ''}`.trim()
+          : cliente.razon_social || 'Sin nombre';
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Cliente encontrado',
+        detail: nombreCliente,
+        life: 2000,
+      });
     } else {
       this.preguntarCrearCliente(documentoIngresado);
     }
@@ -418,7 +357,6 @@ export class GenerarVenta implements OnInit, OnDestroy {
     this.busquedaRealizada = false;
     this.clienteEncontrado = null;
     this.mostrarFormulario = true;
-
     this.nuevoCliente = {
       tipo_doc: this.tipoComprobante === '03' ? 'DNI' : 'RUC',
       num_doc: '',
@@ -429,7 +367,6 @@ export class GenerarVenta implements OnInit, OnDestroy {
       email: '',
       telefono: '',
     };
-
     this.messageService.add({
       severity: 'info',
       summary: 'Nuevo cliente',
@@ -441,7 +378,6 @@ export class GenerarVenta implements OnInit, OnDestroy {
   onTipoComprobanteChange(): void {
     if (this.clienteEncontrado) {
       const tipoDocRequerido = this.tipoComprobante === '03' ? 'DNI' : 'RUC';
-
       if (this.clienteEncontrado.tipo_doc !== tipoDocRequerido) {
         this.limpiarCliente();
         this.messageService.add({
@@ -452,10 +388,7 @@ export class GenerarVenta implements OnInit, OnDestroy {
         });
       }
     }
-
-    this.clienteAutoComplete = null;
-    this.clientesSugeridos = [];
-
+    this.clienteAutoComplete = '';
     this.nuevoCliente.tipo_doc = this.tipoComprobante === '03' ? 'DNI' : 'RUC';
   }
 
@@ -467,57 +400,8 @@ export class GenerarVenta implements OnInit, OnDestroy {
     }
   }
 
-  onBlurAutoComplete(): void {
-    setTimeout(() => {
-      if (this.clickEnBotonBuscar) {
-        this.clickEnBotonBuscar = false;
-        return;
-      }
-
-      if (this.seleccionandoDelAutocomplete) {
-        this.seleccionandoDelAutocomplete = false;
-        return;
-      }
-
-      if (this.clienteEncontrado) {
-        return;
-      }
-
-      if (this.clienteAutoComplete && typeof this.clienteAutoComplete === 'string') {
-        const documentoIngresado = this.clienteAutoComplete.trim();
-
-        const longitudRequerida = this.tipoComprobante === '03' ? 8 : 11;
-
-        if (documentoIngresado.length === longitudRequerida && /^\d+$/.test(documentoIngresado)) {
-          const cliente = this.clientesService.buscarPorDocumento(documentoIngresado);
-
-          if (cliente) {
-            this.clienteEncontrado = cliente;
-            this.busquedaRealizada = true;
-            this.mostrarFormulario = false;
-
-            const nombreCliente =
-              this.tipoComprobante === '03'
-                ? `${cliente.apellidos || ''} ${cliente.nombres || ''}`.trim()
-                : cliente.razon_social || 'Sin nombre';
-
-            this.messageService.add({
-              severity: 'success',
-              summary: 'Cliente encontrado',
-              detail: nombreCliente,
-              life: 2000,
-            });
-          } else {
-            this.preguntarCrearCliente(documentoIngresado);
-          }
-        }
-      }
-    }, 100);
-  }
-
   preguntarCrearCliente(documento: string): void {
     const tipoDoc = this.tipoComprobante === '03' ? 'DNI' : 'RUC';
-
     this.confirmationService.confirm({
       message: `El ${tipoDoc} ${documento} no está registrado. ¿Desea registrar un nuevo cliente?`,
       header: 'Cliente no encontrado',
@@ -528,7 +412,7 @@ export class GenerarVenta implements OnInit, OnDestroy {
         this.abrirFormularioNuevoCliente(documento);
       },
       reject: () => {
-        this.clienteAutoComplete = null;
+        this.clienteAutoComplete = '';
         this.numeroDocumento = '';
         this.messageService.add({
           severity: 'info',
@@ -541,12 +425,7 @@ export class GenerarVenta implements OnInit, OnDestroy {
   }
 
   abrirFormularioNuevoCliente(documento?: string): void {
-    const documentoIngresado =
-      documento ||
-      (typeof this.clienteAutoComplete === 'string'
-        ? this.clienteAutoComplete
-        : this.clienteAutoComplete?.num_doc || '');
-
+    const documentoIngresado = documento || this.clienteAutoComplete;
     const longitudRequerida = this.tipoComprobante === '03' ? 8 : 11;
 
     if (documentoIngresado.length !== longitudRequerida) {
@@ -582,48 +461,8 @@ export class GenerarVenta implements OnInit, OnDestroy {
     });
   }
 
-  onSelectCliente(event: any): void {
-    this.seleccionandoDelAutocomplete = true;
-
-    const cliente: Cliente = event.value;
-
-    this.numeroDocumento = cliente.num_doc;
-
-    setTimeout(() => {
-      this.clienteAutoComplete = null;
-    }, 0);
-
-    this.clienteEncontrado = cliente;
-    this.busquedaRealizada = true;
-    this.mostrarFormulario = false;
-
-    const nombreCliente =
-      this.tipoComprobante === '03'
-        ? `${cliente.apellidos || ''} ${cliente.nombres || ''}`.trim()
-        : cliente.razon_social || 'Sin nombre';
-
-    this.messageService.add({
-      severity: 'success',
-      summary: 'Cliente seleccionado',
-      detail: nombreCliente,
-    });
-  }
-
-  onClearCliente(): void {
-    this.clienteAutoComplete = null;
-    this.numeroDocumento = '';
-    this.tieneSugerencias = false;
-    this.limpiarCliente();
-  }
-
   buscarCliente(): void {
-    this.clickEnBotonBuscar = true;
-
-    const documentoIngresado =
-      typeof this.clienteAutoComplete === 'string'
-        ? this.clienteAutoComplete.trim()
-        : this.clienteAutoComplete?.num_doc || '';
-
+    const documentoIngresado = this.clienteAutoComplete.trim();
     if (!documentoIngresado) {
       this.messageService.add({
         severity: 'warn',
@@ -632,7 +471,6 @@ export class GenerarVenta implements OnInit, OnDestroy {
       });
       return;
     }
-
     const longitudRequerida = this.tipoComprobante === '03' ? 8 : 11;
     if (documentoIngresado.length !== longitudRequerida) {
       this.messageService.add({
@@ -642,21 +480,17 @@ export class GenerarVenta implements OnInit, OnDestroy {
       });
       return;
     }
-
     this.busquedaRealizada = true;
     const cliente = this.clientesService.buscarPorDocumento(documentoIngresado);
     this.clienteEncontrado = cliente || null;
-
     if (!this.clienteEncontrado) {
       this.preguntarCrearCliente(documentoIngresado);
     } else {
       this.mostrarFormulario = false;
-
       const nombreCliente =
         this.tipoComprobante === '03'
           ? `${this.clienteEncontrado.apellidos || ''} ${this.clienteEncontrado.nombres || ''}`.trim()
           : this.clienteEncontrado.razon_social || 'Sin nombre';
-
       this.messageService.add({
         severity: 'success',
         summary: 'Cliente encontrado',
@@ -715,12 +549,10 @@ export class GenerarVenta implements OnInit, OnDestroy {
 
   limpiarCliente(): void {
     this.numeroDocumento = '';
+    this.clienteAutoComplete = '';
     this.clienteEncontrado = null;
     this.busquedaRealizada = false;
     this.mostrarFormulario = false;
-    this.clientesSugeridos = [];
-    this.tieneSugerencias = false;
-
     this.nuevoCliente = {
       tipo_doc: this.tipoComprobante === '03' ? 'DNI' : 'RUC',
       num_doc: '',
@@ -738,13 +570,11 @@ export class GenerarVenta implements OnInit, OnDestroy {
       this.sedeNombreSeleccionada,
       'Activo',
     );
-
     this.aplicarFiltros();
   }
 
   cargarFamilias(): void {
     const familiasUnicas = [...new Set(this.productosDisponibles.map((p) => p.familia))];
-
     this.familiasDisponibles = [
       { label: 'Todas las familias', value: null },
       ...familiasUnicas.map((f) => ({ label: f, value: f })),
@@ -753,16 +583,13 @@ export class GenerarVenta implements OnInit, OnDestroy {
 
   buscarProductos(event: any): void {
     const query = event.query.toLowerCase();
-
     let productosBase = this.familiaSeleccionada
       ? this.productosDisponibles.filter((p) => p.familia === this.familiaSeleccionada)
       : this.productosDisponibles;
-
     this.productosSugeridos = productosBase
       .filter((producto) => {
         const coincideNombre = producto.nombre.toLowerCase().includes(query);
         const coincideCodigo = producto.codigo.toLowerCase().includes(query);
-
         return coincideNombre || coincideCodigo;
       })
       .slice(0, 10);
@@ -770,11 +597,8 @@ export class GenerarVenta implements OnInit, OnDestroy {
 
   onProductoSeleccionado(event: any): void {
     const producto: Producto = event.value;
-
     this.seleccionarProducto(producto);
-
     this.productoSeleccionadoBusqueda = '';
-
     this.messageService.add({
       severity: 'success',
       summary: 'Producto seleccionado',
@@ -1180,7 +1004,9 @@ export class GenerarVenta implements OnInit, OnDestroy {
       this.messageService.add({
         severity: 'success',
         summary: 'Venta generada exitosamente',
-        detail: `Comprobante ${this.comprobanteGenerado.serie}-${this.comprobanteGenerado.numero.toString().padStart(8, '0')} creado`,
+        detail: `Comprobante ${this.comprobanteGenerado.serie}-${this.comprobanteGenerado.numero
+          .toString()
+          .padStart(8, '0')} creado`,
         life: 4000,
       });
     }, 1500);
@@ -1192,19 +1018,18 @@ export class GenerarVenta implements OnInit, OnDestroy {
         severity: 'warn',
         summary: 'Sin comprobante',
         detail: 'No hay comprobante para imprimir',
-        life: 3000
+        life: 3000,
       });
       return;
     }
 
     this.guardarEstado();
-    
-    
+
     this.router.navigate(['/ventas/imprimir-comprobante'], {
       state: {
         comprobante: this.comprobanteGenerado,
-        rutaRetorno: '/ventas/generar-venta'
-      }
+        rutaRetorno: '/ventas/generar-venta',
+      },
     });
   }
 

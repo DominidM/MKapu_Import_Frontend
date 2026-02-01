@@ -98,55 +98,24 @@
               <label class="input-label">{{ tipoComprobante === '03' ? 'DNI' : 'RUC' }}</label>
 
               <div class="flex gap-2 align-items-center">
-
                 <div style="flex: 1; min-width: 0">
-                  <p-autocomplete
+                  <input
+                    pInputText
                     [(ngModel)]="clienteAutoComplete"
-                    [suggestions]="clientesSugeridos"
-                    (completeMethod)="buscarClienteAutoComplete($event)"
-                    (onSelect)="onSelectCliente($event)"
-                    (onClear)="onClearCliente()"
-                    (input)="validarSoloNumeros($event)"
+                    class="w-full autocomplete-clientes"
                     [placeholder]="
                       tipoComprobante === '03'
                         ? 'Ingrese DNI (8 dígitos)'
                         : 'Ingrese RUC (11 dígitos)'
                     "
-                    [minLength]="1"
-                    [forceSelection]="false"
-                    [showEmptyMessage]="true"
-                    emptyMessage="No se encontraron clientes"
-                    dataKey="id_cliente"
-                    optionLabel="num_doc"
-                    styleClass="w-full autocomplete-clientes"
+                    [maxlength]="tipoComprobante === '03' ? 8 : 11"
                     inputmode="numeric"
                     pattern="[0-9]*"
-                  >
-                    <ng-template let-cliente pTemplate="item">
-                      <div class="flex align-items-center gap-3 p-2">
-                        <i class="pi pi-user text-2xl" style="color: #f6af33"></i>
-                        <div class="flex-1">
-                          <div *ngIf="tipoComprobante === '03'">
-                            <div class="font-bold">
-                              {{ cliente.nombres }} {{ cliente.apellidos }}
-                            </div>
-                            <small class="text-600">DNI: {{ cliente.num_doc }}</small>
-                          </div>
-                          <div *ngIf="tipoComprobante === '01'">
-                            <div class="font-bold">{{ cliente.razon_social }}</div>
-                            <small class="text-600">RUC: {{ cliente.num_doc }}</small>
-                          </div>
-                        </div>
-                      </div>
-                    </ng-template>
-
-                    <ng-template let-cliente pTemplate="selectedItem">
-                      <span *ngIf="cliente">{{ cliente.num_doc }}</span>
-                    </ng-template>
-                  </p-autocomplete>
+                    (input)="validarSoloNumeros($event); onInputCambioDocumento()"
+                    (keyup.enter)="manejarAccionCliente()"
+                  />
                 </div>
 
-                <!-- BOTÓN DINÁMICO -->
                 <div style="flex: 0 0 200px">
                   <p-button
                     [label]="textoBotonCliente"
@@ -173,18 +142,18 @@
               >
                 <i class="pi pi-info-circle text-500"></i>
                 <small class="text-600">
-                  {{ clienteAutoComplete?.length || 0 }} /
+                  {{ clienteAutoComplete.length || 0 }} /
                   {{ tipoComprobante === '03' ? '8' : '11' }} dígitos
                   <span
-                    *ngIf="(clienteAutoComplete?.length || 0) < (tipoComprobante === '03' ? 8 : 11)"
+                    *ngIf="(clienteAutoComplete.length || 0) < (tipoComprobante === '03' ? 8 : 11)"
                     class="text-orange-500"
                   >
-                    ({{ (tipoComprobante === '03' ? 8 : 11) - (clienteAutoComplete?.length || 0) }}
+                    ({{ (tipoComprobante === '03' ? 8 : 11) - (clienteAutoComplete.length || 0) }}
                     restantes)
                   </span>
                   <span
                     *ngIf="
-                      (clienteAutoComplete?.length || 0) === (tipoComprobante === '03' ? 8 : 11)
+                      (clienteAutoComplete.length || 0) === (tipoComprobante === '03' ? 8 : 11)
                     "
                     class="text-green-500"
                   >
@@ -194,7 +163,6 @@
               </div>
             </div>
 
-            <!-- CLIENTE ENCONTRADO -->
             <div *ngIf="clienteEncontrado" class="cliente-encontrado-card mt-3">
               <p-card styleClass="cliente-card-success">
                 <div class="cliente-content">
@@ -252,7 +220,6 @@
               </p-card>
             </div>
 
-            <!-- FORMULARIO NUEVO CLIENTE -->
             <div *ngIf="mostrarFormulario" class="nuevo-cliente-form mt-3">
               <p-divider align="center">
                 <span class="divider-text">
@@ -262,7 +229,7 @@
               </p-divider>
 
               <div class="form-grid">
-                <!-- ✅ Campo DNI/RUC en el formulario también con validación -->
+
                 <div class="form-field full-width" *ngIf="!nuevoCliente.num_doc">
                   <label>{{ tipoComprobante === '03' ? 'DNI' : 'RUC' }} *</label>
                   <input
