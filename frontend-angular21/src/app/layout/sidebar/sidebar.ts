@@ -93,6 +93,12 @@ export class Sidebar implements OnInit {
       label: 'Transferencias',
       icon: 'pi pi-arrows-h',
     },
+    {
+      path: '/admin/despacho-productos',
+      allowedRoles: [UserRole.ADMIN],
+      label: 'Despacho',
+      icon: 'pi pi-truck',
+    },
 
     {
       path: '',
@@ -119,6 +125,7 @@ export class Sidebar implements OnInit {
       icon: 'pi pi-building',
     },
 
+
     // ==================== VENTAS ====================
     {
       path: '/ventas/dashboard-ventas',
@@ -138,6 +145,7 @@ export class Sidebar implements OnInit {
       label: 'Historial Ventas',
       icon: 'pi pi-bookmark',
     },
+
 
     // ==================== ALMACÉN ====================
     {

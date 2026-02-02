@@ -1,0 +1,306 @@
+:host {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.despacho-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.despacho-page > p-card {
+  display: block;
+  width: 100%;
+}
+
+:host ::ng-deep .despacho-page * {
+  box-sizing: border-box;
+}
+
+.despacho-header-card .p-card-body {
+  padding: 1rem 1.25rem;
+}
+
+.despacho-title-icon {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #fde68a;
+  color: #1f2937;
+  font-size: 18px;
+}
+
+.despacho-kicker {
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6b7280;
+  font-weight: 600;
+  margin: 0;
+}
+
+.despacho-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0.2rem 0 0;
+}
+
+.despacho-pill {
+  border-radius: 999px;
+  font-weight: 600;
+  padding: 0.35rem 1rem;
+  font-size: 0.75rem;
+}
+
+.despacho-pill-danger {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+.despacho-filter-card .p-card-body {
+  padding: 1rem 1.25rem;
+}
+
+.despacho-search-label {
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.despacho-search-input .p-inputtext {
+  width: 100%;
+}
+
+.despacho-section-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: #e0f2fe;
+  color: #075985;
+}
+
+.despacho-table-scroll {
+  overflow-x: auto;
+}
+
+:host ::ng-deep .despacho-table .p-datatable-thead > tr > th {
+  text-transform: uppercase;
+  color: #475569;
+  background: transparent;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+:host ::ng-deep .despacho-table .p-datatable-tbody > tr > td {
+  vertical-align: top;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.despacho-code {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.despacho-code-main {
+  font-weight: 700;
+  color: #334155;
+}
+
+.despacho-code-meta {
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+.despacho-producto {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.despacho-producto-nombre {
+  font-weight: 600;
+  color: #334155;
+}
+
+.despacho-producto-meta {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.despacho-cantidad {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 28px;
+  border-radius: 999px;
+  background: #f3f4f6;
+  font-weight: 600;
+  color: #111827;
+}
+
+.despacho-comprobante,
+.despacho-dato,
+.despacho-hora {
+  color: #374151;
+  font-weight: 500;
+}
+
+.despacho-agencia {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.despacho-tag {
+  font-size: 0.75rem;
+}
+
+.despacho-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.despacho-icon-btn {
+  border-radius: 999px;
+}
+
+.despacho-icon-warn {
+  color: #0f172a;
+}
+
+.despacho-icon-danger {
+  color: #b91c1c;
+}
+
+.despacho-empty {
+  text-align: center;
+  padding: 2rem 1rem;
+}
+
+.despacho-empty-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.despacho-empty-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: #f3f4f6;
+  display: grid;
+  place-items: center;
+  color: #6b7280;
+  font-size: 1.4rem;
+}
+
+.despacho-empty-title {
+  font-weight: 700;
+  color: #111827;
+}
+
+.despacho-empty-text {
+  color: #6b7280;
+  font-size: 0.85rem;
+}
+
+:host-context(.app-dark) .despacho-kicker {
+  color: #94a3b8;
+}
+
+:host-context(.app-dark) .despacho-title {
+  color: #f8fafc;
+}
+
+:host-context(.app-dark) .despacho-title-icon {
+  background: #3a2a12;
+  color: #f8fafc;
+}
+
+:host-context(.app-dark) .despacho-filter-card .p-card-body,
+:host-context(.app-dark) .despacho-header-card .p-card-body {
+  background: transparent;
+}
+
+:host-context(.app-dark) .despacho-search-label {
+  color: #94a3b8;
+}
+
+:host-context(.app-dark) .despacho-section-icon {
+  background: #0b2535;
+  color: #93c5fd;
+}
+
+:host-context(.app-dark) .despacho-agencia {
+  background: #3a2a12;
+  color: #fcd34d;
+}
+
+:host-context(.app-dark) .despacho-cantidad {
+  background: #1f2937;
+  color: #e2e8f0;
+}
+
+:host-context(.app-dark) .despacho-comprobante,
+:host-context(.app-dark) .despacho-dato,
+:host-context(.app-dark) .despacho-hora,
+:host-context(.app-dark) .despacho-code-main,
+:host-context(.app-dark) .despacho-producto-nombre {
+  color: #e2e8f0;
+}
+
+:host-context(.app-dark) .despacho-code-meta,
+:host-context(.app-dark) .despacho-producto-meta,
+:host-context(.app-dark) .despacho-empty-text {
+  color: #94a3b8;
+}
+
+:host-context(.app-dark) .despacho-empty-icon {
+  background: #111827;
+  color: #94a3b8;
+}
+
+:host-context(.app-dark) .despacho-table .p-datatable-thead > tr > th {
+  color: #cbd5f5;
+  background: #0f172a;
+  border-bottom: 1px solid #1f2937;
+}
+
+:host-context(.app-dark) .despacho-table .p-datatable-tbody > tr > td {
+  border-bottom: 1px solid #1f2937;
+}
+
+:host-context(.app-dark) :host ::ng-deep .despacho-table .p-datatable-tbody > tr > td,
+:host-context(.app-dark) :host ::ng-deep .despacho-table .p-datatable-thead > tr > th {
+  border-color: #1f2937;
+}
+
+:host-context(.app-dark) :host ::ng-deep .despacho-table .p-datatable-tbody > tr {
+  border-bottom: 1px solid #1f2937;
+}
+
+@media (max-width: 768px) {
+  .despacho-title {
+    font-size: 1.2rem;
+  }
+}

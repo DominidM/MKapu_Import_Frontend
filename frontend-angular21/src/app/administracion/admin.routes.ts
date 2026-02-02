@@ -224,4 +224,15 @@ export const ADMIN_ROUTES: Routes = [
     redirectTo: 'dashboard',
     pathMatch: 'full',
   },
+
+  /* =======================
+     DESPACHO PRODUCTOS
+  ======================= */
+  {
+    path: 'despacho-productos',
+    loadComponent: () =>
+      import('./pages/despacho-productos/pages/listado-despacho/listado-despacho').then(
+        (m) => m.ListadoDespacho,
+      ),
+  },
 ];
