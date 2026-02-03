@@ -12,6 +12,7 @@ import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmDialog } from 'primeng/confirmdialog';
 import { TooltipModule } from 'primeng/tooltip';
+import { SelectModule } from 'primeng/select';
 import { ConfirmationService, MessageService } from 'primeng/api';
 
 import { EmpleadosService, Empleado } from '../../../../../core/services/empleados.service';
@@ -53,6 +54,7 @@ interface DespachoBase {
     AutoCompleteModule,
     InputTextModule,
     TagModule,
+    SelectModule,
     ToastModule,
     ConfirmDialog,
     TooltipModule,
@@ -70,6 +72,13 @@ export class ListadoDespacho implements OnInit {
   sugerencias: DespachoRow[] = [];
 
   filas: DespachoRow[] = [];
+  filasFiltradas: DespachoRow[] = [];
+  estadoFiltro: 'TODOS' | DespachoRow['estado'] = 'TODOS';
+  estadoOptions = [
+    { label: 'Todos', value: 'TODOS' },
+    { label: 'Despachado', value: 'DESPACHADO' },
+    { label: 'Sin despachar', value: 'SIN DESPACHAR' },
+  ];
 
   private empleados: Empleado[] = [];
   private ventas: ComprobanteVenta[] = [];
@@ -196,6 +205,7 @@ export class ListadoDespacho implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.cargarVentas();
     this.cargarEmpleados();
   }
 
@@ -203,11 +213,11 @@ export class ListadoDespacho implements OnInit {
     this.empleadosService.getEmpleados().subscribe({
       next: (empleados) => {
         this.empleados = empleados;
-        this.cargarVentas();
+        this.actualizarResponsables();
       },
       error: () => {
         this.empleados = [];
-        this.cargarVentas();
+        this.actualizarResponsables();
       },
     });
   }
@@ -221,6 +231,18 @@ export class ListadoDespacho implements OnInit {
       this.armarFila(venta, index, despachador, asesor),
     );
     this.sugerencias = [...this.filas];
+    this.aplicarFiltros();
+  }
+
+  private actualizarResponsables(): void {
+    const despachador = this.obtenerNombreEmpleado('ALMACENERO');
+    const asesor = this.obtenerNombreEmpleado('VENTAS');
+    this.filas = this.filas.map((fila) => ({
+      ...fila,
+      despachador,
+      asesor,
+    }));
+    this.aplicarFiltros();
   }
 
   private armarFila(
@@ -264,6 +286,22 @@ export class ListadoDespacho implements OnInit {
       life: 2000,
     });
   }
+
+  limpiarFiltros(): void {
+    this.searchTerm = null;
+    this.estadoFiltro = 'TODOS';
+    this.aplicarFiltros();
+  }
+
+  aplicarFiltros(): void {
+    if (this.estadoFiltro === 'TODOS') {
+      this.filasFiltradas = [...this.filas];
+      return;
+    }
+
+    this.filasFiltradas = this.filas.filter((fila) => fila.estado === this.estadoFiltro);
+  }
+
 
   getSalidaSeverity(salida: string): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {
     const salidaUpper = salida.toUpperCase();

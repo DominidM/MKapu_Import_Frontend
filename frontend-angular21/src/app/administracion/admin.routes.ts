@@ -235,4 +235,11 @@ export const ADMIN_ROUTES: Routes = [
         (m) => m.ListadoDespacho,
       ),
   },
+  {
+    path: 'despacho-productos/detalle-despacho/:id',
+    loadComponent: () =>
+      import('./pages/despacho-productos/pages/detalles-despacho/detalles-despacho').then(
+        (m) => m.DetallesDespacho,
+      ),
+  },
 ];
