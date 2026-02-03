@@ -23,6 +23,7 @@
   flex-direction: column;
   flex: 1; /* ocupa todo el espacio restante */
   height: 100%;
+  min-width: 0;
 }
 
 /* Header arriba */
@@ -38,6 +39,7 @@
   overflow-y: auto; /* scroll si el contenido es largo */
   
   padding: 16px;
+  min-width: 0;
 }
 
 /* Sidebar desktop */
@@ -49,6 +51,10 @@
 @media (max-width: 768px) {
   .sidebar-desktop {
     display: none;
+  }
+
+  .main-container {
+    width: 100vw;
   }
 }
 

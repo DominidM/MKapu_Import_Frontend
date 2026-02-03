@@ -63,7 +63,6 @@ export class PosService {
     this.pagosSubject.next(datosIniciales);
   }
 
-
   registrarPago(pago: Omit<Pago, 'id_pago'>): Pago {
     const pagos = this.pagosSubject.value;
     const nuevoId = Math.max(...pagos.map(p => p.id_pago), 0) + 1;
@@ -184,6 +183,55 @@ export class PosService {
     return iconos[medio] || 'pi pi-wallet';
   }
 
+  getTiposPagoOptions() {
+    return [
+      { label: 'Todos', value: null },
+      { label: 'Efectivo', value: 'EFECTIVO' },
+      { label: 'Tarjeta', value: 'TARJETA' },
+      { label: 'Yape', value: 'YAPE' },
+      { label: 'Plin', value: 'PLIN' },
+      { label: 'Transferencia', value: 'TRANSFERENCIA' },
+    ];
+  }
+
+  getTiposPagoOptionsConIconos() {
+    return [
+      { label: 'Efectivo', value: 'EFECTIVO', icon: 'pi pi-money-bill' },
+      { label: 'Tarjeta', value: 'TARJETA', icon: 'pi pi-credit-card' },
+      { label: 'Yape', value: 'YAPE', icon: 'pi pi-mobile' },
+      { label: 'Plin', value: 'PLIN', icon: 'pi pi-mobile' },
+      { label: 'Transferencia', value: 'TRANSFERENCIA', icon: 'pi pi-arrow-right-arrow-left' },
+    ];
+  }
+
+  getTipoPagoLabel(tipoPago: string): string {
+    const labels: { [key: string]: string } = {
+      EFECTIVO: 'Efectivo',
+      TARJETA: 'Tarjeta',
+      YAPE: 'Yape',
+      PLIN: 'Plin',
+      TRANSFERENCIA: 'Transferencia',
+    };
+    return labels[tipoPago] || tipoPago;
+  }
+
+  getSeverityTipoPago(tipoPago: string): 'success' | 'info' | 'warn' | 'secondary' {
+    switch (tipoPago) {
+      case 'EFECTIVO':
+        return 'success';
+      case 'TARJETA':
+        return 'info';
+      case 'YAPE':
+        return 'warn';
+      case 'PLIN':
+        return 'secondary';
+      case 'TRANSFERENCIA':
+        return 'info';
+      default:
+        return 'secondary';
+    }
+  }
+
   abrirCaja(saldoInicial: number): void {
     this.cajaAbierta.next(true);
     this.saldoCaja.next(saldoInicial);
@@ -260,7 +308,6 @@ export class PosService {
     return this.getPagosHoy().reduce((total, pago) => total + pago.monto, 0);
   }
 
-
   imprimirVoucher(pago: Pago): void {
     console.log('🖨️ ========== VOUCHER DE PAGO ==========');
     console.log(`Comprobante: ${pago.id_comprobante}`);
@@ -314,5 +361,15 @@ export class PosService {
     }
 
     return { valido: errores.length === 0, errores };
+  }
+
+  formatearMonto(monto: number): string {
+    return `S/. ${monto.toFixed(2)}`;
+  }
+
+  getTotalPorMedioPago(medioPago: string): number {
+    return this.pagosSubject.value
+      .filter(p => p.med_pago === medioPago)
+      .reduce((sum, p) => sum + p.monto, 0);
   }
 }

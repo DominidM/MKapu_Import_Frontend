@@ -1,0 +1,461 @@
+:host {
+  display: block;
+  width: 100%;
+  min-height: 100%;
+  --transfer-bg: #f4f4f4;
+  --transfer-card: #ffffff;
+  --transfer-border: #e5e7eb;
+  --transfer-text: #1f2937;
+  --transfer-muted: #6b7280;
+  --transfer-accent: #f6af33;
+  --transfer-success: #10b981;
+}
+
+:host-context(.app-dark) {
+  --transfer-bg: #101214;
+  --transfer-card: #14171a;
+  --transfer-border: #2c3137;
+  --transfer-text: #f2f4f7;
+  --transfer-muted: #9aa2ac;
+  --transfer-accent: #f0a63f;
+  --transfer-success: #22c55e;
+}
+
+.transfer-header-card {
+  border-radius: 0.85rem;
+  background: var(--transfer-card);
+}
+
+.transfer-title-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: rgba(246, 175, 51, 0.15);
+  color: var(--transfer-accent);
+  font-size: 1.2rem;
+}
+
+.transfer-kicker {
+  margin: 0;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  color: var(--transfer-muted);
+}
+
+.transfer-title {
+  margin: 0;
+  font-size: 1.25rem;
+  color: var(--transfer-text);
+}
+
+.transfer-header-btn {
+  border-radius: 999px;
+  padding: 0.35rem 1rem;
+  font-size: 0.75rem;
+}
+
+.wizard-card ::ng-deep .p-card-body {
+  padding: 0;
+}
+
+.wizard-steps {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  overflow-x: auto;
+}
+
+.wizard-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 90px;
+  opacity: 0.5;
+  transition: all 0.3s ease;
+}
+
+.wizard-step.active {
+  opacity: 1;
+}
+
+.wizard-step.completed {
+  opacity: 0.85;
+}
+
+.step-number {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #e5e7eb;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+  transition: all 0.3s ease;
+  border: 3px solid transparent;
+}
+
+.wizard-step.active .step-number {
+  background: var(--transfer-accent);
+  color: #1f2937;
+  transform: scale(1.1);
+  border-color: rgba(246, 175, 51, 0.3);
+  box-shadow: 0 0 0 7px rgba(246, 175, 51, 0.15);
+}
+
+.wizard-step.completed .step-number {
+  background: var(--transfer-success);
+  color: #ffffff;
+}
+
+.step-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--transfer-muted);
+  text-align: center;
+}
+
+.wizard-step.active .step-title {
+  color: var(--transfer-accent);
+}
+
+.wizard-step.completed .step-title {
+  color: var(--transfer-success);
+}
+
+:host ::ng-deep .wizard-divider {
+  margin: 0;
+}
+
+:host ::ng-deep .wizard-divider .p-divider {
+  border-top: 1px solid var(--transfer-border);
+  margin: 0;
+}
+
+.wizard-content {
+  min-height: 420px;
+  background: var(--transfer-card);
+}
+
+.step-content {
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.step-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--transfer-border);
+}
+
+.step-icon {
+  font-size: 2rem;
+  color: var(--transfer-accent);
+}
+
+.step-header h3 {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--transfer-text);
+}
+
+.transfer-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.field-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--transfer-muted);
+  text-transform: uppercase;
+}
+
+.transfer-subcard {
+  border: 1px solid var(--transfer-border);
+  border-radius: 0.75rem;
+  background: var(--transfer-card);
+  padding: 1rem;
+  margin-bottom: 1.2rem;
+}
+
+.transfer-product-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--transfer-text);
+  margin-bottom: 0.5rem;
+}
+
+.transfer-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  color: var(--transfer-muted);
+  font-size: 0.85rem;
+}
+
+.transfer-stock-list {
+  margin-top: 1rem;
+}
+
+.transfer-stock-title {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: var(--transfer-muted);
+  letter-spacing: 0.04em;
+  margin-bottom: 0.5rem;
+}
+
+.transfer-suggestion-title {
+  font-weight: 600;
+  color: var(--transfer-text);
+}
+
+.transfer-suggestion-meta {
+  font-size: 0.8rem;
+  color: var(--transfer-muted);
+}
+
+.transfer-suggestion {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.stock-badge-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.4rem;
+}
+
+.stock-badge {
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  background: #1f2937;
+  color: #f9fafb;
+}
+
+.stock-badge--high {
+  background: #0f3d2e;
+  color: #bbf7d0;
+}
+
+.stock-badge--mid {
+  background: #5c3a1f;
+  color: #fde68a;
+}
+
+.stock-badge--low {
+  background: #4c1d1d;
+  color: #fecaca;
+}
+
+.stock-mini-card {
+  margin-top: 0.6rem;
+  border: 1px solid var(--transfer-border);
+  border-radius: 0.75rem;
+  background: var(--transfer-card);
+}
+
+.stock-mini-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.6rem 0.8rem;
+}
+
+.stock-mini-label {
+  font-size: 0.8rem;
+  color: var(--transfer-muted);
+}
+
+.transfer-panel {
+  border: 1px solid var(--transfer-border);
+  border-radius: 0.85rem;
+  padding: 1.1rem;
+  background: var(--transfer-card);
+  overflow: visible;
+}
+
+.transfer-panel-grid {
+  row-gap: 1.5rem;
+  margin-left: -1rem;
+  margin-right: -1rem;
+}
+
+.transfer-panel-grid > [class*='col-'] {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.transfer-panel-title {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-weight: 700;
+  color: var(--transfer-text);
+  margin-bottom: 1rem;
+}
+
+.transfer-motivo-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.transfer-motivo-icon {
+  font-size: 1.1rem;
+  color: var(--transfer-accent);
+}
+
+.transfer-panel-helper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--transfer-muted);
+  margin-bottom: 0.75rem;
+}
+
+.transfer-panel-note {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--transfer-muted);
+  margin-bottom: 0.75rem;
+}
+
+.transfer-stock {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9rem;
+}
+
+.transfer-stock-value {
+  font-weight: 700;
+  color: var(--transfer-text);
+}
+
+.transfer-qty-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.transfer-qty {
+  flex: 1;
+  min-width: 0;
+}
+
+.helper-text {
+  font-size: 0.8rem;
+  color: var(--transfer-muted);
+}
+
+.transfer-textarea {
+  resize: none;
+}
+
+.transfer-summary {
+  border: 1px solid var(--transfer-border);
+  border-radius: 0.75rem;
+  background: var(--transfer-card);
+}
+
+.transfer-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.recap-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  color: var(--transfer-muted);
+  margin-bottom: 0.4rem;
+}
+
+.recap-value {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.recap-meta {
+  font-size: 0.8rem;
+  color: var(--transfer-muted);
+  margin-top: 0.2rem;
+}
+
+.recap-card {
+  border: 1px solid var(--transfer-border);
+  border-radius: 0.9rem;
+  background: rgba(246, 175, 51, 0.08);
+  padding: 0.95rem;
+}
+
+.recap-card-wide {
+  grid-column: span 2;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--transfer-border);
+  color: var(--transfer-muted);
+  font-size: 0.9rem;
+}
+
+.summary-row strong {
+  color: var(--transfer-text);
+}
+
+.summary-row:last-child {
+  border-bottom: none;
+}
+
+:host ::ng-deep .wizard-primary.p-button {
+  background: var(--transfer-accent);
+  border-color: var(--transfer-accent);
+  color: #1f1f1f;
+  font-weight: 700;
+}
+
+:host ::ng-deep .wizard-primary.p-button:hover {
+  background: #e69a27;
+  border-color: #e69a27;
+}
+

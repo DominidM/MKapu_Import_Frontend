@@ -1,8 +1,8 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, NavigationEnd } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { Subscription } from 'rxjs';
+import { Subscription, filter } from 'rxjs';
 
 import { Card } from 'primeng/card';
 import { Button } from 'primeng/button';
@@ -113,7 +113,8 @@ export class GenerarVenta implements OnInit, OnDestroy {
   familiaSeleccionada: string | null = null;
   familiasDisponibles: { label: string; value: string | null }[] = [];
 
-  sedeSeleccionada: string = '';
+  sedeIdSeleccionada: string = '';
+  sedeNombreSeleccionada: string = '';
 
   opcionesTipoPrecio = [
     { label: 'Unidad', value: 'UNIDAD' },
@@ -149,6 +150,51 @@ export class GenerarVenta implements OnInit, OnDestroy {
   comprobanteGenerado: ComprobanteVenta | null = null;
   loading = false;
 
+  tieneSugerencias: boolean = false;
+
+  get textoBotonCliente(): string {
+    const documentoActual =
+      typeof this.clienteAutoComplete === 'string'
+        ? this.clienteAutoComplete.trim()
+        : this.clienteAutoComplete?.num_doc || '';
+
+    const longitudRequerida = this.tipoComprobante === '03' ? 8 : 11;
+    const tieneLongitudCorrecta = documentoActual.length === longitudRequerida;
+
+    if (tieneLongitudCorrecta && this.tieneSugerencias) {
+      return 'Buscar';
+    }
+
+    return 'Registrar Cliente';
+  }
+
+  get iconoBotonCliente(): string {
+    const documentoActual =
+      typeof this.clienteAutoComplete === 'string'
+        ? this.clienteAutoComplete.trim()
+        : this.clienteAutoComplete?.num_doc || '';
+
+    const longitudRequerida = this.tipoComprobante === '03' ? 8 : 11;
+    const tieneLongitudCorrecta = documentoActual.length === longitudRequerida;
+
+    return tieneLongitudCorrecta && this.tieneSugerencias ? 'pi pi-search' : 'pi pi-user-plus';
+  }
+
+  get severityBotonCliente(): 'primary' {
+    return 'primary';
+  }
+
+  get botonClienteHabilitado(): boolean {
+    const documentoActual =
+      typeof this.clienteAutoComplete === 'string'
+        ? this.clienteAutoComplete.trim()
+        : this.clienteAutoComplete?.num_doc || '';
+
+    const longitudRequerida = this.tipoComprobante === '03' ? 8 : 11;
+
+    return documentoActual.length === 0 || documentoActual.length === longitudRequerida;
+  }
+
   constructor(
     private router: Router,
     private ventasService: VentasService,
@@ -163,32 +209,12 @@ export class GenerarVenta implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.empleadoActual = this.empleadosService.getEmpleadoActual();
+
+    this.empleadoActual = this.empleadosService.getEmpleadoActual()!;
     this.nombreResponsable = this.empleadosService.getNombreCompletoEmpleadoActual();
 
-    if (!this.empleadoActual) {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Error de autenticación',
-        detail: 'No hay un empleado autenticado',
-        life: 3000,
-      });
-      this.router.navigate(['/login']);
-      return;
-    }
-
-    if (!this.empleadosService.puedeRealizarVentas()) {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Acceso denegado',
-        detail: 'No tiene permisos para realizar ventas',
-        life: 3000,
-      });
-      this.router.navigate(['/almacen/dashboard']);
-      return;
-    }
-
-    this.sedeSeleccionada = this.empleadoActual.id_sede;
+    this.sedeIdSeleccionada = this.empleadoActual.id_sede;
+    this.sedeNombreSeleccionada = this.empleadoActual.nombre_sede!;
 
     this.messageService.add({
       severity: 'success',
@@ -202,9 +228,21 @@ export class GenerarVenta implements OnInit, OnDestroy {
     this.bancosDisponibles = this.posService.getBancosDisponibles();
 
     this.restaurarEstado();
+
+    this.subscriptions.add(
+      this.router.events
+        .pipe(filter((event) => event instanceof NavigationEnd))
+        .subscribe((event: NavigationEnd) => {
+          if (event.url === '/ventas/generar-ventas') {
+
+            this.restaurarEstado();
+          }
+        })
+    );
   }
 
   ngOnDestroy(): void {
+
     this.subscriptions.unsubscribe();
   }
 
@@ -228,10 +266,13 @@ export class GenerarVenta implements OnInit, OnDestroy {
       promocionAplicada: this.promocionAplicada,
       descuentoPromocion: this.descuentoPromocion,
       comprobanteGenerado: this.comprobanteGenerado,
+      sedeIdSeleccionada: this.sedeIdSeleccionada,
+      sedeNombreSeleccionada: this.sedeNombreSeleccionada,
     };
 
     try {
       sessionStorage.setItem(this.STORAGE_KEY, JSON.stringify(estado));
+
     } catch (error) {
       console.error('Error al guardar estado:', error);
     }
@@ -243,6 +284,8 @@ export class GenerarVenta implements OnInit, OnDestroy {
 
       if (estadoGuardado) {
         const estado = JSON.parse(estadoGuardado);
+
+        console.log('📂 Restaurando estado de generar-venta:', estado);
 
         this.activeStep = estado.activeStep || 0;
         this.tipoComprobante = estado.tipoComprobante || '03';
@@ -263,15 +306,24 @@ export class GenerarVenta implements OnInit, OnDestroy {
         this.descuentoPromocion = estado.descuentoPromocion || 0;
         this.comprobanteGenerado = estado.comprobanteGenerado || null;
 
-        this.messageService.add({
-          severity: 'info',
-          summary: 'Estado restaurado',
-          detail: 'Se recuperó la venta en progreso',
-          life: 2000,
-        });
+        this.sedeIdSeleccionada = estado.sedeIdSeleccionada || this.empleadoActual!.id_sede;
+        this.sedeNombreSeleccionada =
+          estado.sedeNombreSeleccionada || this.empleadoActual!.nombre_sede!;
+
+
+        if (estado.activeStep > 0 || estado.productosSeleccionados?.length > 0) {
+          this.messageService.add({
+            severity: 'info',
+            summary: 'Estado restaurado',
+            detail: 'Se recuperó la venta en progreso',
+            life: 2000,
+          });
+        }
+      } else {
+        console.log('ℹ️ No hay estado guardado para restaurar');
       }
     } catch (error) {
-      console.error('Error al restaurar estado:', error);
+      console.error('❌ Error al restaurar estado:', error);
     }
   }
 
@@ -279,8 +331,37 @@ export class GenerarVenta implements OnInit, OnDestroy {
     sessionStorage.removeItem(this.STORAGE_KEY);
   }
 
+  validarSoloNumeros(event: any): void {
+    const input = event.target as HTMLInputElement;
+    const valor = input.value;
+
+    const valorLimpio = valor.replace(/\D/g, '');
+
+    const longitudMaxima = this.tipoComprobante === '03' ? 8 : 11;
+    const valorFinal = valorLimpio.slice(0, longitudMaxima);
+
+    this.clienteAutoComplete = valorFinal;
+    input.value = valorFinal;
+  }
+
+  validarSoloNumerosFormulario(event: any): void {
+    const input = event.target as HTMLInputElement;
+    const valor = input.value;
+
+    const valorLimpio = valor.replace(/\D/g, '');
+
+    const longitudMaxima = this.tipoComprobante === '03' ? 8 : 11;
+    const valorFinal = valorLimpio.slice(0, longitudMaxima);
+
+    this.nuevoCliente.num_doc = valorFinal;
+    input.value = valorFinal;
+  }
+
   buscarClienteAutoComplete(event: any): void {
-    const query = event.query.toLowerCase();
+    let query = event.query.toLowerCase();
+
+    query = query.replace(/\D/g, '');
+
     const todosClientes = this.clientesService.getClientes();
 
     const tipoDocRequerido = this.tipoComprobante === '03' ? 'DNI' : 'RUC';
@@ -299,6 +380,62 @@ export class GenerarVenta implements OnInit, OnDestroy {
         return matchDoc || matchApellidos || matchNombres || matchRazonSocial;
       })
       .slice(0, 10);
+
+    this.tieneSugerencias = this.clientesSugeridos.length > 0;
+  }
+
+  manejarAccionCliente(): void {
+    const documentoIngresado =
+      typeof this.clienteAutoComplete === 'string'
+        ? this.clienteAutoComplete.trim()
+        : this.clienteAutoComplete?.num_doc || '';
+
+    const longitudRequerida = this.tipoComprobante === '03' ? 8 : 11;
+
+    if (documentoIngresado.length === 0) {
+      this.abrirFormularioVacio();
+      return;
+    }
+
+    if (documentoIngresado.length !== longitudRequerida) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Documento inválido',
+        detail: `El ${this.tipoComprobante === '03' ? 'DNI' : 'RUC'} debe tener ${longitudRequerida} dígitos`,
+        life: 3000,
+      });
+      return;
+    }
+
+    if (this.tieneSugerencias) {
+      this.buscarCliente();
+    } else {
+      this.preguntarCrearCliente(documentoIngresado);
+    }
+  }
+
+  abrirFormularioVacio(): void {
+    this.busquedaRealizada = false;
+    this.clienteEncontrado = null;
+    this.mostrarFormulario = true;
+
+    this.nuevoCliente = {
+      tipo_doc: this.tipoComprobante === '03' ? 'DNI' : 'RUC',
+      num_doc: '',
+      apellidos: '',
+      nombres: '',
+      razon_social: '',
+      direccion: '',
+      email: '',
+      telefono: '',
+    };
+
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Nuevo cliente',
+      detail: 'Complete los datos para registrar',
+      life: 3000,
+    });
   }
 
   onTipoComprobanteChange(): void {
@@ -371,18 +508,44 @@ export class GenerarVenta implements OnInit, OnDestroy {
               life: 2000,
             });
           } else {
-            this.abrirFormularioNuevoCliente();
+            this.preguntarCrearCliente(documentoIngresado);
           }
         }
       }
     }, 100);
   }
 
-  abrirFormularioNuevoCliente(): void {
+  preguntarCrearCliente(documento: string): void {
+    const tipoDoc = this.tipoComprobante === '03' ? 'DNI' : 'RUC';
+
+    this.confirmationService.confirm({
+      message: `El ${tipoDoc} ${documento} no está registrado. ¿Desea registrar un nuevo cliente?`,
+      header: 'Cliente no encontrado',
+      icon: 'pi pi-question-circle',
+      acceptLabel: 'Sí, registrar',
+      rejectLabel: 'No, cancelar',
+      accept: () => {
+        this.abrirFormularioNuevoCliente(documento);
+      },
+      reject: () => {
+        this.clienteAutoComplete = null;
+        this.numeroDocumento = '';
+        this.messageService.add({
+          severity: 'info',
+          summary: 'Búsqueda cancelada',
+          detail: 'Puede buscar otro cliente',
+          life: 2000,
+        });
+      },
+    });
+  }
+
+  abrirFormularioNuevoCliente(documento?: string): void {
     const documentoIngresado =
-      typeof this.clienteAutoComplete === 'string'
+      documento ||
+      (typeof this.clienteAutoComplete === 'string'
         ? this.clienteAutoComplete
-        : this.clienteAutoComplete?.num_doc || '';
+        : this.clienteAutoComplete?.num_doc || '');
 
     const longitudRequerida = this.tipoComprobante === '03' ? 8 : 11;
 
@@ -413,7 +576,7 @@ export class GenerarVenta implements OnInit, OnDestroy {
 
     this.messageService.add({
       severity: 'info',
-      summary: 'Cliente no encontrado',
+      summary: 'Registrar cliente',
       detail: 'Complete los datos para registrar',
       life: 3000,
     });
@@ -449,13 +612,19 @@ export class GenerarVenta implements OnInit, OnDestroy {
   onClearCliente(): void {
     this.clienteAutoComplete = null;
     this.numeroDocumento = '';
+    this.tieneSugerencias = false;
     this.limpiarCliente();
   }
 
   buscarCliente(): void {
     this.clickEnBotonBuscar = true;
 
-    if (!this.numeroDocumento.trim()) {
+    const documentoIngresado =
+      typeof this.clienteAutoComplete === 'string'
+        ? this.clienteAutoComplete.trim()
+        : this.clienteAutoComplete?.num_doc || '';
+
+    if (!documentoIngresado) {
       this.messageService.add({
         severity: 'warn',
         summary: 'Documento requerido',
@@ -465,7 +634,7 @@ export class GenerarVenta implements OnInit, OnDestroy {
     }
 
     const longitudRequerida = this.tipoComprobante === '03' ? 8 : 11;
-    if (this.numeroDocumento.length !== longitudRequerida) {
+    if (documentoIngresado.length !== longitudRequerida) {
       this.messageService.add({
         severity: 'warn',
         summary: 'Documento inválido',
@@ -475,22 +644,11 @@ export class GenerarVenta implements OnInit, OnDestroy {
     }
 
     this.busquedaRealizada = true;
-    const cliente = this.clientesService.buscarPorDocumento(this.numeroDocumento);
+    const cliente = this.clientesService.buscarPorDocumento(documentoIngresado);
     this.clienteEncontrado = cliente || null;
 
     if (!this.clienteEncontrado) {
-      this.nuevoCliente.num_doc = this.numeroDocumento;
-      this.nuevoCliente.tipo_doc = this.tipoComprobante === '03' ? 'DNI' : 'RUC';
-      this.nuevoCliente.apellidos = '';
-      this.nuevoCliente.nombres = '';
-      this.nuevoCliente.razon_social = '';
-      this.mostrarFormulario = true;
-
-      this.messageService.add({
-        severity: 'info',
-        summary: 'Cliente no encontrado',
-        detail: 'Complete los datos para registrar',
-      });
+      this.preguntarCrearCliente(documentoIngresado);
     } else {
       this.mostrarFormulario = false;
 
@@ -561,6 +719,7 @@ export class GenerarVenta implements OnInit, OnDestroy {
     this.busquedaRealizada = false;
     this.mostrarFormulario = false;
     this.clientesSugeridos = [];
+    this.tieneSugerencias = false;
 
     this.nuevoCliente = {
       tipo_doc: this.tipoComprobante === '03' ? 'DNI' : 'RUC',
@@ -575,7 +734,11 @@ export class GenerarVenta implements OnInit, OnDestroy {
   }
 
   cargarProductos(): void {
-    this.productosDisponibles = this.productosService.getProductos(this.sedeSeleccionada, 'Activo');
+    this.productosDisponibles = this.productosService.getProductos(
+      this.sedeNombreSeleccionada,
+      'Activo',
+    );
+
     this.aplicarFiltros();
   }
 
@@ -648,7 +811,55 @@ export class GenerarVenta implements OnInit, OnDestroy {
   }
 
   agregarProducto(): void {
-    if (!this.productoTemp || this.cantidadTemp <= 0) return;
+    if (!this.productoTemp || this.cantidadTemp <= 0) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Cantidad inválida',
+        detail: 'Ingrese una cantidad válida',
+        life: 3000,
+      });
+      return;
+    }
+
+    const stockDisponibleActual = this.productosService.getStockDisponible(this.productoTemp.id);
+
+    const cantidadYaEnCarrito = this.productosSeleccionados
+      .filter((p) => p.id_producto === String(this.productoTemp!.id))
+      .reduce((sum, p) => sum + p.cantidad, 0);
+
+    const stockTotalDisponible = stockDisponibleActual + cantidadYaEnCarrito;
+
+    if (this.cantidadTemp > stockTotalDisponible) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Stock insuficiente',
+        detail: `Solo hay ${stockTotalDisponible} unidades disponibles de este producto. Stock en almacén: ${stockDisponibleActual}, ya en carrito: ${cantidadYaEnCarrito}`,
+        life: 5000,
+      });
+      return;
+    }
+
+    if (this.cantidadTemp > stockDisponibleActual) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Stock insuficiente en almacén',
+        detail: `Solo quedan ${stockDisponibleActual} unidades en almacén. Ya tiene ${cantidadYaEnCarrito} en el carrito.`,
+        life: 5000,
+      });
+      return;
+    }
+
+    const exito = this.productosService.descontarStock(this.productoTemp.id, this.cantidadTemp);
+
+    if (!exito) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error al descontar stock',
+        detail: 'No se pudo descontar el stock del producto',
+        life: 4000,
+      });
+      return;
+    }
 
     const precio = this.getPrecioSegunTipo(this.productoTemp);
     const valorUnit = this.comprobantesService.calcularValorUnitario(precio);
@@ -668,13 +879,18 @@ export class GenerarVenta implements OnInit, OnDestroy {
     };
 
     this.productosSeleccionados.push(detalle);
+    this.cargarProductos();
     this.productoTemp = null;
+    this.cantidadTemp = 1;
 
     this.messageService.add({
       severity: 'success',
       summary: 'Producto agregado',
       detail: 'Producto añadido al carrito',
+      life: 2000,
     });
+
+    this.guardarEstado();
   }
 
   getPrecioSegunTipo(producto: Producto): number {
@@ -696,22 +912,34 @@ export class GenerarVenta implements OnInit, OnDestroy {
       acceptLabel: 'Sí',
       rejectLabel: 'No',
       accept: () => {
+        const productoEliminado = this.productosSeleccionados[index];
+
+        this.productosService.devolverStock(
+          Number(productoEliminado.id_producto),
+          productoEliminado.cantidad,
+        );
+
+        this.cargarProductos();
+
         this.productosSeleccionados.splice(index, 1);
+
         this.messageService.add({
           severity: 'info',
           summary: 'Producto eliminado',
-          detail: 'Producto removido del carrito',
+          detail: 'Producto removido del carrito y stock devuelto',
         });
+
+        this.guardarEstado();
       },
     });
   }
 
-obtenerSeveridadStock(stock: number | undefined): 'success' | 'warn' | 'danger' {
-  if (!stock || stock === 0) return 'danger';
-  if (stock <= 5) return 'warn';
-  if (stock <= 20) return 'warn';
-  return 'success';
-}
+  obtenerSeveridadStock(stock: number | undefined): 'success' | 'warn' | 'danger' {
+    if (!stock || stock === 0) return 'danger';
+    if (stock <= 5) return 'warn';
+    if (stock <= 20) return 'warn';
+    return 'success';
+  }
 
   onCodigoPromocionChange(): void {
     if (!this.codigoPromocion.trim()) {
@@ -734,7 +962,7 @@ obtenerSeveridadStock(stock: number | undefined): 'success' | 'warn' | 'danger' 
       subtotal: this.calcularSubtotal(),
       tipoComprobante: this.tipoComprobante,
       idCliente: this.clienteEncontrado?.id_cliente,
-      idSede: this.sedeSeleccionada,
+      idSede: this.sedeIdSeleccionada,
     });
 
     if (!resultado.exito) {
@@ -908,6 +1136,7 @@ obtenerSeveridadStock(stock: number | undefined): 'success' | 'warn' | 'danger' 
       fec_venc:
         this.tipoComprobante === '01' ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) : null,
       moneda: 'PEN',
+      tipo_pago: this.tipoPago,
       tipo_op: '0101',
       subtotal: subtotalConDescuento,
       igv: igv,
@@ -915,7 +1144,7 @@ obtenerSeveridadStock(stock: number | undefined): 'success' | 'warn' | 'danger' 
       total: total,
       estado: true,
       responsable: this.nombreResponsable,
-      id_sede: this.sedeSeleccionada,
+      id_sede: this.sedeIdSeleccionada,
       id_empleado: this.empleadoActual!.id_empleado,
       detalles: detalles,
       cliente_nombre: nombreCliente,
@@ -950,39 +1179,83 @@ obtenerSeveridadStock(stock: number | undefined): 'success' | 'warn' | 'danger' 
 
       this.messageService.add({
         severity: 'success',
-        summary: 'Venta generada',
-        detail: `${this.comprobanteGenerado.serie}-${this.comprobanteGenerado.numero.toString().padStart(8, '0')} creado`,
+        summary: 'Venta generada exitosamente',
+        detail: `Comprobante ${this.comprobanteGenerado.serie}-${this.comprobanteGenerado.numero.toString().padStart(8, '0')} creado`,
+        life: 4000,
       });
     }, 1500);
   }
 
-  imprimirComprobante() {
-    this.guardarEstado();
+  imprimirComprobante(): void {
+    if (!this.comprobanteGenerado) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Sin comprobante',
+        detail: 'No hay comprobante para imprimir',
+        life: 3000
+      });
+      return;
+    }
 
+    this.guardarEstado();
+    
+    
     this.router.navigate(['/ventas/imprimir-comprobante'], {
       state: {
         comprobante: this.comprobanteGenerado,
-        rutaRetorno: '/ventas/generar-venta',
-      },
+        rutaRetorno: '/ventas/generar-venta'
+      }
     });
   }
 
   nuevaVenta(): void {
-    this.confirmationService.confirm({
-      message: '¿Estás seguro de iniciar una nueva venta? Se perderá el progreso actual.',
-      header: 'Confirmar Nueva Venta',
-      icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'Sí, nueva venta',
-      rejectLabel: 'Cancelar',
-      accept: () => {
-        this.limpiarEstado();
-        window.location.reload();
-      },
-    });
+    if (this.comprobanteGenerado) {
+      this.limpiarEstado();
+      window.location.reload();
+    } else {
+      this.confirmationService.confirm({
+        message: '¿Estás seguro de cancelar esta venta? Se perderá el progreso actual.',
+        header: 'Confirmar Cancelación',
+        icon: 'pi pi-exclamation-triangle',
+        acceptLabel: 'Sí, cancelar',
+        rejectLabel: 'No',
+        accept: () => {
+          this.productosSeleccionados.forEach((item) => {
+            this.productosService.devolverStock(Number(item.id_producto), item.cantidad);
+          });
+
+          this.limpiarEstado();
+          window.location.reload();
+        },
+      });
+    }
   }
 
   verListado(): void {
-    this.limpiarEstado();
-    this.router.navigate(['/ventas/historial-ventas']);
+    if (this.comprobanteGenerado) {
+      this.router.navigate(['/ventas/historial-ventas']);
+      return;
+    }
+
+    if (this.productosSeleccionados.length > 0) {
+      this.confirmationService.confirm({
+        message: '¿Desea salir sin generar la venta? Se cancelará la operación.',
+        header: 'Confirmar salida',
+        icon: 'pi pi-exclamation-triangle',
+        acceptLabel: 'Sí, salir',
+        rejectLabel: 'Continuar venta',
+        accept: () => {
+          this.productosSeleccionados.forEach((item) => {
+            this.productosService.devolverStock(Number(item.id_producto), item.cantidad);
+          });
+
+          this.limpiarEstado();
+          this.router.navigate(['/ventas/historial-ventas']);
+        },
+      });
+    } else {
+      this.limpiarEstado();
+      this.router.navigate(['/ventas/historial-ventas']);
+    }
   }
 }

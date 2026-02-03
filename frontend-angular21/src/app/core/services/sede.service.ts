@@ -36,7 +36,7 @@ export class SedeService {
       {
         id_sede: 'SEDE001',
         nombre: 'LAS FLORES',
-        razon_social: 'IMPORTADOR MKAPAPU S.A.C.',
+        razon_social: 'MKAPU IMPORT',
         ruc: '20123456789',
         direccion: 'Av. Las Flores 123',
         telefono: '01-2345678',
@@ -50,7 +50,7 @@ export class SedeService {
       {
         id_sede: 'SEDE002',
         nombre: 'LURIN',
-        razon_social: 'IMPORTADOR MKAPAPU S.A.C.',
+        razon_social: 'MKAPU IMPORT',
         ruc: '20123456789',
         direccion: 'Av. Principal 456, Lurín',
         telefono: '01-3456789',
@@ -64,7 +64,7 @@ export class SedeService {
       {
         id_sede: 'SEDE003',
         nombre: 'VES',
-        razon_social: 'IMPORTADOR MKAPAPU S.A.C.',
+        razon_social: 'MKAPU IMPORT',
         ruc: '20123456789',
         direccion: 'Calle Los Álamos 789, VES',
         telefono: '01-4567890',

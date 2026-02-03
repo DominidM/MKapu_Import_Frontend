@@ -24,6 +24,7 @@ export interface ComprobanteVenta {
   fec_emision: Date;
   fec_venc: Date | null;
   moneda: 'PEN' | 'USD';
+  tipo_pago: string;
   tipo_op: string;
   subtotal: number;
   igv: number;
@@ -39,13 +40,11 @@ export interface ComprobanteVenta {
   detalles: DetalleComprobante[];
   cliente_nombre?: string;
   cliente_doc?: string;
-  // ✅ CAMPOS DE PROMOCIÓN
   codigo_promocion?: string;
   descuento_promocion?: number;
   descripcion_promocion?: string;
-  id_promocion?: string; // Para referencia
+  id_promocion?: string;
 }
-
 
 export interface VentaWizard {
   tipoComprobante: '01' | '03';
@@ -67,7 +66,7 @@ export interface FiltrosVenta {
   estado?: boolean;
   cliente?: string;
   responsable?: string;
-  empleado?: string; // ✅ AGREGADO
+  empleado?: string;
 }
 
 @Injectable({
@@ -99,6 +98,7 @@ export class VentasService {
         fec_emision: new Date('2026-01-10T10:30:00'),
         fec_venc: null,
         moneda: 'PEN',
+        tipo_pago: 'EFECTIVO',
         tipo_op: '0101',
         subtotal: 1354.24,
         igv: 243.76,
@@ -110,7 +110,7 @@ export class VentasService {
         cdr_cpe: 'CDR-ACEPTADO',
         responsable: 'Juan Carlos Pérez García',
         id_sede: 'SEDE001',
-        id_empleado: 'EMP-001', // ✅ AGREGADO
+        id_empleado: 'EMP-001',
         cliente_nombre: 'Juan Pérez García',
         cliente_doc: '12345678',
         detalles: [
@@ -138,6 +138,7 @@ export class VentasService {
         fec_emision: new Date('2026-01-10T14:20:00'),
         fec_venc: new Date('2026-02-10T14:20:00'),
         moneda: 'PEN',
+        tipo_pago: 'TARJETA',
         tipo_op: '0101',
         subtotal: 2033.90,
         igv: 366.10,
@@ -149,7 +150,7 @@ export class VentasService {
         cdr_cpe: 'CDR-ACEPTADO',
         responsable: 'María Elena Rodríguez López',
         id_sede: 'SEDE002',
-        id_empleado: 'EMP-006', // ✅ AGREGADO
+        id_empleado: 'EMP-006',
         cliente_nombre: 'Empresa Ejemplo SAC',
         cliente_doc: '20123456789',
         detalles: [
@@ -177,6 +178,7 @@ export class VentasService {
         fec_emision: new Date('2026-01-11T09:15:00'),
         fec_venc: null,
         moneda: 'PEN',
+        tipo_pago: 'YAPE',
         tipo_op: '0101',
         subtotal: 761.86,
         igv: 137.14,
@@ -188,7 +190,7 @@ export class VentasService {
         cdr_cpe: 'CDR-ACEPTADO',
         responsable: 'Diana Carolina Quispe Mamani',
         id_sede: 'SEDE003',
-        id_empleado: 'EMP-008', // ✅ AGREGADO
+        id_empleado: 'EMP-008',
         cliente_nombre: 'María López Sánchez',
         cliente_doc: '87654321',
         detalles: [
@@ -216,6 +218,7 @@ export class VentasService {
         fec_emision: new Date('2026-01-11T16:45:00'),
         fec_venc: new Date('2026-02-11T16:45:00'),
         moneda: 'PEN',
+        tipo_pago: 'PLIN',
         tipo_op: '0101',
         subtotal: 1525.42,
         igv: 274.58,
@@ -227,7 +230,7 @@ export class VentasService {
         cdr_cpe: 'CDR-ACEPTADO',
         responsable: 'Luis Fernando Gutiérrez Ramos',
         id_sede: 'SEDE001',
-        id_empleado: 'EMP-005', // ✅ AGREGADO
+        id_empleado: 'EMP-005',
         cliente_nombre: 'Inversiones Del Sur SAC',
         cliente_doc: '20987654321',
         detalles: [
@@ -255,6 +258,7 @@ export class VentasService {
         fec_emision: new Date('2026-01-12T11:00:00'),
         fec_venc: null,
         moneda: 'PEN',
+        tipo_pago: 'EFECTIVO',
         tipo_op: '0101',
         subtotal: 423.73,
         igv: 76.27,
@@ -266,7 +270,7 @@ export class VentasService {
         cdr_cpe: 'CDR-ACEPTADO',
         responsable: 'Ana Patricia Morales Vega',
         id_sede: 'SEDE002',
-        id_empleado: 'EMP-004', // ✅ AGREGADO
+        id_empleado: 'EMP-004',
         cliente_nombre: 'Carlos Ramírez Torres',
         cliente_doc: '23456789',
         detalles: [
@@ -294,6 +298,7 @@ export class VentasService {
         fec_emision: new Date('2026-01-12T13:30:00'),
         fec_venc: null,
         moneda: 'PEN',
+        tipo_pago: 'TARJETA',
         tipo_op: '0101',
         subtotal: 1016.95,
         igv: 183.05,
@@ -305,7 +310,7 @@ export class VentasService {
         cdr_cpe: 'CDR-ANULADO',
         responsable: 'Roberto Carlos Vega Mendoza',
         id_sede: 'SEDE003',
-        id_empleado: 'EMP-011', // ✅ AGREGADO
+        id_empleado: 'EMP-011',
         cliente_nombre: 'Ana Flores Medina',
         cliente_doc: '34567890',
         detalles: [
@@ -333,6 +338,7 @@ export class VentasService {
         fec_emision: new Date('2026-01-13T08:20:00'),
         fec_venc: new Date('2026-02-13T08:20:00'),
         moneda: 'PEN',
+        tipo_pago: 'YAPE',
         tipo_op: '0101',
         subtotal: 2711.86,
         igv: 488.14,
@@ -344,7 +350,7 @@ export class VentasService {
         cdr_cpe: 'CDR-ACEPTADO',
         responsable: 'Juan Carlos Pérez García',
         id_sede: 'SEDE001',
-        id_empleado: 'EMP-001', // ✅ AGREGADO
+        id_empleado: 'EMP-001',
         cliente_nombre: 'Constructora Lima SAC',
         cliente_doc: '20456789123',
         detalles: [
@@ -372,6 +378,7 @@ export class VentasService {
         fec_emision: new Date('2026-01-13T15:10:00'),
         fec_venc: null,
         moneda: 'PEN',
+        tipo_pago: 'EFECTIVO',
         tipo_op: '0101',
         subtotal: 635.59,
         igv: 114.41,
@@ -383,7 +390,7 @@ export class VentasService {
         cdr_cpe: 'CDR-ACEPTADO',
         responsable: 'Rosa María Flores Pérez',
         id_sede: 'SEDE002',
-        id_empleado: 'EMP-006', // ✅ AGREGADO
+        id_empleado: 'EMP-006',
         cliente_nombre: 'Pedro Castro Vega',
         cliente_doc: '45678901',
         detalles: [
@@ -423,6 +430,7 @@ export class VentasService {
         fec_emision: new Date('2026-01-14T10:30:00'),
         fec_venc: null,
         moneda: 'PEN',
+        tipo_pago: 'PLIN',
         tipo_op: '0101',
         subtotal: 932.20,
         igv: 167.80,
@@ -434,7 +442,7 @@ export class VentasService {
         cdr_cpe: 'CDR-ACEPTADO',
         responsable: 'Sofía Alejandra Torres Lima',
         id_sede: 'SEDE003',
-        id_empleado: 'EMP-012', // ✅ AGREGADO
+        id_empleado: 'EMP-012',
         cliente_nombre: 'Luis Gonzales Ruiz',
         cliente_doc: '56789012',
         detalles: [
@@ -462,6 +470,7 @@ export class VentasService {
         fec_emision: new Date('2026-01-14T14:45:00'),
         fec_venc: new Date('2026-02-14T14:45:00'),
         moneda: 'PEN',
+        tipo_pago: 'TARJETA',
         tipo_op: '0101',
         subtotal: 3050.85,
         igv: 549.15,
@@ -473,7 +482,7 @@ export class VentasService {
         cdr_cpe: 'CDR-ACEPTADO',
         responsable: 'María Elena Rodríguez López',
         id_sede: 'SEDE001',
-        id_empleado: 'EMP-002', // ✅ AGREGADO
+        id_empleado: 'EMP-002',
         cliente_nombre: 'Comercial Norte SAC',
         cliente_doc: '20567890123',
         detalles: [
@@ -501,6 +510,7 @@ export class VentasService {
         fec_emision: new Date('2026-01-15T09:00:00'),
         fec_venc: null,
         moneda: 'PEN',
+        tipo_pago: 'EFECTIVO',
         tipo_op: '0101',
         subtotal: 550.85,
         igv: 99.15,
@@ -512,7 +522,7 @@ export class VentasService {
         cdr_cpe: 'CDR-ACEPTADO',
         responsable: 'Carmen Julia Ríos Castillo',
         id_sede: 'SEDE002',
-        id_empleado: 'EMP-008', // ✅ AGREGADO
+        id_empleado: 'EMP-008',
         cliente_nombre: 'Rosa Martínez Luna',
         cliente_doc: '67890123',
         detalles: [
@@ -540,6 +550,7 @@ export class VentasService {
         fec_emision: new Date('2026-01-15T16:20:00'),
         fec_venc: null,
         moneda: 'PEN',
+        tipo_pago: 'YAPE',
         tipo_op: '0101',
         subtotal: 1694.92,
         igv: 305.08,
@@ -551,7 +562,7 @@ export class VentasService {
         cdr_cpe: 'CDR-ACEPTADO',
         responsable: 'Diana Carolina Quispe Mamani',
         id_sede: 'SEDE003',
-        id_empleado: 'EMP-008', // ✅ AGREGADO
+        id_empleado: 'EMP-008',
         cliente_nombre: 'Miguel Díaz Campos',
         cliente_doc: '78901234',
         detalles: [
@@ -660,12 +671,10 @@ export class VentasService {
     return this.comprobantesSubject.value.filter((c) => c.responsable === responsable);
   }
 
-  // ✅ NUEVO MÉTODO: Filtrar por empleado
   getComprobantesPorEmpleado(idEmpleado: string): ComprobanteVenta[] {
     return this.comprobantesSubject.value.filter((c) => c.id_empleado === idEmpleado);
   }
 
-  // ✅ NUEVO MÉTODO: Filtrar por sede
   getComprobantesPorSede(idSede: string): ComprobanteVenta[] {
     return this.comprobantesSubject.value.filter((c) => c.id_sede === idSede);
   }
@@ -697,7 +706,6 @@ export class VentasService {
       comprobantes = comprobantes.filter((c) => c.responsable === filtros.responsable);
     }
 
-    // ✅ NUEVO FILTRO: Por empleado
     if (filtros.empleado) {
       comprobantes = comprobantes.filter((c) => c.id_empleado === filtros.empleado);
     }
@@ -822,7 +830,6 @@ export class VentasService {
     return comprobante.estado && fechaEmision.getTime() === hoy.getTime();
   }
 
-  // ✅ NUEVO MÉTODO: Estadísticas por empleado
   getEstadisticasPorEmpleado(idEmpleado: string) {
     const ventas = this.getComprobantesPorEmpleado(idEmpleado).filter(c => c.estado);
     
@@ -835,7 +842,6 @@ export class VentasService {
     };
   }
 
-  // ✅ NUEVO MÉTODO: Estadísticas por sede
   getEstadisticasPorSede(idSede: string) {
     const ventas = this.getComprobantesPorSede(idSede).filter(c => c.estado);
     

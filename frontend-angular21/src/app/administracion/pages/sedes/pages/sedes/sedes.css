@@ -168,3 +168,52 @@
 .sedes-page-dropdown {
   min-width: 90px;
 }
+
+.sedes-empty-state {
+  border: 1px dashed #e2e8f0;
+  border-radius: 16px;
+  padding: 2.5rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  text-align: center;
+  color: #64748b;
+}
+
+.sedes-empty-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: #f8fafc;
+  display: grid;
+  place-items: center;
+  font-size: 22px;
+  color: #94a3b8;
+}
+
+.sedes-empty-title {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.sedes-empty-subtitle {
+  font-size: 0.85rem;
+  max-width: 360px;
+}
+
+:host-context(.app-dark) .sedes-kicker {
+  color: #94a3b8;
+}
+
+:host-context(.app-dark) .sedes-title {
+  color: #f8fafc;
+}
+
+:host-context(.app-dark) .sedes-search-label {
+  color: #e2e8f0;
+}
+
+:host-context(.app-dark) .sedes-search-input {
+  color: #e2e8f0;
+}
