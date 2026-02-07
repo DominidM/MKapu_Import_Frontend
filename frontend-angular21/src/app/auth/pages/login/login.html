@@ -1,76 +1,66 @@
-<div class="flex justify-content-end p-1">
-  <p-button
-      (onClick)="toggleTheme()"
-      icon="pi pi-moon"
-  />
+<!-- BOTÓN DE TEMA (EL TUYO, UNO SOLO) -->
+<div class="theme-toggle" >
+    <p-button (onClick)="toggleTheme()" rounded icon="pi pi-moon" />
 </div>
 
-<div class="flex align-items-center justify-content-center h-screen">
+<div class="login-page">
 
-  <!-- FORMULARIO -->
-  <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="w-full flex justify-content-center">
+    <div class="background-wrapper">
+        <div class="background-image"></div>
+        <div class="background-overlay"></div>
+    </div>
 
-      <p-card [style]="{ width: '25rem', overflow: 'hidden', padding: '2rem'}" styleClass="login-card">
+    <p-card class="login-card">
+        <div class="card-content">
 
-          <ng-template #header>
-              <div class="flex justify-content-center mb-3">
-                  <img
-                      src="/images/logo.jpg"
-                      alt="Logo MKapu"
-                      class="img-custom"
-                  />
-              </div>
-          </ng-template>
+            <!-- LOGO -->
+            <div class="logo-section">
+                <div class="logo-area">
+                    <div class="logo">mkapu</div>
+                    <div class="logo-subtitle">import</div>
+                </div>
+            </div>
 
-          <ng-template #title>
-              BIENVENIDO A MKAPU
-          </ng-template>
+            <!-- TEXTO -->
+            <div class="welcome-section">
+                <h2 class="welcome-title">Bienvenido de nuevo</h2>
+                <p class="welcome-subtitle">
+                    Ingresa tus credenciales para continuar
+                </p>
+            </div>
 
-          <ng-template #subtitle>
-              Sistema de gestión para MKapu Import
-          </ng-template>
+            <!-- FORMULARIO ANGULAR -->
+            <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
 
-          <div class="flex flex-column gap-3 mt-4">
-              <p-iftalabel>
-                  <input
-                      type="text"
-                      pInputText
-                      class="w-full"
-                      formControlName="username"
-                      name="usuario"
-                      required
-                  />
-                  <label>Usuario</label>
-              </p-iftalabel>
+                <!-- USUARIO -->
+                <div class="form-group">
+                    <label class="form-label">Usuario</label>
+                    <input pInputText formControlName="username" placeholder="Ingresa tu usuario" class="w-full" />
+                </div>
 
-              <p-iftalabel>
-                  <p-password
-                      formControlName="password"
-                      name="password"
-                      [toggleMask]="true"
-                      styleClass="w-full"
-                      inputStyleClass="w-full"
-                      required
-                  ></p-password>
-                  <label>Contraseña</label>
-              </p-iftalabel>
-          </div>
+                <!-- PASSWORD -->
+                <div class="form-group">
+                    <label class="form-label">Contraseña</label>
+                    <p-password formControlName="password" [toggleMask]="true" styleClass="w-full"
+                        inputStyleClass="w-full" placeholder="Ingresa tu contraseña">
+                    </p-password>
+                </div>
 
-          <ng-template #footer>
-              <div class="flex gap-4 mt-1">
-                  <p-button
-                      label="Iniciar Sesión"
-                      class="w-full"
-                      styleClass="w-full"
-                      type="submit"
-                      
-                  />
-              </div>
-          </ng-template>
+                <!-- BOTÓN -->
+                <div class="flex gap-4 mt-1">
+                    <p-button label="Iniciar Sesión" class="w-full" styleClass="w-full" type="submit" />
+                </div>
 
-      </p-card>
+            </form>
 
-  </form>
+            <div class="card-footer">
+                <i class="pi pi-shield"></i>
+                <span>Conexión segura</span>
+            </div>
+
+        </div>
+    </p-card>
+
 </div>
 
 <p-toast position="top-right"></p-toast>
