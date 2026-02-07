@@ -1,0 +1,148 @@
+:host ::ng-deep {
+  .surface-50 {
+    border-radius: 1rem !important;
+  }
+}
+
+.transfer-title-icon {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #f5c34d;
+  color: #1f2937;
+  font-size: 18px;
+}
+
+.transfer-kicker {
+  margin: 0;
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.transfer-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.transfer-pill {
+  border-radius: 9999px !important;
+  padding: 1.25rem 2.5rem !important;
+  font-size: 1.1rem !important;
+  font-weight: 600;
+  min-height: 56px !important;
+  box-shadow: 0 6px 12px #00000026 !important;
+  transition: all 0.2s;
+}
+
+.transfer-pill-secondary {
+  background: #64748b !important;
+  border: 2px solid #475569 !important;
+  color: #ffffff !important;
+}
+
+.transfer-pill:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px #00000033 !important;
+}
+
+:host-context(.app-dark) .transfer-title-icon {
+  background: #3a2a10;
+  color: #fbbf24;
+}
+
+:host-context(.app-dark) .transfer-kicker {
+  color: #94a3b8;
+}
+
+:host-context(.app-dark) .transfer-title {
+  color: #f8fafc;
+}
+
+:host-context(.app-dark) .transfer-pill-secondary {
+  background: #1f2937 !important;
+  border-color: #334155 !important;
+  color: #e2e8f0 !important;
+}
+
+:host-context(.app-dark) :host ::ng-deep .surface-card {
+  background: #14171a;
+  border-color: #2f3540;
+}
+
+:host-context(.app-dark) :host ::ng-deep .p-card {
+  background: #14171a;
+  border-color: #2f3540;
+}
+
+:host-context(.app-dark) :host ::ng-deep .surface-50 {
+  background: #1b1f24 !important;
+  border-color: #2f3540 !important;
+}
+
+:host-context(.app-dark) :host ::ng-deep .text-900 {
+  color: #f8fafc !important;
+}
+
+:host-context(.app-dark) :host ::ng-deep .text-700 {
+  color: #cbd5f5 !important;
+}
+
+:host-context(.app-dark) :host ::ng-deep .text-600 {
+  color: #94a3b8 !important;
+}
+
+:host-context(.app-dark) :host ::ng-deep .text-primary {
+  color: #fbbf24 !important;
+}
+
+:host-context(.app-dark) :host ::ng-deep .bg-primary-50 {
+  background: #2a2414 !important;
+}
+
+:host-context(.app-dark) :host ::ng-deep .bg-orange-50 {
+  background: #2a1d0a !important;
+  border-color: #6b3f1a !important;
+}
+
+:host-context(.app-dark) :host ::ng-deep .bg-amber-50 {
+  background: #2b2312 !important;
+  border-color: #6b4e1e !important;
+}
+
+:host-context(.app-dark) :host ::ng-deep .bg-blue-50 {
+  background: #0f2536 !important;
+  border-color: #1e3a5f !important;
+}
+
+:host-context(.app-dark) :host ::ng-deep .bg-green-50 {
+  background: #0b2a1f !important;
+  border-color: #14532d !important;
+}
+
+:host-context(.app-dark) :host ::ng-deep .bg-purple-50 {
+  background: #1f1b2e !important;
+  border-color: #3b2f5a !important;
+}
+
+:host-context(.app-dark) :host ::ng-deep .text-primary,
+:host-context(.app-dark) :host ::ng-deep .text-blue-600,
+:host-context(.app-dark) :host ::ng-deep .text-green-600,
+:host-context(.app-dark) :host ::ng-deep .text-orange-600,
+:host-context(.app-dark) :host ::ng-deep .text-amber-600,
+:host-context(.app-dark) :host ::ng-deep .text-purple-600 {
+  color: #fbbf24 !important;
+}
+
+:host-context(.app-dark) :host ::ng-deep .text-blue-700,
+:host-context(.app-dark) :host ::ng-deep .text-green-700,
+:host-context(.app-dark) :host ::ng-deep .text-orange-700,
+:host-context(.app-dark) :host ::ng-deep .text-amber-700,
+:host-context(.app-dark) :host ::ng-deep .text-purple-700 {
+  color: #fcd34d !important;
+}

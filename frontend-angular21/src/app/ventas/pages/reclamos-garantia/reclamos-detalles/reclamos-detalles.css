@@ -1,0 +1,232 @@
+::ng-deep .ventas-header-card .p-card-body {
+  padding: 1.25rem 1.25rem !important;
+}
+
+.ventas-title-icon {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #f5c34d;
+  color: #1f2937;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.ventas-kicker {
+  margin: 0;
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.ventas-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+:host ::ng-deep .ventas-pill {
+  padding: 0.5rem 1.5rem !important;
+  border-radius: 8px !important;
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
+  min-height: 42px !important;
+  box-shadow: none !important;
+  transition: all 0.2s ease !important;
+}
+
+:host ::ng-deep .ventas-pill.btn-cancelar {
+  background: #ffffff !important;
+  color: #64748B !important;
+  border: 2px solid #64748b !important;
+  box-shadow: none !important;
+}
+
+:host ::ng-deep .ventas-pill.btn-cancelar:hover {
+  background: #f9fafb !important;
+  transform: translateY(-2px) !important;
+}
+
+
+:host ::ng-deep .btn-guardar-cambios {
+  background: #f6af33 !important;
+  border: none !important;
+  color: #1f2937 !important;
+  font-size: 1rem !important;
+  font-weight: 700 !important;
+  padding: 0.75rem 2rem !important;
+  min-height: 42px !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(246, 175, 51, 0.3) !important;
+  transition: all 0.3s ease !important;
+}
+
+::ng-deep .ventas-header-card,
+::ng-deep .section-card,
+::ng-deep .actions-card {
+  border: none !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+  overflow: hidden !important;
+}
+
+:host ::ng-deep .cliente-card .p-card,
+:host ::ng-deep .producto-card .p-card,
+:host ::ng-deep .gestion-card .p-card {
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+:host ::ng-deep .cliente-card .p-card-body,
+:host ::ng-deep .producto-card .p-card-body,
+:host ::ng-deep .gestion-card .p-card-body {
+  padding: 1.75rem;
+}
+
+/* Card header secciones */
+.card-header {
+  border-radius: 15px 15px 0 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 0rem;
+  border-bottom: 2px solid #e2e8f0;
+  margin-bottom: 1.5rem;
+}
+
+.card-header h3 {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #1f2937;
+}
+
+.icon-reclamo {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #f5c34d;
+  color: #1f2937;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+/* Info items */
+.info-item {
+  padding: 1rem;
+  border-radius: 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s ease;
+  height: 100%;
+}
+
+.info-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.info-label i {
+  color: #f0d067;
+}
+
+.descripcion-texto {
+  color: #475569;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0;
+  padding: 0.75rem;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+}
+
+.observaciones-historial {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1rem;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.info-box {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: #eff6ff;
+  border: 1px solid #93c5fd;
+  border-radius: 8px;
+  color: #1e40af;
+}
+
+.garantia-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  border: 2px solid;
+}
+
+.garantia-badge.vigente {
+  background: rgba(16, 185, 129, 0.1);
+  color: #059669;
+  border-color: #10b981;
+}
+
+.garantia-badge.vencida {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+  border-color: #ef4444;
+}
+
+
+:host-context(.app-dark) ::ng-deep .ventas-header-card .p-card,
+:host-context(.app-dark) ::ng-deep .ventas-header-card .p-card-body {
+  background: #18181b !important;
+}
+
+:host-context(.app-dark) ::ng-deep .actions-card .p-card,
+:host-context(.app-dark) ::ng-deep .actions-card .p-card-body,
+:host-context(.app-dark) ::ng-deep .actions-card .p-card-content {
+  background: #18181b !important;
+}
+
+:host-context(.app-dark) :host ::ng-deep .cliente-card .p-card,
+:host-context(.app-dark) :host ::ng-deep .producto-card .p-card,
+:host-context(.app-dark) :host ::ng-deep .gestion-card .p-card {
+  background: #1a1a1a !important;
+  border-color: #2d2d2d !important;
+}
+
+@media (max-width: 768px) {
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+}

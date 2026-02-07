@@ -1,0 +1,274 @@
+<div class="clientes-page">
+    <p-card styleClass="clientes-header-card">
+        <div class="flex align-items-center justify-content-between flex-wrap gap-3">
+            <div class="flex align-items-center gap-3">
+                <span class="clientes-title-icon">
+                    <i class="pi pi-list"></i>
+                </span>
+                <div>
+                    <p class="clientes-kicker">ALMACEN - MERMAS / REMATES</p>
+                    <h2 class="clientes-title">MERMAS / REMATES</h2>
+                </div>
+            </div>
+            <div class="flex align-items-center gap-2">
+                <p-button [routerLink]="['/admin/mermas-remates/registro-merma-remate']" label="Registro Producto"
+                    icon="pi pi-plus" styleClass="clientes-pill"></p-button>
+            </div>
+        </div>
+    </p-card>
+
+    <div class="grid mb-4">
+        <div class="col-12 md:col-4">
+            <p-card styleClass="stat-card stat-card-mermas">
+                <div class="flex align-items-center justify-content-between">
+                    <div>
+                        <p class="stat-label">TOTAL MERMAS</p>
+                        <h3 class="stat-value">{{ totalMermas }}</h3>
+                        <p class="stat-change">-3 vs. semana pasada</p>
+                    </div>
+                    <div class="stat-icon stat-icon-mermas">
+                        <i class="pi pi-exclamation-triangle"></i>
+                    </div>
+                </div>
+            </p-card>
+        </div>
+
+        <div class="col-12 md:col-4">
+            <p-card styleClass="stat-card stat-card-remates">
+                <div class="flex align-items-center justify-content-between">
+                    <div>
+                        <p class="stat-label">TOTAL REMATES</p>
+                        <h3 class="stat-value">{{ totalRemates }}</h3>
+                        <p class="stat-change">+8 nuevos hoy</p>
+                    </div>
+                    <div class="stat-icon stat-icon-remates">
+                        <i class="pi pi-dollar"></i>
+                    </div>
+                </div>
+            </p-card>
+        </div>
+
+        <div class="col-12 md:col-4">
+            <p-card styleClass="stat-card stat-card-valor">
+                <div class="flex align-items-center justify-content-between">
+                    <div>
+                        <p class="stat-label">VALOR TOTAL</p>
+                        <h3 class="stat-value">S/ {{ valorTotalRemates | number:'1.2-2' }}</h3>
+                        <p class="stat-change">Precio de remate acumulado</p>
+                    </div>
+                    <div class="stat-icon stat-icon-valor">
+                        <i class="pi pi-chart-line"></i>
+                    </div>
+                </div>
+            </p-card>
+        </div>
+    </div>
+
+    <!-- Filtros de Búsqueda -->
+    <p-card styleClass="filtros-card">
+        <div class="grid">
+            <div class="col-12 md:col-5">
+                <label class="filter-label">Buscar Producto</label>
+                <span class="p-input-icon-left ">
+
+                    <input pInputText type="text" placeholder="Escribe código, producto o sede..." class="w-full"
+                        [(ngModel)]="busqueda" (input)="aplicarFiltros()" />
+                </span>
+            </div>
+
+            <div class="col-12 md:col-4">
+                <label class="filter-label">Estado</label>
+                <p-autoComplete [suggestions]="tiposFiltro" [(ngModel)]="tipoFiltro" optionLabel="label" optionValue="value"
+                    placeholder="Seleccione tipo" styleClass="w-full" (onChange)="aplicarFiltros()">
+                </p-autoComplete>
+            </div>
+
+            <div class="col-12 md:col-3">
+                <label class="filter-label" style="visibility: hidden;">Acción</label>
+                <p-button label="Limpiar Filtros" icon="pi pi-filter-slash" [outlined]="true" severity="danger"
+                    styleClass="w-full" (onClick)="limpiarFiltros()">
+                </p-button>
+            </div>
+        </div>
+    </p-card>
+
+    <!-- Tabs -->
+    <div class="tabs-container mb-3">
+        <p-button [label]="'Todos los Productos (' + getContadorTab('todos') + ')'" icon="pi pi-list"
+            [outlined]="tabActiva !== 'todos'" [text]="tabActiva !== 'todos'" styleClass="tab-button"
+            [ngClass]="{'tab-active': tabActiva === 'todos'}" (onClick)="cambiarTab('todos')">
+        </p-button>
+        <p-button [label]="'Mermas (' + getContadorTab('merma') + ')'" icon="pi pi-exclamation-triangle"
+            [outlined]="tabActiva !== 'merma'" [text]="tabActiva !== 'merma'" styleClass="tab-button"
+            [ngClass]="{'tab-active': tabActiva === 'merma'}" (onClick)="cambiarTab('merma')">
+        </p-button>
+        <p-button [label]="'Remates (' + getContadorTab('remate') + ')'" icon="pi pi-dollar"
+            [outlined]="tabActiva !== 'remate'" [text]="tabActiva !== 'remate'" styleClass="tab-button"
+            [ngClass]="{'tab-active': tabActiva === 'remate'}" (onClick)="cambiarTab('remate')">
+        </p-button>
+    </div>
+
+    <!-- Tabla de Productos -->
+    <p-card styleClass="tabla-card">
+        <div class="flex align-items-center justify-content-between mb-3">
+            <div class="flex align-items-center gap-2">
+                <span class="tabla-icon">
+                    <i class="pi pi-table"></i>
+                </span>
+                <h3 class="tabla-title mb-0">PRODUCTOS REGISTRADOS</h3>
+                <p-tag *ngIf="productosFiltrados.length > 0" [value]="productosFiltrados.length + ' productos'"
+                    severity="info">
+                </p-tag>
+            </div>
+        </div>
+
+        <p-table [value]="productosFiltrados" [tableStyle]="{ 'min-width': '100%' }" styleClass="mermas-table">
+            <ng-template #header>
+                <tr>
+                    <th style="width: 12%">CÓDIGO</th>
+                    <th style="width: 28%">PRODUCTO</th>
+                    <th style="width: 10%">TIPO</th>
+                    <th style="width: 10%">CANTIDAD</th>
+                    <th style="width: 15%">CÓDIGO REMATE</th>
+                    <th style="width: 15%">PRECIO REMATE</th>
+                    <th style="width: 10%" class="text-center">ACCIONES</th>
+                </tr>
+            </ng-template>
+            <ng-template #body let-producto>
+                <tr>
+                    <td>
+                        <span class="codigo-producto">{{ producto.codigo }}</span>
+                        <div class="fecha-producto">{{ producto.fechaRegistro | date:'dd/MM/yyyy' }}</div>
+                    </td>
+                    <td>
+                        <div class="producto-info">
+                            <div class="producto-nombre">{{ producto.nombre }}</div>
+                            <div class="producto-responsable">Responsable: {{ producto.responsable }}</div>
+                        </div>
+                    </td>
+                    <td>
+                        <p-tag [value]="getTipoLabel(producto.tipo)" [severity]="getTipoSeverity(producto.tipo)">
+                        </p-tag>
+                    </td>
+                    <td>
+                        <span class="cantidad-badge">{{ producto.cantidad }} unid.</span>
+                    </td>
+                    <td>
+                        <span *ngIf="producto.tipo === 'remate'" class="codigo-remate">
+                            {{ producto.codigoRemate }}
+                        </span>
+                        <span *ngIf="producto.tipo === 'merma'" class="text-400">—</span>
+                    </td>
+                    <td>
+                        <span *ngIf="producto.tipo === 'remate'" class="precio-remate">
+                            S/ {{ producto.precioRemate | number:'1.2-2' }}
+                        </span>
+                        <span *ngIf="producto.tipo === 'merma'" class="text-400">—</span>
+                    </td>
+                    <td class="text-center">
+                        <p-button icon="pi pi-pencil" [text]="true" severity="info" styleClass="action-btn"
+                            (onClick)="editarProducto(producto)" pTooltip="Editar" tooltipPosition="left">
+                        </p-button>
+                        <p-button icon="pi pi-trash" [text]="true" severity="danger" styleClass="action-btn"
+                            (onClick)="eliminarProducto(producto)" pTooltip="Eliminar" tooltipPosition="left">
+                        </p-button>
+                    </td>
+                </tr>
+            </ng-template>
+            <ng-template #emptymessage>
+                <tr>
+                    <td colspan="7" class="text-center py-5">
+                        <i class="pi pi-inbox text-4xl text-400 mb-3"></i>
+                        <p class="text-500 mt-2">No hay productos registrados con los filtros seleccionados.</p>
+                    </td>
+                </tr>
+            </ng-template>
+        </p-table>
+    </p-card>
+
+    <!-- Modal de Registro/Edición -->
+    <p-dialog [(visible)]="mostrarModal" [header]="modoEdicion ? 'Editar Producto' : 'Registrar Producto'"
+        [modal]="true" [style]="{width: '600px'}" [draggable]="false" [resizable]="false" styleClass="mermas-dialog">
+
+        <div class="grid form-grid">
+            <div class="col-12">
+                <label class="field-label" for="codigo">
+                    CÓDIGO DEL PRODUCTO <span class="required-asterisk">*</span>
+                </label>
+                <input id="codigo" pInputText class="w-full" [(ngModel)]="productoActual.codigo"
+                    [disabled]="modoEdicion" placeholder="Ej: TRF-2026-0006" />
+            </div>
+
+            <div class="col-12">
+                <label class="field-label" for="nombre">
+                    NOMBRE DEL PRODUCTO <span class="required-asterisk">*</span>
+                </label>
+                <input id="nombre" pInputText class="w-full" [(ngModel)]="productoActual.nombre"
+                    placeholder="Ej: Smart TV LED 55" />
+            </div>
+
+            <div class="col-12">
+                <label class="field-label" for="cantidad">
+                    CANTIDAD <span class="required-asterisk">*</span>
+                </label>
+                <p-inputNumber [(ngModel)]="productoActual.cantidad" [min]="1" [style]="{'width': '100%'}"
+                    [showButtons]="true" buttonLayout="horizontal" incrementButtonIcon="pi pi-plus"
+                    decrementButtonIcon="pi pi-minus">
+                </p-inputNumber>
+            </div>
+
+            <div class="col-12">
+                <label class="field-label" for="tipo">
+                    TIPO DE REGISTRO <span class="required-asterisk">*</span>
+                </label>
+                <p-autoComplete [suggestions]="tiposProducto" [(ngModel)]="productoActual.tipo" optionLabel="label"
+                    optionValue="value" placeholder="Seleccione tipo..." styleClass="w-full"
+                    (onChange)="onTipoChange()">
+                </p-autoComplete>
+            </div>
+
+            <!-- Campos condicionales para Remate -->
+            <ng-container *ngIf="productoActual.tipo === 'remate'">
+                <div class="col-12">
+                    <label class="field-label" for="codigoRemate">
+                        CÓDIGO DE REMATE <span class="required-asterisk">*</span>
+                    </label>
+                    <input id="codigoRemate" pInputText class="w-full" [(ngModel)]="productoActual.codigoRemate"
+                        placeholder="Ej: RMT-2026-004" />
+                </div>
+
+                <div class="col-12">
+                    <label class="field-label" for="precioRemate">
+                        PRECIO DE REMATE <span class="required-asterisk">*</span>
+                    </label>
+                    <p-inputNumber [(ngModel)]="productoActual.precioRemate" mode="currency" currency="PEN"
+                        locale="es-PE" [minFractionDigits]="2" [maxFractionDigits]="2" [style]="{'width': '100%'}">
+                    </p-inputNumber>
+                </div>
+            </ng-container>
+
+            <div class="col-12">
+                <label class="field-label" for="responsable">
+                    RESPONSABLE <span class="required-asterisk">*</span>
+                </label>
+                <input id="responsable" pInputText class="w-full" [(ngModel)]="productoActual.responsable"
+                    placeholder="Ej: Jefatura de almacén" />
+            </div>
+        </div>
+
+        <ng-template pTemplate="footer">
+            <div class="flex justify-content-center gap-2 mt-3">
+                <p-button label="Cancelar" icon="pi pi-times" [outlined]="true" severity="secondary"
+                    (onClick)="cerrarModal()">
+                </p-button>
+                <p-button [label]="modoEdicion ? 'Actualizar' : 'Guardar Producto'" icon="pi pi-check"
+                    styleClass="mermas-btn-primary" (onClick)="guardarProducto()">
+                </p-button>
+            </div>
+        </ng-template>
+    </p-dialog>
+
+    <!-- Componentes de PrimeNG -->
+    <p-toast />
+    <p-confirmDialog />
+</div>

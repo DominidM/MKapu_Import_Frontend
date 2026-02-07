@@ -1,0 +1,58 @@
+@import url(../../historial-ventas/historial-ventas.css);
+
+.filtro-busqueda-65 {
+  flex: 1;
+  min-width: 400px;
+}
+
+.codigo-comprobante {
+  font-family: 'Courier New', monospace;
+  font-weight: 600;
+  color: #6B7280;
+  font-size: 0.9rem;
+  background: #F3F4F6;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.codigo-producto {
+  font-family: 'Courier New', monospace;
+  font-weight: 600;
+  color: #F6AF33;
+  font-size: 0.85rem;
+  margin-bottom: 0.25rem;
+}
+
+.text-sm {
+  font-size: 0.875rem;
+  color: #6B7280;
+}
+
+.text-muted {
+  color: #9CA3AF;
+}
+
+.dias-transcurridos {
+  font-weight: 600;
+  color: #6B7280;
+}
+
+.mensaje-vacio {
+  padding: 3rem;
+  text-align: center;
+  color: #9CA3AF;
+}
+
+.mensaje-vacio i {
+  font-size: 4rem;
+  color: #D1D5DB;
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.mensaje-vacio p {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+}

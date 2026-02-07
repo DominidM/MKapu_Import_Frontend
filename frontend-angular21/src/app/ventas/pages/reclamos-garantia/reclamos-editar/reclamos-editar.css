@@ -1,0 +1,572 @@
+::ng-deep .ventas-header-card .p-card-body {
+  padding: 1.25rem 1.25rem !important;
+}
+
+.ventas-title-icon {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #f5c34d;
+  color: #1f2937;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.ventas-kicker {
+  margin: 0;
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.ventas-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+:host ::ng-deep .ventas-pill {
+  border-radius: 8px !important;
+  padding: 0.5rem 1.5rem !important;
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
+  min-height: 42px !important;
+  transition: all 0.2s ease !important;
+}
+
+/* estilo tipo “outline suave” */
+:host ::ng-deep .ventas-pill.btn-cancelar {
+  background: #ffffff !important;
+  color: #64748b !important;
+  border: 2px solid #64748B !important;
+  box-shadow: none !important;
+}
+
+:host ::ng-deep .ventas-pill.btn-cancelar:hover:not(:disabled) {
+  background: #f9fafb !important;
+  transform: translateY(-2px);
+}
+
+
+:host ::ng-deep .ventas-pill.p-button-outlined {
+  background: transparent !important;
+  border: 2px solid currentColor !important;
+}
+
+:host ::ng-deep .ventas-pill.p-button-outlined:hover:not(:disabled) {
+  background: var(--primary-color) !important;
+  color: #ffffff !important;
+}
+
+:host ::ng-deep .btn-guardar-cambios {
+  background: #f6af33 !important;
+  border: none !important;
+  color: #1f2937 !important;
+  font-size: 1rem !important;
+  font-weight: 700 !important;
+  padding: 0.75rem 2rem !important;
+  min-height: 42px !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(246, 175, 51, 0.3) !important;
+  transition: all 0.3s ease !important;
+}
+
+:host ::ng-deep .btn-guardar-cambios:hover:not(:disabled) {
+  background: #e8a424 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(246, 175, 51, 0.4) !important;
+}
+
+:host ::ng-deep .btn-guardar-cambios:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+::ng-deep .ventas-header-card,
+::ng-deep .section-card,
+::ng-deep .actions-card {
+  border: none !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+  overflow: hidden !important;
+}
+
+:host ::ng-deep .cliente-card .p-card,
+:host ::ng-deep .producto-card .p-card,
+:host ::ng-deep .gestion-card .p-card {
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+:host ::ng-deep .cliente-card .p-card:hover,
+:host ::ng-deep .producto-card .p-card:hover,
+:host ::ng-deep .gestion-card .p-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+:host ::ng-deep .cliente-card .p-card-body,
+:host ::ng-deep .producto-card .p-card-body,
+:host ::ng-deep .gestion-card .p-card-body {
+  padding: 1.75rem;
+}
+
+::ng-deep .ventas-header-card .p-card,
+::ng-deep .section-card .p-card,
+::ng-deep .actions-card .p-card {
+  border-radius: 12px !important;
+  border: none !important;
+}
+
+::ng-deep .section-card .p-card-body,
+::ng-deep .actions-card .p-card-body {
+  padding: 0 !important;
+}
+
+::ng-deep .section-card .p-card-content {
+  padding: 1.5rem !important;
+}
+
+::ng-deep .actions-card .p-card-content {
+  padding: 1.25rem !important;
+}
+
+.card-header {
+  border-radius: 15px 15px 0 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 0rem;
+  border-bottom: 2px solid #e2e8f0;
+  margin-bottom: 1.5rem;
+}
+
+.card-header h3 {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #1f2937;
+}
+
+.card-header h3 i {
+  color: #1f2937;
+  font-size: 1.2rem;
+}
+
+.icon-reclamo {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #f5c34d;
+  color: #1f2937;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.icon-reclamo i {
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.info-item {
+  padding: 1rem;
+  border-radius: 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s ease;
+  height: 100%;
+}
+
+.info-item:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.info-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.info-label i {
+  color: #f0d067;
+  font-size: 1rem;
+}
+
+.info-item strong {
+  color: #1e293b;
+  font-size: 1rem;
+}
+
+.info-item small {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+}
+
+.descripcion-texto {
+  color: #475569;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0;
+  padding: 0.75rem;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+}
+
+.garantia-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  border: 2px solid;
+}
+
+.garantia-badge.vigente {
+  background: rgba(16, 185, 129, 0.1);
+  color: #059669;
+  border-color: #10b981;
+}
+
+.garantia-badge.vencida {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+  border-color: #ef4444;
+}
+
+.garantia-badge i {
+  font-size: 1.25rem;
+}
+
+.form-field {
+  margin-bottom: 0;
+}
+
+.field-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.field-label i {
+  color: #f0d067;
+  font-size: 1.1rem;
+}
+
+.required {
+  color: #ef4444;
+  font-weight: 700;
+  margin-left: 0.25rem;
+}
+
+.field-help {
+  display: block;
+  color: #64748b;
+  font-size: 0.875rem;
+}
+
+.observaciones-historial {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1rem;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.observaciones-historial pre {
+  margin: 0;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  font-size: 0.9rem;
+  color: #475569;
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.6;
+}
+
+.info-box {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: #eff6ff;
+  border: 1px solid #93c5fd;
+  border-radius: 8px;
+  color: #1e40af;
+  font-size: 0.95rem;
+}
+
+.info-box i {
+  font-size: 1.5rem;
+  color: #3b82f6;
+}
+
+:host ::ng-deep .p-confirmdialog .p-dialog-content {
+  padding: 2rem 1.5rem !important;
+}
+
+:host ::ng-deep .p-confirmdialog .p-confirmdialog-message {
+  margin-left: 1rem;
+  white-space: pre-line;
+  line-height: 1.6;
+}
+
+:host ::ng-deep .p-confirmdialog .p-dialog-footer {
+  background: #f8fafc !important;
+  border-top: 1px solid #e2e8f0 !important;
+  padding: 1.25rem !important;
+}
+
+:host ::ng-deep .p-confirmdialog .p-button.p-button-text {
+  background: transparent !important;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.cliente-card {
+  animation: fadeIn 0.5s ease 0.1s backwards;
+}
+
+.producto-card {
+  animation: fadeIn 0.5s ease 0.2s backwards;
+}
+
+.gestion-card {
+  animation: fadeIn 0.5s ease 0.3s backwards;
+}
+
+@media (max-width: 768px) {
+  :host ::ng-deep .ventas-pill {
+    font-size: 0.875rem !important;
+    padding: 0.5rem 1rem !important;
+  }
+
+  :host ::ng-deep .btn-guardar-cambios {
+    width: 100%;
+  }
+
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .card-header h3 {
+    font-size: 1.1rem;
+  }
+
+  .icon-reclamo {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+  }
+}
+
+:host-context(.app-dark) ::ng-deep .ventas-header-card .p-card,
+:host-context(.app-dark) ::ng-deep .ventas-header-card .p-card-body {
+  background: #18181b !important;
+}
+
+:host-context(.app-dark) .ventas-title-icon {
+  background: #f5c34d !important;
+  color: #1f2937 !important;
+}
+
+:host-context(.app-dark) .ventas-kicker {
+  color: #94a3b8 !important;
+}
+
+:host-context(.app-dark) .ventas-title {
+  color: #f1f5f9 !important;
+}
+
+:host-context(.app-dark) ::ng-deep .ventas-header-card,
+:host-context(.app-dark) ::ng-deep .section-card,
+:host-context(.app-dark) ::ng-deep .actions-card {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2) !important;
+}
+
+:host-context(.app-dark) ::ng-deep .section-card .p-card,
+:host-context(.app-dark) ::ng-deep .section-card .p-card-body,
+:host-context(.app-dark) ::ng-deep .section-card .p-card-content {
+  background: #27272a !important;
+}
+
+:host-context(.app-dark) ::ng-deep .actions-card .p-card,
+:host-context(.app-dark) ::ng-deep .actions-card .p-card-body,
+:host-context(.app-dark) ::ng-deep .actions-card .p-card-content {
+  background: #18181b !important;
+}
+
+:host-context(.app-dark) :host ::ng-deep .cliente-card .p-card,
+:host-context(.app-dark) :host ::ng-deep .producto-card .p-card,
+:host-context(.app-dark) :host ::ng-deep .gestion-card .p-card {
+  background: #1a1a1a !important;
+  border-color: #2d2d2d !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.6) !important;
+}
+
+:host-context(.app-dark) :host ::ng-deep .cliente-card .p-card:hover,
+:host-context(.app-dark) :host ::ng-deep .producto-card .p-card:hover,
+:host-context(.app-dark) :host ::ng-deep .gestion-card .p-card:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.8) !important;
+}
+
+:host-context(.app-dark) .card-header {
+  border-bottom-color: #2d2d2d !important;
+}
+
+:host-context(.app-dark) .card-header h3 {
+  color: #f5f5f5 !important;
+}
+
+:host-context(.app-dark) .card-header h3 i {
+  color: #1f2937 !important;
+}
+
+:host-context(.app-dark) .icon-reclamo {
+  background: #f5c34d !important;
+  color: #1f2937 !important;
+}
+
+:host-context(.app-dark) .field-label,
+:host-context(.app-dark) .info-item strong {
+  color: #f1f5f9 !important;
+}
+
+:host-context(.app-dark) .info-label {
+  color: #94a3b8 !important;
+}
+
+:host-context(.app-dark) .info-item {
+  background: #18181b !important;
+  border-color: #3f3f46 !important;
+}
+
+:host-context(.app-dark) .info-item:hover {
+  background: #27272a !important;
+  border-color: #52525b !important;
+}
+
+:host-context(.app-dark) .descripcion-texto {
+  color: #cbd5e1 !important;
+  background: #18181b !important;
+  border-color: #3f3f46 !important;
+}
+
+:host-context(.app-dark) .info-box {
+  background: rgba(59, 130, 246, 0.1) !important;
+  border-color: rgba(59, 130, 246, 0.3) !important;
+  color: #93c5fd !important;
+}
+
+:host-context(.app-dark) .info-box i {
+  color: #60a5fa !important;
+}
+
+:host-context(.app-dark) .observaciones-historial {
+  background: #18181b !important;
+  border-color: #3f3f46 !important;
+}
+
+:host-context(.app-dark) .observaciones-historial pre {
+  color: #cbd5e1 !important;
+}
+
+:host-context(.app-dark) ::ng-deep .p-inputtext,
+:host-context(.app-dark) ::ng-deep textarea.p-inputtext {
+  background: #18181b !important;
+  border-color: #3f3f46 !important;
+  color: #f1f5f9 !important;
+}
+
+:host-context(.app-dark) ::ng-deep .p-select {
+  background: #18181b !important;
+  border-color: #3f3f46 !important;
+  color: #f1f5f9 !important;
+}
+
+:host-context(.app-dark) ::ng-deep .p-select-overlay {
+  background: #27272a !important;
+  border-color: #3f3f46 !important;
+}
+
+:host-context(.app-dark) ::ng-deep .p-select-option {
+  color: #f1f5f9 !important;
+}
+
+:host-context(.app-dark) ::ng-deep .p-select-option:hover {
+  background: #3f3f46 !important;
+}
+
+:host-context(.app-dark) ::ng-deep .p-divider.p-divider-horizontal:before {
+  border-top-color: #2d2d2d !important;
+}
+
+:host-context(.app-dark) ::ng-deep .p-confirmdialog {
+  background: #27272a !important;
+  border: 1px solid #3f3f46 !important;
+}
+
+:host-context(.app-dark) ::ng-deep .p-confirmdialog .p-dialog-header {
+  background: #18181b !important;
+  border-bottom: 1px solid #3f3f46 !important;
+  color: #f1f5f9 !important;
+}
+
+:host-context(.app-dark) ::ng-deep .p-confirmdialog .p-dialog-content {
+  background: #27272a !important;
+  color: #cbd5e1 !important;
+}
+
+:host-context(.app-dark) ::ng-deep .p-confirmdialog .p-confirmdialog-message {
+  color: #cbd5e1 !important;
+}
+
+:host-context(.app-dark) ::ng-deep .p-confirmdialog .p-dialog-footer {
+  background: #18181b !important;
+  border-top: 1px solid #3f3f46 !important;
+}
+
+:host-context(.app-dark) ::ng-deep .p-confirmdialog .p-confirmdialog-icon {
+  color: #f59e0b !important;
+}
