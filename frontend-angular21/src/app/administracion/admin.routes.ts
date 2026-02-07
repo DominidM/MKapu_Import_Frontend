@@ -226,6 +226,7 @@ export const ADMIN_ROUTES: Routes = [
   },
 
 <<<<<<< HEAD
+<<<<<<< HEAD
   /* =======================
     COMISIONES
   ======================= */
@@ -281,4 +282,23 @@ export const ADMIN_ROUTES: Routes = [
     ],
   },
 >>>>>>> d7e9c79a9eda46b581f75fe8dba5991daa40f224
+=======
+  /* =======================
+     DESPACHO PRODUCTOS
+  ======================= */
+  {
+    path: 'despacho-productos',
+    loadComponent: () =>
+      import('./pages/despacho-productos/pages/listado-despacho/listado-despacho').then(
+        (m) => m.ListadoDespacho,
+      ),
+  },
+  {
+    path: 'despacho-productos/detalle-despacho/:id',
+    loadComponent: () =>
+      import('./pages/despacho-productos/pages/detalles-despacho/detalles-despacho').then(
+        (m) => m.DetallesDespacho,
+      ),
+  },
+>>>>>>> 5905fb728c07a062798aeb4ff702289e5389a4dd
 ];
