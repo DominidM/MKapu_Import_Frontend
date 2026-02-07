@@ -118,7 +118,12 @@ export class Sidebar implements OnInit {
       label: 'Sedes',
       icon: 'pi pi-building',
     },
-
+    {
+      path: '/admin/comision',
+      allowedRoles: [UserRole.ADMIN],
+      label: 'Comisiones',
+      icon: 'pi pi-wallet',
+    },
     // ==================== VENTAS ====================
     {
       path: '/ventas/dashboard-ventas',

@@ -224,4 +224,35 @@ export const ADMIN_ROUTES: Routes = [
     redirectTo: 'dashboard',
     pathMatch: 'full',
   },
+
+  /* =======================
+    COMISIONES
+  ======================= */
+  {
+    path: 'comision',
+    loadComponent: () =>
+      import('./pages/comision/comision')
+    .then( (m) => m.Comision
+  ),
+       
+  },
+
+
+ 
+  {
+    path: 'comision-regla',
+    loadComponent: () =>
+      import('./pages/comision-regla/comisionregla')
+        .then( (m) => m.ComisionRegla),
+  },
+  
+
+  {
+    path: 'comision-reportes',
+    loadComponent: () =>
+      import('./pages/comision-reportes/comisionreportes')
+        .then( (m) => m.ComisionReportes),
+  },
+  
+
 ];
