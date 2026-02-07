@@ -1,0 +1,175 @@
+<div class="comision-page">
+
+    <!-- ================= HEADER ================= -->
+    <p-card styleClass="sedes-header-card">
+      <div class="flex align-items-center justify-content-between flex-wrap gap-3">
+  
+        <div class="flex align-items-center gap-3">
+          <span class="sedes-title-icon">
+            <i class="pi pi-chart-line"></i>
+          </span>
+          <div>
+            <p class="sedes-kicker">
+              ADMINISTRADOR · ADMINISTRACIÓN · COMISIONES
+            </p>
+            <h2 class="sedes-title">
+              REPORTES DE COMISIONES
+            </h2>
+          </div>
+        </div>
+  
+        <p-button
+          label="Exportar"
+          icon="pi pi-download"
+          styleClass="sedes-pill">
+        </p-button>
+  
+      </div>
+    </p-card>
+  
+    <!-- ================= MÉTRICAS ================= -->
+    <div class="comision-metrics grid mt-4">
+  
+      <!-- TOTAL A PAGAR -->
+      <div class="col-12 md:col-6 xl:col-4">
+        <p-card styleClass="metric-card metric-info">
+          <div class="metric-header">
+            <span class="metric-title">Total a Pagar (Mes)</span>
+            <span class="metric-icon metric-icon-info">
+              <i class="pi pi-money-bill"></i>
+            </span>
+          </div>
+          <div class="metric-value">
+            S/ {{ totalPagar | number:'1.2-2' }}
+          </div>
+          <div class="metric-sub">
+            Comisiones del período actual
+          </div>
+        </p-card>
+      </div>
+  
+      <!-- VENTAS TOTALES -->
+      <div class="col-12 md:col-6 xl:col-4">
+        <p-card styleClass="metric-card metric-success">
+          <div class="metric-header">
+            <span class="metric-title">Ventas Totales</span>
+            <span class="metric-icon metric-icon-success">
+              <i class="pi pi-briefcase"></i>
+            </span>
+          </div>
+          <div class="metric-value">
+            S/ {{ ventasTotales | number }}
+          </div>
+          <div class="metric-sub">
+            Ventas netas acumuladas
+          </div>
+        </p-card>
+      </div>
+  
+      <!-- VENDEDOR TOP -->
+      <div class="col-12 md:col-6 xl:col-4">
+        <p-card styleClass="metric-card metric-warning">
+          <div class="metric-header">
+            <span class="metric-title">Vendedor Top</span>
+            <span class="metric-icon metric-icon-warning">
+              <i class="pi pi-trophy"></i>
+            </span>
+          </div>
+          <div class="metric-value">
+            {{ vendedorTop.nombre }}
+          </div>
+          <div class="metric-sub">
+            S/ {{ vendedorTop.comision | number:'1.2-2' }} en comisiones
+          </div>
+        </p-card>
+      </div>
+  
+    </div>
+  
+    <!-- ================= FILTROS ================= -->
+    <p-card class="mt-4 filtros-card">
+      <div class="flex flex-wrap gap-3 align-items-center">
+  
+        <span class="p-input-icon-left flex-1">
+          <i class="pi pi-search"></i>
+          <input
+            pInputText
+            type="text"
+            placeholder="Buscar por DNI o código..."
+            [(ngModel)]="filtroBusqueda" />
+        </span>
+  
+        <!-- AUTOCOMPLETE PERIODO -->
+        <p-autoComplete
+          [(ngModel)]="periodoSeleccionado"
+          [suggestions]="periodosFiltrados"
+          (completeMethod)="filtrarPeriodos($event)"
+          field="nombre"
+          placeholder="Periodo">
+        </p-autoComplete>
+  
+        <!-- AUTOCOMPLETE ESTADO -->
+        <p-autoComplete
+          [(ngModel)]="estadoSeleccionado"
+          [suggestions]="estadosFiltrados"
+          (completeMethod)="filtrarEstados($event)"
+          field="nombre"
+          placeholder="Estado">
+        </p-autoComplete>
+  
+      </div>
+    </p-card>
+  
+    <!-- ================= TABLA ================= -->
+    <p-card class="mt-4 tabla-card">
+      <p-table
+        [value]="reportes"
+        responsiveLayout="scroll"
+        [paginator]="true"
+        [rows]="5"
+        [rowsPerPageOptions]="[5,10,20]"
+        [showCurrentPageReport]="true"
+        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} resultados">
+  
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Vendedor</th>
+            <th>Periodo</th>
+            <th>Ventas Netas</th>
+            <th>% Com.</th>
+            <th>Comisión Total</th>
+            <th>Estado</th>
+          </tr>
+        </ng-template>
+  
+        <ng-template pTemplate="body" let-row>
+          <tr>
+            <td>{{ row.vendedor }}</td>
+            <td>{{ row.periodo }}</td>
+            <td>S/ {{ row.ventas | number }}</td>
+            <td>
+              <span class="porcentaje-chip">
+                {{ row.porcentaje }}
+              </span>
+            </td>
+            <td class="comision-highlight">
+              S/ {{ row.comision | number:'1.2-2' }}
+            </td>
+            <td>
+              <p-tag
+                [value]="row.estado"
+                [severity]="
+                  row.estado === 'Pagado' ? 'success' :
+                  row.estado === 'Pendiente' ? 'warn' :
+                  'info'
+                ">
+              </p-tag>
+            </td>
+          </tr>
+        </ng-template>
+  
+      </p-table>
+    </p-card>
+  
+  </div>
+  

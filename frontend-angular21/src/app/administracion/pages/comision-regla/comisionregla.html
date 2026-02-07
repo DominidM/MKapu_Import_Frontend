@@ -1,0 +1,123 @@
+<p-card class="comision-regla-card">
+
+    <!-- HEADER -->
+    <div class="regla-header mb-4">
+      <span class="regla-icon">
+        <i class="pi pi-plus"></i>
+      </span>
+      <h3>Nueva Regla</h3>
+    </div>
+  
+    <!-- FORM BODY -->
+    <div class="form-body">
+  
+      <!-- CATEGORIA -->
+      <div class="form-group mb-4">
+        <label class="block mb-2">
+          Categoría (Familia)
+        </label>
+  
+        <p-autoComplete
+          [(ngModel)]="familiaSeleccionada"
+          [suggestions]="familiasFiltradas"
+          (completeMethod)="filtrarFamilias($event)"
+          field="label"
+          placeholder="Seleccione una familia..."
+          dropdown="true"
+          styleClass="w-full">
+        </p-autoComplete>
+      </div>
+  
+      <!-- TIPO DE VENTA -->
+      <div class="form-group mb-4">
+        <label class="block mb-2">
+          Tipo de Venta
+        </label>
+  
+        <div class="tipo-venta flex gap-2 flex-wrap">
+          <button
+            pButton
+            type="button"
+            label="General"
+            [class.active]="tipoVenta === 'general'"
+            (click)="tipoVenta = 'general'">
+          </button>
+  
+          <button
+            pButton
+            type="button"
+            label="Remate"
+            [class.active]="tipoVenta === 'remate'"
+            (click)="tipoVenta = 'remate'">
+          </button>
+  
+          <button
+            pButton
+            type="button"
+            label="Unitarias"
+            [class.active]="tipoVenta === 'unitarias'"
+            (click)="tipoVenta = 'unitarias'">
+          </button>
+        </div>
+      </div>
+  
+      <!-- SWITCH -->
+      <div class="form-group switch-group mb-4 flex align-items-center justify-content-between">
+        <div>
+          <strong>Comisión por Lote</strong>
+          <small class="block">
+            Aplicar a múltiples unidades
+          </small>
+        </div>
+  
+        <p-checkbox
+          [(ngModel)]="comisionPorLote"
+          [binary]="true"
+          inputId="lote"
+          styleClass="switch-checkbox">
+        </p-checkbox>
+      </div>
+  
+      <!-- MONTO -->
+      <div class="form-group mb-4">
+        <label class="block mb-2">
+          Monto de Comisión
+        </label>
+  
+        <div class="monto-input flex align-items-center gap-2">
+          <span class="currency">S/</span>
+  
+          <input
+            pInputText
+            type="number"
+            [(ngModel)]="montoComision"
+            placeholder="0.00"
+            class="flex-1" />
+  
+          <span class="currency">PEN</span>
+        </div>
+      </div>
+  
+    </div>
+  
+    <!-- ACTIONS -->
+    <div class="actions flex justify-content-end gap-2 mt-4">
+      <button
+        pButton
+        type="button"
+        label="Cancelar"
+        class="btn-cancel"
+        (click)="cancelar()">
+      </button>
+  
+      <button
+        pButton
+        type="button"
+        label="Guardar Regla"
+        class="btn-save"
+        (click)="guardarRegla()">
+      </button>
+    </div>
+  
+  </p-card>
+  
