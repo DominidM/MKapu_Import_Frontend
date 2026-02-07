@@ -645,6 +645,17 @@ export class GenerarVenta implements OnInit, OnDestroy {
       return;
     }
 
+    // ✅ VALIDAR QUE EL PRODUCTO TENGA ID
+    if (!this.productoTemp.id) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'El producto seleccionado no tiene ID válido',
+        life: 3000,
+      });
+      return;
+    }
+
     const stockDisponibleActual = this.productosService.getStockDisponible(this.productoTemp.id);
 
     const cantidadYaEnCarrito = this.productosSeleccionados

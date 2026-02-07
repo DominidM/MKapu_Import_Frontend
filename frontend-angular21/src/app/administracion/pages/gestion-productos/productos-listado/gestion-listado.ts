@@ -17,10 +17,22 @@ import { TooltipModule } from 'primeng/tooltip';
 import { PaginatorModule } from 'primeng/paginator';
 import { RouterOutlet, RouterModule } from '@angular/router';
 import { ConfirmDialog } from 'primeng/confirmdialog';
+import { DialogModule } from 'primeng/dialog';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmationService, MessageService } from 'primeng/api';
 
 import { ProductosService, Producto } from '../../../../core/services/productos.service';
+import { DialogStockSedes } from '../../../shared/dialog-stock-sedes/dialog-stock-sedes';
+
+interface ProductoAgrupado {
+  codigo: string;
+  nombre: string;
+  familia: string;
+  precioVenta: number;
+  stockTotal: number;
+  variantes: Producto[];
+  cantidadSedes: number;
+}
 
 @Component({
   selector: 'app-gestion-productos',
@@ -29,7 +41,7 @@ import { ProductosService, Producto } from '../../../../core/services/productos.
     CommonModule, FormsModule, ButtonModule, TableModule, CardModule, TagModule,
     AutoCompleteModule, SelectModule, ToggleButtonModule, ProgressSpinnerModule,
     InputTextModule, TooltipModule, PaginatorModule, RouterOutlet, RouterModule,
-    ConfirmDialog, ToastModule
+    ConfirmDialog, DialogModule, ToastModule, DialogStockSedes
   ],
   templateUrl: './gestion-listado.html',
   styleUrl: './gestion-listado.css',
@@ -42,24 +54,33 @@ export class GestionListado implements OnInit, OnDestroy, AfterViewInit {
   subtituloKicker = 'GESTION DE PRODUCTOS'
   iconoCabecera = 'pi pi-building';
 
-  productos: Producto[] = [];
-  productosOriginal: Producto[] = [];
-  productosFiltrados: Producto[] = [];
+  productosAgrupados: ProductoAgrupado[] = [];
+  productosAgrupadosFiltrados: ProductoAgrupado[] = [];
+  productosAgrupadosPaginados: ProductoAgrupado[] = [];
+  
   loading = false;
   vistaLista: boolean = true;
 
+  mostrarDialogStock = false;
+  variantesSeleccionadas: Producto[] = [];
+  nombreProductoSeleccionado = '';
+
+  mostrarDialogEliminar = false;
+  productoAEliminar: ProductoAgrupado | null = null;
+
   productosEliminados: Producto[] = [];
+  productosEliminadosAgrupados: ProductoAgrupado[] = [];
   productosEliminadosFiltrados: Producto[] = [];
   loadingEliminados = false;
-  vistaListaEliminados: boolean= true;
+  vistaListaEliminados: boolean = true;
   buscarValueEliminados: string | null = null;
 
   sedeValue: string | null = null;
   familiaValue: string | null = null;
   buscarValue: string | null = null;
-  items: Producto[] = [];
+  items: ProductoAgrupado[] = [];
 
-  sedes: {label: string, value: string}[] = [];
+  sedesOptions: {label: string, value: string | null}[] = [];
   familias: {label: string, value: string}[] = [];
 
   familiaValueEliminados: string | null = null;
@@ -67,7 +88,6 @@ export class GestionListado implements OnInit, OnDestroy, AfterViewInit {
 
   totalSedesActivas = 0;
   totalProductosActivos = 0;
-  resumenSedes: {sede: string, activos: number, eliminados: number, total: number}[] = [];
 
   rows = 10;
   first = 0;
@@ -77,7 +97,6 @@ export class GestionListado implements OnInit, OnDestroy, AfterViewInit {
   totalRecordsEliminados = 0;
 
   esVistaEliminados = false;
-  sedePersistente: string | null = null;
 
   constructor(
     public router: Router,
@@ -91,7 +110,7 @@ export class GestionListado implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngOnInit() {
-    this.cargarProductos();
+    this.cargarProductosAgrupados();
     this.loadingEliminados = false;
     this.actualizarCabecera();
     
@@ -105,23 +124,12 @@ export class GestionListado implements OnInit, OnDestroy, AfterViewInit {
         
         if (event.url === '/admin/gestion-productos' || 
             event.url.startsWith('/admin/gestion-productos?')) {
-          
-          this.cargarProductos();
-          
-          if (this.sedeValue) {
-            if (this.esVistaEliminados) {
-              this.cargarProductosEliminados();
-            } else {
-              this.productosOriginal = this.productosService.getProductos(this.sedeValue, 'Activo');
-              this.aplicarTodosLosFiltros();
-            }
-          }
+          this.cargarProductosAgrupados();
         }
         
         this.cdr.detectChanges();
       });
   }
-
 
   ngAfterViewInit() {
     this.cdr.detectChanges();
@@ -134,33 +142,96 @@ export class GestionListado implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private actualizarCabecera() {
-    setTimeout(() => {
-      if (this.esVistaEliminados) {
-        this.tituloKicker = 'ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS ELIMINADOS';
-        this.iconoCabecera = 'pi pi-trash';
+
+    Promise.resolve().then(() => {
+    if (this.esVistaEliminados) {
+      this.tituloKicker = 'ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS ELIMINADOS';
+      this.iconoCabecera = 'pi pi-trash';
+    } else {
+      const url = this.router.url;
+      
+      if (url.includes('crear-producto')) {
+        this.tituloKicker = 'ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS CREACIÓN';
+        this.iconoCabecera = 'pi pi-plus-circle';
+      } else if (url.includes('editar-producto')) {
+        this.tituloKicker = 'ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS EDICIÓN';
+        this.iconoCabecera = 'pi pi-pencil';
+      } else if (url.includes('ver-detalle-producto')) {
+        this.tituloKicker = 'ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS DETALLE';
+        this.iconoCabecera = 'pi pi-eye';
       } else {
-        const url = this.router.url;
-        
-        if (url.includes('crear-producto')) {
-          this.tituloKicker = 'ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS CREACIÓN';
-          this.iconoCabecera = 'pi pi-plus-circle';
-        } else if (url.includes('editar-producto')) {
-          this.tituloKicker = 'ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS EDICIÓN';
-          this.iconoCabecera = 'pi pi-pencil';
-        } else if (url.includes('ver-detalle-producto')) {
-          this.tituloKicker = 'ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS DETALLE';
-          this.iconoCabecera = 'pi pi-eye';
-        } else {
-          this.tituloKicker = 'ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS ACTIVOS';
-          this.iconoCabecera = 'pi pi-building';
-        }
+        this.tituloKicker = 'ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS ACTIVOS';
+        this.iconoCabecera = 'pi pi-building';
       }
-      this.cdr.detectChanges();
-    }, 0);
+    }
+    this.cdr.detectChanges();
+  });
+}
+
+
+  cargarProductosAgrupados() {
+    this.loading = true;
+    
+    const todosProductos = this.productosService.getProductos(undefined, 'Activo');
+    
+    const productosPorCodigo = new Map<string, Producto[]>();
+    
+    todosProductos.forEach(p => {
+      if (!productosPorCodigo.has(p.codigo)) {
+        productosPorCodigo.set(p.codigo, []);
+      }
+      productosPorCodigo.get(p.codigo)!.push(p);
+    });
+
+    this.productosAgrupados = Array.from(productosPorCodigo.entries()).map(([codigo, variantes]) => {
+      const primera = variantes[0];
+      const stockTotal = variantes.reduce((sum, v) => sum + (v.stockTotal || 0), 0);
+      const precioPromedio = variantes.reduce((sum, v) => sum + v.precioVenta, 0) / variantes.length;
+
+      return {
+        codigo: codigo,
+        nombre: primera.nombre,
+        familia: primera.familia,
+        precioVenta: precioPromedio,
+        stockTotal: stockTotal,
+        variantes: variantes,
+        cantidadSedes: primera.cantidadSedes || variantes.length
+      };
+    });
+
+    this.cargarSedes();
+    this.familias = this.productosService.getFamilias().map(f => ({ label: f, value: f }));
+    this.totalSedesActivas = this.productosService.getSedes().length;
+    this.totalProductosActivos = this.productosAgrupados.length;
+    
+    this.aplicarTodosLosFiltros();
+    this.loading = false;
+    this.resetPaginador();
+  }
+
+  cargarSedes() {
+    const sedesData = this.productosService.getSedes();
+    this.sedesOptions = [
+      { label: 'Todas las sedes', value: null },
+      ...sedesData.map(sede => ({
+        label: this.formatearNombreSede(sede),
+        value: sede
+      }))
+    ];
+  }
+
+  formatearNombreSede(sede: string): string {
+    return sede
+      .split(' ')
+      .map(palabra => palabra.charAt(0).toUpperCase() + palabra.slice(1).toLowerCase())
+      .join(' ');
+  }
+
+  onSelectSede() {
+    this.aplicarTodosLosFiltros();
   }
 
   irEliminados() {
-    this.sedePersistente = this.sedeValue;
     this.esVistaEliminados = true;
     this.vistaListaEliminados = true;
     this.cargarProductosEliminados();
@@ -173,57 +244,16 @@ export class GestionListado implements OnInit, OnDestroy, AfterViewInit {
     this.buscarValueEliminados = null;
     this.familiaValueEliminados = null;
     this.actualizarCabecera();
-    
-    if (this.sedeValue) {
-      this.onSelectSede();
-    }
-  }
-
-  cargarProductos() {
-    this.loading = true;
-    this.productosOriginal = this.productosService.getProductos(undefined, 'Activo');
-    
-    this.cargarSedes();
-    
-    this.familias = this.productosService.getFamilias().map(f => ({ label: f, value: f }));
-    this.resumenSedes = this.productosService.getResumenPorSedes();
-    this.totalSedesActivas = this.sedes.length;
-    this.totalProductosActivos = this.productosService.getTotalProductosActivos();
-    this.loading = false;
-    this.resetPaginador();
-  }
-
-  cargarSedes() {
-    const sedesData = this.productosService.getSedes();
-    this.sedes = sedesData.map(sede => ({
-      label: this.formatearNombreSede(sede),
-      value: sede
-    }));
-  }
-
-  formatearNombreSede(sede: string): string {
-    return sede
-      .split(' ')
-      .map(palabra => palabra.charAt(0).toUpperCase() + palabra.slice(1).toLowerCase())
-      .join(' ');
+    this.cargarProductosAgrupados();
   }
 
   cargarProductosEliminados() {
-    if (!this.sedeValue) {
-      this.productosEliminados = [];
-      this.productosEliminadosFiltrados = [];
-      this.totalRecordsEliminados = 0;
-      this.loadingEliminados = false;
-      this.cdr.detectChanges();
-      return;
-    }
-    
     this.loadingEliminados = true;
     this.cdr.detectChanges();
     
     setTimeout(() => {
       try {
-        let productos = this.productosService.getProductosEliminados(this.sedeValue!);
+        let productos = this.productosService.getProductosEliminados();
         
         if (this.familiaValueEliminados) {
           productos = productos.filter(p => p.familia === this.familiaValueEliminados);
@@ -231,11 +261,15 @@ export class GestionListado implements OnInit, OnDestroy, AfterViewInit {
         
         this.productosEliminados = productos;
         this.productosEliminadosFiltrados = [...productos];
-        this.totalRecordsEliminados = productos.length;
+        
+        this.agruparProductosEliminados();
+        
+        this.totalRecordsEliminados = this.productosEliminadosAgrupados.length;
         this.resetPaginadorEliminados();
       } catch (error) {
         this.productosEliminados = [];
         this.productosEliminadosFiltrados = [];
+        this.productosEliminadosAgrupados = [];
         this.totalRecordsEliminados = 0;
       } finally {
         this.loadingEliminados = false;
@@ -244,8 +278,35 @@ export class GestionListado implements OnInit, OnDestroy, AfterViewInit {
     }, 300);
   }
 
+  agruparProductosEliminados() {
+    const productosPorCodigo = new Map<string, Producto[]>();
+    
+    this.productosEliminadosFiltrados.forEach(p => {
+      if (!productosPorCodigo.has(p.codigo)) {
+        productosPorCodigo.set(p.codigo, []);
+      }
+      productosPorCodigo.get(p.codigo)!.push(p);
+    });
+
+    this.productosEliminadosAgrupados = Array.from(productosPorCodigo.entries()).map(([codigo, variantes]) => {
+      const primera = variantes[0];
+      const stockTotal = variantes.reduce((sum, v) => sum + (v.stockTotal || 0), 0);
+      const precioPromedio = variantes.reduce((sum, v) => sum + v.precioVenta, 0) / variantes.length;
+
+      return {
+        codigo: codigo,
+        nombre: primera.nombre,
+        familia: primera.familia,
+        precioVenta: precioPromedio,
+        stockTotal: stockTotal,
+        variantes: variantes,
+        cantidadSedes: primera.cantidadSedes || variantes.length
+      };
+    });
+  }
+
   cargarFamiliasEliminados() {
-    const productos = this.productosService.getProductosEliminados(this.sedeValue!);
+    const productos = this.productosService.getProductosEliminados();
     const familiasUnicas = [...new Set(productos.map(p => p.familia))];
     
     this.familiasEliminados = [
@@ -271,13 +332,13 @@ export class GestionListado implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private aplicarPaginacion() {
-    if (this.productosFiltrados.length === 0) {
-      this.productos = [];
+    if (this.productosAgrupadosFiltrados.length === 0) {
+      this.productosAgrupadosPaginados = [];
       this.totalRecords = 0;
       return;
     }
-    this.totalRecords = this.productosFiltrados.length;
-    this.productos = this.productosFiltrados.slice(this.first, this.first + this.rows);
+    this.totalRecords = this.productosAgrupadosFiltrados.length;
+    this.productosAgrupadosPaginados = this.productosAgrupadosFiltrados.slice(this.first, this.first + this.rows);
   }
 
   private resetPaginador() {
@@ -298,11 +359,11 @@ export class GestionListado implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private aplicarPaginacionEliminados() {
-    if (this.productosEliminadosFiltrados.length === 0) {
+    if (this.productosEliminadosAgrupados.length === 0) {
       this.totalRecordsEliminados = 0;
       return;
     }
-    this.totalRecordsEliminados = this.productosEliminadosFiltrados.length;
+    this.totalRecordsEliminados = this.productosEliminadosAgrupados.length;
   }
 
   private resetPaginadorEliminados() {
@@ -310,56 +371,58 @@ export class GestionListado implements OnInit, OnDestroy, AfterViewInit {
     this.firstEliminados = 0;
   }
 
-  onSelectSede() {
-    if (!this.sedeValue) {
-      this.resetFiltros();
-      return;
-    }
-
-    if (this.esVistaEliminados) {
-      this.familiaValueEliminados = null;
-      this.cargarProductosEliminados();
-      this.cargarFamiliasEliminados();
-    } else {
-      this.productosOriginal = this.productosService.getProductos(this.sedeValue, 'Activo');
-      this.familias = this.productosService.getFamilias(this.sedeValue!)
-        .map(f => ({ label: f, value: f }));
-      this.aplicarTodosLosFiltros();
-    }
-  }
-
   onSelectFamilia() {
     this.aplicarTodosLosFiltros();
   }
 
   aplicarTodosLosFiltros() {
-    if (!this.sedeValue || this.productosOriginal.length === 0) {
-      this.productosFiltrados = [];
+    if (this.productosAgrupados.length === 0) {
+      this.productosAgrupadosFiltrados = [];
       this.aplicarPaginacion();
       return;
     }
 
-    this.productosFiltrados = this.productosOriginal.filter((p: Producto) => {
+    this.productosAgrupadosFiltrados = this.productosAgrupados.filter((p: ProductoAgrupado) => {
+      const matchesSede = !this.sedeValue || 
+        p.variantes.some(v => v.variantes?.some(vr => vr.sede === this.sedeValue));
+      
       const matchesFamilia = !this.familiaValue || p.familia === this.familiaValue;
+      
       let query = '';
       if (this.buscarValue && typeof this.buscarValue === 'string') {
-        query = this.buscarValue.toLowerCase().replace(/\s*\([^)]+\)\s*$/, '');
+        query = this.buscarValue.toLowerCase();
       }
+      
       const matchesBusqueda = !query || 
         p.nombre.toLowerCase().includes(query) ||
         p.codigo.toLowerCase().includes(query) ||
         p.familia.toLowerCase().includes(query);
-      return matchesFamilia && matchesBusqueda;
+      
+      return matchesSede && matchesFamilia && matchesBusqueda;
     });
+
+    if (this.sedeValue) {
+      this.productosAgrupadosFiltrados = this.productosAgrupadosFiltrados.map(p => {
+        const variantesFiltradas = p.variantes.filter(v => 
+          v.variantes?.some(vr => vr.sede === this.sedeValue)
+        );
+        const stockFiltrado = variantesFiltradas.reduce((sum, v) => sum + (v.stockTotal || 0), 0);
+        
+        return {
+          ...p,
+          stockTotal: stockFiltrado,
+          variantes: variantesFiltradas,
+          cantidadSedes: variantesFiltradas[0]?.variantes?.filter(vr => vr.sede === this.sedeValue).length || 0
+        };
+      });
+    }
+    
     this.aplicarPaginacion();
   }
 
   searchBuscar(event: any) {
     const query = event.query?.toLowerCase() || '';
-    const disponibles = this.sedeValue 
-      ? this.productosService.getProductos(this.sedeValue, 'Activo')
-      : this.productosService.getProductos(undefined, 'Activo');
-    this.items = disponibles.filter((p: Producto) => 
+    this.items = this.productosAgrupados.filter((p: ProductoAgrupado) => 
       p.nombre.toLowerCase().includes(query) || 
       p.codigo.toLowerCase().includes(query) ||
       p.familia.toLowerCase().includes(query)
@@ -376,21 +439,59 @@ export class GestionListado implements OnInit, OnDestroy, AfterViewInit {
   filtrarEliminados() {
     if (!this.buscarValueEliminados || this.buscarValueEliminados.trim() === '') {
       this.productosEliminadosFiltrados = [...this.productosEliminados];
-      this.totalRecordsEliminados = this.productosEliminados.length;
-      return;
+    } else {
+      const query = this.buscarValueEliminados.toLowerCase();
+      this.productosEliminadosFiltrados = this.productosEliminados.filter(p => 
+        p.nombre.toLowerCase().includes(query) || 
+        p.codigo.toLowerCase().includes(query)
+      );
     }
-    const query = this.buscarValueEliminados.toLowerCase();
-    this.productosEliminadosFiltrados = this.productosEliminados.filter(p => 
-      p.nombre.toLowerCase().includes(query) || 
-      p.codigo.toLowerCase().includes(query)
-    );
-    this.totalRecordsEliminados = this.productosEliminadosFiltrados.length;
+    
+    this.agruparProductosEliminados();
+    this.totalRecordsEliminados = this.productosEliminadosAgrupados.length;
   }
 
-  eliminarProducto(producto: Producto, event: Event) {
+  verStockPorSede(producto: ProductoAgrupado, event: Event) {
+    event.stopPropagation();
+    this.variantesSeleccionadas = producto.variantes;
+    this.nombreProductoSeleccionado = producto.nombre;
+    this.mostrarDialogStock = true;
+  }
+
+  getStockSeverity(stock: number): 'success' | 'warn' | 'danger' {
+    if (stock > 30) return 'success';
+    if (stock > 10) return 'warn';
+    return 'danger';
+  }
+
+  eliminarProducto(producto: ProductoAgrupado, event: Event) {
     this.confirmationService.confirm({
       target: event.target as EventTarget,
-      message: `¿Seguro que deseas eliminar el producto "${producto.nombre}"?`,
+      message: `¿Estás seguro de eliminar el producto "<strong>${producto.nombre}</strong>"?`,
+      header: 'Confirmar Eliminación',
+      icon: 'pi pi-exclamation-triangle',
+      rejectLabel: 'Cancelar',
+      acceptLabel: 'Continuar',
+      acceptButtonProps: { severity: 'danger' },
+      rejectButtonProps: { severity: 'secondary', outlined: true },
+      accept: () => {
+        if (producto.cantidadSedes === 1 && producto.variantes[0].id) {
+          this.ejecutarEliminacion(producto.variantes[0]);
+        } else {
+          this.productoAEliminar = producto;
+          this.mostrarDialogEliminar = true;
+        }
+      }
+    });
+  }
+
+  seleccionarSedeEliminar(variante: Producto) {
+    if (!variante.id) return;
+    
+    const sedeNombre = variante.variantes?.[0]?.sede || 'desconocida';
+    
+    this.confirmationService.confirm({
+      message: `¿Eliminar el producto "<strong>${variante.nombre}</strong>" de la sede <strong>${this.formatearNombreSede(sedeNombre)}</strong>?`,
       header: 'Confirmar Eliminación',
       icon: 'pi pi-exclamation-triangle',
       rejectLabel: 'Cancelar',
@@ -398,59 +499,103 @@ export class GestionListado implements OnInit, OnDestroy, AfterViewInit {
       acceptButtonProps: { severity: 'danger' },
       rejectButtonProps: { severity: 'secondary', outlined: true },
       accept: () => {
-        const exito = this.productosService.eliminarProducto(producto.id);
-        if (exito) {
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Producto Eliminado',
-            detail: `"${producto.nombre}" movido a eliminados`,
-            life: 3000
-          });
-          this.onSelectSede();
-        }
-      },
-      reject: () => {
-        this.messageService.add({
-          severity: 'info',
-          summary: 'Cancelado',
-          detail: 'Eliminación cancelada',
-          life: 2000
-        });
+        this.ejecutarEliminacion(variante);
+        this.cerrarDialogEliminar();
       }
     });
   }
 
-  restaurarProducto(producto: Producto, event: Event) {
+  eliminarTodasLasSedes() {
+    if (!this.productoAEliminar) return;
+
     this.confirmationService.confirm({
-      target: event.target as EventTarget,
-      message: `¿Restaurar <strong>${producto.nombre}</strong>?`,
-      header: 'Confirmar Restauración',
-      icon: 'pi pi-info-circle',
+      message: `¿Eliminar el producto "<strong>${this.productoAEliminar.nombre}</strong>" de <strong>TODAS LAS SEDES</strong>?<br><br>Esta acción eliminará ${this.productoAEliminar.cantidadSedes} registros.`,
+      header: 'Confirmar Eliminación Total',
+      icon: 'pi pi-exclamation-triangle',
       rejectLabel: 'Cancelar',
-      acceptLabel: 'Restaurar',
-      acceptButtonProps: { severity: 'warning' },
+      acceptLabel: 'Eliminar Todo',
+      acceptButtonProps: { severity: 'danger' },
       rejectButtonProps: { severity: 'secondary', outlined: true },
       accept: () => {
-        const exito = this.productosService.restaurarProducto(producto.id);
-        if (exito) {
+        let exitoso = 0;
+        this.productoAEliminar!.variantes.forEach(variante => {
+          if (variante.id && this.productosService.eliminarProducto(variante.id)) {
+            exitoso++;
+          }
+        });
+
+        if (exitoso > 0) {
           this.messageService.add({
             severity: 'success',
-            summary: 'Producto Restaurado',
-            detail: `"${producto.nombre}" restaurado exitosamente`,
+            summary: 'Productos Eliminados',
+            detail: `"${this.productoAEliminar!.nombre}" eliminado de ${exitoso} sedes`,
             life: 3000
           });
-          this.cargarProductosEliminados();
+          this.cargarProductosAgrupados();
         }
-      },
-      reject: () => {
-        this.messageService.add({
-          severity: 'info',
-          summary: 'Cancelado',
-          detail: 'Restauración cancelada',
-          life: 2000
-        });
+        
+        this.cerrarDialogEliminar();
       }
     });
+  }
+
+  ejecutarEliminacion(producto: Producto) {
+    if (!producto.id) return;
+    
+    const sedeNombre = producto.variantes?.[0]?.sede || 'desconocida';
+    const exito = this.productosService.eliminarProducto(producto.id);
+    
+    if (exito) {
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Producto Eliminado',
+        detail: `"${producto.nombre}" eliminado de ${this.formatearNombreSede(sedeNombre)}`,
+        life: 3000
+      });
+      this.cargarProductosAgrupados();
+    }
+  }
+
+  cerrarDialogEliminar() {
+    this.mostrarDialogEliminar = false;
+    this.productoAEliminar = null;
+  }
+
+  restaurarProducto(producto: ProductoAgrupado, event: Event) {
+    const varianteId = producto.variantes[0]?.id;
+    if (!varianteId) return;
+    
+    if (producto.cantidadSedes === 1) {
+      this.confirmationService.confirm({
+        target: event.target as EventTarget,
+        message: `¿Restaurar "<strong>${producto.nombre}</strong>"?`,
+        header: 'Confirmar Restauración',
+        icon: 'pi pi-info-circle',
+        rejectLabel: 'Cancelar',
+        acceptLabel: 'Restaurar',
+        acceptButtonProps: { severity: 'warning' },
+        rejectButtonProps: { severity: 'secondary', outlined: true },
+        accept: () => {
+          const exito = this.productosService.restaurarProducto(varianteId);
+          if (exito) {
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Producto Restaurado',
+              detail: `"${producto.nombre}" restaurado exitosamente`,
+              life: 3000
+            });
+            this.cargarProductosEliminados();
+          }
+        }
+      });
+    } else {
+      this.messageService.add({
+        severity: 'info',
+        summary: 'Restauración por Sede',
+        detail: 'Este producto tiene múltiples sedes. Usa "Editar" para restaurar sedes específicas.',
+        life: 4000
+      });
+    }
   }
 
   limpiarFiltros() {
@@ -460,28 +605,16 @@ export class GestionListado implements OnInit, OnDestroy, AfterViewInit {
       this.filtrarEliminados();
       this.cargarProductosEliminados();
     } else {
-      this.resetFiltrosParcial();
+      this.sedeValue = null;
+      this.familiaValue = null;
+      this.buscarValue = null;
+      this.items = [];
       this.aplicarTodosLosFiltros();
     }
   }
 
-  private resetFiltrosParcial() {
-    this.familiaValue = null;
-    this.buscarValue = null;
-    this.buscarValueEliminados = null;
-    this.items = [];
-  }
-
-  private resetFiltros() {
-    this.sedeValue = null;
-    this.resetFiltrosParcial();
-    this.familias = [];
-    this.productosFiltrados = [];
-    this.productos = [];
-  }
-
-  trackByFn(index: number, item: Producto): number {
-    return item.id;
+  trackByFn(index: number, item: any): string {
+    return item.codigo || item.id;
   }
 
   irDetalle(id: number) { 
@@ -517,12 +650,12 @@ export class GestionListado implements OnInit, OnDestroy, AfterViewInit {
            url.includes('ver-detalle-producto');
   }
 
-  get totalActivosSede(): number {
-    return this.sedeValue ? this.productosService.getTotalProductosActivosPorSede(this.sedeValue) : 0;
+  get stockTotalGeneral(): number {
+    return this.productosAgrupados.reduce((sum, p) => sum + p.stockTotal, 0);
   }
 
-  get totalEliminadosSede(): number {
-    return this.sedeValue ? this.productosService.getTotalProductosEliminadosPorSede(this.sedeValue) : 0;
+  get totalFamilias(): number {
+    return this.familias.length;
   }
 
   get totalEliminados(): number {
@@ -536,5 +669,4 @@ export class GestionListado implements OnInit, OnDestroy, AfterViewInit {
   getLastEliminados(): number {
     return Math.min(this.firstEliminados + this.rowsEliminados, this.totalRecordsEliminados);
   }
-  
 }

@@ -19,17 +19,28 @@ label {
 }
 
 ::ng-deep .productos-pill-warning {
-  color: #ffffff !important;
+  background: #f5c34d !important;
+  border: 2px solid #e0a82e !important;
+  color: #1f2937 !important;
+  padding: 1.25rem 2.5rem !important;
+  font-size: 1.1rem !important;
   font-weight: 600 !important;
-  transition: all 0.3s ease !important;
+  min-height: 56px !important;
+  box-shadow: 0 6px 12px rgba(245, 195, 77, 0.3) !important;
+  transition: all 0.2s ease !important;
 }
 
+::ng-deep .productos-pill-warning:hover:not(:disabled) {
+  background: #e0a82e !important;
+  border: 2px solid #c89619 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(245, 195, 77, 0.4) !important;
+}
 
 ::ng-deep .productos-pill-warning:disabled {
   opacity: 0.5 !important;
   cursor: not-allowed !important;
 }
-
 
 .productos-title-icon {
   width: 40px;
@@ -71,11 +82,88 @@ label {
   transition: all 0.2s ease !important;
 }
 
+::ng-deep .p-button.p-button-success.p-button-outlined {
+  border-color: #10b981 !important;
+  color: #10b981 !important;
+  transition: all 0.2s ease !important;
+}
+
+::ng-deep .p-button.p-button-success.p-button-outlined:hover {
+  background: #10b981 !important;
+  color: #ffffff !important;
+  border-color: #059669 !important;
+}
+
+::ng-deep .p-button.p-button-danger.p-button-outlined {
+  border-color: #ef4444 !important;
+  color: #ef4444 !important;
+  transition: all 0.2s ease !important;
+}
+
+::ng-deep .p-button.p-button-danger.p-button-outlined:hover {
+  background: #ef4444 !important;
+  color: #ffffff !important;
+  border-color: #dc2626 !important;
+}
+
 .productos-pill-secondary:hover:not(:disabled) {
   background: #475569 !important;
   border: 2px solid #334155 !important;
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2) !important;
+}
+
+::ng-deep .p-card {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+::ng-deep .p-card .p-card-body {
+  padding: 0 !important;
+}
+
+.surface-card {
+  background: var(--surface-card);
+}
+
+.border-300 {
+  border-color: var(--surface-300);
+}
+
+h3 i {
+  color: var(--primary-color);
+}
+
+::ng-deep .p-inputnumber-button-group .p-button {
+  min-width: 2.5rem !important;
+  padding: 0.5rem !important;
+}
+
+::ng-deep .p-inputnumber-button-group .p-inputnumber-input {
+  text-align: center !important;
+}
+
+.surface-100 {
+  background: var(--surface-100);
+}
+
+.surface-50 {
+  background: var(--surface-50);
+}
+
+.text-500 {
+  color: var(--text-color-secondary);
+}
+
+.text-600 {
+  color: var(--text-color);
+}
+
+.text-900 {
+  color: var(--surface-900);
+}
+
+.text-primary {
+  color: var(--primary-color);
 }
 
 @media (max-width: 768px) {
@@ -93,9 +181,72 @@ label {
     font-size: 1rem;
   }
 
-  .productos-pill-secondary {
+  .productos-pill-secondary,
+  ::ng-deep .productos-pill-warning {
     padding: 1rem 2rem !important;
     font-size: 1rem !important;
     min-height: 48px !important;
   }
+
+  ::ng-deep .p-button-sm {
+    font-size: 0.875rem !important;
+    padding: 0.5rem 1rem !important;
+  }
+}
+
+@media (max-width: 576px) {
+  .grid > .col-12.md\:col-6 {
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+  }
+
+  .grid > .col-12.md\:col-4 {
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+  }
+
+  ::ng-deep .p-inputnumber-button-group {
+    width: 100% !important;
+  }
+}
+
+::ng-deep .p-inputnumber-buttons-horizontal .p-inputnumber-button {
+  background: var(--surface-100) !important;
+  border-color: var(--surface-300) !important;
+  color: var(--text-color) !important;
+}
+
+::ng-deep .p-inputnumber-buttons-horizontal .p-inputnumber-button:hover {
+  background: var(--primary-color) !important;
+  border-color: var(--primary-color) !important;
+  color: #ffffff !important;
+}
+
+::ng-deep .p-confirm-dialog {
+  border-radius: 12px !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3) !important;
+}
+
+::ng-deep .p-confirm-dialog .p-dialog-header {
+  padding: 1.5rem !important;
+  border-top-left-radius: 12px !important;
+  border-top-right-radius: 12px !important;
+}
+
+::ng-deep .p-confirm-dialog .p-dialog-content {
+  padding: 1.5rem !important;
+}
+
+::ng-deep .p-confirm-dialog .p-dialog-footer {
+  padding: 1.25rem 1.5rem !important;
+}
+
+textarea.p-inputtext {
+  min-height: 100px;
+  font-family: inherit !important;
+}
+
+small.text-red-500 {
+  font-size: 0.875rem;
+  font-weight: 500;
 }

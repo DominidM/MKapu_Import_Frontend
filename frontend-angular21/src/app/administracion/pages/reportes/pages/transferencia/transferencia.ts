@@ -28,14 +28,13 @@ import { SedeService } from '../../../../../core/services/sede.service';
     TableModule,
     TagModule,
     ConfirmDialogModule,
-    ToastModule
+    ToastModule,
   ],
   templateUrl: './transferencia.html',
   styleUrl: './transferencia.css',
-  providers: [ConfirmationService, MessageService]
+  providers: [ConfirmationService, MessageService],
 })
 export class Transferencia implements OnInit {
-
   transferencias: any[] = [];
   filteredTransferencias: any[] = [];
   transferenciaSuggestions: any[] = [];
@@ -47,7 +46,7 @@ export class Transferencia implements OnInit {
     { label: 'Pendiente', value: 'Pendiente' },
     { label: 'En transito', value: 'En transito' },
     { label: 'Completada', value: 'Completada' },
-    { label: 'Incidencia', value: 'Incidencia' }
+    { label: 'Incidencia', value: 'Incidencia' },
   ];
 
   constructor(
@@ -55,7 +54,7 @@ export class Transferencia implements OnInit {
     private messageService: MessageService,
     private router: Router,
     private productosService: ProductosService,
-    private sedeService: SedeService
+    private sedeService: SedeService,
   ) {}
 
   // 🔥 SIEMPRE SE EJECUTA AL ENTRAR A LA RUTA
@@ -86,32 +85,41 @@ export class Transferencia implements OnInit {
       next: (sedes) => {
         this.sedes = sedes.map((sede) => ({
           label: sede.nombre,
-          value: sede.id_sede
+          value: sede.id_sede,
         }));
         this.cargarTransferencias();
       },
       error: (error) => {
         console.error('Error al cargar sedes:', error);
         this.cargarTransferencias();
-      }
+      },
     });
   }
 
   private crearTransferenciasIniciales(): any[] {
     const productos = this.productosService.getProductos(undefined, 'Activo');
-    const sedesDisponibles = this.sedes.length > 0 ? this.sedes : [
-      { label: 'SEDE001', value: 'SEDE001' },
-      { label: 'SEDE002', value: 'SEDE002' },
-      { label: 'SEDE003', value: 'SEDE003' }
-    ];
+    const sedesDisponibles =
+      this.sedes.length > 0
+        ? this.sedes
+        : [
+            { label: 'SEDE001', value: 'SEDE001' },
+            { label: 'SEDE002', value: 'SEDE002' },
+            { label: 'SEDE003', value: 'SEDE003' },
+          ];
     const sedeLabelMap = new Map(sedesDisponibles.map((sede) => [sede.value, sede.label]));
     const hoy = new Date();
 
     return productos.slice(0, 3).map((producto, index) => {
-      const origen = sedeLabelMap.get(producto.sede) || producto.sede;
+
+      const origen = producto.sede ? sedeLabelMap.get(producto.sede) || producto.sede : 'Sin sede';
+
       const destino = sedesDisponibles.find((sede) => sede.value !== producto.sede)?.label || '-';
-      const fechaEnvio = this.formatearFecha(new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - (index + 2)));
-      const fechaLlegada = this.formatearFecha(new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - index));
+      const fechaEnvio = this.formatearFecha(
+        new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - (index + 2)),
+      );
+      const fechaLlegada = this.formatearFecha(
+        new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - index),
+      );
 
       return {
         codigo: `TRF-${hoy.getFullYear()}-${String(index + 1).padStart(4, '0')}`,
@@ -122,7 +130,7 @@ export class Transferencia implements OnInit {
         responsable: 'Jefatura de almacen',
         estado: index === 0 ? 'En transito' : index === 1 ? 'Pendiente' : 'Completada',
         fechaEnvio,
-        fechaLlegada
+        fechaLlegada,
       };
     });
   }
@@ -160,41 +168,41 @@ export class Transferencia implements OnInit {
       header: 'Confirmación',
       icon: 'pi pi-exclamation-triangle',
       accept: () => {
-        this.transferencias = this.transferencias.filter(
-          t => t.codigo !== transferencia.codigo
-        );
+        this.transferencias = this.transferencias.filter((t) => t.codigo !== transferencia.codigo);
 
-        localStorage.setItem(
-          'transferencias',
-          JSON.stringify(this.transferencias)
-        );
+        localStorage.setItem('transferencias', JSON.stringify(this.transferencias));
 
         this.cargarTransferencias();
 
         this.messageService.add({
           severity: 'success',
           summary: 'Eliminada',
-          detail: 'Transferencia eliminada correctamente'
+          detail: 'Transferencia eliminada correctamente',
         });
-      }
+      },
     });
   }
 
   getEstadoSeverity(estado: string) {
     switch (estado.toLowerCase()) {
-      case 'completada': return 'success';
-      case 'pendiente': return 'warn';
-      case 'en transito': return 'secondary';
-      default: return 'secondary';
+      case 'completada':
+        return 'success';
+      case 'pendiente':
+        return 'warn';
+      case 'en transito':
+        return 'secondary';
+      default:
+        return 'secondary';
     }
   }
 
   filtrar(valor: string): void {
     const v = valor.toLowerCase();
 
-    this.filteredTransferencias = this.transferencias.filter(t => {
-      const matchesText = [t.codigo, t.producto, t.origen, t.destino]
-        .some(campo => campo.toLowerCase().includes(v));
+    this.filteredTransferencias = this.transferencias.filter((t) => {
+      const matchesText = [t.codigo, t.producto, t.origen, t.destino].some((campo) =>
+        campo.toLowerCase().includes(v),
+      );
       const matchesEstado = this.estadoFilter ? t.estado === this.estadoFilter : true;
       return matchesText && matchesEstado;
     });
@@ -207,6 +215,4 @@ export class Transferencia implements OnInit {
     if (typeof term === 'string') return term;
     return term.producto ?? '';
   }
-
-  
 }

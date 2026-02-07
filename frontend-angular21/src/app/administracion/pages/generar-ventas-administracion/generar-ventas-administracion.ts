@@ -239,7 +239,7 @@ export class GenerarVentasAdministracion implements OnInit, OnDestroy {
             console.log('🔄 Detectada navegación de retorno a generar-ventas-administracion');
             this.restaurarEstado();
           }
-        })
+        }),
     );
   }
 
@@ -902,6 +902,17 @@ export class GenerarVentasAdministracion implements OnInit, OnDestroy {
         severity: 'warn',
         summary: 'Cantidad inválida',
         detail: 'Ingrese una cantidad válida',
+        life: 3000,
+      });
+      return;
+    }
+
+    // ✅ VALIDAR QUE EL PRODUCTO TENGA ID
+    if (!this.productoTemp.id) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'El producto seleccionado no tiene ID válido',
         life: 3000,
       });
       return;

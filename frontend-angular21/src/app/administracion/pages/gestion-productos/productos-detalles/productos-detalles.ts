@@ -10,7 +10,7 @@ import { ToastModule } from 'primeng/toast';
 import { ConfirmDialog } from 'primeng/confirmdialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
 
-import { ProductosService, Producto, ComparativaProducto } from '../../../../core/services/productos.service';
+import { ProductosService, Producto } from '../../../../core/services/productos.service';
 
 @Component({
   selector: 'app-productos-detalles',
@@ -32,8 +32,6 @@ export class ProductosDetalles implements OnInit {
   producto: Producto | null = null;
   productoId: number | null = null;
   loading = true;
-  comparativa: ComparativaProducto | null = null;
-  tieneVariasSedes = false;
 
   constructor(
     private router: Router,
@@ -64,18 +62,9 @@ export class ProductosDetalles implements OnInit {
         life: 3000
       });
       setTimeout(() => this.volver(), 2000);
-    } else {
-      this.cargarComparativa();
     }
     
     this.loading = false;
-  }
-
-  cargarComparativa() {
-    if (!this.producto) return;
-    
-    this.comparativa = this.productosService.getComparativaPorCodigo(this.producto.codigo);
-    this.tieneVariasSedes = (this.comparativa?.variantes.length || 0) > 1;
   }
 
   volver() {
@@ -90,14 +79,8 @@ export class ProductosDetalles implements OnInit {
     }
   }
 
-  irEditarVariante(varianteId: number) {
-    this.router.navigate(['/admin/gestion-productos/editar-producto', varianteId], {
-      queryParams: { returnUrl: `/admin/gestion-productos/ver-detalle-producto/${this.productoId}` }
-    });
-  }
-
   eliminarProducto(event: Event) {
-    if (!this.producto) return;
+    if (!this.producto || !this.producto.id) return;
 
     this.confirmationService.confirm({
       target: event.target as EventTarget,
@@ -109,7 +92,7 @@ export class ProductosDetalles implements OnInit {
       acceptButtonProps: { severity: 'danger' },
       rejectButtonProps: { severity: 'secondary', outlined: true },
       accept: () => {
-        const exito = this.productosService.eliminarProducto(this.producto!.id);
+        const exito = this.productosService.eliminarProducto(this.producto!.id!);
         if (exito) {
           this.messageService.add({
             severity: 'success',
@@ -132,7 +115,7 @@ export class ProductosDetalles implements OnInit {
   }
 
   restaurarProducto(event: Event) {
-    if (!this.producto) return;
+    if (!this.producto || !this.producto.id) return;
 
     this.confirmationService.confirm({
       target: event.target as EventTarget,
@@ -144,7 +127,7 @@ export class ProductosDetalles implements OnInit {
       acceptButtonProps: { severity: 'warning' },
       rejectButtonProps: { severity: 'secondary', outlined: true },
       accept: () => {
-        const exito = this.productosService.restaurarProducto(this.producto!.id);
+        const exito = this.productosService.restaurarProducto(this.producto!.id!);
         if (exito) {
           this.messageService.add({
             severity: 'success',
@@ -180,6 +163,10 @@ export class ProductosDetalles implements OnInit {
     return this.productosService.getPorcentajeMargen(this.producto);
   }
 
+  get tieneVariasSedes(): boolean {
+    return (this.producto?.variantes?.length || 0) > 1;
+  }
+
   formatearNombreSede(sede: string): string {
     return sede
       .split(' ')
@@ -187,16 +174,13 @@ export class ProductosDetalles implements OnInit {
       .join(' ');
   }
 
-  getSeverityPorDiferencia(porcentaje: number): 'success' | 'warning' | 'danger' | 'secondary' {
-    if (porcentaje < -5) return 'success';
-    if (porcentaje > 5) return 'danger';
-    if (Math.abs(porcentaje) > 2) return 'warning';
-    return 'secondary';
+  getStockSeverity(stock: number): 'success' | 'warn' | 'danger' {
+    if (stock > 30) return 'success';
+    if (stock > 10) return 'warn';
+    return 'danger';
   }
 
-  getIconoPorDiferencia(diferencia: number): string {
-    if (diferencia < 0) return 'pi-arrow-down';
-    if (diferencia > 0) return 'pi-arrow-up';
-    return 'pi-minus';
+  getStockPorSede(sede: string): number {
+    return this.producto?.variantes?.find(v => v.sede === sede)?.stock || 0;
   }
 }

@@ -1,27 +1,33 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 
+export interface VarianteProducto {
+  id?: number;
+  sede: string;
+  stock: number;
+}
+
 export interface Producto {
-  id: number;
+  id?: number;
   codigo: string;
   anexo?: string;
   nombre: string;
   descripcion?: string;
-  sede: string;
   familia: string;
-
   precioCompra: number;
   precioVenta: number;
   precioUnidad: number;
   precioCaja: number;
   precioMayorista: number;
-
   unidadMedida: string;
-  stock?: number;
-
   estado: 'Activo' | 'Eliminado';
   fechaCreacion: Date;
   fechaActualizacion: Date;
+  variantes?: VarianteProducto[];
+  stockTotal?: number;
+  cantidadSedes?: number;
+  sede?: string;
+  stock?: number;
 }
 
 export interface ComparativaProducto {
@@ -74,7 +80,6 @@ export class ProductosService {
         anexo: 'TV-001',
         nombre: 'Smart TV LED 55" 4K RAF',
         descripcion: 'Televisor LED 55 pulgadas 4K UHD Smart TV con WiFi integrado',
-        sede: 'LAS FLORES',
         familia: 'Televisores',
         precioCompra: 1200.0,
         precioVenta: 1599.0,
@@ -82,10 +87,14 @@ export class ProductosService {
         precioCaja: 15200.0,
         precioMayorista: 1450.0,
         unidadMedida: 'UND',
-        stock: 15,
         estado: 'Activo',
         fechaCreacion: new Date('2024-01-15'),
         fechaActualizacion: new Date('2026-01-10'),
+        variantes: [
+          { sede: 'LAS FLORES', stock: 45 },
+          { sede: 'LURIN', stock: 20 },
+          { sede: 'VES', stock: 8 }
+        ]
       },
       {
         id: 2,
@@ -93,7 +102,6 @@ export class ProductosService {
         anexo: 'LAV-001',
         nombre: 'Lavarropas Automático 10kg RAF',
         descripcion: 'Lavadora automática carga frontal 10kg con 15 programas',
-        sede: 'LURIN',
         familia: 'Lavarropas',
         precioCompra: 650.0,
         precioVenta: 899.0,
@@ -101,10 +109,13 @@ export class ProductosService {
         precioCaja: 8500.0,
         precioMayorista: 820.0,
         unidadMedida: 'UND',
-        stock: 20,
         estado: 'Activo',
         fechaCreacion: new Date('2024-02-10'),
         fechaActualizacion: new Date('2026-01-10'),
+        variantes: [
+          { sede: 'LAS FLORES', stock: 20 },
+          { sede: 'LURIN', stock: 15 }
+        ]
       },
       {
         id: 3,
@@ -112,7 +123,6 @@ export class ProductosService {
         anexo: 'REF-001',
         nombre: 'Refrigerador No Frost 12 pies RAF',
         descripcion: 'Refrigeradora No Frost 12 pies cúbicos con dispensador',
-        sede: 'LAS FLORES',
         familia: 'Refrigeradores',
         precioCompra: 950.0,
         precioVenta: 1299.0,
@@ -120,10 +130,12 @@ export class ProductosService {
         precioCaja: 12300.0,
         precioMayorista: 1180.0,
         unidadMedida: 'UND',
-        stock: 12,
         estado: 'Activo',
         fechaCreacion: new Date('2024-01-20'),
         fechaActualizacion: new Date('2026-01-10'),
+        variantes: [
+          { sede: 'LAS FLORES', stock: 12 }
+        ]
       },
       {
         id: 4,
@@ -131,7 +143,6 @@ export class ProductosService {
         anexo: 'MW-001',
         nombre: 'Microondas Inverter 900W RAF',
         descripcion: 'Horno microondas con tecnología inverter 900W',
-        sede: 'LAS FLORES',
         familia: 'Microondas',
         precioCompra: 220.0,
         precioVenta: 299.0,
@@ -139,10 +150,12 @@ export class ProductosService {
         precioCaja: 2800.0,
         precioMayorista: 275.0,
         unidadMedida: 'UND',
-        stock: 30,
         estado: 'Activo',
         fechaCreacion: new Date('2024-03-05'),
         fechaActualizacion: new Date('2026-01-10'),
+        variantes: [
+          { sede: 'LAS FLORES', stock: 30 }
+        ]
       },
       {
         id: 5,
@@ -150,7 +163,6 @@ export class ProductosService {
         anexo: 'ASP-001',
         nombre: 'Aspiradora Industrial 2000W RAF',
         descripcion: 'Aspiradora industrial potencia 2000W con filtro HEPA',
-        sede: 'LURIN',
         familia: 'Electrodomésticos',
         precioCompra: 400.0,
         precioVenta: 549.0,
@@ -158,10 +170,12 @@ export class ProductosService {
         precioCaja: 5200.0,
         precioMayorista: 500.0,
         unidadMedida: 'UND',
-        stock: 18,
         estado: 'Activo',
         fechaCreacion: new Date('2024-02-25'),
         fechaActualizacion: new Date('2026-01-10'),
+        variantes: [
+          { sede: 'LURIN', stock: 18 }
+        ]
       },
       {
         id: 6,
@@ -169,7 +183,6 @@ export class ProductosService {
         anexo: 'COF-001',
         nombre: 'Cafetera Automática 800W RAF',
         descripcion: 'Cafetera automática programable 12 tazas',
-        sede: 'LAS FLORES',
         familia: 'Cocina',
         precioCompra: 280.0,
         precioVenta: 379.0,
@@ -177,10 +190,12 @@ export class ProductosService {
         precioCaja: 3600.0,
         precioMayorista: 345.0,
         unidadMedida: 'UND',
-        stock: 25,
         estado: 'Activo',
         fechaCreacion: new Date('2024-03-12'),
         fechaActualizacion: new Date('2026-01-10'),
+        variantes: [
+          { sede: 'LAS FLORES', stock: 25 }
+        ]
       },
       {
         id: 7,
@@ -188,7 +203,6 @@ export class ProductosService {
         anexo: 'LIC-001',
         nombre: 'Licuadora Profesional 500W RAF',
         descripcion: 'Licuadora profesional 5 velocidades jarra de vidrio',
-        sede: 'LAS FLORES',
         familia: 'Cocina',
         precioCompra: 135.0,
         precioVenta: 189.0,
@@ -196,10 +210,13 @@ export class ProductosService {
         precioCaja: 1800.0,
         precioMayorista: 170.0,
         unidadMedida: 'UND',
-        stock: 40,
         estado: 'Activo',
         fechaCreacion: new Date('2024-04-01'),
         fechaActualizacion: new Date('2026-01-10'),
+        variantes: [
+          { sede: 'LAS FLORES', stock: 40 },
+          { sede: 'VES', stock: 15 }
+        ]
       },
       {
         id: 8,
@@ -207,7 +224,6 @@ export class ProductosService {
         anexo: 'HOR-001',
         nombre: 'Horno Eléctrico 1800W RAF',
         descripcion: 'Horno eléctrico 45L con control de temperatura',
-        sede: 'LAS FLORES',
         familia: 'Cocina',
         precioCompra: 370.0,
         precioVenta: 499.0,
@@ -215,197 +231,43 @@ export class ProductosService {
         precioCaja: 4700.0,
         precioMayorista: 460.0,
         unidadMedida: 'UND',
-        stock: 15,
         estado: 'Activo',
         fechaCreacion: new Date('2024-03-18'),
         fechaActualizacion: new Date('2026-01-10'),
-      },
-      {
-        id: 9,
-        codigo: 'RAF-AIR12',
-        anexo: 'AIR-001',
-        nombre: 'Aire Acondicionado 12000 BTU RAF',
-        descripcion: 'Aire acondicionado split 12000 BTU inverter',
-        sede: 'LURIN',
-        familia: 'Climatización',
-        precioCompra: 1400.0,
-        precioVenta: 1899.0,
-        precioUnidad: 1899.0,
-        precioCaja: 18200.0,
-        precioMayorista: 1750.0,
-        unidadMedida: 'UND',
-        stock: 10,
-        estado: 'Activo',
-        fechaCreacion: new Date('2024-01-30'),
-        fechaActualizacion: new Date('2026-01-10'),
-      },
-      {
-        id: 10,
-        codigo: 'RAF-VENT16',
-        anexo: 'VEN-001',
-        nombre: 'Ventilador Industrial 16" RAF',
-        descripcion: 'Ventilador de pie industrial 16 pulgadas 3 velocidades',
-        sede: 'LAS FLORES',
-        familia: 'Climatización',
-        precioCompra: 190.0,
-        precioVenta: 259.0,
-        precioUnidad: 259.0,
-        precioCaja: 2450.0,
-        precioMayorista: 235.0,
-        unidadMedida: 'UND',
-        stock: 35,
-        estado: 'Activo',
-        fechaCreacion: new Date('2024-04-10'),
-        fechaActualizacion: new Date('2026-01-10'),
-      },
-      {
-        id: 11,
-        codigo: 'RAF-PLAN200',
-        anexo: 'PLA-001',
-        nombre: 'Plancha a Vapor 2000W RAF',
-        descripcion: 'Plancha a vapor vertical y horizontal 2000W',
-        sede: 'LAS FLORES',
-        familia: 'Electrodomésticos',
-        precioCompra: 95.0,
-        precioVenta: 129.0,
-        precioUnidad: 129.0,
-        precioCaja: 1200.0,
-        precioMayorista: 115.0,
-        unidadMedida: 'UND',
-        stock: 45,
-        estado: 'Activo',
-        fechaCreacion: new Date('2024-04-20'),
-        fechaActualizacion: new Date('2026-01-10'),
-      },
-      {
-        id: 12,
-        codigo: 'RAF-BAT100',
-        anexo: 'BAT-001',
-        nombre: 'Batidora Eléctrica 5 Velocidades RAF',
-        descripcion: 'Batidora eléctrica de mano 5 velocidades con turbo',
-        sede: 'LAS FLORES',
-        familia: 'Cocina',
-        precioCompra: 110.0,
-        precioVenta: 149.0,
-        precioUnidad: 149.0,
-        precioCaja: 1400.0,
-        precioMayorista: 135.0,
-        unidadMedida: 'UND',
-        stock: 50,
-        estado: 'Activo',
-        fechaCreacion: new Date('2024-04-15'),
-        fechaActualizacion: new Date('2026-01-10'),
-      },
-      {
-        id: 13,
-        codigo: 'RAF-TER150',
-        anexo: 'TER-001',
-        nombre: 'Termo Eléctrico 1.5L RAF',
-        descripcion: 'Termo eléctrico 1.5 litros acero inoxidable',
-        sede: 'LAS FLORES',
-        familia: 'Cocina',
-        precioCompra: 72.0,
-        precioVenta: 99.0,
-        precioUnidad: 99.0,
-        precioCaja: 920.0,
-        precioMayorista: 88.0,
-        unidadMedida: 'UND',
-        stock: 60,
-        estado: 'Activo',
-        fechaCreacion: new Date('2024-04-25'),
-        fechaActualizacion: new Date('2026-01-10'),
-      },
-      {
-        id: 14,
-        codigo: 'RAF-SAND900',
-        anexo: 'SAN-001',
-        nombre: 'Sandwichera Antiadherente 900W RAF',
-        descripcion: 'Sandwichera antiadherente placas desmontables',
-        sede: 'LAS FLORES',
-        familia: 'Cocina',
-        precioCompra: 88.0,
-        precioVenta: 119.0,
-        precioUnidad: 119.0,
-        precioCaja: 1100.0,
-        precioMayorista: 105.0,
-        unidadMedida: 'UND',
-        stock: 35,
-        estado: 'Activo',
-        fechaCreacion: new Date('2024-04-28'),
-        fechaActualizacion: new Date('2026-01-10'),
-      },
-      {
-        id: 15,
-        codigo: 'RAF-EXTR90',
-        anexo: 'EXT-001',
-        nombre: 'Extractor de Aire 90cm RAF',
-        descripcion: 'Extractor de cocina 90cm acero inoxidable',
-        sede: 'LURIN',
-        familia: 'Climatización',
-        precioCompra: 260.0,
-        precioVenta: 349.0,
-        precioUnidad: 349.0,
-        precioCaja: 3300.0,
-        precioMayorista: 320.0,
-        unidadMedida: 'UND',
-        stock: 22,
-        estado: 'Activo',
-        fechaCreacion: new Date('2024-03-22'),
-        fechaActualizacion: new Date('2026-01-10'),
-      },
-      {
-        id: 16,
-        codigo: 'RAF-TV55',
-        anexo: 'TV-003',
-        nombre: 'Smart TV LED 55" 4K RAF',
-        descripcion: 'Televisor LED 55 pulgadas 4K UHD Smart TV con WiFi integrado',
-        sede: 'LURIN',
-        familia: 'Televisores',
-        precioCompra: 1250.0,
-        precioVenta: 1650.0,
-        precioUnidad: 1650.0,
-        precioCaja: 15700.0,
-        precioMayorista: 1500.0,
-        unidadMedida: 'UND',
-        stock: 12,
-        estado: 'Activo',
-        fechaCreacion: new Date('2024-01-16'),
-        fechaActualizacion: new Date('2026-01-10'),
-      },
-      {
-        id: 17,
-        codigo: 'RAF-TV55',
-        anexo: 'TV-004',
-        nombre: 'Smart TV LED 55" 4K RAF',
-        descripcion: 'Televisor LED 55 pulgadas 4K UHD Smart TV con WiFi integrado',
-        sede: 'VES',
-        familia: 'Televisores',
-        precioCompra: 1230.0,
-        precioVenta: 1625.0,
-        precioUnidad: 1625.0,
-        precioCaja: 15500.0,
-        precioMayorista: 1475.0,
-        unidadMedida: 'UND',
-        stock: 18,
-        estado: 'Activo',
-        fechaCreacion: new Date('2024-01-17'),
-        fechaActualizacion: new Date('2026-01-10'),
-      },
+        variantes: [
+          { sede: 'LAS FLORES', stock: 15 }
+        ]
+      }
     ];
 
     this.productosSubject.next(datosIniciales);
   }
 
+  private calcularPropiedadesDerivadas(producto: Producto): Producto {
+    if (producto.variantes && producto.variantes.length > 0) {
+      producto.stockTotal = producto.variantes.reduce((sum, v) => sum + v.stock, 0);
+      producto.cantidadSedes = producto.variantes.length;
+      producto.stock = producto.stockTotal;
+    }
+    return producto;
+  }
+
   getProductos(sede?: string, estado: 'Activo' | 'Eliminado' = 'Activo'): Producto[] {
-    let productos = this.productosSubject.value.filter((p) => p.estado === estado);
+    let productos = this.productosSubject.value
+      .filter((p) => p.estado === estado)
+      .map(p => this.calcularPropiedadesDerivadas({...p}));
+    
     if (sede) {
-      productos = productos.filter((p) => p.sede === sede);
+      productos = productos.filter((p) => 
+        p.variantes?.some(v => v.sede === sede)
+      );
     }
     return productos;
   }
 
   getProductoPorId(id: number): Producto | null {
-    return this.productosSubject.value.find((p) => p.id === id) || null;
+    const producto = this.productosSubject.value.find((p) => p.id === id);
+    return producto ? this.calcularPropiedadesDerivadas({...producto}) : null;
   }
 
   getProductoById(id: number): Producto | null {
@@ -413,16 +275,16 @@ export class ProductosService {
   }
 
   getProductoPorCodigo(codigo: string): Producto | undefined {
-    return this.productosSubject.value.find((p) => p.codigo === codigo && p.estado === 'Activo');
+    const producto = this.productosSubject.value.find((p) => p.codigo === codigo && p.estado === 'Activo');
+    return producto ? this.calcularPropiedadesDerivadas({...producto}) : undefined;
   }
 
-  
   getProductosPorCodigo(codigo: string, incluirEliminados: boolean = false): Producto[] {
     let productos = this.productosSubject.value.filter((p) => p.codigo === codigo);
     if (!incluirEliminados) {
       productos = productos.filter((p) => p.estado === 'Activo');
     }
-    return productos;
+    return productos.map(p => this.calcularPropiedadesDerivadas({...p}));
   }
 
   buscarProductos(termino: string, sede?: string): Producto[] {
@@ -434,10 +296,10 @@ export class ProductosService {
     );
 
     if (sede) {
-      productos = productos.filter((p) => p.sede === sede);
+      productos = productos.filter((p) => p.variantes?.some(v => v.sede === sede));
     }
 
-    return productos;
+    return productos.map(p => this.calcularPropiedadesDerivadas({...p}));
   }
 
   getProductosEliminados(sede?: string): Producto[] {
@@ -445,7 +307,11 @@ export class ProductosService {
   }
 
   getSedes(): string[] {
-    return [...new Set(this.productosSubject.value.map((p) => p.sede))].sort();
+    const sedesSet = new Set<string>();
+    this.productosSubject.value.forEach(p => {
+      p.variantes?.forEach(v => sedesSet.add(v.sede));
+    });
+    return Array.from(sedesSet).sort();
   }
 
   getFamilias(sede?: string): string[] {
@@ -459,10 +325,10 @@ export class ProductosService {
     );
 
     if (sede) {
-      productos = productos.filter((p) => p.sede === sede);
+      productos = productos.filter((p) => p.variantes?.some(v => v.sede === sede));
     }
 
-    return productos;
+    return productos.map(p => this.calcularPropiedadesDerivadas({...p}));
   }
 
   getUnidadesMedida(): string[] {
@@ -471,7 +337,7 @@ export class ProductosService {
 
   crearProducto(productoData: Omit<Producto, 'id'>): Producto {
     const productos = [...this.productosSubject.value];
-    const nuevoId = Math.max(...productos.map((p) => p.id), 0) + 1;
+    const nuevoId = Math.max(...productos.map((p) => p.id || 0), 0) + 1;
 
     const nuevoProducto: Producto = {
       ...productoData,
@@ -481,9 +347,10 @@ export class ProductosService {
       estado: 'Activo',
     };
 
-    productos.push(nuevoProducto);
+    const productoConPropiedades = this.calcularPropiedadesDerivadas(nuevoProducto);
+    productos.push(productoConPropiedades);
     this.productosSubject.next(productos);
-    return nuevoProducto;
+    return productoConPropiedades;
   }
 
   crearProductoBoolean(productoData: Omit<Producto, 'id'>): boolean {
@@ -506,6 +373,7 @@ export class ProductosService {
         ...cambios,
         fechaActualizacion: new Date(),
       };
+      productos[index] = this.calcularPropiedadesDerivadas(productos[index]);
       this.productosSubject.next(productos);
       return true;
     }
@@ -608,7 +476,9 @@ export class ProductosService {
 
   existeCodigo(codigo: string, sede?: string): boolean {
     if (sede) {
-      return this.productosSubject.value.some((p) => p.codigo === codigo && p.sede === sede);
+      return this.productosSubject.value.some((p) => 
+        p.codigo === codigo && p.variantes?.some(v => v.sede === sede)
+      );
     }
     return this.productosSubject.value.some((p) => p.codigo === codigo);
   }
@@ -656,7 +526,7 @@ export class ProductosService {
         if (!codigosPorSedes.has(p.codigo)) {
           codigosPorSedes.set(p.codigo, new Set());
         }
-        codigosPorSedes.get(p.codigo)!.add(p.sede);
+        p.variantes?.forEach(v => codigosPorSedes.get(p.codigo)!.add(v.sede));
       });
 
     return Array.from(codigosPorSedes.entries())
@@ -693,8 +563,8 @@ export class ProductosService {
     const varianteMasCara = variantes.find((v) => v.precioVenta === precioMaximoVenta)!;
 
     const variantesConDiferencia = variantes.map((v) => ({
-      id: v.id,
-      sede: v.sede,
+      id: v.id || 0,
+      sede: v.sede || '',
       precioCompra: v.precioCompra,
       precioVenta: v.precioVenta,
       precioUnidad: v.precioUnidad,
@@ -724,8 +594,8 @@ export class ProductosService {
       precioMayoristaPromedio,
       precioMinimoVenta,
       precioMaximoVenta,
-      sedeMasBarata: varianteMasBarata.sede,
-      sedeMasCara: varianteMasCara.sede,
+      sedeMasBarata: varianteMasBarata.sede || '',
+      sedeMasCara: varianteMasCara.sede || '',
     };
   }
 

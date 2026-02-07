@@ -1,7 +1,7 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, FormArray, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
@@ -13,6 +13,11 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { Button } from 'primeng/button';
 
 import { ProductosService, Producto } from '../../../../core/services/productos.service';
+
+interface StockSede {
+  sede: string;
+  stock: number;
+}
 
 @Component({
   selector: 'app-productos-form',
@@ -37,7 +42,8 @@ export class ProductosFormulario implements OnInit, OnDestroy {
   isEditMode = false;
   productoId: number | null = null;
   productoOriginal: Producto | null = null;
-  returnUrl: string = '/admin/gestion-productos'; 
+  returnUrl: string = '/admin/gestion-productos';
+  navegando = false; // ✅ Flag para evitar cambios durante navegación
 
   sedes: { label: string; value: string }[] = [];
   familias: { label: string; value: string }[] = [];
@@ -49,22 +55,27 @@ export class ProductosFormulario implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private productosService: ProductosService,
     private confirmationService: ConfirmationService,
-    private messageService: MessageService
+    private messageService: MessageService,
+    private cdr: ChangeDetectorRef // ✅ Agregado
   ) {
     this.productoForm = this.fb.group({
       codigo: ['', Validators.required],
       anexo: [''],
       nombre: ['', Validators.required],
       descripcion: [''],
-      sede: ['', Validators.required],
       familia: ['', Validators.required],
       precioCompra: [0, [Validators.required, Validators.min(0)]],
       precioVenta: [0, [Validators.required, Validators.min(0)]],
       precioUnidad: [0, [Validators.required, Validators.min(0)]],
       precioCaja: [0, [Validators.required, Validators.min(0)]],
       precioMayorista: [0, [Validators.required, Validators.min(0)]],
-      unidadMedida: ['UND', Validators.required]
+      unidadMedida: ['UND', Validators.required],
+      stockPorSede: this.fb.array([], Validators.required)
     });
+  }
+
+  get stockPorSede(): FormArray {
+    return this.productoForm.get('stockPorSede') as FormArray;
   }
 
   ngOnInit() {
@@ -126,6 +137,63 @@ export class ProductosFormulario implements OnInit, OnDestroy {
       .join(' ');
   }
 
+  crearStockSedeFormGroup(sede: string = '', stock: number = 0): FormGroup {
+    return this.fb.group({
+      sede: [sede, Validators.required],
+      stock: [stock, [Validators.required, Validators.min(0)]]
+    });
+  }
+
+  agregarStockSede() {
+    if (this.stockPorSede.length >= this.sedes.length) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Límite alcanzado',
+        detail: 'Ya has agregado todas las sedes disponibles',
+        life: 3000
+      });
+      return;
+    }
+    this.stockPorSede.push(this.crearStockSedeFormGroup());
+  }
+
+  eliminarStockSede(index: number) {
+    const sedeEliminar = this.stockPorSede.at(index).value;
+    
+    this.confirmationService.confirm({
+      message: `¿Eliminar el stock de la sede <strong>${this.formatearNombreSede(sedeEliminar.sede || 'Sin nombre')}</strong>?`,
+      header: 'Confirmar Eliminación',
+      icon: 'pi pi-exclamation-triangle',
+      rejectLabel: 'Cancelar',
+      acceptLabel: 'Eliminar',
+      acceptButtonProps: { severity: 'danger' },
+      rejectButtonProps: { severity: 'secondary', outlined: true },
+      accept: () => {
+        this.stockPorSede.removeAt(index);
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Stock Eliminado',
+          detail: 'Stock de sede eliminado correctamente',
+          life: 2000
+        });
+      }
+    });
+  }
+
+  getSedesDisponibles(currentValue?: string): { label: string; value: string }[] {
+    const sedesSeleccionadas = this.stockPorSede.controls
+      .map(control => control.get('sede')?.value)
+      .filter(sede => sede && sede !== currentValue);
+    
+    return this.sedes.filter(sede => !sedesSeleccionadas.includes(sede.value));
+  }
+
+  calcularStockTotal(): number {
+    return this.stockPorSede.controls.reduce((total, control) => {
+      return total + (Number(control.get('stock')?.value) || 0);
+    }, 0);
+  }
+
   cargarProducto(id: number) {
     const producto = this.productosService.getProductoPorId(id);
     
@@ -137,7 +205,6 @@ export class ProductosFormulario implements OnInit, OnDestroy {
         anexo: producto.anexo || '',
         nombre: producto.nombre,
         descripcion: producto.descripcion || '',
-        sede: producto.sede,
         familia: producto.familia,
         precioCompra: producto.precioCompra,
         precioVenta: producto.precioVenta,
@@ -147,10 +214,19 @@ export class ProductosFormulario implements OnInit, OnDestroy {
         unidadMedida: producto.unidadMedida
       });
 
-      setTimeout(() => {
+      if (producto.variantes && producto.variantes.length > 0) {
+        this.stockPorSede.clear();
+        producto.variantes.forEach(variante => {
+          this.stockPorSede.push(this.crearStockSedeFormGroup(variante.sede, variante.stock));
+        });
+      }
+
+      // ✅ Usar Promise en lugar de setTimeout
+      Promise.resolve().then(() => {
         this.productoForm.markAsPristine();
         this.productoForm.markAsUntouched();
-      }, 0);
+        this.cdr.detectChanges();
+      });
       
     } else {
       this.messageService.add({
@@ -171,14 +247,14 @@ export class ProductosFormulario implements OnInit, OnDestroy {
         (formData.anexo && formData.anexo.trim() !== '') ||
         (formData.nombre && formData.nombre.trim() !== '') ||
         (formData.descripcion && formData.descripcion.trim() !== '') ||
-        formData.sede !== '' ||
         formData.familia !== '' ||
         formData.precioCompra > 0 ||
         formData.precioVenta > 0 ||
         formData.precioUnidad > 0 ||
         formData.precioCaja > 0 ||
         formData.precioMayorista > 0 ||
-        formData.unidadMedida !== 'UND'
+        formData.unidadMedida !== 'UND' ||
+        this.stockPorSede.length > 0
       );
     }
 
@@ -189,14 +265,14 @@ export class ProductosFormulario implements OnInit, OnDestroy {
       String(formData.anexo || '').trim() !== String(this.productoOriginal.anexo || '').trim() ||
       String(formData.nombre || '').trim() !== String(this.productoOriginal.nombre || '').trim() ||
       String(formData.descripcion || '').trim() !== String(this.productoOriginal.descripcion || '').trim() ||
-      String(formData.sede || '') !== String(this.productoOriginal.sede || '') ||
       String(formData.familia || '') !== String(this.productoOriginal.familia || '') ||
       Number(formData.precioCompra || 0) !== Number(this.productoOriginal.precioCompra || 0) ||
       Number(formData.precioVenta || 0) !== Number(this.productoOriginal.precioVenta || 0) ||
       Number(formData.precioUnidad || 0) !== Number(this.productoOriginal.precioUnidad || 0) ||
       Number(formData.precioCaja || 0) !== Number(this.productoOriginal.precioCaja || 0) ||
       Number(formData.precioMayorista || 0) !== Number(this.productoOriginal.precioMayorista || 0) ||
-      String(formData.unidadMedida || '') !== String(this.productoOriginal.unidadMedida || '')
+      String(formData.unidadMedida || '') !== String(this.productoOriginal.unidadMedida || '') ||
+      JSON.stringify(formData.stockPorSede) !== JSON.stringify(this.productoOriginal.variantes?.map(v => ({ sede: v.sede, stock: v.stock })))
     );
   }
 
@@ -205,6 +281,17 @@ export class ProductosFormulario implements OnInit, OnDestroy {
       Object.keys(this.productoForm.controls).forEach(key => {
         this.productoForm.get(key)?.markAsTouched();
       });
+      
+      if (this.stockPorSede.length === 0) {
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Stock Requerido',
+          detail: 'Debe agregar al menos una sede con stock',
+          life: 3000
+        });
+        return;
+      }
+      
       this.messageService.add({
         severity: 'warn',
         summary: 'Formulario Incompleto',
@@ -238,14 +325,17 @@ export class ProductosFormulario implements OnInit, OnDestroy {
           anexo: formData.anexo || undefined,
           nombre: formData.nombre,
           descripcion: formData.descripcion || undefined,
-          sede: formData.sede,
           familia: formData.familia,
           precioCompra: formData.precioCompra,
           precioVenta: formData.precioVenta,
           precioUnidad: formData.precioUnidad,
           precioCaja: formData.precioCaja,
           precioMayorista: formData.precioMayorista,
-          unidadMedida: formData.unidadMedida
+          unidadMedida: formData.unidadMedida,
+          variantes: formData.stockPorSede.map((item: StockSede) => ({
+            sede: item.sede,
+            stock: item.stock
+          }))
         };
 
         const exito = this.productosService.actualizarProducto(this.productoId!, productoActualizado);
@@ -255,9 +345,12 @@ export class ProductosFormulario implements OnInit, OnDestroy {
             severity: 'success',
             summary: 'Producto Actualizado',
             detail: `"${formData.nombre}" actualizado correctamente`,
-            life: 3000
+            life: 2500
           });
-          setTimeout(() => this.volverSinConfirmar(), 1500);
+          // ✅ Navegación segura con microtask
+          Promise.resolve().then(() => {
+            setTimeout(() => this.volverSinConfirmar(), 1000);
+          });
         } else {
           this.messageService.add({
             severity: 'error',
@@ -293,7 +386,6 @@ export class ProductosFormulario implements OnInit, OnDestroy {
           anexo: formData.anexo || undefined,
           nombre: formData.nombre,
           descripcion: formData.descripcion || undefined,
-          sede: formData.sede,
           familia: formData.familia,
           precioCompra: formData.precioCompra,
           precioVenta: formData.precioVenta,
@@ -303,7 +395,11 @@ export class ProductosFormulario implements OnInit, OnDestroy {
           unidadMedida: formData.unidadMedida,
           estado: 'Activo',
           fechaCreacion: new Date(),
-          fechaActualizacion: new Date()
+          fechaActualizacion: new Date(),
+          variantes: formData.stockPorSede.map((item: StockSede) => ({
+            sede: item.sede,
+            stock: item.stock
+          }))
         };
 
         try {
@@ -312,9 +408,12 @@ export class ProductosFormulario implements OnInit, OnDestroy {
             severity: 'success',
             summary: 'Producto Creado',
             detail: `"${nuevoProducto.nombre}" creado correctamente`,
-            life: 3000
+            life: 2500
           });
-          setTimeout(() => this.volverSinConfirmar(), 1500);
+          // ✅ Navegación segura con microtask
+          Promise.resolve().then(() => {
+            setTimeout(() => this.volverSinConfirmar(), 1000);
+          });
         } catch (error) {
           this.messageService.add({
             severity: 'error',
@@ -337,7 +436,7 @@ export class ProductosFormulario implements OnInit, OnDestroy {
 
   volver() {
     if (!this.hayaCambios()) {
-      this.router.navigateByUrl(this.returnUrl);
+      this.volverSinConfirmar();
       return;
     }
 
@@ -364,12 +463,26 @@ export class ProductosFormulario implements OnInit, OnDestroy {
             : 'Creación de producto cancelada',
           life: 2000
         });
-        setTimeout(() => this.router.navigateByUrl(this.returnUrl), 500);
+        // ✅ Navegación con delay
+        Promise.resolve().then(() => {
+          setTimeout(() => this.volverSinConfirmar(), 500);
+        });
       }
     });
   }
 
   volverSinConfirmar() {
-    this.router.navigateByUrl(this.returnUrl);
+    if (this.navegando) return;
+    
+    this.navegando = true;
+    
+    // ✅ Navegación segura
+    Promise.resolve().then(() => {
+      this.router.navigate([this.returnUrl]).then(() => {
+        this.navegando = false;
+      }).catch(() => {
+        this.navegando = false;
+      });
+    });
   }
 }

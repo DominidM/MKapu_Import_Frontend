@@ -1,5 +1,4 @@
-<div class="p-2">
-  <!-- CABECERA -->
+<div class="p-2" *ngIf="!isRutaHija()">
   <p-card styleClass="productos-header-card mb-4 productos-header-bordered">
     <div class="flex align-items-center justify-content-between flex-wrap gap-2">
       <div class="flex align-items-center gap-3">
@@ -7,19 +6,14 @@
           <i [class]="iconoCabecera"></i>
         </span>
         <div>
-          <p class="productos-kicker mb-0">
-            {{ tituloKicker }}
-          </p>
-          <h2 class="productos-title mb-0">
-            {{ subtituloKicker }}
-          </h2>
+          <p class="productos-kicker mb-0">{{ tituloKicker }}</p>
+          <h2 class="productos-title mb-0">{{ subtituloKicker }}</h2>
         </div>
       </div>
       <div class="flex gap-2">
         <p-button
           *ngIf="!esVistaEliminados"
           icon="pi pi-trash"
-          [label]="isRutaHija() ? '' : ''"
           [outlined]="true"
           severity="danger"
           styleClass="productos-pill productos-pill-danger-outlined"
@@ -53,49 +47,50 @@
 
 <div class="p-2">
   <div *ngIf="!isRutaHija()">
-    <!-- SELECTOR DE SEDE -->
-    <div class="surface-card border-round-xl shadow-1 p-4 mb-4">
-      <div class="flex justify-content-between align-items-center">
-        <div class="flex align-items-center gap-4">
-          <i [class]="esVistaEliminados ? 'pi pi-trash text-6xl text-orange-500' : 'pi pi-home text-6xl text-primary'"></i>
-          <div class="flex flex-column gap-1">
-            <label class="font-bold text-xs uppercase text-600">SELECCIONAR SEDE:</label>
-            <p-select
-              [(ngModel)]="sedeValue"
-              name="sedeSelect"
-              [options]="sedes"
-              optionLabel="label"
-              optionValue="value"
-              [placeholder]="esVistaEliminados ? 'Elija una sede para ver productos...' : 'Elija una sede para gestionar productos...'"
-              (onChange)="onSelectSede()"
-              class="w-24rem"
-            >
-            </p-select>
-          </div>
+    <div class="contadores-productos mb-4">
+      <div class="contador-card">
+        <i class="pi pi-box"></i>
+        <div>
+          <span class="contador-label">Total Productos</span>
+          <span class="contador-valor">{{ totalProductosActivos }}</span>
+          <span class="contador-detalle"><i class="pi pi-check-circle"></i> En catálogo</span>
         </div>
-        
-        <p-tag 
-          *ngIf="!esVistaEliminados"
-          [value]="totalActivosSede + ' ACTIVOS'" 
-          severity="success" 
-          class="text-xs font-bold">
-        </p-tag>
-        <p-tag 
-          *ngIf="esVistaEliminados"
-          [value]="(sedeValue ? totalEliminadosSede : 0) + ' ELIMINADOS'" 
-          severity="danger" 
-          class="text-xs font-bold">
-        </p-tag>
+      </div>
+
+      <div class="contador-card">
+        <i class="pi pi-tags"></i>
+        <div>
+          <span class="contador-label">Familias</span>
+          <span class="contador-valor">{{ totalFamilias }}</span>
+          <span class="contador-detalle"><i class="pi pi-sitemap"></i> Categorías</span>
+        </div>
+      </div>
+
+      <div class="contador-card">
+        <i class="pi pi-building"></i>
+        <div>
+          <span class="contador-label">Sedes Activas</span>
+          <span class="contador-valor">{{ totalSedesActivas }}</span>
+          <span class="contador-detalle"><i class="pi pi-map-marker"></i> Ubicaciones</span>
+        </div>
+      </div>
+
+      <div class="contador-card">
+        <i class="pi pi-database"></i>
+        <div>
+          <span class="contador-label">Stock Total</span>
+          <span class="contador-valor">{{ stockTotalGeneral }}</span>
+          <span class="contador-detalle"><i class="pi pi-arrow-up"></i> Unidades</span>
+        </div>
       </div>
     </div>
 
-    <!-- FILTROS -->
     <div class="surface-card border-round-xl shadow-1 mb-4">
       <div class="p-3">
         <div class="flex flex-wrap gap-6 align-items-end h-full">
           <div class="flex-1 p-fluid h-full">
             <label class="font-medium mb-2 block">Buscar Producto</label>
-            
+
             <p-autocomplete
               *ngIf="!esVistaEliminados"
               [(ngModel)]="buscarValue"
@@ -105,32 +100,36 @@
               (onSelect)="filtrarPorBusqueda($event)"
               placeholder="Nombre o código del producto..."
               fluid
-              [disabled]="!sedeValue"
               styleClass="autocomplete-productos"
             >
               <ng-template let-item pTemplate="item">
                 <div class="autocomplete-item-custom">
                   <div class="flex flex-column">
                     <span class="font-bold text-900 mb-1">{{ item.nombre }}</span>
-                    <small class="text-600"><i class="pi pi-tag mr-1"></i>{{ item.codigo }} • {{ item.familia }}</small>
+                    <small class="text-600">
+                      <i class="pi pi-tag mr-1"></i>{{ item.codigo }} • {{ item.familia }} •
+                      <i class="pi pi-box ml-2 mr-1"></i>Stock: {{ item.stockTotal }} unid.
+                      <span *ngIf="!sedeValue">
+                        • <i class="pi pi-building ml-2 mr-1"></i>{{ item.cantidadSedes }} sedes
+                      </span>
+                    </small>
                   </div>
                 </div>
               </ng-template>
             </p-autocomplete>
-            
-            <input 
+
+            <input
               *ngIf="esVistaEliminados"
               type="text"
               pInputText
               [(ngModel)]="buscarValueEliminados"
               name="buscarEliminados"
-              (input)="filtrarEliminados()" 
+              (input)="filtrarEliminados()"
               placeholder="Nombre o código del producto..."
-              [disabled]="!sedeValue"
               class="w-full"
             />
           </div>
-          
+
           <div *ngIf="!esVistaEliminados" class="flex flex-column w-16rem h-full">
             <label class="font-medium mb-2 block">Familia</label>
             <p-select
@@ -140,7 +139,6 @@
               optionLabel="label"
               optionValue="value"
               placeholder="Todas las familias"
-              [disabled]="!sedeValue"
               (onChange)="onSelectFamilia()"
               class="w-full"
             >
@@ -156,13 +154,28 @@
               optionLabel="label"
               optionValue="value"
               placeholder="Todas las familias"
-              [disabled]="!sedeValue"
               (onChange)="onSelectFamiliaEliminados()"
               class="w-full"
             >
             </p-select>
           </div>
-          
+
+          <div class="flex flex-column w-16rem h-full">
+            <label class="font-medium mb-2 block">Filtrar por Sede</label>
+            <p-select
+              [(ngModel)]="sedeValue"
+              name="sedeSelect"
+              [options]="sedesOptions"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Todas las sedes"
+              (onChange)="onSelectSede()"
+              class="w-full"
+              [showClear]="true"
+            >
+            </p-select>
+          </div>
+
           <div class="flex gap-3 align-items-center">
             <p-toggleButton
               *ngIf="!esVistaEliminados"
@@ -171,7 +184,8 @@
               [onLabel]="'Lista'"
               [offLabel]="'Tarjetas'"
               [onIcon]="'pi pi-table'"
-              [offIcon]="'pi pi-list'" />
+              [offIcon]="'pi pi-list'"
+            />
 
             <p-toggleButton
               *ngIf="esVistaEliminados"
@@ -180,268 +194,577 @@
               [onLabel]="'Lista'"
               [offLabel]="'Tarjetas'"
               [onIcon]="'pi pi-table'"
-              [offIcon]="'pi pi-list'" />
+              [offIcon]="'pi pi-list'"
+            />
 
             <p-button
               icon="pi pi-filter-slash"
-              label="Limpiar Filtros"
+              label="Limpiar"
               severity="danger"
               size="small"
-              (onClick)="limpiarFiltros()">
+              (onClick)="limpiarFiltros()"
+            >
             </p-button>
           </div>
-
         </div>
       </div>
     </div>
 
-    <!-- MENSAJE SIN SEDE -->
-    <div *ngIf="!sedeValue" class="surface-card p-8 text-center mb-6 border-round-xl">
-      <div class="flex flex-column align-items-center gap-4">
-        <i class="pi pi-exclamation-triangle text-6xl text-warning"></i>
-        <h3 class="text-2xl font-bold text-900 mb-2">¡Debe definir una Sede!</h3>
-        <p class="text-xl text-600 m-0">
-          {{ esVistaEliminados ? 'Seleccione una sede para ver productos eliminados' : 'Seleccione una sede arriba para poder ver y gestionar los productos' }}
-        </p>
-      </div>
-    </div>
-
-    <!-- PRODUCTOS ACTIVOS -->
-    <div *ngIf="sedeValue && !esVistaEliminados">
-
+    <div *ngIf="!esVistaEliminados">
       <div *ngIf="vistaLista" class="mb-6">
-        <div *ngIf="productos.length > 0" class="surface-card border-round-xl shadow-1 overflow-hidden">
+        <div
+          *ngIf="productosAgrupadosPaginados.length > 0"
+          class="surface-card border-round-xl shadow-1 overflow-hidden"
+        >
           <p-table
-            [value]="productos"
-            dataKey="id"
+            [value]="productosAgrupadosPaginados"
+            dataKey="codigo"
             [rows]="rows"
             [first]="first"
             [totalRecords]="totalRecords"
-            [rowsPerPageOptions]="[5, 10, 25, 50]"
             [loading]="loading"
             [paginator]="false"
-            styleClass="productos-table-nativa productos-table-hover">
+            styleClass="productos-table-nativa productos-table-hover"
+          >
             <ng-template pTemplate="header">
               <tr>
                 <th style="width: 15%">Código</th>
                 <th style="width: 35%">Producto</th>
-                <th style="width: 17%">Familia</th>
-                <th style="width: 13%">Precio Unit.</th>
-                <th style="width: 20%">Acciones</th>
+                <th style="width: 15%">Familia</th>
+                <th style="width: 12%">Sedes</th>
+                <th style="width: 12%">Stock Total</th>
+                <th style="width: 11%">Acciones</th>
               </tr>
             </ng-template>
             <ng-template pTemplate="body" let-p>
               <tr>
-                <td>{{ p.codigo }}</td>
+                <td class="font-semibold">{{ p.codigo }}</td>
                 <td>{{ p.nombre }}</td>
                 <td>{{ p.familia }}</td>
-                <td class="font-bold text-green-500">S/ {{ p.precioVenta | number : '1.2-2' }}</td>
+                <td>
+                  <p-tag
+                    [value]="p.cantidadSedes + ' sedes'"
+                    severity="info"
+                    styleClass="font-bold"
+                  ></p-tag>
+                </td>
+                <td>
+                  <p-tag
+                    [value]="p.stockTotal + ' unid.'"
+                    [severity]="getStockSeverity(p.stockTotal)"
+                    styleClass="font-bold"
+                  >
+                  </p-tag>
+                </td>
                 <td>
                   <div class="flex align-items-center gap-2">
-                    <p-button icon="pi pi-eye" text severity="secondary" styleClass="productos-icon-btn productos-icon-soft" pTooltip="Ver Detalles" (onClick)="irDetalle(p.id)"></p-button>
+                    <p-button
+                      icon="pi pi-chart-bar"
+                      text
+                      severity="secondary"
+                      styleClass="productos-icon-btn"
+                      pTooltip="Ver Stock por Sede"
+                      (onClick)="verStockPorSede(p, $event)"
+                    >
+                    </p-button>
 
-                    <p-button icon="pi pi-pencil" text severity="secondary" styleClass="productos-icon-btn productos-icon-warn" pTooltip="Editar Producto" (onClick)="irEditar(p.id)"></p-button>
+                    <p-button
+                      *ngIf="p.variantes && p.variantes.length > 0 && p.variantes[0]?.id"
+                      icon="pi pi-eye"
+                      text
+                      severity="secondary"
+                      styleClass="productos-icon-btn productos-icon-soft"
+                      pTooltip="Ver Detalles"
+                      (onClick)="irDetalle(p.variantes[0].id!)"
+                    >
+                    </p-button>
 
-                    <p-button icon="pi pi-trash" text severity="danger" styleClass="productos-icon-btn productos-icon-danger" pTooltip="Eliminar Producto" (onClick)="eliminarProducto(p, $event)"></p-button>
+                    <p-button
+                      *ngIf="p.variantes && p.variantes.length > 0 && p.variantes[0]?.id"
+                      icon="pi pi-pencil"
+                      text
+                      severity="secondary"
+                      styleClass="productos-icon-btn productos-icon-warn"
+                      pTooltip="Editar Producto"
+                      (onClick)="irEditar(p.variantes[0].id!)"
+                    >
+                    </p-button>
+
+                    <p-button
+                      icon="pi pi-trash"
+                      text
+                      severity="danger"
+                      styleClass="productos-icon-btn productos-icon-danger"
+                      pTooltip="Eliminar Producto"
+                      (onClick)="eliminarProducto(p, $event)"
+                    >
+                    </p-button>
                   </div>
                 </td>
               </tr>
             </ng-template>
             <ng-template pTemplate="emptymessage">
-              <tr><td colspan="5" class="text-center py-6">
-                <i class="pi pi-inbox text-4xl text-400 mb-3 block"></i>
-                <p class="text-900 font-medium mb-0">No se encontraron productos</p>
-                <p class="text-600 mt-2">Ajusta los filtros arriba</p>
-              </td></tr>
+              <tr>
+                <td colspan="6" class="text-center py-6">
+                  <i class="pi pi-inbox text-4xl text-400 mb-3 block"></i>
+                  <p class="text-900 font-medium mb-0">No se encontraron productos</p>
+                  <p class="text-600 mt-2">Ajusta los filtros arriba</p>
+                </td>
+              </tr>
             </ng-template>
           </p-table>
         </div>
-        
-        <!-- PAGINADOR -->
-        <div *ngIf="productos.length > 0" class="flex justify-content-between align-items-center gap-6 mt-4 p-3 surface-50 border-round-xl">
-          <div class="text-600 font-medium">Mostrando {{first + 1}}-{{getLast()}} de {{totalRecords}} productos</div>
-          <p-paginator [rows]="rows" [first]="first" [totalRecords]="totalRecords" (onPageChange)="onPageChange($event)" styleClass="flex-1 justify-content-center"></p-paginator>
+
+        <div
+          *ngIf="productosAgrupadosPaginados.length > 0"
+          class="flex justify-content-between align-items-center gap-6 mt-4 p-3 surface-50 border-round-xl"
+        >
+          <div class="text-600 font-medium">
+            Mostrando {{ first + 1 }}-{{ getLast() }} de {{ totalRecords }} productos
+          </div>
+          <p-paginator
+            [rows]="rows"
+            [first]="first"
+            [totalRecords]="totalRecords"
+            (onPageChange)="onPageChange($event)"
+            styleClass="flex-1 justify-content-center"
+          ></p-paginator>
           <div class="flex align-items-center gap-2">
             <span class="text-600 mr-2">Filas:</span>
-            <p-select 
+            <p-select
               [(ngModel)]="rows"
               name="rowsSelectActivos1"
-              [options]="[5,10,25,50]" 
-              class="w-6rem" 
-              (onChange)="cambiarFilas($event.value)">
-            </p-select>
+              [options]="[5, 10, 25, 50]"
+              class="w-6rem"
+              (onChange)="cambiarFilas($event.value)"
+            ></p-select>
           </div>
         </div>
       </div>
 
-      <!-- CARDS ACTIVOS -->
       <div *ngIf="!vistaLista" class="mb-6">
-        <div *ngIf="productos.length > 0" class="grid">
-          <div class="col-12 md:col-6 lg:col-4 xl:col-3" *ngFor="let p of productos; trackBy: trackByFn">
-            <div class="surface-card border-round-xl shadow-2 h-full hover:shadow-5 transition-duration-300 p-4 h-full flex flex-column">
-              <div class="h-header-fijo flex justify-content-between align-items-start mb-4" style="height: 5rem; display: flex; align-items: flex-start">
-                <div class="flex flex-column h-full w-full" style="height: 100%; overflow: hidden">
-                  <span class="text-lg font-bold text-900 line-height-2 mb-3 truncate" style="line-height: 1.3; max-height: 3rem; overflow: hidden">{{ p.nombre }}</span>
-                  <small class="text-700 font-medium truncate" style="line-height: 1.2; max-height: 1.5rem; overflow: hidden">{{ p.codigo }} - {{ p.familia }}</small>
+        <div *ngIf="productosAgrupadosPaginados.length > 0" class="grid">
+          <div
+            class="col-12 md:col-6 lg:col-4 xl:col-3"
+            *ngFor="let p of productosAgrupadosPaginados; trackBy: trackByFn"
+          >
+            <div
+              class="surface-card border-round-xl shadow-2 h-full hover:shadow-5 transition-duration-300 p-4 flex flex-column"
+            >
+              <div
+                class="h-header-fijo flex justify-content-between align-items-start mb-3"
+                style="height: 5rem"
+              >
+                <div class="flex flex-column h-full w-full" style="overflow: hidden">
+                  <span
+                    class="text-lg font-bold text-900 line-height-2 mb-2 truncate"
+                    style="max-height: 3rem"
+                    >{{ p.nombre }}</span
+                  >
+                  <small class="text-700 font-medium truncate"
+                    >{{ p.codigo }} - {{ p.familia }}</small
+                  >
                 </div>
               </div>
-              <div class="mb-4 p-3 bg-green-50 border-round-lg flex-shrink-0" style="flex: 0 0 4rem">
-                <div class="flex align-items-center justify-content-center h-full">
-                  <i class="pi pi-tag text-green-500 mr-2"></i>
-                  <span class="text-3xl font-black text-green-600">S/ {{ p.precioVenta | number : '1.2-2' }}</span>
+
+              <div class="flex gap-2 mb-3">
+                <div class="flex-1 text-center p-2 bg-blue-50 border-round">
+                  <i class="pi pi-box text-blue-600 block mb-1"></i>
+                  <span class="text-xs text-500 block">Stock Total</span>
+                  <span class="font-bold text-blue-600">{{ p.stockTotal }}</span>
+                </div>
+                <div class="flex-1 text-center p-2 bg-orange-50 border-round">
+                  <i class="pi pi-building text-orange-600 block mb-1"></i>
+                  <span class="text-xs text-500 block">Sedes</span>
+                  <span class="font-bold text-orange-600">{{ p.cantidadSedes }}</span>
                 </div>
               </div>
-              <div class="flex-shrink-0 mb-4" style="flex: 0 0 2.5rem; display: flex; align-items: center; justify-content: end">
-                <div class="flex align-items-center text-sm text-green-600 font-medium p-2 bg-green-50 border-round">
+
+              <div class="mb-3 flex justify-content-end">
+                <div
+                  class="flex align-items-center text-sm text-green-600 font-medium p-2 bg-green-50 border-round"
+                >
                   <i class="pi pi-check-circle mr-2"></i>
                   <span>Activo</span>
                 </div>
               </div>
+
               <div class="flex-1"></div>
+
               <div class="flex align-items-center justify-content-center gap-2 pt-2">
+                <p-button
+                  icon="pi pi-chart-bar"
+                  text
+                  severity="secondary"
+                  styleClass="productos-icon-btn"
+                  pTooltip="Ver Stock por Sede"
+                  (onClick)="verStockPorSede(p, $event)"
+                ></p-button>
                 
-                <p-button icon="pi pi-eye" text severity="secondary" styleClass="productos-icon-btn productos-icon-soft" pTooltip="Ver Detalles" (onClick)="irDetalle(p.id)"></p-button>
-
-                <p-button icon="pi pi-pencil" text severity="secondary" styleClass="productos-icon-btn productos-icon-warn" pTooltip="Editar Producto" (onClick)="irEditar(p.id)"></p-button>
-
-                <p-button icon="pi pi-trash" text severity="danger" styleClass="productos-icon-btn productos-icon-danger" pTooltip="Eliminar Producto" (onClick)="eliminarProducto(p, $event)"></p-button>
+                <p-button
+                  *ngIf="p.variantes && p.variantes.length > 0 && p.variantes[0]?.id"
+                  icon="pi pi-eye"
+                  text
+                  severity="secondary"
+                  styleClass="productos-icon-btn productos-icon-soft"
+                  pTooltip="Ver Detalles"
+                  (onClick)="irDetalle(p.variantes[0].id!)"
+                ></p-button>
+                
+                <p-button
+                  *ngIf="p.variantes && p.variantes.length > 0 && p.variantes[0]?.id"
+                  icon="pi pi-pencil"
+                  text
+                  severity="secondary"
+                  styleClass="productos-icon-btn productos-icon-warn"
+                  pTooltip="Editar Producto"
+                  (onClick)="irEditar(p.variantes[0].id!)"
+                ></p-button>
+                
+                <p-button
+                  icon="pi pi-trash"
+                  text
+                  severity="danger"
+                  styleClass="productos-icon-btn productos-icon-danger"
+                  pTooltip="Eliminar Producto"
+                  (onClick)="eliminarProducto(p, $event)"
+                ></p-button>
               </div>
             </div>
           </div>
         </div>
-        
-        <!-- PAGINADOR -->
-        <div *ngIf="productos.length > 0" class="flex justify-content-between align-items-center gap-6 mt-4 p-3 surface-50 border-round-xl">
-          <div class="text-600 font-medium">Mostrando {{first + 1}}-{{getLast()}} de {{totalRecords}} productos</div>
-          <p-paginator [rows]="rows" [first]="first" [totalRecords]="totalRecords" (onPageChange)="onPageChange($event)" styleClass="flex-1 justify-content-center"></p-paginator>
+
+        <div
+          *ngIf="productosAgrupadosPaginados.length > 0"
+          class="flex justify-content-between align-items-center gap-6 mt-4 p-3 surface-50 border-round-xl"
+        >
+          <div class="text-600 font-medium">
+            Mostrando {{ first + 1 }}-{{ getLast() }} de {{ totalRecords }} productos
+          </div>
+          <p-paginator
+            [rows]="rows"
+            [first]="first"
+            [totalRecords]="totalRecords"
+            (onPageChange)="onPageChange($event)"
+            styleClass="flex-1 justify-content-center"
+          ></p-paginator>
           <div class="flex align-items-center gap-2">
             <span class="text-600 mr-2">Filas:</span>
-            <p-select 
+            <p-select
               [(ngModel)]="rows"
               name="rowsSelectActivos2"
-              [options]="[5,10,25,50]" 
-              class="w-6rem" 
-              (onChange)="cambiarFilas($event.value)">
-            </p-select>
+              [options]="[5, 10, 25, 50]"
+              class="w-6rem"
+              (onChange)="cambiarFilas($event.value)"
+            ></p-select>
           </div>
         </div>
       </div>
 
-      <!-- SIN PRODUCTOS -->
-      <div *ngIf="productos.length === 0" class="surface-card p-8 text-center py-12 border-round-xl">
+      <div
+        *ngIf="productosAgrupadosPaginados.length === 0 && !loading"
+        class="surface-card p-8 text-center py-12 border-round-xl"
+      >
         <div class="flex flex-column align-items-center gap-4">
           <i class="pi pi-inbox text-7xl text-400 mb-4"></i>
           <h2 class="text-3xl font-bold text-900 mb-3">Sin Productos</h2>
           <p class="text-xl text-600 mb-6 max-w-30rem">
-            No hay productos activos en esta sede <strong>"{{ sedeValue }}"</strong> con los filtros aplicados
+            No hay productos activos con los filtros aplicados
           </p>
           <div class="flex gap-4 flex-wrap justify-content-center">
-
             <p-button
               icon="pi pi-filter-slash"
               label="Limpiar Filtros"
               severity="danger"
               styleClass="productos-pill"
-              size= "large"
-              [style]="{'padding': '1.25rem 2rem'}"
-              (onClick)="limpiarFiltros()">
-            </p-button>
-
-
-            <p-button label="Agregar Primer Producto" icon="pi pi-plus" severity="success" size="large" class="w-14rem" (click)="irCrear()"></p-button>
+              size="large"
+              (onClick)="limpiarFiltros()"
+            ></p-button>
+            <p-button
+              label="Agregar Primer Producto"
+              icon="pi pi-plus"
+              severity="success"
+              size="large"
+              (click)="irCrear()"
+            ></p-button>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- PRODUCTOS ELIMINADOS -->
-    <div *ngIf="sedeValue && esVistaEliminados">
-
+    <div *ngIf="esVistaEliminados">
       <div *ngIf="vistaListaEliminados" class="mb-6">
-        <div *ngIf="productosEliminadosFiltrados.length > 0" class="surface-card border-round-xl shadow-1 overflow-hidden">
-          <p-table [value]="productosEliminadosFiltrados" [loading]="loadingEliminados" styleClass="productos-table-nativa productos-table-hover">
+        <div
+          *ngIf="productosEliminadosAgrupados.length > 0"
+          class="surface-card border-round-xl shadow-1 overflow-hidden"
+        >
+          <p-table
+            [value]="productosEliminadosAgrupados"
+            [loading]="loadingEliminados"
+            styleClass="productos-table-nativa productos-table-hover"
+          >
             <ng-template pTemplate="header">
               <tr>
                 <th style="width: 15%">Código</th>
-                <th style="width: 35%">Producto</th>
-                <th style="width: 17%">Familia</th>
-                <th style="width: 13%">Precio</th>
-                <th style="width: 20%">Acciones</th>
+                <th style="width: 30%">Producto</th>
+                <th style="width: 15%">Familia</th>
+                <th style="width: 12%">Sedes</th>
+                <th style="width: 12%">Stock Total</th>
+                <th style="width: 16%">Acciones</th>
               </tr>
             </ng-template>
             <ng-template pTemplate="body" let-p>
               <tr>
-                <td>{{p.codigo}}</td>
-                <td>{{p.nombre}}</td>
-                <td>{{p.familia}}</td>
-                <td class="font-bold text-orange-500">S/ {{p.precioVenta | number:'1.2-2'}}</td>
+                <td class="font-semibold">{{ p.codigo }}</td>
+                <td>{{ p.nombre }}</td>
+                <td>{{ p.familia }}</td>
+                <td>
+                  <p-tag
+                    [value]="p.cantidadSedes + ' sedes'"
+                    severity="warn"
+                    styleClass="font-bold"
+                  ></p-tag>
+                </td>
+                <td>
+                  <p-tag
+                    [value]="p.stockTotal + ' unid.'"
+                    severity="warn"
+                    styleClass="font-bold"
+                  ></p-tag>
+                </td>
                 <td>
                   <div class="flex align-items-center gap-2">
-                    <p-button icon="pi pi-eye" text severity="secondary" styleClass="productos-icon-btn productos-icon-soft" pTooltip="Ver Detalles" (onClick)="irDetalle(p.id)"></p-button>
-                    <p-button icon="pi pi-pencil" text severity="secondary" styleClass="productos-icon-btn productos-icon-warn" pTooltip="Editar Producto" (onClick)="irEditar(p.id)"></p-button>
-                    <p-button icon="pi pi-refresh" severity="success" text styleClass="productos-icon-btn" pTooltip="Restaurar Producto" (onClick)="restaurarProducto(p, $event)"></p-button>
+                    <p-button
+                      icon="pi pi-chart-bar"
+                      text
+                      severity="secondary"
+                      styleClass="productos-icon-btn"
+                      pTooltip="Ver Stock por Sede"
+                      (onClick)="verStockPorSede(p, $event)"
+                    ></p-button>
+                    
+                    <p-button
+                      *ngIf="p.variantes && p.variantes.length > 0 && p.variantes[0]?.id"
+                      icon="pi pi-eye"
+                      text
+                      severity="secondary"
+                      styleClass="productos-icon-btn productos-icon-soft"
+                      pTooltip="Ver Detalles"
+                      (onClick)="irDetalle(p.variantes[0].id!)"
+                    ></p-button>
+                    
+                    <p-button
+                      *ngIf="p.variantes && p.variantes.length > 0 && p.variantes[0]?.id"
+                      icon="pi pi-pencil"
+                      text
+                      severity="secondary"
+                      styleClass="productos-icon-btn productos-icon-warn"
+                      pTooltip="Editar Producto"
+                      (onClick)="irEditar(p.variantes[0].id!)"
+                    ></p-button>
+                    
+                    <p-button
+                      icon="pi pi-refresh"
+                      severity="success"
+                      text
+                      styleClass="productos-icon-btn"
+                      pTooltip="Restaurar Producto"
+                      (onClick)="restaurarProducto(p, $event)"
+                    ></p-button>
                   </div>
                 </td>
               </tr>
             </ng-template>
             <ng-template pTemplate="emptymessage">
-              <tr><td colspan="5" class="text-center py-6">
-                <i class="pi pi-inbox text-4xl text-400 mb-3"></i><p>No hay productos eliminados</p>
-              </td></tr>
+              <tr>
+                <td colspan="6" class="text-center py-6">
+                  <i class="pi pi-inbox text-4xl text-400 mb-3"></i>
+                  <p>No hay productos eliminados</p>
+                </td>
+              </tr>
             </ng-template>
           </p-table>
         </div>
       </div>
 
-      <!-- CARDS ELIMINADOS -->
       <div *ngIf="!vistaListaEliminados" class="mb-6">
-        <div *ngIf="productosEliminadosFiltrados.length > 0" class="grid">
-          <div class="col-12 md:col-6 lg:col-4 xl:col-3" *ngFor="let p of productosEliminadosFiltrados; trackBy: trackByFn">
-            <div class="surface-card border-round-xl shadow-2 h-full hover:shadow-5 transition-duration-300 p-4 h-full flex flex-column">
-              <div class="h-header-fijo flex justify-content-between align-items-start mb-4" style="height: 5rem; display: flex; align-items: flex-start">
-                <div class="flex flex-column h-full w-full" style="height: 100%; overflow: hidden">
-                  <span class="text-lg font-bold text-900 line-height-2 mb-3 truncate" style="line-height: 1.3; max-height: 3rem; overflow: hidden">{{ p.nombre }}</span>
-                  <small class="text-700 font-medium truncate" style="line-height: 1.2; max-height: 1.5rem; overflow: hidden">{{ p.codigo }} - {{ p.familia }}</small>
+        <div *ngIf="productosEliminadosAgrupados.length > 0" class="grid">
+          <div
+            class="col-12 md:col-6 lg:col-4 xl:col-3"
+            *ngFor="let p of productosEliminadosAgrupados; trackBy: trackByFn"
+          >
+            <div
+              class="surface-card border-round-xl shadow-2 h-full hover:shadow-5 transition-duration-300 p-4 flex flex-column"
+            >
+              <div
+                class="h-header-fijo flex justify-content-between align-items-start mb-4"
+                style="height: 5rem"
+              >
+                <div class="flex flex-column h-full w-full" style="overflow: hidden">
+                  <span class="text-lg font-bold text-900 line-height-2 mb-3 truncate">{{
+                    p.nombre
+                  }}</span>
+                  <small class="text-700 font-medium truncate"
+                    >{{ p.codigo }} - {{ p.familia }}</small
+                  >
                 </div>
               </div>
-              <div class="mb-4 p-3 bg-orange-50 border-round-lg flex-shrink-0" style="flex: 0 0 4rem">
-                <div class="flex align-items-center justify-content-center h-full">
-                  <i class="pi pi-tag text-orange-500 mr-2"></i>
-                  <span class="text-3xl font-black text-orange-600">S/ {{ p.precioVenta | number : '1.2-2' }}</span>
+
+              <div class="flex gap-2 mb-3">
+                <div class="flex-1 text-center p-2 bg-orange-50 border-round">
+                  <i class="pi pi-box text-orange-600 block mb-1"></i>
+                  <span class="text-xs text-500 block">Stock Total</span>
+                  <span class="font-bold text-orange-600">{{ p.stockTotal }}</span>
+                </div>
+                <div class="flex-1 text-center p-2 bg-orange-50 border-round">
+                  <i class="pi pi-building text-orange-600 block mb-1"></i>
+                  <span class="text-xs text-500 block">Sedes</span>
+                  <span class="font-bold text-orange-600">{{ p.cantidadSedes }}</span>
                 </div>
               </div>
-              <div class="flex-shrink-0 mb-4" style="flex: 0 0 2.5rem; display: flex; align-items: center; justify-content: end">
-                <div class="flex align-items-center text-sm text-orange-600 font-medium p-2 bg-orange-50 border-round">
+
+              <div class="mb-4 flex justify-content-end">
+                <div
+                  class="flex align-items-center text-sm text-orange-600 font-medium p-2 bg-orange-50 border-round"
+                >
                   <i class="pi pi-times-circle mr-2"></i>
                   <span>Eliminado</span>
                 </div>
               </div>
               <div class="flex-1"></div>
               <div class="flex align-items-center justify-content-center gap-2 pt-2">
-                <p-button icon="pi pi-eye" text severity="secondary" styleClass="productos-icon-btn productos-icon-soft" pTooltip="Ver Detalles" (onClick)="irDetalle(p.id)"></p-button>
-                <p-button icon="pi pi-pencil" text severity="secondary" styleClass="productos-icon-btn productos-icon-warn" pTooltip="Editar Producto" (onClick)="irEditar(p.id)"></p-button>
-                <p-button icon="pi pi-refresh" severity="success" text styleClass="productos-icon-btn" pTooltip="Restaurar Producto" (onClick)="restaurarProducto(p, $event)"></p-button>
+                <p-button
+                  icon="pi pi-chart-bar"
+                  text
+                  severity="secondary"
+                  styleClass="productos-icon-btn"
+                  pTooltip="Ver Stock por Sede"
+                  (onClick)="verStockPorSede(p, $event)"
+                ></p-button>
+                
+                <p-button
+                  *ngIf="p.variantes && p.variantes.length > 0 && p.variantes[0]?.id"
+                  icon="pi pi-eye"
+                  text
+                  severity="secondary"
+                  styleClass="productos-icon-btn productos-icon-soft"
+                  pTooltip="Ver Detalles"
+                  (onClick)="irDetalle(p.variantes[0].id!)"
+                ></p-button>
+                
+                <p-button
+                  *ngIf="p.variantes && p.variantes.length > 0 && p.variantes[0]?.id"
+                  icon="pi pi-pencil"
+                  text
+                  severity="secondary"
+                  styleClass="productos-icon-btn productos-icon-warn"
+                  pTooltip="Editar Producto"
+                  (onClick)="irEditar(p.variantes[0].id!)"
+                ></p-button>
+                
+                <p-button
+                  icon="pi pi-refresh"
+                  severity="success"
+                  text
+                  styleClass="productos-icon-btn"
+                  pTooltip="Restaurar Producto"
+                  (onClick)="restaurarProducto(p, $event)"
+                ></p-button>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- SIN ELIMINADOS -->
-      <div *ngIf="productosEliminadosFiltrados.length === 0 && !loadingEliminados" class="surface-card p-8 text-center py-12 border-round-xl">
+      <div
+        *ngIf="productosEliminadosAgrupados.length === 0 && !loadingEliminados"
+        class="surface-card p-8 text-center py-12 border-round-xl"
+      >
         <i class="pi pi-trash text-7xl text-orange-400 mb-4"></i>
         <h2 class="text-3xl font-bold text-900 mb-3">¡Sin Productos Eliminados!</h2>
-        <p class="text-xl text-600 mb-6">No hay productos eliminados en <strong>"{{sedeValue}}"</strong></p>
-        <p-button label="Volver Productos Activos" icon="pi pi-arrow-left" severity="secondary" size="large" (click)="volverDesdeEliminados()"></p-button>
+        <p class="text-xl text-600 mb-6">No hay productos eliminados</p>
+        <p-button
+          label="Volver Productos Activos"
+          icon="pi pi-arrow-left"
+          severity="secondary"
+          size="large"
+          (click)="volverDesdeEliminados()"
+        ></p-button>
       </div>
     </div>
   </div>
 
-  <!-- ROUTER OUTLET -->
-  <div class="router-child-outlet surface-section" [style.min-height]="isRutaHija() ? '400px' : '0'">
+  <div
+    class="router-child-outlet surface-section"
+    [style.min-height]="isRutaHija() ? '400px' : '0'"
+  >
     <router-outlet></router-outlet>
   </div>
 </div>
+
+<app-dialog-stock-sedes
+  [(visible)]="mostrarDialogStock"
+  [variantes]="variantesSeleccionadas"
+  [nombreProducto]="nombreProductoSeleccionado"
+>
+</app-dialog-stock-sedes>
+
+<p-dialog
+  [(visible)]="mostrarDialogEliminar"
+  [modal]="true"
+  [style]="{ width: '550px' }"
+  [draggable]="false"
+  [resizable]="false"
+  styleClass="border-round-xl"
+  header="Seleccionar Sede a Eliminar"
+>
+  <div class="py-3">
+    <p class="text-600 mb-4">
+      Este producto está en <strong>{{ productoAEliminar?.cantidadSedes }} sedes</strong>.
+      Selecciona qué deseas eliminar:
+    </p>
+
+    <div class="flex flex-column gap-2">
+      <div
+        *ngFor="let variante of productoAEliminar?.variantes"
+        class="p-3 border-round-lg border-1 surface-border hover:surface-hover cursor-pointer"
+        (click)="seleccionarSedeEliminar(variante)"
+      >
+        <div class="flex justify-content-between align-items-center">
+          <div class="flex align-items-center gap-3">
+            <i class="pi pi-building text-2xl text-primary"></i>
+            <div>
+              <span class="font-bold block">
+                {{ variante.variantes && variante.variantes.length > 0 && variante.variantes[0].sede 
+                  ? formatearNombreSede(variante.variantes[0].sede) 
+                  : 'Sin sede' }}
+              </span>
+              <small class="text-500">Stock: {{ variante.stockTotal || 0 }} unidades</small>
+            </div>
+          </div>
+          <i class="pi pi-trash text-red-500"></i>
+        </div>
+      </div>
+
+      <div
+        class="p-3 border-round-lg bg-red-50 border-1 border-red-200 hover:bg-red-100 cursor-pointer mt-2"
+        (click)="eliminarTodasLasSedes()"
+      >
+        <div class="flex justify-content-between align-items-center">
+          <div class="flex align-items-center gap-3">
+            <i class="pi pi-exclamation-triangle text-2xl text-red-600"></i>
+            <span class="font-bold text-red-600">Eliminar todas las sedes</span>
+          </div>
+          <i class="pi pi-trash text-red-600"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" severity="secondary" (onClick)="cerrarDialogEliminar()"></p-button>
+  </ng-template>
+</p-dialog>
 
 <p-toast></p-toast>
 <p-confirmdialog></p-confirmdialog>

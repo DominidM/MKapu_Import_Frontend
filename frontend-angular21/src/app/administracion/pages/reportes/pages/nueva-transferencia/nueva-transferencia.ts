@@ -41,20 +41,19 @@ interface TransferProducto {
     DividerModule,
     ToastModule,
     ConfirmDialogModule,
-    AutoCompleteModule
+    AutoCompleteModule,
   ],
   templateUrl: './nueva-transferencia.html',
   styleUrl: './nueva-transferencia.css',
-  providers: [MessageService, ConfirmationService]
+  providers: [MessageService, ConfirmationService],
 })
 export class NuevaTransferencia implements OnInit {
-
   constructor(
     private messageService: MessageService,
     private confirmationService: ConfirmationService,
     private router: Router,
     private productosService: ProductosService,
-    private sedeService: SedeService
+    private sedeService: SedeService,
   ) {}
 
   tituloKicker = 'ADMINISTRACION - REPORTES';
@@ -121,7 +120,9 @@ export class NuevaTransferencia implements OnInit {
     return this.responsables.find((item) => item.value === responsable)?.label || '-';
   }
 
-  getStockBadges(producto: TransferProducto | null): { label: string; stock: number; className: string }[] {
+  getStockBadges(
+    producto: TransferProducto | null,
+  ): { label: string; stock: number; className: string }[] {
     if (!producto) {
       return [];
     }
@@ -131,7 +132,7 @@ export class NuevaTransferencia implements OnInit {
       return {
         label: sede.label,
         stock,
-        className: this.getStockClass(stock)
+        className: this.getStockClass(stock),
       };
     });
   }
@@ -168,7 +169,7 @@ export class NuevaTransferencia implements OnInit {
       next: (sedes) => {
         this.sedes = sedes.map((sede) => ({
           label: sede.nombre,
-          value: sede.nombre
+          value: sede.nombre,
         }));
         if (!this.sedeOrigen && this.sedes.length > 0) {
           this.sedeOrigen = this.sedes[0].value;
@@ -183,7 +184,7 @@ export class NuevaTransferencia implements OnInit {
           detail: 'No se pudieron cargar las sedes',
         });
         this.cargarProductos();
-      }
+      },
     });
   }
 
@@ -208,19 +209,27 @@ export class NuevaTransferencia implements OnInit {
       if (map.has(clave)) {
         return;
       }
+
       const variantes = this.productosService.getProductosPorCodigo(clave);
       const stockPorSede: Record<string, number> = {};
+
       variantes.forEach((variante) => {
-        stockPorSede[variante.sede] = variante.stock ?? 0;
+        // ✅ VALIDAR QUE LA SEDE EXISTA ANTES DE USARLA COMO ÍNDICE
+        if (variante.sede) {
+          stockPorSede[variante.sede] = variante.stock ?? 0;
+        }
       });
-      map.set(clave, {
-        id: producto.id,
-        nombre: producto.nombre,
-        sku: producto.codigo,
-        categoria: producto.familia,
-        marca: 'N/A',
-        stockPorSede
-      });
+
+      if (producto.id) {
+        map.set(clave, {
+          id: producto.id,
+          nombre: producto.nombre,
+          sku: producto.codigo,
+          categoria: producto.familia,
+          marca: 'N/A',
+          stockPorSede,
+        });
+      }
     });
 
     return Array.from(map.values());
@@ -384,11 +393,11 @@ export class NuevaTransferencia implements OnInit {
           severity: 'success',
           summary: 'Registro exitoso',
           detail: 'La transferencia fue registrada correctamente',
-          life: 3000
+          life: 3000,
         });
         this.router.navigate(['/admin/transferencia']);
         this.resetForm();
-      }
+      },
     });
   }
 
@@ -404,5 +413,4 @@ export class NuevaTransferencia implements OnInit {
     this.fechaLlegada = null;
     this.responsable = null;
   }
-
 }
