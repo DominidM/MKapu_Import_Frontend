@@ -18,6 +18,10 @@
   padding: 1rem 1.25rem;
 }
 
+.usuarios-header-card {
+  width: 100%;
+}
+
 /* ICONO (AMARILLO COMO EJEMPLO) */
 .usuarios-title-icon {
   width: 40px;
@@ -46,6 +50,14 @@
   font-size: 1.1rem;
   font-weight: 600;
   color: #1f2937;
+}
+
+:host-context(.app-dark) .usuarios-kicker {
+  color: #94a3b8;
+}
+
+:host-context(.app-dark) .usuarios-title {
+  color: #f8fafc;
 }
 
 /* ================================

@@ -17,47 +17,41 @@
         </div>
     </p-card>
 
-    <div class="grid mb-4">
+    <div class="grid mb-4 mermas-metrics">
         <div class="col-12 md:col-4">
-            <p-card styleClass="stat-card stat-card-mermas">
-                <div class="flex align-items-center justify-content-between">
+            <p-card styleClass="stat-card">
+                <div class="stat-card-content">
+                    <i class="pi pi-exclamation-triangle stat-icon"></i>
                     <div>
                         <p class="stat-label">TOTAL MERMAS</p>
                         <h3 class="stat-value">{{ totalMermas }}</h3>
                         <p class="stat-change">-3 vs. semana pasada</p>
                     </div>
-                    <div class="stat-icon stat-icon-mermas">
-                        <i class="pi pi-exclamation-triangle"></i>
-                    </div>
                 </div>
             </p-card>
         </div>
 
         <div class="col-12 md:col-4">
-            <p-card styleClass="stat-card stat-card-remates">
-                <div class="flex align-items-center justify-content-between">
+            <p-card styleClass="stat-card">
+                <div class="stat-card-content">
+                    <i class="pi pi-dollar stat-icon"></i>
                     <div>
                         <p class="stat-label">TOTAL REMATES</p>
                         <h3 class="stat-value">{{ totalRemates }}</h3>
                         <p class="stat-change">+8 nuevos hoy</p>
                     </div>
-                    <div class="stat-icon stat-icon-remates">
-                        <i class="pi pi-dollar"></i>
-                    </div>
                 </div>
             </p-card>
         </div>
 
         <div class="col-12 md:col-4">
-            <p-card styleClass="stat-card stat-card-valor">
-                <div class="flex align-items-center justify-content-between">
+            <p-card styleClass="stat-card">
+                <div class="stat-card-content">
+                    <i class="pi pi-chart-line stat-icon"></i>
                     <div>
                         <p class="stat-label">VALOR TOTAL</p>
                         <h3 class="stat-value">S/ {{ valorTotalRemates | number:'1.2-2' }}</h3>
                         <p class="stat-change">Precio de remate acumulado</p>
-                    </div>
-                    <div class="stat-icon stat-icon-valor">
-                        <i class="pi pi-chart-line"></i>
                     </div>
                 </div>
             </p-card>
@@ -168,9 +162,6 @@
                     <td class="text-center">
                         <p-button icon="pi pi-pencil" [text]="true" severity="info" styleClass="action-btn"
                             (onClick)="editarProducto(producto)" pTooltip="Editar" tooltipPosition="left">
-                        </p-button>
-                        <p-button icon="pi pi-trash" [text]="true" severity="danger" styleClass="action-btn"
-                            (onClick)="eliminarProducto(producto)" pTooltip="Eliminar" tooltipPosition="left">
                         </p-button>
                     </td>
                 </tr>

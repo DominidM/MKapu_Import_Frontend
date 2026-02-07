@@ -1,27 +1,24 @@
 <!-- HEADER -->
-<section class="wizard-content p-4">
-  <p-card class="header-card">
-    <div class="flex align-items-center justify-content-between">
-      
-      <div class="flex align-items-center gap-3">
-        <span class="inventory-title-icon">
+<section class="wizard-content">
+  <p-card styleClass="usuarios-header-card">
+    <div class="usuarios-header-row flex flex-column md:flex-row md:align-items-center md:justify-content-between gap-3">
+      <div class="usuarios-header-title flex align-items-center gap-3 w-full md:w-auto">
+        <span class="usuarios-title-icon">
           <i class="pi pi-users"></i>
         </span>
-
         <div>
-          <p class="transfer-kicker">Administración</p>
-          <h2 class="transfer-title">Listado de Usuarios</h2>
+          <p class="usuarios-kicker">ADMINISTRACIÓN · USUARIOS</p>
+          <h2 class="usuarios-title">LISTADO DE USUARIOS</h2>
         </div>
       </div>
-
-      <button
-        pButton
-        icon="pi pi-user-plus"
-        label="Nuevo Usuario"
-        class="wizard-primary"
-        (click)="nuevoUsuario()"
-      ></button>
-
+      <div class="usuarios-header-actions flex w-full md:w-auto md:justify-content-end">
+        <p-button
+          label="Nuevo Usuario"
+          icon="pi pi-user-plus"
+          styleClass="usuarios-pill w-full md:w-auto"
+          (onClick)="nuevoUsuario()"
+        ></p-button>
+      </div>
     </div>
   </p-card>
 </section>
