@@ -416,6 +416,7 @@ export class ProductosService {
     return this.productosSubject.value.find((p) => p.codigo === codigo && p.estado === 'Activo');
   }
 
+  
   getProductosPorCodigo(codigo: string, incluirEliminados: boolean = false): Producto[] {
     let productos = this.productosSubject.value.filter((p) => p.codigo === codigo);
     if (!incluirEliminados) {

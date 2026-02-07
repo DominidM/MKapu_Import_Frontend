@@ -23,6 +23,19 @@ export const routes: Routes = [
     data: { allowedRoles: [UserRole.ADMIN] },
     children: ADMIN_ROUTES,
   },
+// ✅ Dashboard con layout (sin guards temporalmente)
+  {
+    path: 'dashboard-admin',
+    component: Main,  // ✅ Esto trae el sidebar y header
+    // canActivate: [authGuard, roleGuard],  // ❌ Comentar temporalmente
+    // data: { allowedRoles: [UserRole.ADMIN] },
+    children: [
+      {
+        path: '',
+        loadComponent: () => import('./administracion/pages/dashboard/dashboard').then((m) => m.Dashboard),
+      }
+    ]
+  },
 
   /* =======================
      ALMACÉN

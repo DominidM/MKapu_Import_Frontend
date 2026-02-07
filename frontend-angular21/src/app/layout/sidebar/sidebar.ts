@@ -93,6 +93,12 @@ export class Sidebar implements OnInit {
       label: 'Transferencias',
       icon: 'pi pi-arrows-h',
     },
+    {
+      path: '/admin/despacho-productos',
+      allowedRoles: [UserRole.ADMIN],
+      label: 'Despacho',
+      icon: 'pi pi-truck',
+    },
 
     {
       path: '',
@@ -118,6 +124,18 @@ export class Sidebar implements OnInit {
       label: 'Sedes',
       icon: 'pi pi-building',
     },
+    {
+      path: '/admin/comision',
+      allowedRoles: [UserRole.ADMIN],
+      label: 'Comisiones',
+      icon: 'pi pi-wallet',
+    },
+    {
+      path: '/admin/mermas-remates',
+      allowedRoles: [UserRole.ADMIN],
+      label: 'Mermas / Remates',
+      icon: 'pi pi-trash',
+    },
 
     // ==================== VENTAS ====================
     {
@@ -138,6 +156,13 @@ export class Sidebar implements OnInit {
       label: 'Historial Ventas',
       icon: 'pi pi-bookmark',
     },
+    {
+      path: '/ventas/reclamos-listado',
+      allowedRoles: [UserRole.VENTAS],
+      label: 'Reclamos y Garantías',
+      icon: 'pi pi-shield',
+    },
+
 
     // ==================== ALMACÉN ====================
     {

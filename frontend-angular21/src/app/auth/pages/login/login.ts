@@ -40,42 +40,68 @@ export class Login {
   }
 
   onSubmit(): void {
-    if (this.loginForm.invalid) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Formulario inválido',
-        detail: 'Por favor, complete todos los campos'
-      });
-      return;
-    }
+    /*
+  if (this.loginForm.invalid) {
+    this.messageService.add({
+      severity: 'warn',
+      summary: 'Formulario inválido',
+      detail: 'Por favor, complete todos los campos'
+    });
+    return;
 
-    this.isLoading = true;
+
+  this.isLoading = true;
+ 
+  console.log('este es el form:', { username, password });
+
+    */
     const { username, password } = this.loginForm.value;
 
-    console.log('este es el form:', { username, password });
+  this.authService.login(username, password).subscribe({
+    next: (data) => {
+      console.log('Login exitoso:', data);
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Bienvenido',
+        detail: 'Inicio de sesión exitoso'
+      });
+    },
+    error: (err) => {
+      console.error('Error al logearse:', err);
+      this.isLoading = false;
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error de autenticación',
+        detail: err.error?.message || 'Credenciales incorrectas'
+      });
+    },
+    complete: () => {
+      this.isLoading = false;
+    }
+  });
 
-    this.authService.login(username, password).subscribe({
-      next: (data) => {
-        console.log('Login exitoso:', data);
+  /*
+  // ✅ SIMULACIÓN temporal para desarrollo
+  setTimeout(() => {
+    this.isLoading = false;
+    
+    // Guardar token falso en localStorage (para que los guards lo detecten)
+    localStorage.setItem('token', 'fake-token-for-dev');
+    localStorage.setItem('userRole', 'ADMIN'); // o el rol que necesites
 
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Bienvenido',
-          detail: 'Inicio de sesión exitoso'
-        });
-      },
-      error: (err) => {
-        console.error('Error al logearse:', err);
-        this.isLoading = false;
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error de autenticación',
-          detail: err.error?.message || 'Credenciales incorrectas'
-        });
-      },
-      complete: () => {
-        this.isLoading = false;
-      }
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Bienvenido',
+      detail: 'Inicio de sesión exitoso (modo desarrollo)'
     });
-  }
+
+    // Redirigir al dashboard de admin
+
+    //this.router.navigate(['/gestion-productos']);
+
+    this.router.navigate(['/dashboard-admin']);
+  }, 500);
+  */
+}
+
 }

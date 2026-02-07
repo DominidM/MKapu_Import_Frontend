@@ -224,4 +224,73 @@ export const ADMIN_ROUTES: Routes = [
     redirectTo: 'dashboard',
     pathMatch: 'full',
   },
+
+  /* =======================
+    COMISIONES
+  ======================= */
+  {
+    path: 'comision',
+    loadComponent: () =>
+      import('./pages/comision/comision')
+    .then( (m) => m.Comision
+  ),
+       
+  },
+
+
+ 
+  {
+    path: 'comision-regla',
+    loadComponent: () =>
+      import('./pages/comision-regla/comisionregla')
+        .then( (m) => m.ComisionRegla),
+  },
+  
+
+  {
+    path: 'comision-reportes',
+    loadComponent: () =>
+      import('./pages/comision-reportes/comisionreportes')
+        .then( (m) => m.ComisionReportes),
+  },
+  
+  /* =======================
+     MERMAS / REMATES
+  ======================= */
+  {
+    path: 'mermas-remates',
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/mermas-remates/pages/mermas-remates-pr/mermas-remates-pr').then(
+            (m) => m.MermasRematesPr,
+          ),
+      },
+      {
+        path: 'registro-merma-remate',
+        loadComponent: () =>
+          import('./pages/mermas-remates/pages/mermas-remates-registro/mermas-remates-registro').then(
+            (m) => m.MermasRematesRegistro,
+          ),
+      },
+    ],
+  },
+  /* =======================
+     DESPACHO PRODUCTOS
+  ======================= */
+  {
+    path: 'despacho-productos',
+    loadComponent: () =>
+      import('./pages/despacho-productos/pages/listado-despacho/listado-despacho').then(
+        (m) => m.ListadoDespacho,
+      ),
+  },
+  {
+    path: 'despacho-productos/detalle-despacho/:id',
+    loadComponent: () =>
+      import('./pages/despacho-productos/pages/detalles-despacho/detalles-despacho').then(
+        (m) => m.DetallesDespacho,
+      ),
+  },
 ];
