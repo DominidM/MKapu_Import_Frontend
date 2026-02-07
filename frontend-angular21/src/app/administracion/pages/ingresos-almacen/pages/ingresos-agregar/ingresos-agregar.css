@@ -43,6 +43,7 @@
     border-radius: 14px;
     border: 1px solid #2b2b2b;
     box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+    margin-bottom: 1.5rem;
 }
 
 :host ::ng-deep .sede-cliente.p-card {
@@ -96,4 +97,149 @@
 
 :host ::ng-deep .cliente-btn-cancel .p-button-label {
     font-weight: 600;
+}
+
+/* ===== ESTILOS PARA LA SECCIÓN DE PRODUCTOS ===== */
+
+.productos-card {
+    background: #ffffff;
+}
+
+.productos-section-icon {
+    width: 36px;
+    height: 36px;
+    display: grid;
+    place-items: center;
+    border-radius: 8px;
+    background: #dbeafe;
+    color: #1d4ed8;
+    font-size: 16px;
+}
+
+.productos-table-container {
+    background: #ffffff;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.productos-table-container :host ::ng-deep .p-datatable .p-datatable-thead > tr > th {
+    background: #f8f9fa;
+    color: #4b5563;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 1rem;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.productos-table-container :host ::ng-deep .p-datatable .p-datatable-tbody > tr > td {
+    padding: 0.75rem 1rem;
+    vertical-align: middle;
+}
+
+.required-asterisk {
+    color: #dc3545;
+    margin-left: 2px;
+}
+
+.subtotal-input {
+    background: #f8f9fa !important;
+    font-weight: 600 !important;
+    color: #059669 !important;
+    border-color: #e5e7eb !important;
+}
+
+.productos-delete-btn {
+    color: #dc3545 !important;
+}
+
+.productos-delete-btn:hover {
+    background: #fee2e2 !important;
+}
+
+.productos-add-btn {
+    border-color: #3b82f6 !important;
+    color: #3b82f6 !important;
+    border-radius: 8px;
+}
+
+.productos-add-btn:hover {
+    background: #eff6ff !important;
+}
+
+.productos-totales-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid #e5e7eb;
+}
+
+.productos-total-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.productos-total-label {
+    font-size: 0.85rem;
+    color: #6b7280;
+    font-weight: 500;
+    text-align: center;
+}
+
+.productos-total-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.productos-total-value-highlight {
+    color: #059669;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .productos-totales-container {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .productos-total-value {
+        font-size: 1.5rem;
+    }
+}
+
+/* PrimeNG overrides for inputs in table */
+:host ::ng-deep .productos-table-container .p-inputtext,
+:host ::ng-deep .productos-table-container .p-select {
+    font-size: 0.875rem;
+}
+
+:host ::ng-deep .productos-table-container .p-inputnumber-input {
+    text-align: center;
+}
+
+:host ::ng-deep .productos-table-container .p-datatable .p-datatable-tbody > tr {
+    transition: background-color 0.2s;
+}
+
+:host ::ng-deep .productos-table-container .p-datatable .p-datatable-tbody > tr:hover {
+    background-color: #f9fafb;
+}
+
+/* Estilos para el mensaje vacío */
+:host ::ng-deep .productos-table-container .p-datatable-emptymessage > td {
+    padding: 3rem 1rem !important;
+}
+
+/* Ajuste del DatePicker */
+:host ::ng-deep .p-datepicker {
+    width: 100%;
+}
+
+:host ::ng-deep .p-datepicker-input-icon-container {
+    width: 100%;
 }

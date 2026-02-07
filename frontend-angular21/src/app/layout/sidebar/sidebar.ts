@@ -119,11 +119,20 @@ export class Sidebar implements OnInit {
       icon: 'pi pi-building',
     },
     {
+<<<<<<< HEAD
       path: '/admin/comision',
       allowedRoles: [UserRole.ADMIN],
       label: 'Comisiones',
       icon: 'pi pi-wallet',
     },
+=======
+      path: '/admin/mermas-remates',
+      allowedRoles: [UserRole.ADMIN],
+      label: 'Mermas / Remates',
+      icon: 'pi pi-trash',
+    },
+
+>>>>>>> d7e9c79a9eda46b581f75fe8dba5991daa40f224
     // ==================== VENTAS ====================
     {
       path: '/ventas/dashboard-ventas',

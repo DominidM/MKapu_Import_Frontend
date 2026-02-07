@@ -225,6 +225,7 @@ export const ADMIN_ROUTES: Routes = [
     pathMatch: 'full',
   },
 
+<<<<<<< HEAD
   /* =======================
     COMISIONES
   ======================= */
@@ -255,4 +256,29 @@ export const ADMIN_ROUTES: Routes = [
   },
   
 
+=======
+
+  /* =======================
+     MERMAS / REMATES
+  ======================= */
+  {
+    path: 'mermas-remates',
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/mermas-remates/pages/mermas-remates-pr/mermas-remates-pr').then(
+            (m) => m.MermasRematesPr,
+          ),
+      },
+      {
+        path: 'registro-merma-remate',
+        loadComponent: () =>
+          import('./pages/mermas-remates/pages/mermas-remates-registro/mermas-remates-registro').then(
+            (m) => m.MermasRematesRegistro,
+          ),
+      },
+    ],
+  },
+>>>>>>> d7e9c79a9eda46b581f75fe8dba5991daa40f224
 ];
