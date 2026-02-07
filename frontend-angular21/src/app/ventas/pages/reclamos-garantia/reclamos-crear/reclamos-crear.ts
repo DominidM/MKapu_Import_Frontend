@@ -42,7 +42,6 @@ interface ComprobanteConProductos extends ComprobanteVenta {
     Textarea,
     Select,
     SelectButton,
-    AutoComplete,
     Toast,
     Tag,
     Divider,

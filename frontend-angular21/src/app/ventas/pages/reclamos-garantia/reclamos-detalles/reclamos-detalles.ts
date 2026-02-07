@@ -15,7 +15,7 @@ import { MessageService } from 'primeng/api';
 @Component({
   selector: 'app-reclamos-detalles',
   standalone: true,
-  imports: [CommonModule, Card, Button, Tag, Divider, Toast],
+  imports: [CommonModule, Card, Button, Tag, Toast],
   providers: [MessageService],
   templateUrl: './reclamos-detalles.html',
   styleUrl: './reclamos-detalles.css',

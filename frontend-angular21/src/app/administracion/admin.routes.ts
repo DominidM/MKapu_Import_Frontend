@@ -225,8 +225,6 @@ export const ADMIN_ROUTES: Routes = [
     pathMatch: 'full',
   },
 
-<<<<<<< HEAD
-<<<<<<< HEAD
   /* =======================
     COMISIONES
   ======================= */
@@ -256,9 +254,6 @@ export const ADMIN_ROUTES: Routes = [
         .then( (m) => m.ComisionReportes),
   },
   
-
-=======
-
   /* =======================
      MERMAS / REMATES
   ======================= */
@@ -281,8 +276,6 @@ export const ADMIN_ROUTES: Routes = [
       },
     ],
   },
->>>>>>> d7e9c79a9eda46b581f75fe8dba5991daa40f224
-=======
   /* =======================
      DESPACHO PRODUCTOS
   ======================= */
@@ -300,5 +293,4 @@ export const ADMIN_ROUTES: Routes = [
         (m) => m.DetallesDespacho,
       ),
   },
->>>>>>> 5905fb728c07a062798aeb4ff702289e5389a4dd
 ];

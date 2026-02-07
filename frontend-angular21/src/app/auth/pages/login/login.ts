@@ -40,6 +40,7 @@ export class Login {
   }
 
   onSubmit(): void {
+    /*
   if (this.loginForm.invalid) {
     this.messageService.add({
       severity: 'warn',
@@ -47,15 +48,15 @@ export class Login {
       detail: 'Por favor, complete todos los campos'
     });
     return;
-  }
+
 
   this.isLoading = true;
-  const { username, password } = this.loginForm.value;
-
+ 
   console.log('este es el form:', { username, password });
 
-  // ✅ BYPASS temporal - comentar el servicio real
-  /*
+    */
+    const { username, password } = this.loginForm.value;
+
   this.authService.login(username, password).subscribe({
     next: (data) => {
       console.log('Login exitoso:', data);
@@ -78,8 +79,8 @@ export class Login {
       this.isLoading = false;
     }
   });
-  */
 
+  /*
   // ✅ SIMULACIÓN temporal para desarrollo
   setTimeout(() => {
     this.isLoading = false;
@@ -100,6 +101,7 @@ export class Login {
 
     this.router.navigate(['/dashboard-admin']);
   }, 500);
+  */
 }
 
 }
