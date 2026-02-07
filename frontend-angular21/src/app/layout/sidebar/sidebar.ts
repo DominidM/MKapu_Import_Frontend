@@ -138,6 +138,12 @@ export class Sidebar implements OnInit {
       label: 'Historial Ventas',
       icon: 'pi pi-bookmark',
     },
+    {
+      path: '/ventas/reclamos-listado',
+      allowedRoles: [UserRole.VENTAS],
+      label: 'Reclamos y Garantías',
+      icon: 'pi pi-shield',
+    },
 
     // ==================== ALMACÉN ====================
     {
