@@ -1,0 +1,104 @@
+<p-toast position="top-right"></p-toast>
+
+<section class="edit-user-page">
+  <div class="p-2 pt-5 md:pt-2">
+    <p-card class="edit-user-header-card">
+      <div class="edit-user-header-row">
+        <div class="edit-user-header-title">
+          <span class="edit-user-title-icon">
+            <i class="pi pi-user-edit"></i>
+          </span>
+          <div>
+            <p class="edit-user-kicker mb-0">ADMINISTRACIÓN · USUARIOS</p>
+            <h2 class="edit-user-title mb-0">EDITAR USUARIO</h2>
+            <div class="edit-user-meta">
+              <span class="edit-user-chip">
+                <i class="pi pi-check"></i>
+                En edición
+              </span>
+              <span>Datos principales</span>
+            </div>
+          </div>
+        </div>
+        <div class="edit-user-header-actions">
+          <button
+            pButton
+            type="button"
+            label="Volver"
+            icon="pi pi-arrow-left"
+            class="p-button-outlined"
+            [routerLink]="['/admin/usuarios']">
+          </button>
+        </div>
+      </div>
+    </p-card>
+  </div>
+
+  <div class="p-2">
+    <p-card class="edit-user-form-card">
+    <div class="edit-user-section">
+      <div class="edit-user-section-header">
+        <i class="pi pi-id-card"></i>
+        <h3>Datos principales</h3>
+      </div>
+      <div class="edit-user-grid">
+        <div class="edit-user-field-icon">
+          <span class="edit-user-icon-lg">
+            <i class="pi pi-user"></i>
+          </span>
+          <div class="edit-user-field">
+            <label>Nombre</label>
+            <input pInputText class="w-full" [(ngModel)]="testUpdateForm.usu_nom" />
+          </div>
+        </div>
+
+        <div class="edit-user-field-icon">
+          <span class="edit-user-icon-lg">
+            <i class="pi pi-phone"></i>
+          </span>
+          <div class="edit-user-field">
+            <label>Celular</label>
+            <input pInputText class="w-full" [(ngModel)]="testUpdateForm.celular" />
+          </div>
+        </div>
+
+        <div class="edit-user-field-icon edit-user-field-wide">
+          <span class="edit-user-icon-lg">
+            <i class="pi pi-map-marker"></i>
+          </span>
+          <div class="edit-user-field">
+            <label>Dirección</label>
+            <input pInputText class="w-full" [(ngModel)]="testUpdateForm.direccion" />
+          </div>
+        </div>
+
+        <div class="edit-user-field-icon">
+          <span class="edit-user-icon-lg">
+            <i class="pi pi-check-circle"></i>
+          </span>
+          <div class="edit-user-field">
+            <label>Estado</label>
+            <p-select
+              class="w-full"
+              [options]="[{ label: 'Activo', value: true }, { label: 'Inactivo', value: false }]"
+              optionLabel="label"
+              optionValue="value"
+              [(ngModel)]="testUpdateForm.activo">
+            </p-select>
+          </div>
+        </div>
+      </div>
+      <div class="edit-user-form-actions">
+        <button
+          pButton
+          type="button"
+          label="Actualizar usuario"
+          icon="pi pi-save"
+          class="p-button-warning"
+          (click)="actualizarUsuarioCompleto()">
+        </button>
+      </div>
+    </div>
+    </p-card>
+  </div>
+</section>

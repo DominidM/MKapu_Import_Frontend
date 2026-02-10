@@ -1,0 +1,111 @@
+<!-- HEADER -->
+<section class="wizard-content">
+  <p-card styleClass="usuarios-header-card">
+    <div
+      class="usuarios-header-row flex flex-column md:flex-row md:align-items-center md:justify-content-between gap-3">
+      <div class="usuarios-header-title flex align-items-center gap-3 w-full md:w-auto">
+        <span class="usuarios-title-icon">
+          <i class="pi pi-users"></i>
+        </span>
+        <div>
+          <p class="usuarios-kicker">ADMINISTRACIÓN · USUARIOS</p>
+          <h2 class="usuarios-title">LISTADO DE USUARIOS</h2>
+        </div>
+      </div>
+      <div class="usuarios-header-actions flex w-full md:w-auto md:justify-content-end">
+        <p-button label="Nuevo Usuario" icon="pi pi-user-plus" styleClass="usuarios-pill w-full md:w-auto"
+          (onClick)="nuevoUsuario()"></p-button>
+      </div>
+    </div>
+  </p-card>
+</section>
+
+<!-- BUSCADOR -->
+<section class="wizard-content mt-3">
+  <p-card>
+    <h4 class="mb-3">Buscar Usuario</h4>
+
+    <div class="flex align-items-center gap-3">
+      <input pInputText type="text" maxlength="8" placeholder="Ingrese DNI (8 dígitos)..." [(ngModel)]="filtroDni"
+        class="w-full" />
+
+      <p-select
+        [options]="estados"
+        optionLabel="label"
+        optionValue="value"
+        [(ngModel)]="filtroEstado"
+        (onChange)="onEstadoChange()"
+        class="w-full md:w-15rem"
+        placeholder="Estado">
+      </p-select>
+
+      <button pButton icon="pi pi-filter-slash" label="Limpiar" severity="danger"></button>
+    </div>
+  </p-card>
+</section>
+
+<!-- TABLA -->
+<section class="wizard-content mt-4">
+  <p-card>
+    <div class="flex flex-column md:flex-row md:align-items-center md:justify-content-between gap-3 mb-3">
+      <div class="flex align-items-center gap-2">
+        <i class="pi pi-user"></i>
+        <strong>Usuarios</strong>
+        <p-tag *ngIf="totalusers > 0" [value]="totalusers + ' Usuarios'" severity="info"></p-tag>
+      </div>
+    </div>
+
+    <p-table
+      [value]="usuariosFiltrados"
+      responsiveLayout="scroll"
+      class="p-datatable-sm usuarios-table--espaciada"
+      [rows]="5"
+      [paginator]="true">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Usuario</th>
+          <th>DNI</th>
+          <th>Email</th>
+          <th>Celular</th>
+          <th>Dirección</th>
+          <th>Sede</th>
+          <th>Estado</th>
+          <th style="width: 110px">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-user>
+        <tr>
+          <td>
+            <strong>{{ user.usu_nom }}</strong>
+            <div class="helper-text">{{ user.ape_pat }} {{ user.ape_mat }}</div>
+          </td>
+          <td>{{ user.dni }}</td>
+          <td>{{ user.email }}</td>
+          <td>{{ user.celular }}</td>
+          <td>{{ user.direccion }}</td>
+          <td>{{ user.sedeNombre || 'N/A' }}</td>
+          <td>
+            <p-tag [value]="user.activo ? 'Activo' : 'Inactivo'"
+              [severity]="user.activo ? 'success' : 'danger'"></p-tag>
+          </td>
+          <td class="text-center">
+            <button pButton icon="pi pi-eye" class="p-button-text p-button-sm"></button>
+            <button
+              pButton
+              icon="pi pi-pencil"
+              class="p-button-text p-button-sm"
+              [routerLink]="['/admin/usuarios/editar-usuario', user.id_usuario]">
+            </button>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="8" class="text-center">No hay usuarios registrados</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </p-card>
+</section>

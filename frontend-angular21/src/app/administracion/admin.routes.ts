@@ -22,15 +22,22 @@ export const ADMIN_ROUTES: Routes = [
       {
         path: '',
         loadComponent: () =>
-          import('./pages/administracion-crear-usuario/administracion-crear-usuario').then(
+          import('./pages/usuarios/pages/administracion-crear-usuario/administracion-crear-usuario').then(
             (m) => m.AdministracionCrearUsuario,
           ),
       },
       {
         path: 'crear-usuario',
         loadComponent: () =>
-          import('./pages/administracion/administracion').then(
+          import('./pages/usuarios/pages/administracion/administracion').then(
             (m) => m.Administracion,
+          ),
+      },
+      {
+        path: 'editar-usuario/:id',
+        loadComponent: () =>
+          import('./pages/usuarios/pages/administracion-editar-usuario/administracion-editar-usuario').then(
+            (m) => m.AdministracionEditarUsuario,
           ),
       },
     ],
@@ -234,18 +241,18 @@ export const ADMIN_ROUTES: Routes = [
       import('./pages/comision/comision')
     .then( (m) => m.Comision
   ),
-       
+
   },
 
 
- 
+
   {
     path: 'comision-regla',
     loadComponent: () =>
       import('./pages/comision-regla/comisionregla')
         .then( (m) => m.ComisionRegla),
   },
-  
+
 
   {
     path: 'comision-reportes',
@@ -253,7 +260,7 @@ export const ADMIN_ROUTES: Routes = [
       import('./pages/comision-reportes/comisionreportes')
         .then( (m) => m.ComisionReportes),
   },
-  
+
   /* =======================
      MERMAS / REMATES
   ======================= */

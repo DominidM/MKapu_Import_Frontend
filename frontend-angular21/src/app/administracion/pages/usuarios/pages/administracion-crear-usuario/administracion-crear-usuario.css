@@ -125,6 +125,11 @@
   color: #4b5563;
 }
 
+.usuarios-table--espaciada ::ng-deep .p-datatable-tbody > tr > td {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
 /* ================================
    BOTONES TABLA
 ================================ */
