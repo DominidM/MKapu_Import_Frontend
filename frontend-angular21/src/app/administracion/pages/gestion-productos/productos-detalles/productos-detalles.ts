@@ -183,4 +183,12 @@ export class ProductosDetalles implements OnInit {
   getStockPorSede(sede: string): number {
     return this.producto?.variantes?.find(v => v.sede === sede)?.stock || 0;
   }
+
+  irTransferirProducto() {
+  if (this.productoId) {
+    this.router.navigate(['/admin/transferencia'], {
+      queryParams: { productoId: this.productoId }
+    });
+  }
+}
 }
