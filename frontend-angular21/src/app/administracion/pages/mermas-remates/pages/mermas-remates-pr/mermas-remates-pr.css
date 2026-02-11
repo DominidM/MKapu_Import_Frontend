@@ -8,6 +8,11 @@
     padding: 1rem 1.25rem;
 }
 
+.clientes-header-card {
+    border-radius: 12px;
+    overflow: hidden;
+}
+
 .clientes-title-icon {
     width: 40px;
     height: 40px;
@@ -94,79 +99,144 @@
 }
 
 /* ===== TARJETAS DE ESTADÍSTICAS ===== */
-:host ::ng-deep .stat-card {
+.mermas-metrics {
+    margin: 0.75rem 0 1rem;
+    gap: 0;
     border-radius: 12px;
-    border: 1px solid #e5e7eb;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    background: #ffffff;
+}
+
+.mermas-metrics > [class*='col-'] {
+    padding: 0;
+}
+
+.mermas-metrics p-card {
+    height: 100%;
+    display: block;
+}
+
+.mermas-metrics p-card .p-card {
+    height: 100%;
+}
+
+:host ::ng-deep .stat-card {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: flex-start;
+    background: #ffffff;
+    border-right: 2px solid #e5e7eb;
     transition: all 0.3s ease;
+    border-radius: 0;
+}
+
+:host ::ng-deep .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, #F6AF33 0%, #e8a424 100%);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease;
+}
+
+:host ::ng-deep .stat-card:hover::before {
+    transform: scaleX(1);
 }
 
 :host ::ng-deep .stat-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    background: #fefce8;
+    box-shadow: inset 0 -2px 8px rgba(246, 175, 51, 0.1);
 }
 
 :host ::ng-deep .stat-card .p-card-body {
     padding: 1.5rem;
 }
 
+.stat-card-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: flex-start;
+}
+
 .stat-label {
-    font-size: 0.7rem;
+    font-size: 0.75rem;
     font-weight: 600;
-    letter-spacing: 0.08em;
+    color: #9ca3af;
     text-transform: uppercase;
-    color: #94a3b8;
-    margin: 0 0 0.75rem 0;
+    letter-spacing: 0.05em;
+    margin: 0;
 }
 
 .stat-value {
-    font-size: 2.75rem;
+    font-size: 1.75rem;
     font-weight: 700;
     margin: 0;
     color: #1f2937;
     line-height: 1;
+    letter-spacing: -0.02em;
 }
 
 .stat-change {
-    font-size: 0.8rem;
-    color: #94a3b8;
-    margin: 0.5rem 0 0 0;
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin: 0;
 }
 
 .stat-icon {
-    width: 56px;
-    height: 56px;
-    display: grid;
-    place-items: center;
-    border-radius: 12px;
-    font-size: 24px;
+    font-size: 2.5rem;
+    color: #F6AF33;
+    transition: all 0.3s ease;
 }
 
-:host ::ng-deep .stat-card-mermas {
-    border-left: 3px solid #ef4444;
+:host ::ng-deep .stat-card:hover .stat-icon {
+    transform: scale(1.1);
+    color: #e8a424;
 }
 
-.stat-icon-mermas {
-    background: #fee2e2;
-    color: #ef4444;
+
+.mermas-metrics > [class*='col-']:last-child :host ::ng-deep .stat-card,
+.mermas-metrics > [class*='col-']:last-child .stat-card {
+    border-right: none;
 }
 
-:host ::ng-deep .stat-card-remates {
-    border-left: 3px solid #10b981;
+:host-context(.app-dark) .mermas-metrics {
+    background: #18181B;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
 }
 
-.stat-icon-remates {
-    background: #d1fae5;
-    color: #10b981;
+:host-context(.app-dark) :host ::ng-deep .stat-card {
+    background: #18181B;
+    border-right-color: #27272a;
 }
 
-:host ::ng-deep .stat-card-valor {
-    border-left: 3px solid #3b82f6;
+:host-context(.app-dark) :host ::ng-deep .stat-card:hover {
+    background: #27272a;
+    box-shadow: inset 0 -2px 8px rgba(246, 175, 51, 0.2);
 }
 
-.stat-icon-valor {
-    background: #dbeafe;
-    color: #3b82f6;
+:host-context(.app-dark) .stat-label {
+    color: #a1a1aa;
+}
+
+:host-context(.app-dark) .stat-value {
+    color: #ffffff;
+}
+
+:host-context(.app-dark) .stat-change {
+    color: #94a3b8;
+}
+
+:host-context(.app-dark) .stat-icon {
+    color: #F6AF33;
 }
 
 /* ===== FILTROS ===== */
@@ -471,7 +541,7 @@
     }
 
     .stat-value {
-        font-size: 2rem;
+        font-size: 1.5rem;
     }
 
     .tabs-container {
@@ -488,6 +558,45 @@
     }
 }
 
+@media (max-width: 1200px) {
+    .mermas-metrics > [class*='col-']:nth-child(2) :host ::ng-deep .stat-card,
+    .mermas-metrics > [class*='col-']:nth-child(2) .stat-card {
+        border-right: none;
+    }
+
+    .mermas-metrics > [class*='col-']:nth-child(1) :host ::ng-deep .stat-card,
+    .mermas-metrics > [class*='col-']:nth-child(2) :host ::ng-deep .stat-card,
+    .mermas-metrics > [class*='col-']:nth-child(1) .stat-card,
+    .mermas-metrics > [class*='col-']:nth-child(2) .stat-card {
+        border-bottom: 2px solid #e5e7eb;
+    }
+
+    :host-context(.app-dark) .mermas-metrics > [class*='col-']:nth-child(1) :host ::ng-deep .stat-card,
+    :host-context(.app-dark) .mermas-metrics > [class*='col-']:nth-child(2) :host ::ng-deep .stat-card,
+    :host-context(.app-dark) .mermas-metrics > [class*='col-']:nth-child(1) .stat-card,
+    :host-context(.app-dark) .mermas-metrics > [class*='col-']:nth-child(2) .stat-card {
+        border-bottom-color: rgba(255, 255, 255, 0.12);
+    }
+}
+
+@media (max-width: 768px) {
+    .mermas-metrics > [class*='col-'] :host ::ng-deep .stat-card,
+    .mermas-metrics > [class*='col-'] .stat-card {
+        border-right: none;
+        border-bottom: 2px solid #e5e7eb;
+    }
+
+    .mermas-metrics > [class*='col-']:last-child :host ::ng-deep .stat-card,
+    .mermas-metrics > [class*='col-']:last-child .stat-card {
+        border-bottom: none;
+    }
+
+    :host-context(.app-dark) .mermas-metrics > [class*='col-'] :host ::ng-deep .stat-card,
+    :host-context(.app-dark) .mermas-metrics > [class*='col-'] .stat-card {
+        border-bottom-color: rgba(255, 255, 255, 0.12);
+    }
+}
+
 /* ===== AJUSTES ADICIONALES ===== */
 :host ::ng-deep .p-card {
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
@@ -501,6 +610,172 @@
 /* Ajuste para el icono de búsqueda */
 :host ::ng-deep .p-input-icon-left > .p-inputtext {
     padding-left: 2.5rem;
+}
+
+/* ===== DARK MODE GENERAL ===== */
+:host-context(.app-dark) .clientes-title {
+    color: #f8fafc;
+}
+
+:host-context(.app-dark) .clientes-kicker {
+    color: #a1a1aa;
+}
+
+:host-context(.app-dark) .clientes-title-icon {
+    background: #F6AF33;
+    color: #111827;
+}
+
+:host-context(.app-dark) :host ::ng-deep .clientes-header-card,
+:host-context(.app-dark) :host ::ng-deep .filtros-card,
+:host-context(.app-dark) :host ::ng-deep .tabla-card {
+    background: #18181B;
+    border-color: #27272a;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+:host-context(.app-dark) :host ::ng-deep .clientes-header-card .p-card-body,
+:host-context(.app-dark) :host ::ng-deep .filtros-card .p-card-body,
+:host-context(.app-dark) :host ::ng-deep .tabla-card .p-card-body {
+    background: #18181B;
+}
+
+:host-context(.app-dark) .filter-label {
+    color: #a1a1aa;
+}
+
+:host-context(.app-dark) :host ::ng-deep .filtros-card .p-inputtext,
+:host-context(.app-dark) :host ::ng-deep .filtros-card .p-dropdown {
+    background: #09090b;
+    border-color: #27272a;
+    color: #f8fafc;
+}
+
+:host-context(.app-dark) :host ::ng-deep .filtros-card .p-inputtext::placeholder {
+    color: #71717a;
+    font-style: normal;
+}
+
+:host-context(.app-dark) :host ::ng-deep .filtros-card .p-inputtext:focus,
+:host-context(.app-dark) :host ::ng-deep .filtros-card .p-dropdown:focus {
+    border-color: #F6AF33;
+    box-shadow: 0 0 0 2px rgba(246, 175, 51, 0.15);
+}
+
+:host-context(.app-dark) :host ::ng-deep .filtros-card .p-button-outlined {
+    border-color: #ef4444 !important;
+    color: #fecaca !important;
+}
+
+:host-context(.app-dark) :host ::ng-deep .filtros-card .p-button-outlined:hover {
+    background: rgba(239, 68, 68, 0.12) !important;
+}
+
+:host-context(.app-dark) :host ::ng-deep .tab-button {
+    color: #e2e8f0 !important;
+    border-color: #27272a !important;
+    background: #18181B !important;
+}
+
+:host-context(.app-dark) :host ::ng-deep .tab-button:not(.tab-active):hover {
+    background: #1f2937 !important;
+    border-color: #3f3f46 !important;
+}
+
+:host-context(.app-dark) :host ::ng-deep .tab-button.tab-active {
+    background: #F6AF33 !important;
+    border-color: #e8a424 !important;
+    color: #111827 !important;
+}
+
+:host-context(.app-dark) :host ::ng-deep .tabla-title {
+    color: #f8fafc;
+}
+
+:host-context(.app-dark) :host ::ng-deep .tabla-icon {
+    background: #111827;
+    color: #F6AF33;
+}
+
+:host-context(.app-dark) :host ::ng-deep .mermas-table .p-datatable-thead > tr > th {
+    background: #12161b;
+    color: #cbd5f5;
+    border-bottom-color: #2f3540;
+}
+
+:host-context(.app-dark) :host ::ng-deep .mermas-table .p-datatable-tbody > tr > td {
+    color: #e2e8f0;
+    border-bottom-color: #2f3540;
+}
+
+:host-context(.app-dark) :host ::ng-deep .p-tag {
+    color: #0f172a;
+}
+
+:host-context(.app-dark) :host ::ng-deep .p-tag.p-tag-danger {
+    background: rgba(248, 113, 113, 0.2);
+    color: #fecaca;
+}
+
+:host-context(.app-dark) :host ::ng-deep .p-tag.p-tag-success {
+    background: rgba(52, 211, 153, 0.2);
+    color: #86efac;
+}
+
+:host-context(.app-dark) :host ::ng-deep .p-tag.p-tag-info {
+    background: rgba(56, 189, 248, 0.2);
+    color: #bae6fd;
+}
+
+:host-context(.app-dark) :host ::ng-deep .mermas-table .p-datatable-tbody > tr:hover {
+    background-color: #1f2937;
+}
+
+:host-context(.app-dark) .codigo-producto,
+:host-context(.app-dark) .producto-nombre {
+    color: #f8fafc;
+}
+
+:host-context(.app-dark) .fecha-producto,
+:host-context(.app-dark) .producto-responsable {
+    color: #94a3b8;
+}
+
+:host-context(.app-dark) .cantidad-badge {
+    background: #0f172a;
+    color: #e2e8f0;
+}
+
+:host-context(.app-dark) .codigo-remate {
+    color: #34d399;
+}
+
+:host-context(.app-dark) .precio-remate {
+    color: #10b981;
+}
+
+:host-context(.app-dark) :host ::ng-deep .mermas-dialog .p-dialog-header,
+:host-context(.app-dark) :host ::ng-deep .mermas-dialog .p-dialog-content,
+:host-context(.app-dark) :host ::ng-deep .mermas-dialog .p-dialog-footer {
+    background: #18181B;
+    border-color: #27272a;
+}
+
+:host-context(.app-dark) :host ::ng-deep .mermas-dialog .p-dialog-title,
+:host-context(.app-dark) .field-label {
+    color: #f8fafc;
+}
+
+:host-context(.app-dark) :host ::ng-deep .form-grid .p-inputtext,
+:host-context(.app-dark) :host ::ng-deep .form-grid .p-dropdown,
+:host-context(.app-dark) :host ::ng-deep .form-grid .p-inputnumber input {
+    background: #09090b;
+    border-color: #27272a;
+    color: #f8fafc;
+}
+
+:host-context(.app-dark) :host ::ng-deep .form-grid .p-inputtext::placeholder {
+    color: #71717a;
 }
 
 :host ::ng-deep .p-input-icon-left > i:first-of-type {
@@ -525,7 +800,8 @@
 :host ::ng-deep .stat-card .p-card-body {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
+    gap: 0.75rem;
 }
 
 /* Texto */

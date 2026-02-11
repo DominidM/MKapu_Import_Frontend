@@ -200,6 +200,131 @@
     color: #059669;
 }
 
+/* ===== DARK MODE ===== */
+:host-context(.app-dark) .agregar-cliente-page {
+    background: #0f1115;
+}
+
+:host-context(.app-dark) .clientes-header-card {
+    background: #18181B;
+    border-color: #27272a;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+:host-context(.app-dark) .clientes-kicker {
+    color: #a1a1aa;
+}
+
+:host-context(.app-dark) .clientes-title {
+    color: #f8fafc;
+}
+
+:host-context(.app-dark) .clientes-title-icon {
+    background: #F6AF33;
+    color: #111827;
+}
+
+:host-context(.app-dark) .cliente-card {
+    background: #18181B;
+    border-color: #27272a;
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.35);
+}
+
+:host-context(.app-dark) .cliente-card-title,
+:host-context(.app-dark) .cliente-section-title,
+:host-context(.app-dark) .field-label {
+    color: #f8fafc;
+}
+
+:host-context(.app-dark) :host ::ng-deep .form-grid .p-inputtext,
+:host-context(.app-dark) :host ::ng-deep .p-inputtext,
+:host-context(.app-dark) :host ::ng-deep .p-select,
+:host-context(.app-dark) :host ::ng-deep .p-dropdown,
+:host-context(.app-dark) :host ::ng-deep .p-inputnumber input,
+:host-context(.app-dark) :host ::ng-deep .p-datepicker .p-inputtext {
+    background: #09090b;
+    border-color: #27272a;
+    color: #f8fafc;
+}
+
+:host-context(.app-dark) :host ::ng-deep .p-inputtext::placeholder {
+    color: #71717a;
+}
+
+:host-context(.app-dark) :host ::ng-deep .p-inputtext:focus,
+:host-context(.app-dark) :host ::ng-deep .p-select:focus,
+:host-context(.app-dark) :host ::ng-deep .p-dropdown:focus,
+:host-context(.app-dark) :host ::ng-deep .p-inputnumber:focus-within,
+:host-context(.app-dark) :host ::ng-deep .p-datepicker:focus-within {
+    border-color: #F6AF33;
+    box-shadow: 0 0 0 2px rgba(246, 175, 51, 0.15);
+}
+
+:host-context(.app-dark) .productos-card,
+:host-context(.app-dark) .productos-table-container {
+    background: #18181B;
+}
+
+:host-context(.app-dark) .productos-section-icon {
+    background: #111827;
+    color: #F6AF33;
+}
+
+:host-context(.app-dark) .productos-table-container :host ::ng-deep .p-datatable .p-datatable-thead > tr > th {
+    background: #12161b;
+    color: #cbd5f5;
+    border-bottom-color: #2f3540;
+}
+
+:host-context(.app-dark) .productos-table-container :host ::ng-deep .p-datatable .p-datatable-tbody > tr > td {
+    color: #e2e8f0;
+    border-bottom-color: #2f3540;
+}
+
+:host-context(.app-dark) :host ::ng-deep .productos-table-container .p-datatable .p-datatable-tbody > tr:hover {
+    background-color: #1f2937;
+}
+
+:host-context(.app-dark) .subtotal-input {
+    background: #0f172a !important;
+    color: #34d399 !important;
+    border-color: #27272a !important;
+}
+
+:host-context(.app-dark) .productos-add-btn {
+    border-color: #60a5fa !important;
+    color: #60a5fa !important;
+}
+
+:host-context(.app-dark) .productos-add-btn:hover {
+    background: rgba(59, 130, 246, 0.15) !important;
+}
+
+:host-context(.app-dark) .productos-delete-btn {
+    color: #f87171 !important;
+}
+
+:host-context(.app-dark) .productos-delete-btn:hover {
+    background: rgba(248, 113, 113, 0.15) !important;
+}
+
+:host-context(.app-dark) .productos-totales-container {
+    background: #111318;
+    border-color: #27272a;
+}
+
+:host-context(.app-dark) .productos-total-label {
+    color: #94a3b8;
+}
+
+:host-context(.app-dark) .productos-total-value {
+    color: #f8fafc;
+}
+
+:host-context(.app-dark) .productos-total-value-highlight {
+    color: #34d399;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .productos-totales-container {
