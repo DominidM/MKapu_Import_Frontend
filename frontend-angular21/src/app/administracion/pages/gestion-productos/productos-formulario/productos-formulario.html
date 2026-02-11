@@ -1,378 +1,377 @@
-<div class="p-2">
-  <p-card styleClass="productos-header-card mb-4 productos-header-bordered">
-    <div class="flex align-items-center justify-content-between flex-wrap gap-2">
-      <div class="flex align-items-center gap-3">
-        <span class="productos-title-icon">
-          <i [class]="isEditMode ? 'pi pi-pencil' : 'pi pi-plus-circle'"></i>
-        </span>
-        <div>
-          <p class="productos-kicker mb-0">
-            {{ isEditMode ? 'EDITAR PRODUCTO' : 'CREAR NUEVO PRODUCTO' }}
-          </p>
-          <h2 class="productos-title mb-0">
-            {{ isEditMode ? productoOriginal?.nombre || 'Cargando...' : 'Nuevo Producto' }}
-          </h2>
-        </div>
-      </div>
+<div class="p-2 surface-card border-1 border-300 border-round-xl shadow-2">
+  <form [formGroup]="productoForm" (ngSubmit)="guardar()" class="formgrid grid p-4">
+    <div class="col-12 mb-3">
+      <h3 class="text-xl font-bold text-900 m-0 flex align-items-center gap-2">
+        <i class="pi pi-info-circle text-warning"></i>
+        Información Básica
+      </h3>
+    </div>
 
-      <div class="flex gap-2">
+    <div class="field col-12 md:col-6 mb-4">
+      <label for="codigo" class="font-semibold text-900 mb-2 block">Código *</label>
+      <input
+        pInputText
+        id="codigo"
+        formControlName="codigo"
+        class="w-full border-1 border-300"
+        placeholder="Ej: RAF-TV55, RAF-LG32"
+      />
+      <small
+        class="text-red-500 block mt-2"
+        *ngIf="productoForm.get('codigo')?.invalid && productoForm.get('codigo')?.touched"
+      >
+        El código es requerido
+      </small>
+    </div>
+
+    <div class="field col-12 md:col-6 mb-4">
+      <label for="anexo" class="font-semibold text-900 mb-2 block">Anexo</label>
+      <input
+        pInputText
+        id="anexo"
+        formControlName="anexo"
+        class="w-full border-1 border-300"
+        placeholder="Ej: TV-001, LAV-001 (opcional)"
+      />
+    </div>
+
+    <div class="field col-12 mb-4">
+      <label for="nombre" class="font-semibold text-900 mb-2 block">Nombre del Producto *</label>
+      <input
+        pInputText
+        id="nombre"
+        formControlName="nombre"
+        class="w-full border-1 border-300"
+        placeholder="Ej: Smart TV LED 55 pulgadas 4K RAF, Lavarropas Automático 10kg RAF"
+      />
+      <small
+        class="text-red-500 block mt-2"
+        *ngIf="productoForm.get('nombre')?.invalid && productoForm.get('nombre')?.touched"
+      >
+        El nombre es requerido
+      </small>
+    </div>
+
+    <div class="field col-12 mb-4">
+      <label for="descripcion" class="font-semibold text-900 mb-2 block">Descripción</label>
+      <textarea
+        id="descripcion"
+        formControlName="descripcion"
+        rows="3"
+        class="w-full border-1 border-300 p-3 border-round"
+        style="resize: vertical; font-family: inherit"
+        placeholder="Descripción detallada del producto (opcional)"
+      ></textarea>
+    </div>
+
+    <div class="col-12 mb-3">
+      <div class="border-top-1 border-300"></div>
+    </div>
+
+    <div class="col-12 mb-3">
+      <h3 class="text-xl font-bold text-900 m-0 flex align-items-center gap-2">
+        <i class="pi pi-tag text-warning"></i>
+        Categoría
+      </h3>
+    </div>
+
+    <div class="field col-12 md:col-6 mb-4">
+      <label for="familia" class="font-semibold text-900 mb-2 block">Familia *</label>
+      <p-select
+        id="familia"
+        formControlName="familia"
+        [options]="familias"
+        placeholder="Seleccionar familia"
+        styleClass="w-full border-1 border-300"
+      >
+      </p-select>
+      <small
+        class="text-red-500 block mt-2"
+        *ngIf="productoForm.get('familia')?.invalid && productoForm.get('familia')?.touched"
+      >
+        La familia es requerida
+      </small>
+    </div>
+
+    <div class="field col-12 md:col-6 mb-4">
+      <label for="unidadMedida" class="font-semibold text-900 mb-2 block"
+        >Unidad de Medida *</label
+      >
+      <p-select
+        id="unidadMedida"
+        formControlName="unidadMedida"
+        [options]="unidadesMedida"
+        placeholder="Seleccionar unidad"
+        styleClass="w-full border-1 border-300"
+      >
+      </p-select>
+      <small
+        class="text-red-500 block mt-2"
+        *ngIf="
+          productoForm.get('unidadMedida')?.invalid && productoForm.get('unidadMedida')?.touched
+        "
+      >
+        La unidad de medida es requerida
+      </small>
+    </div>
+
+    <div class="col-12 mb-3">
+      <div class="border-top-1 border-300"></div>
+    </div>
+
+    <div class="col-12 mb-3">
+      <h3 class="text-xl font-bold text-900 m-0 flex align-items-center gap-2">
+        <i class="pi pi-dollar text-warning"></i>
+        Precios
+      </h3>
+    </div>
+
+    <div class="field col-12 md:col-6 lg:col-4 mb-4">
+      <label for="precioCompra" class="font-semibold text-900 mb-2 block"
+        >Precio de Compra (S/) *</label
+      >
+      <p-inputNumber
+        id="precioCompra"
+        formControlName="precioCompra"
+        mode="currency"
+        currency="PEN"
+        locale="es-PE"
+        styleClass="w-full"
+        [min]="0"
+        placeholder="S/ 0.00"
+      >
+      </p-inputNumber>
+      <small
+        class="text-red-500 block mt-2"
+        *ngIf="
+          productoForm.get('precioCompra')?.invalid && productoForm.get('precioCompra')?.touched
+        "
+      >
+        El precio de compra es requerido
+      </small>
+    </div>
+
+    <div class="field col-12 md:col-6 lg:col-4 mb-4">
+      <label for="precioVenta" class="font-semibold text-900 mb-2 block"
+        >Precio de Venta (S/) *</label
+      >
+      <p-inputNumber
+        id="precioVenta"
+        formControlName="precioVenta"
+        mode="currency"
+        currency="PEN"
+        locale="es-PE"
+        styleClass="w-full"
+        [min]="0"
+        placeholder="S/ 0.00"
+      >
+      </p-inputNumber>
+      <small
+        class="text-red-500 block mt-2"
+        *ngIf="
+          productoForm.get('precioVenta')?.invalid && productoForm.get('precioVenta')?.touched
+        "
+      >
+        El precio de venta es requerido
+      </small>
+    </div>
+
+    <div class="field col-12 md:col-6 lg:col-4 mb-4">
+      <label for="precioUnidad" class="font-semibold text-900 mb-2 block"
+        >Precio Unidad (S/) *</label
+      >
+      <p-inputNumber
+        id="precioUnidad"
+        formControlName="precioUnidad"
+        mode="currency"
+        currency="PEN"
+        locale="es-PE"
+        styleClass="w-full"
+        [min]="0"
+        placeholder="S/ 0.00"
+      >
+      </p-inputNumber>
+      <small
+        class="text-red-500 block mt-2"
+        *ngIf="
+          productoForm.get('precioUnidad')?.invalid && productoForm.get('precioUnidad')?.touched
+        "
+      >
+        El precio por unidad es requerido
+      </small>
+    </div>
+
+    <div class="field col-12 md:col-6 mb-4">
+      <label for="precioCaja" class="font-semibold text-900 mb-2 block">Precio Caja (S/) *</label>
+      <p-inputNumber
+        id="precioCaja"
+        formControlName="precioCaja"
+        mode="currency"
+        currency="PEN"
+        locale="es-PE"
+        styleClass="w-full"
+        [min]="0"
+        placeholder="S/ 0.00"
+      >
+      </p-inputNumber>
+      <small
+        class="text-red-500 block mt-2"
+        *ngIf="productoForm.get('precioCaja')?.invalid && productoForm.get('precioCaja')?.touched"
+      >
+        El precio por caja es requerido
+      </small>
+    </div>
+
+    <div class="field col-12 md:col-6 mb-4">
+      <label for="precioMayorista" class="font-semibold text-900 mb-2 block"
+        >Precio Mayorista (S/) *</label
+      >
+      <p-inputNumber
+        id="precioMayorista"
+        formControlName="precioMayorista"
+        mode="currency"
+        currency="PEN"
+        locale="es-PE"
+        styleClass="w-full"
+        [min]="0"
+        placeholder="S/ 0.00"
+      >
+      </p-inputNumber>
+      <small
+        class="text-red-500 block mt-2"
+        *ngIf="
+          productoForm.get('precioMayorista')?.invalid &&
+          productoForm.get('precioMayorista')?.touched
+        "
+      >
+        El precio mayorista es requerido
+      </small>
+    </div>
+
+    <div class="col-12 mb-3">
+      <div class="border-top-1 border-300"></div>
+    </div>
+
+    <div class="col-12 mb-3">
+      <div class="flex justify-content-between align-items-center">
+        <h3 class="text-xl font-bold text-900 m-0 flex align-items-center gap-2">
+          <i class="pi pi-warehouse text-warning"></i>
+          Stock por Sede
+        </h3>
         <p-button
-          label="Volver"
-          icon="pi pi-arrow-left"
-          severity="secondary"
-          styleClass="productos-pill productos-pill-secondary"
-          (onClick)="volver()"
+          type="button"
+          label="Agregar Sede"
+          icon="pi pi-plus"
+          severity="success"
+          size="small"
+          [outlined]="true"
+          (onClick)="agregarStockSede()"
         >
         </p-button>
       </div>
     </div>
-  </p-card>
-</div>
 
-
-<div class="p-2">
-  <p-card styleClass="border-1 border-300 border-round-xl shadow-2">
-    <form [formGroup]="productoForm" (ngSubmit)="guardar()" class="formgrid grid p-4">
-      <div class="col-12 mb-3">
-        <h3 class="text-xl font-bold text-900 m-0 flex align-items-center gap-2">
-          <i class="pi pi-info-circle text-primary"></i>
-          Información Básica
-        </h3>
+    <div class="col-12 mb-4" *ngIf="stockPorSede.length === 0">
+      <div class="surface-100 border-round p-4 text-center">
+        <i class="pi pi-info-circle text-4xl text-500 mb-3"></i>
+        <p class="text-600 m-0">
+          No hay sedes agregadas. Haz clic en "Agregar Sede" para empezar.
+        </p>
       </div>
+    </div>
 
-      <div class="field col-12 md:col-6 mb-4">
-        <label for="codigo" class="font-semibold text-900 mb-2 block">Código *</label>
-        <input
-          pInputText
-          id="codigo"
-          formControlName="codigo"
-          class="w-full border-1 border-300"
-          placeholder="Ej: RAF-TV55, RAF-LG32"
-        />
-        <small
-          class="text-red-500 block mt-2"
-          *ngIf="productoForm.get('codigo')?.invalid && productoForm.get('codigo')?.touched"
+    <div class="col-12 mb-3" *ngIf="stockPorSede.length > 0" formArrayName="stockPorSede">
+      <div class="grid">
+        <div
+          class="col-12 mb-4"
+          *ngFor="let item of stockPorSede.controls; let i = index"
+          [formGroupName]="i"
         >
-          El código es requerido
-        </small>
-      </div>
+          <div class="stock-sede-row">
+            <div class="grid align-items-center">
+              <div class="col-12 md:col-3 mb-2 md:mb-0">
+                <label [for]="'sede-' + i" class="font-semibold text-900 mb-2 block text-sm">
+                  Sede *
+                </label>
+                <p-select
+                  [id]="'sede-' + i"
+                  formControlName="sede"
+                  [options]="getSedesDisponibles(item.get('sede')?.value)"
+                  placeholder="Seleccionar sede"
+                  styleClass="w-full"
+                  (onChange)="onSedeChange(i)"
+                  [disabled]="isEditMode"
+                >
+                </p-select>
+                <small
+                  class="text-red-500 block mt-1"
+                  *ngIf="item.get('sede')?.invalid && item.get('sede')?.touched"
+                >
+                  La sede es requerida
+                </small>
+              </div>
 
-      <div class="field col-12 md:col-6 mb-4">
-        <label for="anexo" class="font-semibold text-900 mb-2 block">Anexo</label>
-        <input
-          pInputText
-          id="anexo"
-          formControlName="anexo"
-          class="w-full border-1 border-300"
-          placeholder="Ej: TV-001, LAV-001 (opcional)"
-        />
-      </div>
-
-      <div class="field col-12 mb-4">
-        <label for="nombre" class="font-semibold text-900 mb-2 block">Nombre del Producto *</label>
-        <input
-          pInputText
-          id="nombre"
-          formControlName="nombre"
-          class="w-full border-1 border-300"
-          placeholder="Ej: Smart TV LED 55 pulgadas 4K RAF, Lavarropas Automático 10kg RAF"
-        />
-        <small
-          class="text-red-500 block mt-2"
-          *ngIf="productoForm.get('nombre')?.invalid && productoForm.get('nombre')?.touched"
-        >
-          El nombre es requerido
-        </small>
-      </div>
-
-      <div class="field col-12 mb-4">
-        <label for="descripcion" class="font-semibold text-900 mb-2 block">Descripción</label>
-        <textarea
-          id="descripcion"
-          formControlName="descripcion"
-          rows="3"
-          class="w-full border-1 border-300 p-3 border-round"
-          style="resize: vertical; font-family: inherit"
-          placeholder="Descripción detallada del producto (opcional)"
-        ></textarea>
-      </div>
-
-      <div class="col-12 mb-3">
-        <div class="border-top-1 border-300"></div>
-      </div>
-
-      <div class="col-12 mb-3">
-        <h3 class="text-xl font-bold text-900 m-0 flex align-items-center gap-2">
-          <i class="pi pi-tag text-primary"></i>
-          Categoría
-        </h3>
-      </div>
-
-      <div class="field col-12 md:col-6 mb-4">
-        <label for="familia" class="font-semibold text-900 mb-2 block">Familia *</label>
-        <p-select
-          id="familia"
-          formControlName="familia"
-          [options]="familias"
-          placeholder="Seleccionar familia"
-          styleClass="w-full border-1 border-300"
-        >
-        </p-select>
-        <small
-          class="text-red-500 block mt-2"
-          *ngIf="productoForm.get('familia')?.invalid && productoForm.get('familia')?.touched"
-        >
-          La familia es requerida
-        </small>
-      </div>
-
-      <div class="field col-12 md:col-6 mb-4">
-        <label for="unidadMedida" class="font-semibold text-900 mb-2 block"
-          >Unidad de Medida *</label
-        >
-        <p-select
-          id="unidadMedida"
-          formControlName="unidadMedida"
-          [options]="unidadesMedida"
-          placeholder="Seleccionar unidad"
-          styleClass="w-full border-1 border-300"
-        >
-        </p-select>
-        <small
-          class="text-red-500 block mt-2"
-          *ngIf="
-            productoForm.get('unidadMedida')?.invalid && productoForm.get('unidadMedida')?.touched
-          "
-        >
-          La unidad de medida es requerida
-        </small>
-      </div>
-
-      <div class="col-12 mb-3">
-        <div class="border-top-1 border-300"></div>
-      </div>
-
-      <div class="col-12 mb-3">
-        <h3 class="text-xl font-bold text-900 m-0 flex align-items-center gap-2">
-          <i class="pi pi-dollar text-primary"></i>
-          Precios
-        </h3>
-      </div>
-
-      <div class="field col-12 md:col-6 lg:col-4 mb-4">
-        <label for="precioCompra" class="font-semibold text-900 mb-2 block"
-          >Precio de Compra (S/) *</label
-        >
-        <p-inputNumber
-          id="precioCompra"
-          formControlName="precioCompra"
-          mode="currency"
-          currency="PEN"
-          locale="es-PE"
-          styleClass="w-full"
-          [min]="0"
-          placeholder="S/ 0.00"
-        >
-        </p-inputNumber>
-        <small
-          class="text-red-500 block mt-2"
-          *ngIf="
-            productoForm.get('precioCompra')?.invalid && productoForm.get('precioCompra')?.touched
-          "
-        >
-          El precio de compra es requerido
-        </small>
-      </div>
-
-      <div class="field col-12 md:col-6 lg:col-4 mb-4">
-        <label for="precioVenta" class="font-semibold text-900 mb-2 block"
-          >Precio de Venta (S/) *</label
-        >
-        <p-inputNumber
-          id="precioVenta"
-          formControlName="precioVenta"
-          mode="currency"
-          currency="PEN"
-          locale="es-PE"
-          styleClass="w-full"
-          [min]="0"
-          placeholder="S/ 0.00"
-        >
-        </p-inputNumber>
-        <small
-          class="text-red-500 block mt-2"
-          *ngIf="
-            productoForm.get('precioVenta')?.invalid && productoForm.get('precioVenta')?.touched
-          "
-        >
-          El precio de venta es requerido
-        </small>
-      </div>
-
-      <div class="field col-12 md:col-6 lg:col-4 mb-4">
-        <label for="precioUnidad" class="font-semibold text-900 mb-2 block"
-          >Precio Unidad (S/) *</label
-        >
-        <p-inputNumber
-          id="precioUnidad"
-          formControlName="precioUnidad"
-          mode="currency"
-          currency="PEN"
-          locale="es-PE"
-          styleClass="w-full"
-          [min]="0"
-          placeholder="S/ 0.00"
-        >
-        </p-inputNumber>
-        <small
-          class="text-red-500 block mt-2"
-          *ngIf="
-            productoForm.get('precioUnidad')?.invalid && productoForm.get('precioUnidad')?.touched
-          "
-        >
-          El precio por unidad es requerido
-        </small>
-      </div>
-
-      <div class="field col-12 md:col-6 mb-4">
-        <label for="precioCaja" class="font-semibold text-900 mb-2 block">Precio Caja (S/) *</label>
-        <p-inputNumber
-          id="precioCaja"
-          formControlName="precioCaja"
-          mode="currency"
-          currency="PEN"
-          locale="es-PE"
-          styleClass="w-full"
-          [min]="0"
-          placeholder="S/ 0.00"
-        >
-        </p-inputNumber>
-        <small
-          class="text-red-500 block mt-2"
-          *ngIf="productoForm.get('precioCaja')?.invalid && productoForm.get('precioCaja')?.touched"
-        >
-          El precio por caja es requerido
-        </small>
-      </div>
-
-      <div class="field col-12 md:col-6 mb-4">
-        <label for="precioMayorista" class="font-semibold text-900 mb-2 block"
-          >Precio Mayorista (S/) *</label
-        >
-        <p-inputNumber
-          id="precioMayorista"
-          formControlName="precioMayorista"
-          mode="currency"
-          currency="PEN"
-          locale="es-PE"
-          styleClass="w-full"
-          [min]="0"
-          placeholder="S/ 0.00"
-        >
-        </p-inputNumber>
-        <small
-          class="text-red-500 block mt-2"
-          *ngIf="
-            productoForm.get('precioMayorista')?.invalid &&
-            productoForm.get('precioMayorista')?.touched
-          "
-        >
-          El precio mayorista es requerido
-        </small>
-      </div>
-
-      <div class="col-12 mb-3">
-        <div class="border-top-1 border-300"></div>
-      </div>
-
-      <div class="col-12 mb-3">
-        <div class="flex justify-content-between align-items-center">
-          <h3 class="text-xl font-bold text-900 m-0 flex align-items-center gap-2">
-            <i class="pi pi-warehouse text-primary"></i>
-            Stock por Sede
-          </h3>
-          <p-button
-            type="button"
-            label="Agregar Sede"
-            icon="pi pi-plus"
-            severity="success"
-            size="small"
-            [outlined]="true"
-            (onClick)="agregarStockSede()"
-          >
-          </p-button>
-        </div>
-      </div>
-
-      <div class="col-12 mb-4" *ngIf="stockPorSede.length === 0">
-        <div class="surface-100 border-round p-4 text-center">
-          <i class="pi pi-info-circle text-4xl text-500 mb-3"></i>
-          <p class="text-600 m-0">
-            No hay sedes agregadas. Haz clic en "Agregar Sede" para empezar.
-          </p>
-        </div>
-      </div>
-
-      <div class="col-12 mb-3" *ngIf="stockPorSede.length > 0" formArrayName="stockPorSede">
-        <div class="grid">
-          <div
-            class="col-12 mb-3"
-            *ngFor="let item of stockPorSede.controls; let i = index"
-            [formGroupName]="i"
-          >
-            <div class="surface-card border-1 border-300 border-round p-3">
-              <div class="grid align-items-end">
-                <div class="col-12 md:col-6 mb-2 md:mb-0">
-                  <label [for]="'sede-' + i" class="font-semibold text-900 mb-2 block text-sm">
-                    Sede *
-                  </label>
-                  <p-select
-                    [id]="'sede-' + i"
-                    formControlName="sede"
-                    [options]="getSedesDisponibles(item.get('sede')?.value)"
-                    placeholder="Seleccionar sede"
-                    styleClass="w-full"
-                  >
-                  </p-select>
-                  <small
-                    class="text-red-500 block mt-1"
-                    *ngIf="item.get('sede')?.invalid && item.get('sede')?.touched"
-                  >
-                    La sede es requerida
-                  </small>
+              <div class="col-12 md:col-2 mb-2 md:mb-0" *ngIf="isEditMode">
+                <label class="font-semibold text-900 mb-2 block text-sm text-center">
+                  Stock Actual
+                </label>
+                <div class="stock-actual-display">
+                  <span class="text-3xl font-black text-warning">
+                    {{ getStockActualSede(item.get('sede')?.value) }}
+                  </span>
                 </div>
+              </div>
 
-                <div class="col-12 md:col-4 mb-2 md:mb-0">
-                  <label [for]="'stock-' + i" class="font-semibold text-900 mb-2 block text-sm">
-                    Stock Inicial *
-                  </label>
-                  <p-inputNumber
-                    [id]="'stock-' + i"
-                    formControlName="stock"
-                    [min]="0"
-                    [showButtons]="true"
-                    buttonLayout="horizontal"
-                    incrementButtonIcon="pi pi-plus"
-                    decrementButtonIcon="pi pi-minus"
-                    styleClass="w-full"
-                  >
-                  </p-inputNumber>
-                  <small
-                    class="text-red-500 block mt-1"
-                    *ngIf="item.get('stock')?.invalid && item.get('stock')?.touched"
-                  >
-                    El stock es requerido
-                  </small>
+              <div [ngClass]="isEditMode ? 'col-12 md:col-3' : 'col-12 md:col-5'" class="mb-2 md:mb-0">
+                <label [for]="'stock-' + i" class="font-semibold text-900 mb-2 block text-sm">
+                  {{ isEditMode ? 'Ajustar Stock *' : 'Stock Inicial *' }}
+                </label>
+                <p-inputNumber
+                  [id]="'stock-' + i"
+                  formControlName="ajuste"
+                  [showButtons]="true"
+                  buttonLayout="horizontal"
+                  incrementButtonIcon="pi pi-plus"
+                  decrementButtonIcon="pi pi-minus"
+                  styleClass="w-full input-stock-centered"
+                  (onInput)="onStockChange(i)"
+                >
+                </p-inputNumber>
+                <small class="text-500 block mt-1 text-xs" *ngIf="isEditMode">
+                  Nuevo total: {{ calcularNuevoStockSede(item.get('sede')?.value, item.get('ajuste')?.value) }}
+                </small>
+                <small
+                  class="text-red-500 block mt-1"
+                  *ngIf="item.get('ajuste')?.invalid && item.get('ajuste')?.touched"
+                >
+                  El stock es requerido
+                </small>
+              </div>
+
+              <div class="col-12 md:col-2 mb-2 md:mb-0" *ngIf="isEditMode">
+                <div class="diferencia-box">
+                  <small class="block text-600 mb-2 font-semibold text-center">Diferencia</small>
+                  <div class="flex justify-content-center">
+                    <p-tag
+                      [value]="formatearDiferencia(item.get('ajuste')?.value)"
+                      [severity]="getSeverityDiferencia(item.get('ajuste')?.value)"
+                      styleClass="font-bold tag-diferencia text-lg"
+                    >
+                    </p-tag>
+                  </div>
                 </div>
+              </div>
 
-                <div class="col-12 md:col-2 flex justify-content-center">
+              <div [ngClass]="isEditMode ? 'col-12 md:col-2' : 'col-12 md:col-4'">
+                <div class="eliminar-box">
                   <p-button
                     type="button"
                     icon="pi pi-trash"
                     severity="danger"
                     [outlined]="true"
-                    styleClass="w-full"
+                    styleClass="w-full btn-eliminar-sede"
                     pTooltip="Eliminar sede"
+                    tooltipPosition="top"
                     (onClick)="eliminarStockSede(i)"
                   >
                   </p-button>
@@ -381,68 +380,71 @@
             </div>
           </div>
         </div>
+      </div>
 
-        <div class="surface-50 border-round p-3 mt-3">
-          <div class="flex justify-content-between align-items-center">
-            <span class="font-semibold text-900">
-              <i class="pi pi-box mr-2 text-primary"></i>
-              Stock Total:
-            </span>
-            <span class="text-2xl font-bold text-primary">
+      <div class="stock-total-box surface-50 border-round-lg p-4 mt-3">
+        <div class="flex justify-content-between align-items-center">
+          <div class="flex align-items-center gap-3">
+            <i class="pi pi-box text-3xl text-warning"></i>
+            <span class="text-xl font-bold text-900">Stock Total {{ isEditMode ? 'Nuevo' : '' }}:</span>
+          </div>
+          <div class="stock-total-valor">
+            <span class="text-4xl font-black text-warning">
               {{ calcularStockTotal() }}
             </span>
           </div>
         </div>
       </div>
+    </div>
 
-      <div class="col-12 mb-3">
-        <div class="border-top-1 border-300"></div>
-      </div>
+    <div class="col-12 mb-3">
+      <div class="border-top-1 border-300"></div>
+    </div>
 
-      <div class="field col-12 mb-4" *ngIf="isEditMode && productoOriginal">
-        <div class="surface-50 border-round p-3 border-1 border-300">
-          <div class="flex align-items-center gap-3">
-            <i class="pi pi-info-circle text-2xl text-primary"></i>
-            <div class="flex-1">
-              <p class="m-0 font-semibold text-900">
-                Editando producto: {{ productoOriginal.nombre }}
-              </p>
-              <p class="m-0 text-sm text-600 mt-1">
-                Código:
-                <span class="font-semibold text-primary">{{ productoOriginal.codigo }}</span> |
-                Estado:
-                <span class="font-semibold text-green-600">{{ productoOriginal.estado }}</span> |
-                Stock Total:
-                <span class="font-semibold">{{ productoOriginal.stockTotal || 0 }}</span> | Sedes:
-                <span class="font-semibold">{{ productoOriginal.cantidadSedes || 0 }}</span>
-              </p>
-            </div>
+    <div class="field col-12 mb-4" *ngIf="isEditMode && productoOriginal">
+      <div class="surface-50 border-round p-3 border-1 border-300">
+        <div class="flex align-items-center gap-3">
+          <i class="pi pi-info-circle text-2xl text-warning"></i>
+          <div class="flex-1">
+            <p class="m-0 font-semibold text-900">
+              Editando producto: {{ productoOriginal.nombre }}
+            </p>
+            <p class="m-0 text-sm text-600 mt-1">
+              Código:
+              <span class="font-semibold text-warning">{{ productoOriginal.codigo }}</span> |
+              Estado:
+              <span class="font-semibold text-green-600">{{ productoOriginal.estado }}</span> |
+              Stock Total:
+              <span class="font-semibold">{{ productoOriginal.stockTotal || 0 }}</span> | Sedes:
+              <span class="font-semibold">{{ productoOriginal.cantidadSedes || 0 }}</span>
+            </p>
           </div>
         </div>
       </div>
+    </div>
 
-      <div class="field col-12 flex gap-3 justify-content-end pt-3">
-        <p-button
-          type="button"
-          label="Cancelar"
-          severity="secondary"
-          icon="pi pi-times"
-          styleClass="w-10rem"
-          (onClick)="volver()"
-        >
-        </p-button>
+    <div class="field col-12 flex gap-3 justify-content-end pt-3">
+      <p-button
+        type="button"
+        label="Cancelar"
+        severity="secondary"
+        [outlined]="true"
+        icon="pi pi-times"
+        styleClass="w-10rem"
+        (onClick)="volver()"
+      >
+      </p-button>
 
-        <p-button
-          type="submit"
-          [label]="isEditMode ? 'Actualizar' : 'Guardar'"
-          [icon]="isEditMode ? 'pi pi-refresh' : 'pi pi-check'"
-          styleClass="productos-pill productos-pill-warning w-10rem"
-          [disabled]="!productoForm.valid || stockPorSede.length === 0"
-        >
-        </p-button>
-      </div>
-    </form>
-  </p-card>
+      <p-button
+        type="submit"
+        [label]="isEditMode ? 'Actualizar' : 'Guardar'"
+        [icon]="isEditMode ? 'pi pi-refresh' : 'pi pi-check'"
+        styleClass="productos-pill productos-pill-warning w-10rem"
+        [disabled]="!productoForm.valid || stockPorSede.length === 0"
+      >
+      </p-button>
+    </div>
+  </form>
 </div>
 
 <p-toast></p-toast>

@@ -11,6 +11,8 @@ import { ConfirmDialog } from 'primeng/confirmdialog';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { Button } from 'primeng/button';
+import { TooltipModule } from 'primeng/tooltip';
+import { TagModule } from 'primeng/tag';
 
 import { ProductosService, Producto } from '../../../../core/services/productos.service';
 
@@ -31,11 +33,13 @@ interface StockSede {
     SelectModule,
     CardModule,
     ConfirmDialog,
-    ToastModule
+    ToastModule,
+    TooltipModule,
+    TagModule,
   ],
   templateUrl: './productos-formulario.html',
   styleUrls: ['./productos-formulario.css'],
-  providers: [ConfirmationService, MessageService]
+  providers: [ConfirmationService, MessageService],
 })
 export class ProductosFormulario implements OnInit, OnDestroy {
   productoForm: FormGroup;
@@ -43,7 +47,7 @@ export class ProductosFormulario implements OnInit, OnDestroy {
   productoId: number | null = null;
   productoOriginal: Producto | null = null;
   returnUrl: string = '/admin/gestion-productos';
-  navegando = false; // ✅ Flag para evitar cambios durante navegación
+  navegando = false;
 
   sedes: { label: string; value: string }[] = [];
   familias: { label: string; value: string }[] = [];
@@ -56,7 +60,7 @@ export class ProductosFormulario implements OnInit, OnDestroy {
     private productosService: ProductosService,
     private confirmationService: ConfirmationService,
     private messageService: MessageService,
-    private cdr: ChangeDetectorRef // ✅ Agregado
+    private cdr: ChangeDetectorRef,
   ) {
     this.productoForm = this.fb.group({
       codigo: ['', Validators.required],
@@ -70,7 +74,7 @@ export class ProductosFormulario implements OnInit, OnDestroy {
       precioCaja: [0, [Validators.required, Validators.min(0)]],
       precioMayorista: [0, [Validators.required, Validators.min(0)]],
       unidadMedida: ['UND', Validators.required],
-      stockPorSede: this.fb.array([], Validators.required)
+      stockPorSede: this.fb.array([], Validators.required),
     });
   }
 
@@ -83,13 +87,13 @@ export class ProductosFormulario implements OnInit, OnDestroy {
     this.cargarFamilias();
     this.cargarUnidadesMedida();
 
-    this.route.queryParams.subscribe(params => {
+    this.route.queryParams.subscribe((params) => {
       if (params['returnUrl']) {
         this.returnUrl = params['returnUrl'];
       }
     });
 
-    this.route.params.subscribe(params => {
+    this.route.params.subscribe((params) => {
       if (params['id']) {
         this.isEditMode = true;
         this.productoId = +params['id'];
@@ -108,39 +112,40 @@ export class ProductosFormulario implements OnInit, OnDestroy {
 
   cargarSedes() {
     const sedesData = this.productosService.getSedes();
-    this.sedes = sedesData.map(sede => ({
+    this.sedes = sedesData.map((sede) => ({
       label: this.formatearNombreSede(sede),
-      value: sede
+      value: sede,
     }));
   }
 
   cargarFamilias() {
     const familiasData = this.productosService.getFamilias();
-    this.familias = familiasData.map(familia => ({
+    this.familias = familiasData.map((familia) => ({
       label: familia,
-      value: familia
+      value: familia,
     }));
   }
 
   cargarUnidadesMedida() {
     const unidadesData = this.productosService.getUnidadesMedida();
-    this.unidadesMedida = unidadesData.map(unidad => ({
+    this.unidadesMedida = unidadesData.map((unidad) => ({
       label: unidad,
-      value: unidad
+      value: unidad,
     }));
   }
 
   formatearNombreSede(sede: string): string {
     return sede
       .split(' ')
-      .map(palabra => palabra.charAt(0).toUpperCase() + palabra.slice(1).toLowerCase())
+      .map((palabra) => palabra.charAt(0).toUpperCase() + palabra.slice(1).toLowerCase())
       .join(' ');
   }
 
-  crearStockSedeFormGroup(sede: string = '', stock: number = 0): FormGroup {
+  crearStockSedeFormGroup(sede: string = '', stock: number = 0, ajuste: number = 0): FormGroup {
     return this.fb.group({
       sede: [sede, Validators.required],
-      stock: [stock, [Validators.required, Validators.min(0)]]
+      stockActual: [stock],
+      ajuste: [ajuste, Validators.required],
     });
   }
 
@@ -150,7 +155,7 @@ export class ProductosFormulario implements OnInit, OnDestroy {
         severity: 'warn',
         summary: 'Límite alcanzado',
         detail: 'Ya has agregado todas las sedes disponibles',
-        life: 3000
+        life: 3000,
       });
       return;
     }
@@ -159,7 +164,7 @@ export class ProductosFormulario implements OnInit, OnDestroy {
 
   eliminarStockSede(index: number) {
     const sedeEliminar = this.stockPorSede.at(index).value;
-    
+
     this.confirmationService.confirm({
       message: `¿Eliminar el stock de la sede <strong>${this.formatearNombreSede(sedeEliminar.sede || 'Sin nombre')}</strong>?`,
       header: 'Confirmar Eliminación',
@@ -174,32 +179,76 @@ export class ProductosFormulario implements OnInit, OnDestroy {
           severity: 'success',
           summary: 'Stock Eliminado',
           detail: 'Stock de sede eliminado correctamente',
-          life: 2000
+          life: 2000,
         });
-      }
+      },
     });
   }
 
   getSedesDisponibles(currentValue?: string): { label: string; value: string }[] {
     const sedesSeleccionadas = this.stockPorSede.controls
-      .map(control => control.get('sede')?.value)
-      .filter(sede => sede && sede !== currentValue);
-    
-    return this.sedes.filter(sede => !sedesSeleccionadas.includes(sede.value));
+      .map((control) => control.get('sede')?.value)
+      .filter((sede) => sede && sede !== currentValue);
+
+    return this.sedes.filter((sede) => !sedesSeleccionadas.includes(sede.value));
+  }
+
+  getStockActualSede(sede: string): number {
+    if (!this.isEditMode || !this.productoOriginal) return 0;
+
+    const variante = this.productoOriginal.variantes?.find((v) => v.sede === sede);
+    return variante?.stock || 0;
+  }
+
+  calcularNuevoStockSede(sede: string, ajuste: number): number {
+    const stockActual = this.getStockActualSede(sede);
+    return stockActual + (ajuste || 0);
+  }
+
+  formatearDiferencia(ajuste: number): string {
+    const valor = ajuste || 0;
+    if (valor > 0) return `+${valor}`;
+    if (valor < 0) return `${valor}`;
+    return '0';
+  }
+
+  getSeverityDiferencia(ajuste: number): 'success' | 'danger' | 'secondary' {
+    const valor = ajuste || 0;
+    if (valor > 0) return 'success';
+    if (valor < 0) return 'danger';
+    return 'secondary';
   }
 
   calcularStockTotal(): number {
+    if (!this.isEditMode) {
+      return this.stockPorSede.controls.reduce((total, control) => {
+        return total + (Number(control.get('ajuste')?.value) || 0);
+      }, 0);
+    }
+
     return this.stockPorSede.controls.reduce((total, control) => {
-      return total + (Number(control.get('stock')?.value) || 0);
+      const sede = control.get('sede')?.value;
+      const ajuste = Number(control.get('ajuste')?.value) || 0;
+      const stockActual = this.getStockActualSede(sede);
+      return total + stockActual + ajuste;
     }, 0);
+  }
+
+  onSedeChange(index: number): void {
+    const item = this.stockPorSede.at(index);
+    item.get('ajuste')?.setValue(0, { emitEvent: false });
+  }
+
+  onStockChange(index: number): void {
+    this.cdr.detectChanges();
   }
 
   cargarProducto(id: number) {
     const producto = this.productosService.getProductoPorId(id);
-    
+
     if (producto) {
       this.productoOriginal = { ...producto };
-      
+
       this.productoForm.patchValue({
         codigo: producto.codigo,
         anexo: producto.anexo || '',
@@ -211,29 +260,27 @@ export class ProductosFormulario implements OnInit, OnDestroy {
         precioUnidad: producto.precioUnidad,
         precioCaja: producto.precioCaja,
         precioMayorista: producto.precioMayorista,
-        unidadMedida: producto.unidadMedida
+        unidadMedida: producto.unidadMedida,
       });
 
       if (producto.variantes && producto.variantes.length > 0) {
         this.stockPorSede.clear();
-        producto.variantes.forEach(variante => {
-          this.stockPorSede.push(this.crearStockSedeFormGroup(variante.sede, variante.stock));
+        producto.variantes.forEach((variante) => {
+          this.stockPorSede.push(this.crearStockSedeFormGroup(variante.sede, variante.stock, 0));
         });
       }
 
-      // ✅ Usar Promise en lugar de setTimeout
       Promise.resolve().then(() => {
         this.productoForm.markAsPristine();
         this.productoForm.markAsUntouched();
         this.cdr.detectChanges();
       });
-      
     } else {
       this.messageService.add({
         severity: 'error',
         summary: 'Error',
         detail: 'Producto no encontrado',
-        life: 3000
+        life: 3000,
       });
       this.volverSinConfirmar();
     }
@@ -259,50 +306,54 @@ export class ProductosFormulario implements OnInit, OnDestroy {
     }
 
     const formData = this.productoForm.value;
-    
-    return (
+
+    const hayCambiosBasicos =
       String(formData.codigo || '').trim() !== String(this.productoOriginal.codigo || '').trim() ||
       String(formData.anexo || '').trim() !== String(this.productoOriginal.anexo || '').trim() ||
       String(formData.nombre || '').trim() !== String(this.productoOriginal.nombre || '').trim() ||
-      String(formData.descripcion || '').trim() !== String(this.productoOriginal.descripcion || '').trim() ||
+      String(formData.descripcion || '').trim() !==
+        String(this.productoOriginal.descripcion || '').trim() ||
       String(formData.familia || '') !== String(this.productoOriginal.familia || '') ||
       Number(formData.precioCompra || 0) !== Number(this.productoOriginal.precioCompra || 0) ||
       Number(formData.precioVenta || 0) !== Number(this.productoOriginal.precioVenta || 0) ||
       Number(formData.precioUnidad || 0) !== Number(this.productoOriginal.precioUnidad || 0) ||
       Number(formData.precioCaja || 0) !== Number(this.productoOriginal.precioCaja || 0) ||
-      Number(formData.precioMayorista || 0) !== Number(this.productoOriginal.precioMayorista || 0) ||
-      String(formData.unidadMedida || '') !== String(this.productoOriginal.unidadMedida || '') ||
-      JSON.stringify(formData.stockPorSede) !== JSON.stringify(this.productoOriginal.variantes?.map(v => ({ sede: v.sede, stock: v.stock })))
-    );
+      Number(formData.precioMayorista || 0) !==
+        Number(this.productoOriginal.precioMayorista || 0) ||
+      String(formData.unidadMedida || '') !== String(this.productoOriginal.unidadMedida || '');
+
+    const hayAjustesStock = formData.stockPorSede.some((item: any) => (item.ajuste || 0) !== 0);
+
+    return hayCambiosBasicos || hayAjustesStock;
   }
 
   guardar() {
     if (!this.productoForm.valid) {
-      Object.keys(this.productoForm.controls).forEach(key => {
+      Object.keys(this.productoForm.controls).forEach((key) => {
         this.productoForm.get(key)?.markAsTouched();
       });
-      
+
       if (this.stockPorSede.length === 0) {
         this.messageService.add({
           severity: 'warn',
           summary: 'Stock Requerido',
           detail: 'Debe agregar al menos una sede con stock',
-          life: 3000
+          life: 3000,
         });
         return;
       }
-      
+
       this.messageService.add({
         severity: 'warn',
         summary: 'Formulario Incompleto',
         detail: 'Por favor complete todos los campos requeridos',
-        life: 3000
+        life: 3000,
       });
       return;
     }
 
     const formData = this.productoForm.value;
-    
+
     if (this.isEditMode && this.productoId) {
       this.confirmarActualizacion(formData);
     } else {
@@ -332,31 +383,34 @@ export class ProductosFormulario implements OnInit, OnDestroy {
           precioCaja: formData.precioCaja,
           precioMayorista: formData.precioMayorista,
           unidadMedida: formData.unidadMedida,
-          variantes: formData.stockPorSede.map((item: StockSede) => ({
+          variantes: formData.stockPorSede.map((item: any) => ({
             sede: item.sede,
-            stock: item.stock
-          }))
+            stock: this.getStockActualSede(item.sede) + (item.ajuste || 0),
+          })),
         };
 
-        const exito = this.productosService.actualizarProducto(this.productoId!, productoActualizado);
-        
+        const exito = this.productosService.actualizarProducto(
+          this.productoId!,
+          productoActualizado,
+        );
+
         if (exito) {
           this.messageService.add({
             severity: 'success',
             summary: 'Producto Actualizado',
             detail: `"${formData.nombre}" actualizado correctamente`,
-            life: 2500
+            life: 2500,
           });
-          // ✅ Navegación segura con microtask
-          Promise.resolve().then(() => {
-            setTimeout(() => this.volverSinConfirmar(), 1000);
-          });
+
+          setTimeout(() => {
+            this.cargarProducto(this.productoId!);
+          }, 500);
         } else {
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
             detail: 'Error al actualizar el producto',
-            life: 3000
+            life: 3000,
           });
         }
       },
@@ -365,9 +419,9 @@ export class ProductosFormulario implements OnInit, OnDestroy {
           severity: 'info',
           summary: 'Cancelado',
           detail: 'Actualización cancelada',
-          life: 2000
+          life: 2000,
         });
-      }
+      },
     });
   }
 
@@ -396,10 +450,10 @@ export class ProductosFormulario implements OnInit, OnDestroy {
           estado: 'Activo',
           fechaCreacion: new Date(),
           fechaActualizacion: new Date(),
-          variantes: formData.stockPorSede.map((item: StockSede) => ({
+          variantes: formData.stockPorSede.map((item: any) => ({
             sede: item.sede,
-            stock: item.stock
-          }))
+            stock: item.ajuste || 0,
+          })),
         };
 
         try {
@@ -408,9 +462,8 @@ export class ProductosFormulario implements OnInit, OnDestroy {
             severity: 'success',
             summary: 'Producto Creado',
             detail: `"${nuevoProducto.nombre}" creado correctamente`,
-            life: 2500
+            life: 2500,
           });
-          // ✅ Navegación segura con microtask
           Promise.resolve().then(() => {
             setTimeout(() => this.volverSinConfirmar(), 1000);
           });
@@ -419,7 +472,7 @@ export class ProductosFormulario implements OnInit, OnDestroy {
             severity: 'error',
             summary: 'Error',
             detail: 'Error al crear el producto',
-            life: 3000
+            life: 3000,
           });
         }
       },
@@ -428,9 +481,9 @@ export class ProductosFormulario implements OnInit, OnDestroy {
           severity: 'info',
           summary: 'Cancelado',
           detail: 'Creación cancelada',
-          life: 2000
+          life: 2000,
         });
-      }
+      },
     });
   }
 
@@ -440,12 +493,13 @@ export class ProductosFormulario implements OnInit, OnDestroy {
       return;
     }
 
-    const mensaje = this.isEditMode && this.productoOriginal
-      ? `¿Seguro que deseas cancelar la edición de <strong>${this.productoOriginal.nombre}</strong>?<br>Se perderán los cambios realizados.`
-      : `¿Seguro que deseas cancelar la creación del producto?<br>Se perderán los datos ingresados.`;
-    
+    const mensaje =
+      this.isEditMode && this.productoOriginal
+        ? `¿Seguro que deseas cancelar la edición de <strong>${this.productoOriginal.nombre}</strong>?<br>Se perderán los cambios realizados.`
+        : `¿Seguro que deseas cancelar la creación del producto?<br>Se perderán los datos ingresados.`;
+
     const header = this.isEditMode ? 'Cancelar Edición' : 'Cancelar Creación';
-    
+
     this.confirmationService.confirm({
       message: mensaje,
       header: header,
@@ -458,31 +512,32 @@ export class ProductosFormulario implements OnInit, OnDestroy {
         this.messageService.add({
           severity: 'info',
           summary: this.isEditMode ? 'Edición Cancelada' : 'Creación Cancelada',
-          detail: this.isEditMode 
+          detail: this.isEditMode
             ? `Edición de "${this.productoOriginal?.nombre}" cancelada`
             : 'Creación de producto cancelada',
-          life: 2000
+          life: 2000,
         });
-        // ✅ Navegación con delay
         Promise.resolve().then(() => {
           setTimeout(() => this.volverSinConfirmar(), 500);
         });
-      }
+      },
     });
   }
 
   volverSinConfirmar() {
     if (this.navegando) return;
-    
+
     this.navegando = true;
-    
-    // ✅ Navegación segura
+
     Promise.resolve().then(() => {
-      this.router.navigate([this.returnUrl]).then(() => {
-        this.navegando = false;
-      }).catch(() => {
-        this.navegando = false;
-      });
+      this.router
+        .navigate([this.returnUrl])
+        .then(() => {
+          this.navegando = false;
+        })
+        .catch(() => {
+          this.navegando = false;
+        });
     });
   }
 }

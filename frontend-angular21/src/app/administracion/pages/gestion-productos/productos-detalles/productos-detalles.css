@@ -203,10 +203,14 @@
   color: #4b5563;
 }
 
+/* ============================================ */
+/* DARK MODE */
+/* ============================================ */
+
 :host-context(.app-dark) {
   .estadistica-promedio {
-    background: #1e3a5f !important;
-    border-color: #2563eb !important;
+    background: #12263f !important;
+    border-color: #1d4ed8 !important;
   }
 
   .estadistica-promedio .estadistica-label {
@@ -218,7 +222,7 @@
   }
 
   .estadistica-minimo {
-    background: #1a3d2b !important;
+    background: #142a1f !important;
     border-color: #16a34a !important;
   }
 
@@ -244,8 +248,8 @@
   }
 
   .estadistica-diferencia {
-    background: #2e1f3d !important;
-    border-color: #7c3aed !important;
+    background: #1a1228 !important;
+    border-color: #6d28d9 !important;
   }
 
   .estadistica-diferencia .estadistica-label {
@@ -331,58 +335,70 @@
   }
 }
 
+/* ============================================ */
+/* TONALIDADES DE COLORES EN DARK MODE (MÁS OSCURAS) */
+/* ============================================ */
+
 :host-context(.app-dark) ::ng-deep .bg-red-50 {
-  background-color: #2a1f1f !important;
+  background: linear-gradient(135deg, #2a1515 0%, #1f1010 100%) !important;
+  background-color: #2a1515 !important;
 }
 
 :host-context(.app-dark) ::ng-deep .bg-green-50 {
-  background-color: #1f2a22 !important;
+  background: linear-gradient(135deg, #152a1f 0%, #101f15 100%) !important;
+  background-color: #152a1f !important;
 }
 
 :host-context(.app-dark) ::ng-deep .bg-blue-50 {
-  background-color: #1a2332 !important;
+  background: linear-gradient(135deg, #12223a 0%, #0d1828 100%) !important;
+  background-color: #12223a !important;
 }
 
 :host-context(.app-dark) ::ng-deep .bg-cyan-50 {
-  background-color: #1a2a30 !important;
+  background: linear-gradient(135deg, #122a35 0%, #0d1f28 100%) !important;
+  background-color: #122a35 !important;
 }
 
 :host-context(.app-dark) ::ng-deep .bg-indigo-50 {
-  background-color: #1f1f35 !important;
+  background: linear-gradient(135deg, #1a1a35 0%, #131328 100%) !important;
+  background-color: #1a1a35 !important;
 }
 
 :host-context(.app-dark) ::ng-deep .bg-orange-50 {
-  background-color: #2a2218 !important;
+  background: linear-gradient(135deg, #2a1e12 0%, #1f150d 100%) !important;
+  background-color: #2a1e12 !important;
 }
 
 :host-context(.app-dark) ::ng-deep .bg-purple-50 {
-  background-color: #241f33 !important;
+  background: linear-gradient(135deg, #1f1530 0%, #171028 100%) !important;
+  background-color: #1f1530 !important;
 }
 
 :host-context(.app-dark) ::ng-deep .bg-primary-50 {
-  background-color: #1a2332 !important;
+  background: linear-gradient(135deg, #12223a 0%, #0d1828 100%) !important;
+  background-color: #12223a !important;
 }
 
 :host-context(.app-dark) ::ng-deep .border-red-200 {
-  border-color: #4a2525 !important;
+  border-color: #4a2828 !important;
 }
 
 :host-context(.app-dark) ::ng-deep .border-green-200 {
-  border-color: #254a2a !important;
+  border-color: #284a2a !important;
 }
 
 :host-context(.app-dark) ::ng-deep .border-blue-200 {
-  border-color: #253a55 !important;
+  border-color: #283a52 !important;
 }
 
 :host-context(.app-dark) ::ng-deep .border-cyan-200 {
-  border-color: #254555 !important;
+  border-color: #284552 !important;
 }
 
 :host-context(.app-dark) ::ng-deep .border-indigo-200 {
-  border-color: #353555 !important;
+  border-color: #353552 !important;
 }
 
 :host-context(.app-dark) ::ng-deep .border-orange-200 {
-  border-color: #4a3525 !important;
+  border-color: #4a3528 !important;
 }
