@@ -34,7 +34,6 @@ export class UsuarioService {
   }
 
   postCuentaUsuario(body: CuentaUsuarioRequest): Observable<CuentaUsuarioResponse> {
-    // Usar API Gateway para evitar CORS y sin token (endpoint no protegido hoy)
     console.log('POST /auth/create-account url:', `${this.api}/auth/create-account`);
     return this.http.post<CuentaUsuarioResponse>(`${this.api}/auth/create-account`, body);
   }

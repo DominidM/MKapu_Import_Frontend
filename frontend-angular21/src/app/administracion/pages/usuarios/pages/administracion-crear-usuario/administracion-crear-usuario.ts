@@ -64,14 +64,11 @@ export class AdministracionCrearUsuario implements AfterViewInit {
     );
   }
 
-  /*
   limpiarFiltro(): void {
     this.filtroDni = '';
-    this.filtroRol = null;
-    this.filtroSede = null;
     this.filtroEstado = null;
+    this.getUsuarios();
   }
-  */
 
   nuevoUsuario(): void {
     this.router.navigate(['/admin/usuarios/crear-usuario']);

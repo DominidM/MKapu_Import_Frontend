@@ -75,6 +75,7 @@
                 [(ngModel)]="usuarioRequestForm.usu_nom"
                 (keypress)="allowOnlyLetters($event)"
                 (input)="usuarioRequestForm.usu_nom = sanitizeOnlyLetters(usuarioRequestForm.usu_nom)"
+                (blur)="trimUsuarioField('usu_nom')"
                 class="w-full" />
             </div>
             <div class="col-12 md:col-4 usuarios-field">
@@ -84,6 +85,7 @@
                 [(ngModel)]="usuarioRequestForm.ape_pat"
                 (keypress)="allowOnlyLetters($event)"
                 (input)="usuarioRequestForm.ape_pat = sanitizeOnlyLetters(usuarioRequestForm.ape_pat)"
+                (blur)="trimUsuarioField('ape_pat')"
                 class="w-full" />
             </div>
             <div class="col-12 md:col-4 usuarios-field">
@@ -93,6 +95,7 @@
                 [(ngModel)]="usuarioRequestForm.ape_mat"
                 (keypress)="allowOnlyLetters($event)"
                 (input)="usuarioRequestForm.ape_mat = sanitizeOnlyLetters(usuarioRequestForm.ape_mat)"
+                (blur)="trimUsuarioField('ape_mat')"
                 class="w-full" />
             </div>
             <div class="col-12 md:col-4 usuarios-field">
@@ -119,7 +122,8 @@
               <label class="usuarios-label">Fecha Nac.</label>
               <p-datepicker
                 [(ngModel)]="usuarioRequestForm.fec_nac"
-                dateFormat="yy-mm-dd"
+                dateFormat="dd/mm/yy"
+                placeholder="dd/mm/aaaa"
                 showIcon="true"
                 class="w-full">
               </p-datepicker>
@@ -135,20 +139,35 @@
           <div class="grid">
             <div class="col-12 md:col-4 usuarios-field">
               <label class="usuarios-label">Email</label>
-              <input pInputText type="email" [(ngModel)]="usuarioRequestForm.email" class="w-full" />
+              <input
+                pInputText
+                type="email"
+                [(ngModel)]="usuarioRequestForm.email"
+                (input)="trimUsuarioField('email')"
+                (blur)="trimUsuarioField('email')"
+                class="w-full" />
             </div>
             <div class="col-12 md:col-4 usuarios-field">
               <label class="usuarios-label">Celular</label>
               <p-inputNumber
                 [(ngModel)]="celularInput"
+                (ngModelChange)="onCelularChange($event)"
+                (onKeyDown)="onCelularKeyDown($event)"
                 [useGrouping]="false"
                 [maxFractionDigits]="0"
+                [min]="0"
+                [max]="999999999"
                 class="w-full">
               </p-inputNumber>
             </div>
             <div class="col-12 md:col-4 usuarios-field">
               <label class="usuarios-label">Direccion</label>
-              <input pInputText [(ngModel)]="usuarioRequestForm.direccion" class="w-full" />
+              <input
+                pInputText
+                [(ngModel)]="usuarioRequestForm.direccion"
+                (input)="trimUsuarioField('direccion')"
+                (blur)="trimUsuarioField('direccion')"
+                class="w-full" />
             </div>
             <div class="col-12 md:col-6 usuarios-field">
               <label class="usuarios-label">Sede</label>
@@ -310,12 +329,17 @@
           <div class="grid">
             <div class="col-12 md:col-4 usuarios-field">
               <label class="usuarios-label">Nombre de usuario</label>
-              <input pInputText [(ngModel)]="cuentaForm.username" class="w-full" />
+              <input
+                pInputText
+                [(ngModel)]="cuentaForm.username"
+                (ngModelChange)="cuentaForm.username = removeAllSpaces($event)"
+                class="w-full" />
             </div>
             <div class="col-12 md:col-4 usuarios-field">
               <label class="usuarios-label">Contraseña</label>
               <p-password
                 [(ngModel)]="cuentaForm.password"
+                (ngModelChange)="cuentaForm.password = removeAllSpaces($event)"
                 [toggleMask]="true"
                 styleClass="w-full">
               </p-password>
@@ -324,6 +348,7 @@
               <label class="usuarios-label">Confirmar contraseña</label>
               <p-password
                 [(ngModel)]="cuentaForm.confirmPassword"
+                (ngModelChange)="cuentaForm.confirmPassword = removeAllSpaces($event)"
                 [toggleMask]="true"
                 styleClass="w-full">
               </p-password>

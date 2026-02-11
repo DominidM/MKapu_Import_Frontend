@@ -107,6 +107,7 @@ export class Administracion implements AfterViewInit {
     { label: 'Femenino', value: 'F' }
   ];
 
+
   usuario = {
     dni: '',
     nombre: '',
@@ -313,6 +314,52 @@ export class Administracion implements AfterViewInit {
     return value.replace(/[^A-Za-zÁÉÍÓÚáéíóúÑñ\s]/g, '');
   }
 
+  trimUsuarioField(
+    key: keyof Pick<UsuarioRequest, 'usu_nom' | 'ape_pat' | 'ape_mat' | 'email' | 'direccion'>
+  ): void {
+    const value = this.usuarioRequestForm[key];
+    if (typeof value !== 'string') return;
+    this.usuarioRequestForm[key] = value.trim();
+  }
+
+  removeAllSpaces(value: string): string {
+    if (typeof value !== 'string') return '';
+    return value.replace(/\s+/g, '');
+  }
+
+  onCelularChange(value: number | null): void {
+    if (value === null || value === undefined) {
+      this.celularInput = null;
+      return;
+    }
+
+    const digits = String(value).replace(/\D/g, '');
+    if (!digits) {
+      this.celularInput = null;
+      return;
+    }
+
+    const trimmed = digits.length > 9 ? digits.slice(0, 9) : digits;
+    this.celularInput = Number(trimmed);
+  }
+
+  onCelularKeyDown(event: KeyboardEvent): void {
+    const key = event.key;
+    if (key.length !== 1 || !/\d/.test(key)) return;
+
+    const input = event.target as HTMLInputElement | null;
+    if (!input) return;
+
+    const value = input.value?.replace(/\D/g, '') ?? '';
+    const selectionStart = input.selectionStart ?? value.length;
+    const selectionEnd = input.selectionEnd ?? value.length;
+    const hasSelection = selectionEnd > selectionStart;
+
+    if (!hasSelection && value.length >= 9) {
+      event.preventDefault();
+    }
+  }
+
   listarUsuarios() {
     this.cargandoUsuarios = true;
 
@@ -356,6 +403,15 @@ export class Administracion implements AfterViewInit {
         console.log('Usuario creado (prueba):', data);
         this.listarUsuarios();
         this.resetFormularioPrueba();
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Usuario creado',
+          detail: 'El usuario se registró correctamente.',
+          life: 1500
+        });
+        setTimeout(() => {
+          this.router.navigate(['/admin/usuarios']);
+        }, 1500);
       },
       error: (err) => {
         console.error('Error al crear usuario (prueba):', err);
