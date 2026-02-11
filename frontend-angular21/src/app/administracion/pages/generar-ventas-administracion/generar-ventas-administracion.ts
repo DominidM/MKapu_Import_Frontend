@@ -897,7 +897,12 @@ export class GenerarVentasAdministracion implements OnInit, OnDestroy {
   }
 
   agregarProducto(): void {
-    if (!this.productoTemp || this.cantidadTemp <= 0) {
+    console.log("agregando al carrito")
+
+    console.log("producto", this.productoTemp)
+    console.log("cantidad", this.cantidadTemp)
+    if (!this.productoTemp) {
+
       this.messageService.add({
         severity: 'warn',
         summary: 'Cantidad inválida',
@@ -918,14 +923,14 @@ export class GenerarVentasAdministracion implements OnInit, OnDestroy {
       return;
     }
 
-    const stockDisponibleActual = this.productosService.getStockDisponible(this.productoTemp.id);
+    const stockDisponibleActual = 1;
 
     const cantidadYaEnCarrito = this.productosSeleccionados
       .filter((p) => p.id_producto === String(this.productoTemp!.id))
       .reduce((sum, p) => sum + p.cantidad, 0);
 
     const stockTotalDisponible = stockDisponibleActual + cantidadYaEnCarrito;
-
+    /*
     if (this.cantidadTemp > stockTotalDisponible) {
       this.messageService.add({
         severity: 'error',
@@ -945,7 +950,7 @@ export class GenerarVentasAdministracion implements OnInit, OnDestroy {
       });
       return;
     }
-
+    
     const exito = this.productosService.descontarStock(this.productoTemp.id, this.cantidadTemp);
 
     if (!exito) {
@@ -957,7 +962,7 @@ export class GenerarVentasAdministracion implements OnInit, OnDestroy {
       });
       return;
     }
-
+    */
     const precio = this.getPrecioSegunTipo(this.productoTemp);
     const valorUnit = this.comprobantesService.calcularValorUnitario(precio);
     const igv = this.comprobantesService.calcularIGVItem(valorUnit, this.cantidadTemp);
