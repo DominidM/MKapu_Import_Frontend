@@ -7,17 +7,25 @@
                 text
                 severity="secondary"
                 (onClick)="toggleSidebar.emit()"
-            ></p-button>    
+            ></p-button>
         </ng-template>
         <ng-template #center>
             <input pInputText type="text" placeholder="Buscar" />
         </ng-template>
         <ng-template #end>
-            <p-button icon="pi pi-bell" class="mr-2" text severity="secondary" />
-            <p-button 
-            [icon]="themeService.isDark() ? 'pi pi-sun' : 'pi pi-moon'" 
-            class="mr-2" 
-            text 
+            <div class="header-bell-wrapper">
+                <p-button
+                icon="pi pi-bell"
+                class="mr-2"
+                text
+                severity="secondary"
+                [routerLink]="['/admin/notificaciones']" />
+                <span class="header-bell-badge" *ngIf="notifCount > 0">{{ notifCount }}</span>
+            </div>
+            <p-button
+            [icon]="themeService.isDark() ? 'pi pi-sun' : 'pi pi-moon'"
+            class="mr-2"
+            text
             severity="secondary"
             (click)="toggleTheme()">
             </p-button>

@@ -21,6 +21,8 @@ import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 
 import { UsuarioService } from '../../../../services/usuario.service';
+import { SedeService } from '../../../../services/sede.service';
+import { Headquarter } from '../../../../interfaces/sedes.interface';
 import { UsuarioInterfaceResponse, UsuarioRequest } from '../../../../interfaces/usuario.interface';
 import { ROLE_NAMES, UserRole } from '../../../../../core/constants/roles.constants';
 
@@ -98,9 +100,8 @@ export class Administracion implements AfterViewInit {
   rolSeleccionado: string | null = null;
   rolCuentaSeleccionado: string | null = null;
 
-  sedes: { label: string; value: number }[] = [
-    { label: 'Sede Principal', value: 1 }
-  ];
+  sedes: { label: string; value: number }[] = [];
+  sedesRaw: Headquarter[] = [];
 
   generos: { label: string; value: 'M' | 'F' }[] = [
     { label: 'Masculino', value: 'M' },
@@ -148,13 +149,46 @@ export class Administracion implements AfterViewInit {
   };
 
   private usuarioService = inject(UsuarioService);
+  private sedeService = inject(SedeService);
   private messageService = inject(MessageService);
   private router = inject(Router);
 
   ngAfterViewInit() {
     setTimeout(() => {
+      this.cargarSedes();
       this.listarUsuarios();
     }, 0);
+  }
+
+  private cargarSedes(): void {
+    console.log('[Usuarios] Llamando getSedes()');
+    this.sedeService.getSedes().subscribe({
+      next: (response) => {
+        console.log('[Usuarios] Respuesta getSedes():', response);
+        const sedesResponse = Array.isArray(response)
+          ? response
+          : response?.headquarters ?? [];
+        this.sedesRaw = sedesResponse;
+        this.sedes = this.sedesRaw.map((sede) => ({
+          label: sede.nombre,
+          value: sede.id_sede,
+        }));
+
+        if (this.sedes.length > 0) {
+          const sedeExiste = this.sedes.some(
+            (sede) => sede.value === this.usuarioRequestForm.id_sede,
+          );
+          if (!sedeExiste) {
+            this.usuarioRequestForm.id_sede = this.sedes[0].value;
+            this.usuarioRequestForm.sedeNombre = this.sedes[0].label;
+          }
+        }
+      },
+      error: (error) => {
+        console.error('Error al cargar sedes:', error);
+        this.sedes = [];
+      },
+    });
   }
 
   prevStep(): void {
@@ -396,6 +430,7 @@ export class Administracion implements AfterViewInit {
       activo: true
     };
 
+    console.log('[Usuarios] Payload create user:', payload);
     console.log('POST /admin/users payload:', JSON.stringify(payload));
 
     this.usuarioService.postUsuarios(payload).subscribe({

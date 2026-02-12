@@ -303,10 +303,25 @@
 .transferencia-icon-btn {
   width: 36px;
   height: 36px;
-  border-radius: 12px;
+  border-radius: 10px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+}
+
+.transferencia-header-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+
+:host ::ng-deep .transferencia-bell-btn.p-button,
+:host ::ng-deep .transferencia-bell-btn.p-button:hover,
+:host ::ng-deep .transferencia-bell-btn.p-button:focus,
+:host ::ng-deep .transferencia-bell-btn.p-button:focus-visible {
+  border: 1px solid var(--p-primary-color, #f6af33) !important;
+  border-radius: 10px !important;
+  box-shadow: none !important;
 }
 
 .transferencia-icon-warn {
@@ -324,6 +339,37 @@
 .transferencia-table .p-datatable-thead > tr > th:last-child,
 .transferencia-table .p-datatable-tbody > tr > td:last-child {
   text-align: center;
+}
+
+.transferencia-table .p-datatable-thead > tr > th.col-cantidad,
+.transferencia-table .p-datatable-tbody > tr > td.col-cantidad,
+.transferencia-table .p-datatable-thead > tr > th.col-solicitud,
+.transferencia-table .p-datatable-tbody > tr > td.col-solicitud,
+.transferencia-table .p-datatable-thead > tr > th.col-estado,
+.transferencia-table .p-datatable-tbody > tr > td.col-estado,
+.transferencia-table .p-datatable-thead > tr > th.col-acciones,
+.transferencia-table .p-datatable-tbody > tr > td.col-acciones {
+  text-align: center;
+}
+
+.transferencia-table .p-datatable-thead > tr > th.col-codigo,
+.transferencia-table .p-datatable-thead > tr > th.col-producto,
+.transferencia-table .p-datatable-thead > tr > th.col-ruta,
+.transferencia-table .p-datatable-tbody > tr > td.col-codigo,
+.transferencia-table .p-datatable-tbody > tr > td.col-producto,
+.transferencia-table .p-datatable-tbody > tr > td.col-ruta {
+  text-align: left;
+}
+
+.transferencia-solicitud {
+  font-weight: 600;
+  font-size: 0.75rem;
+  color: #475569;
+  text-transform: uppercase;
+}
+
+:host-context(.app-dark) .transferencia-solicitud {
+  color: #cbd5f5;
 }
 
 .transferencia-section-icon {
