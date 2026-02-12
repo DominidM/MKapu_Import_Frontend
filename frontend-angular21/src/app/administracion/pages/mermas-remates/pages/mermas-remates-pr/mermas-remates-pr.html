@@ -72,8 +72,8 @@
 
             <div class="col-12 md:col-4">
                 <label class="filter-label">Estado</label>
-                <p-autoComplete [suggestions]="tiposFiltro" [(ngModel)]="tipoFiltro" optionLabel="label" optionValue="value"
-                    placeholder="Seleccione tipo" styleClass="w-full" (onChange)="aplicarFiltros()">
+                <p-autoComplete [suggestions]="tiposFiltro" [(ngModel)]="tipoFiltro" optionLabel="label"
+                    optionValue="value" placeholder="Seleccione tipo" styleClass="w-full" (onChange)="aplicarFiltros()">
                 </p-autoComplete>
             </div>
 
@@ -160,8 +160,8 @@
                         <span *ngIf="producto.tipo === 'merma'" class="text-400">—</span>
                     </td>
                     <td class="text-center">
-                        <p-button icon="pi pi-pencil" [text]="true" severity="info" styleClass="action-btn"
-                            (onClick)="editarProducto(producto)" pTooltip="Editar" tooltipPosition="left">
+                        <p-button icon="pi pi-pencil" text severity="secondary"
+                            styleClass="sedes-icon-btn sedes-icon-warn" [routerLink]="['/admin/mermas-remates/edicion-merma-remate']">    
                         </p-button>
                     </td>
                 </tr>

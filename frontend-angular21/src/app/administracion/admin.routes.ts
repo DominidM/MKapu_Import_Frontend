@@ -307,6 +307,13 @@ export const ADMIN_ROUTES: Routes = [
             (m) => m.MermasRematesRegistro,
           ),
       },
+      {
+        path: 'edicion-merma-remate',
+        loadComponent: () =>
+          import('./pages/mermas-remates/pages/mermas-remates-edc/mermas-remates-edc').then(
+            (m) => m.MermasRematesEdcComponent,
+          ),
+      },
     ],
   },
   /* =======================
