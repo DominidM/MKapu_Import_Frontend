@@ -1,0 +1,95 @@
+<div class="clientes-page">
+    <p-card styleClass="clientes-header-card">
+        <div class="flex align-items-center justify-content-between flex-wrap gap-3">
+            <div class="flex align-items-center gap-3">
+                <span class="clientes-title-icon">
+                    <i class="pi pi-list"></i>
+                </span>
+                <div>
+                    <p class="clientes-kicker">ALMACEN - INGRESOS</p>
+                    <h2 class="clientes-title">GESTION DE INGRESOS AL ALMACEN</h2>
+                </div>
+            </div>
+            <div class="flex align-items-center gap-2">
+                <p-button [routerLink]="['/admin/ingresos-almacen/ingresos-agregar']" label="Agregar Ingresos"
+                    icon="pi pi-plus" styleClass="clientes-pill"></p-button>
+            </div>
+        </div>
+    </p-card>
+
+    <p-card>
+        <div class="flex flex-column lg:flex-row lg:align-items-center lg:justify-content-between gap-3">
+            <div class="clientes-search-container flex-1">
+                <span class="clientes-search-label">Buscar Ingresos</span>
+                <p-autoComplete class="clientes-search-input" [(ngModel)]="searchTerm"
+                    [suggestions]="ingresoSuggestions" field="nro_guia" (completeMethod)="onSearch($event)"
+                    (ngModelChange)="onSearchChange($event)" (onSelect)="onSelectIngreso($event)"
+                    placeholder="Escribe número de guía, fecha o proveedor..."
+                    [inputStyle]="{ width: '100%', background: 'transparent', color: 'var(--text-color)' }">
+                    <ng-template let-item pTemplate="item">
+                        <div class="flex flex-column gap-1">
+                            <span class="font-medium">{{ item.nro_guia }}</span>
+                            <small class="text-500">{{ item.proveedor }}</small>
+                        </div>
+                    </ng-template>
+                </p-autoComplete>
+
+            </div>
+            <div class="flex align-items-center gap-2 clientes-filter-actions">
+                <p-button label="Limpiar Filtros" icon="pi pi-filter-slash" severity="danger"
+                    styleClass="clientes-pill clientes-pill-danger" (click)="clearSearch()"></p-button>
+            </div>
+        </div>
+    </p-card>
+
+    <p-card>
+        <div class="flex align-items-center justify-content-between mb-3">
+            <div class="flex align-items-center gap-2">
+                <span class="clientes-section-icon">
+                    <i class="pi pi-user"></i>
+                </span>
+                <span class="text-sm font-semibold text-700">INGRESOS</span>
+                <p-tag [value]="'[' + ingresos.length + '] Ingresos'" severity="danger"></p-tag>
+            </div>
+            <p-button icon="pi pi-id-card" text severity="secondary" styleClass="clientes-icon-btn"></p-button>
+        </div>
+        <div class="card">
+            <p-table [value]="filteredIngresos" [paginator]="true" [rows]="5" [rowsPerPageOptions]="[5, 10, 20]"
+                [tableStyle]="{ 'min-width': '60rem' }">
+                <ng-template #header>
+                    <tr>
+                        <th>N° Guía</th>
+                        <th>Fecha Entrada</th>
+                        <th>Proveedor</th>
+                        <th>N° Productos</th>
+                        <th>Cant. Total </th>
+                        <th>Valor Total</th>
+                        <th>Acciones</th>
+                    </tr>
+                </ng-template>
+                <ng-template #body let-cliente>
+                    <tr>
+                        <td>{{ cliente.nro_guia }}</td>
+                        <td>{{ cliente.fecha_de_entrada }}</td>
+                        <td>{{ cliente.proveedor }}</td>
+                        <td>{{ cliente.nro_productos }}</td>
+                        <td>{{ cliente.cant_total }}</td>
+                        <td>{{ cliente.valor_total }}</td>
+                        <td>
+                            <div class="flex align-items-center gap-2">
+                                <p-button icon="pi pi-eye" text severity="secondary"
+                                    styleClass="clientes-icon-btn clientes-icon-warn"
+                                    [routerLink]="['/admin/clientes/vista-cliente']"></p-button>
+                            </div>
+                        </td>
+                    </tr>
+                </ng-template>
+                <ng-template #emptymessage>
+                    <tr>
+                        <td colspan="5">No customers found.</td>
+                    </tr>
+                </ng-template>
+            </p-table>
+        </div>
+    </p-card>
+</div>

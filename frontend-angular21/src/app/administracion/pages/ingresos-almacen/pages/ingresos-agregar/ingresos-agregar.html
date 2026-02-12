@@ -1,0 +1,226 @@
+<div class="agregar-cliente-page">
+  <p-card styleClass="clientes-header-card">
+    <div class="flex align-items-center justify-content-between flex-wrap gap-3">
+      <div class="flex align-items-center gap-3">
+        <span class="clientes-title-icon">
+          <i class="pi pi-list"></i>
+        </span>
+        <div>
+          <p class="clientes-kicker">ALMACEN - INGRESOS</p>
+          <h2 class="clientes-title">AGREGAR INGRESO</h2>
+        </div>
+      </div>
+    </div>
+  </p-card>
+
+  <div class="flex align-items-center justify-content-between mb-4">
+    <h2 class="cliente-card-title">Crear Ingreso</h2>
+    <p-button
+      icon="pi pi-arrow-left"
+      text
+      severity="secondary"
+      aria-label="Volver a ingresos"
+      [routerLink]="['/admin/ingresos-almacen']"
+    ></p-button>
+  </div>
+
+  <!-- CARD PRINCIPAL: Información General del Ingreso -->
+  <p-card styleClass="cliente-card border-none">
+    <div class="grid form-grid">
+      <div class="col-12 md:col-6">
+        <label class="field-label" for="nro_documento">NUMERO DE GUIA:</label>
+        <input
+          id="nro_documento"
+          pInputText
+          class="w-full"
+          placeholder="Ingrese número de guía"
+          [(ngModel)]="ingreso.nro_guia"
+        />
+      </div>
+      <div class="col-12 md:col-6">
+        <label class="field-label" for="razon_social">FECHA DE ENTRADA:</label>
+        <p-datepicker
+          [(ngModel)]="ingreso.fecha_de_entrada"
+          dateFormat="dd/mm/yy"
+          placeholder="Seleccione fecha"
+          [showIcon]="true"
+          styleClass="w-full"
+        />
+      </div>
+      <div class="col-12">
+        <label class="field-label" for="nombres">PROVEEDOR:</label>
+        <input
+          id="nombres"
+          pInputText
+          class="w-full"
+          placeholder="Ingrese nombre del proveedor"
+          [(ngModel)]="ingreso.proveedor"
+        />
+      </div>
+    </div>
+  </p-card>
+
+  <!-- NUEVA CARD: Detalle de Productos -->
+  <p-card styleClass="cliente-card productos-card border-none">
+    <div class="flex align-items-center justify-content-between mb-4">
+      <div class="flex align-items-center gap-2">
+        <span class="productos-section-icon">
+          <i class="pi pi-box"></i>
+        </span>
+        <h3 class="cliente-section-title mb-0">DETALLE DE PRODUCTOS</h3>
+        <p-tag *ngIf="productos.length > 0" [value]="productos.length + ' items'" severity="info"></p-tag>
+      </div>
+    </div>
+
+    <div class="productos-table-container">
+      <p-table [value]="productos" [tableStyle]="{ 'min-width': '100%' }">
+        <ng-template #header>
+          <tr>
+            <th style="width: 28%">Producto <span class="required-asterisk">*</span></th>
+            <th style="width: 13%">Cantidad <span class="required-asterisk">*</span></th>
+            <th style="width: 15%">Precio Unit. <span class="required-asterisk">*</span></th>
+            <th style="width: 15%">Subtotal</th>
+            <th style="width: 20%">Lote/Serie</th>
+            <th style="width: 9%" class="text-center">Acciones</th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-producto let-i="rowIndex">
+          <tr>
+            <td>
+              <p-autoComplete
+                [(ngModel)]="producto.productoSeleccionado"
+                [suggestions]="productosFiltrados[i] || []"
+                (completeMethod)="buscarProducto($event, i)"
+                field="nombre"
+                [dropdown]="true"
+                appendTo="body"
+                placeholder="Seleccione o busque producto"
+                (onSelect)="onProductoSelect($event, i)"
+                styleClass="w-full">
+                <ng-template let-producto pTemplate="item">
+                  <div class="flex align-items-center gap-2">
+                    <i class="pi pi-box text-primary"></i>
+                    <div>
+                      <div class="font-medium">{{ producto.nombre }}</div>
+                      <div class="text-sm text-500">S/ {{ producto.precioDefault | number:'1.2-2' }}</div>
+                    </div>
+                  </div>
+                </ng-template>
+              </p-autoComplete>
+            </td>
+            <td>
+              <p-inputNumber 
+                [(ngModel)]="producto.cantidad" 
+                [min]="1"
+                [style]="{'width': '100%'}"
+                (onInput)="calcularSubtotal(i)"
+                [showButtons]="true"
+                buttonLayout="horizontal"
+                incrementButtonIcon="pi pi-plus"
+                decrementButtonIcon="pi pi-minus">
+              </p-inputNumber>
+            </td>
+            <td>
+              <p-inputNumber 
+                [(ngModel)]="producto.precioUnitario" 
+                mode="currency"
+                currency="PEN"
+                locale="es-PE"
+                [minFractionDigits]="2"
+                [maxFractionDigits]="2"
+                [style]="{'width': '100%'}"
+                (onInput)="calcularSubtotal(i)">
+              </p-inputNumber>
+            </td>
+            <td>
+              <input 
+                pInputText 
+                type="text" 
+                [value]="'S/ ' + (producto.subtotal | number:'1.2-2')" 
+                readonly
+                class="subtotal-input"
+                [style]="{'width': '100%'}">
+            </td>
+            <td>
+              <input 
+                pInputText 
+                type="text" 
+                [(ngModel)]="producto.loteSerie"
+                placeholder="LOT-2026-001"
+                [style]="{'width': '100%'}">
+            </td>
+            <td class="text-center">
+              <p-button 
+                icon="pi pi-trash" 
+                [text]="true"
+                severity="danger"
+                styleClass="productos-delete-btn"
+                (onClick)="eliminarProducto(i)"
+                pTooltip="Eliminar producto"
+                tooltipPosition="left">
+              </p-button>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template #emptymessage>
+          <tr>
+            <td colspan="6" class="text-center py-5">
+              <i class="pi pi-inbox text-4xl text-400 mb-3"></i>
+              <p class="text-500 mt-2">No hay productos agregados. Haga clic en "Agregar Producto" para comenzar.</p>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+
+    <p-button 
+      label="Agregar Producto" 
+      icon="pi pi-plus" 
+      [outlined]="true"
+      severity="info"
+      styleClass="productos-add-btn mt-3"
+      (onClick)="agregarProducto()">
+    </p-button>
+
+    <!-- Totales -->
+    <div *ngIf="productos.length > 0" class="productos-totales-container mt-4">
+      <div class="productos-total-item">
+        <span class="productos-total-label">Total Productos</span>
+        <span class="productos-total-value">{{ productos.length }}</span>
+      </div>
+      <div class="productos-total-item">
+        <span class="productos-total-label">Total Unidades</span>
+        <span class="productos-total-value">{{ getTotalUnidades() }}</span>
+      </div>
+      <div class="productos-total-item">
+        <span class="productos-total-label">Valor Total</span>
+        <span class="productos-total-value productos-total-value-highlight">
+          S/ {{ getValorTotal() | number:'1.2-2' }}
+        </span>
+      </div>
+    </div>
+  </p-card>
+
+  <!-- CARD DE ACCIONES -->
+  <p-card styleClass="cliente-card border-none">
+    <div class="flex align-items-center justify-content-center gap-3">
+      <p-button
+        label="Cancelar"
+        outlined
+        severity="secondary"
+        styleClass="cliente-btn-cancel"
+        (onClick)="cancelar()"
+      ></p-button>
+      <p-button
+        label="Registrar Ingreso"
+        icon="pi pi-check"
+        styleClass="cliente-btn-primary"
+        (onClick)="registrar()"
+        [disabled]="!validarFormulario()"
+      ></p-button>
+    </div>
+  </p-card>
+
+  <p-toast />
+  <p-confirmdialog />
+</div>

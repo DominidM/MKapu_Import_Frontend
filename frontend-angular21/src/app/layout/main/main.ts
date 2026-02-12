@@ -3,11 +3,11 @@ import { Sidebar } from "../sidebar/sidebar";
 import { Header } from "../header/header";
 import { RouterModule } from "@angular/router";
 import { ThemeService } from '../../core/services/theme.service';
-import { Dashboard } from "../../dashboard/pages/dashboard/dashboard";
+import { DrawerModule } from 'primeng/drawer';
 
 @Component({
   selector: 'app-main',
-  imports: [Sidebar, Header, RouterModule, Dashboard],
+  imports: [Sidebar, Header, RouterModule, DrawerModule],
   templateUrl: './main.html',
   styleUrl: './main.css',
 })
@@ -18,4 +18,12 @@ export class Main {
   toggleTheme(): void {
     this.themeService.toggleTheme();
   }
+
+mobileSidebarVisible = false;
+
+openMobileSidebar() {
+  this.mobileSidebarVisible = true;
+}
+  
+
 }
