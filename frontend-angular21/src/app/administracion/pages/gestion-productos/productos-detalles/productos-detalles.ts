@@ -11,6 +11,8 @@ import { ConfirmDialog } from 'primeng/confirmdialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
 
 import { ProductosService, Producto } from '../../../../core/services/productos.service';
+import { ProductoDetalle, ProductoStockDetalle } from '../../../interfaces/producto.interface';
+import { ProductoService } from '../../../services/producto.service';
 
 @Component({
   selector: 'app-productos-detalles',
@@ -33,22 +35,49 @@ export class ProductosDetalles implements OnInit {
   productoId: number | null = null;
   loading = true;
 
+  productoDetalle!: ProductoDetalle;
+  stockDetalle!: ProductoStockDetalle;
+  idProducto!: number;
+  idSede: number = 1; // puedes traerlo dinámico si quieres
+  //loading = false;
+
   constructor(
     private router: Router,
     private route: ActivatedRoute,
     private productosService: ProductosService,
     private confirmationService: ConfirmationService,
-    private messageService: MessageService
+    private messageService: MessageService,
+    private productoService: ProductoService
   ) {}
 
   ngOnInit() {
-    this.route.params.subscribe(params => {
-      if (params['id']) {
-        this.productoId = +params['id'];
-        this.cargarProducto(this.productoId);
-      }
-    });
+    console.log(123)
+    this.route.paramMap.subscribe(params => {
+    this.idProducto = Number(params.get('id'));
+
+    if (this.idProducto) {
+      this.getDetalleProducto();
+    }
+  });
   }
+
+    getDetalleProducto() {
+    this.loading = true;
+
+    this.productoService
+      .getProductoDetalleStock(this.idProducto, this.idSede)
+      .subscribe({
+        next: (resp) => {
+          this.productoDetalle = resp.producto;
+          this.stockDetalle = resp.stock;
+          this.loading = false;
+        },
+        error: () => {
+          this.loading = false;
+        }
+      });
+  }
+
 
   cargarProducto(id: number) {
     this.loading = true;

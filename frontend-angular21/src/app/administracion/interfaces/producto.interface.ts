@@ -59,3 +59,38 @@ export interface ProductoAutocomplete {
 export interface ProductoAutocompleteResponse {
   data: ProductoAutocomplete[];
 }
+
+export interface ProductoDetalleStockResponse {
+  producto: ProductoDetalle;
+  stock: ProductoStockDetalle;
+}
+
+export interface ProductoDetalle {
+  id_producto: number;
+  codigo: string;
+  nombre: string;
+  descripcion: string;
+  categoria: {
+    id_categoria: number;
+    nombre: string;
+  };
+  precio_compra: number;
+  precio_unitario: number;
+  precio_mayor: number;
+  precio_caja: number;
+  unidad_medida: {
+    id: number | null;
+    nombre: string;
+  };
+  estado: number;
+  fecha_creacion: string;
+  fecha_edicion: string;
+}
+
+export interface ProductoStockDetalle {
+  id_sede: number;
+  sede: string;
+  id_almacen: number;
+  cantidad: number;
+  estado: string;
+}

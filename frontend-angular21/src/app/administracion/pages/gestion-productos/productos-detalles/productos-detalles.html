@@ -1,4 +1,4 @@
-<div class="p-4" *ngIf="producto">
+<div class="p-4" *ngIf="productoDetalle">
   <div class="surface-card border-1 border-300 border-round-xl shadow-1 p-4 mb-4">
     <div class="flex justify-content-between align-items-center flex-wrap gap-3">
       <div class="flex align-items-center gap-3">
@@ -7,7 +7,7 @@
         </span>
         <div>
           <p class="productos-kicker mb-0">DETALLES DEL PRODUCTO</p>
-          <h2 class="productos-title mb-0">{{ producto.nombre }}</h2>
+          <h2 class="productos-title mb-0">{{ productoDetalle.nombre }}</h2>
         </div>
       </div>
 
@@ -39,27 +39,29 @@
             <label class="block text-sm font-semibold text-600 mb-2">CÓDIGO DEL PRODUCTO</label>
             <div class="flex align-items-center gap-2 p-3 bg-primary-50 border-round-lg">
               <i class="pi pi-tag text-primary text-xl"></i>
-              <span class="text-2xl font-black text-primary">{{ producto.codigo }}</span>
+              <span class="text-2xl font-black text-primary">{{ productoDetalle.codigo }}</span>
             </div>
           </div>
 
-          <div class="col-12 md:col-6 mb-4" *ngIf="producto.anexo">
+          <div class="col-12 md:col-6 mb-4" *ngIf="productoDetalle.nombre">
             <label class="block text-sm font-semibold text-600 mb-2">ANEXO</label>
             <div class="flex align-items-center gap-2 p-3 bg-blue-50 border-round-lg">
               <i class="pi pi-bookmark text-blue-600 text-xl"></i>
-              <span class="text-xl font-bold text-blue-700">{{ producto.anexo }}</span>
+              <span class="text-xl font-bold text-blue-700">{{ productoDetalle.nombre }}</span>
             </div>
           </div>
 
           <div class="col-12 md:col-6 mb-4">
             <label class="block text-sm font-semibold text-600 mb-2">ESTADO</label>
             <div class="p-3">
+              <!--
               <p-tag
-                [value]="producto.estado"
-                [severity]="producto.estado === 'Activo' ? 'success' : 'danger'"
+                [value]="productoDetalle.estado"
+                [severity]="producto.?.estado"
                 styleClass="text-lg font-bold px-4 py-2"
               >
               </p-tag>
+              -->
             </div>
           </div>
 
@@ -67,21 +69,21 @@
             <label class="block text-sm font-semibold text-600 mb-2">UNIDAD DE MEDIDA</label>
             <div class="flex align-items-center gap-2 p-3 bg-purple-50 border-round-lg">
               <i class="pi pi-box text-purple-600 text-xl"></i>
-              <span class="text-xl font-bold text-purple-700">{{ producto.unidadMedida }}</span>
+              <span class="text-xl font-bold text-purple-700">{{ productoDetalle.unidad_medida }}</span>
             </div>
           </div>
 
           <div class="col-12 mb-4">
             <label class="block text-sm font-semibold text-600 mb-2">NOMBRE DEL PRODUCTO</label>
             <div class="p-3 surface-50 border-round-lg border-1 border-300">
-              <p class="m-0 text-xl font-semibold text-900">{{ producto.nombre }}</p>
+              <p class="m-0 text-xl font-semibold text-900">{{ productoDetalle.nombre }}</p>
             </div>
           </div>
 
-          <div class="col-12 mb-4" *ngIf="producto.descripcion">
+          <div class="col-12 mb-4" *ngIf="productoDetalle.descripcion">
             <label class="block text-sm font-semibold text-600 mb-2">DESCRIPCIÓN</label>
             <div class="p-3 surface-50 border-round-lg border-1 border-300">
-              <p class="m-0 text-base text-700 line-height-3">{{ producto.descripcion }}</p>
+              <p class="m-0 text-base text-700 line-height-3">{{ productoDetalle.descripcion }}</p>
             </div>
           </div>
 
@@ -91,7 +93,7 @@
               class="flex align-items-center gap-3 p-3 surface-50 border-round-lg border-1 border-300"
             >
               <i class="pi pi-tag text-2xl text-primary"></i>
-              <span class="text-lg font-bold text-900">{{ producto.familia }}</span>
+              <span class="text-lg font-bold text-900">{{ productoDetalle.categoria }}</span>
             </div>
           </div>
 
@@ -101,15 +103,17 @@
               class="flex align-items-center gap-3 p-3 surface-50 border-round-lg border-1 border-300"
             >
               <i class="pi pi-box text-2xl text-primary"></i>
+              <!--
               <span class="text-lg font-bold text-900"
                 >{{ producto.stockTotal || 0 }} {{ producto.unidadMedida }}</span
               >
+              -->
             </div>
           </div>
         </div>
       </p-card>
     </div>
-
+    <!--
     <div class="col-12 lg:col-4">
       <p-card styleClass="border-1 border-300 border-round-xl shadow-2 h-full">
         <div class="flex align-items-center gap-3 mb-4">
@@ -202,11 +206,12 @@
         </div>
       </p-card>
     </div>
-
+    -->
+    <!--
     <div class="col-12" *ngIf="producto.variantes && producto.variantes.length > 0">
       <p-card styleClass="border-1 border-300 border-round-xl shadow-2">
         <div class="flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
-          <!-- Título izquierda -->
+           
           <div class="flex align-items-center gap-3">
             <i class="pi pi-warehouse text-3xl text-orange-500"></i>
             <h3 class="m-0 text-xl font-bold text-900">Stock por Sede</h3>
@@ -217,7 +222,6 @@
             ></p-tag>
           </div>
 
-          <!-- Botón derecha -->
           <p-button
             label="Transferir"
             icon="pi pi-arrow-right-arrow-left"
@@ -311,7 +315,7 @@
         </div>
       </p-card>
     </div>
-
+    -->
     <div class="col-12">
       <p-card styleClass="border-1 border-300 border-round-xl shadow-2">
         <div class="flex justify-content-between align-items-center flex-wrap gap-3">
@@ -357,7 +361,7 @@
         </div>
       </p-card>
     </div>
-
+    <!--
     <div class="col-12" *ngIf="producto.fechaCreacion || producto.fechaActualizacion">
       <p-card styleClass="border-1 border-300 border-round-xl shadow-1">
         <div class="flex align-items-center gap-3 mb-3">
@@ -413,6 +417,6 @@
     ></p-button>
   </div>
 </div>
-
+-->
 <p-toast></p-toast>
 <p-confirmdialog></p-confirmdialog>

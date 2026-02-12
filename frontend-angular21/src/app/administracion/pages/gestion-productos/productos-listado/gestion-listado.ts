@@ -139,26 +139,14 @@ export class GestionListado implements OnInit {
     this.getProductos();
     this.getCategories();
     this.getProductosStock()
-    //this.cargarProductosAgrupados();
-    //this.loadingEliminados = false;
-    this.actualizarCabecera();
-    /*
+
     this.router.events
-      .pipe(
-        filter(event => event instanceof NavigationEnd),
-        takeUntil(this.destroy$)
-      )
-      .subscribe((event: NavigationEnd) => {
+      .pipe(filter(event => event instanceof NavigationEnd))
+      .subscribe(() => {
         this.actualizarCabecera();
-        
-        if (event.url === '/admin/gestion-productos' || 
-            event.url.startsWith('/admin/gestion-productos?')) {
-          this.cargarProductosAgrupados();
-        }
-        
-        this.cdr.detectChanges();
       });
-    */
+
+    this.actualizarCabecera();
   }
 
   getSedes() {
@@ -172,8 +160,8 @@ export class GestionListado implements OnInit {
       map(resp => resp.headquarters.length)
     );
 
-    
-    this.sedes$ .subscribe(data => {
+
+    this.sedes$.subscribe(data => {
       console.log("sedes reales:", data);
     });
 
@@ -214,20 +202,49 @@ export class GestionListado implements OnInit {
       console.log("productos reales:", data);
     });
   }
+
+  buscarProductos(event: any) {
+    const query = event.query;
+
+    if (!query || !this.idSede) return;
+
+    this.productoService
+      .getProductosAutocomplete(query, this.idSede)
+      .pipe(map(resp => resp.data))
+      .subscribe(data => {
+        this.productosAutocomplete = data;
+      });
+  }
+
+  private actualizarCabecera() {
+
+    if (this.esVistaEliminados) {
+      this.tituloKicker = 'ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS ELIMINADOS';
+      this.iconoCabecera = 'pi pi-trash';
+      return;
+    }
+
+    const url = this.router.url;
+
+    if (url.includes('crear-producto')) {
+      this.tituloKicker = 'ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS CREACIÓN';
+      this.iconoCabecera = 'pi pi-plus-circle';
+
+    } else if (url.includes('editar-producto')) {
+      this.tituloKicker = 'ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS EDICIÓN';
+      this.iconoCabecera = 'pi pi-pencil';
+
+    } else if (url.includes('ver-detalle-producto')) {
+      this.tituloKicker = 'ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS DETALLE';
+      this.iconoCabecera = 'pi pi-eye';
+
+    } else {
+      this.tituloKicker = 'ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS ACTIVOS';
+      this.iconoCabecera = 'pi pi-building';
+    }
+  }
   /*
-  ngAfterViewInit() {
-    this.cdr.detectChanges();
-  }
-
-  ngOnDestroy() {
-    this.destroy$.next();
-    this.destroy$.complete();
-    this.confirmationService.close();
-  }
-  */
-
-
-
+  
   private actualizarCabecera() {
 
     Promise.resolve().then(() => {
@@ -255,7 +272,7 @@ export class GestionListado implements OnInit {
     });
   }
 
-
+  */
   cargarProductosAgrupados() {
     this.loading = true;
 
@@ -512,19 +529,6 @@ export class GestionListado implements OnInit {
     this.aplicarPaginacion();
   }
 
-  buscarProductos(event: any) {
-    const query = event.query;
-
-    if (!query || !this.idSede) return;
-
-    this.productoService
-      .getProductosAutocomplete(query, this.idSede)
-      .pipe(map(resp => resp.data))
-      .subscribe(data => {
-        this.productosAutocomplete = data;
-      });
-  }
-
   filtrarPorBusqueda(event: any) {
     if (event?.value) {
       this.buscarValue = event.value.nombre;
@@ -714,11 +718,9 @@ export class GestionListado implements OnInit {
   }
 
   irDetalle(id: number) {
-    setTimeout(() => {
-      this.router.navigate(['/admin/gestion-productos/ver-detalle-producto', id]);
-      this.actualizarCabecera();
-      //this.cdr.detectChanges();
-    }, 0);
+    this.router.navigate(
+      ['/admin/gestion-productos/ver-detalle-producto', id]
+    );
   }
 
   irCrear() {

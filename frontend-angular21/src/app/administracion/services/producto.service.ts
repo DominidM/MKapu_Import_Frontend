@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { environment } from '../../../enviroments/enviroment';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { ProductoAutocompleteResponse, ProductoResponse, ProductoStockResponse } from '../interfaces/producto.interface';
+import { ProductoAutocompleteResponse, ProductoDetalleStockResponse, ProductoResponse, ProductoStockResponse } from '../interfaces/producto.interface';
 import { Observable } from 'rxjs';
 
 @Injectable({
@@ -86,5 +86,18 @@ export class ProductoService {
     );
   }
 
+  getProductoDetalleStock(
+    idProducto: number,
+    idSede: number
+  ): Observable<ProductoDetalleStockResponse> {
+
+    const params = new HttpParams()
+      .set('id_sede', idSede);
+
+    return this.http.get<ProductoDetalleStockResponse>(
+      `${this.api}/logistics/products/${idProducto}/stock`,
+      { params }
+    );
+  }
 
 }
