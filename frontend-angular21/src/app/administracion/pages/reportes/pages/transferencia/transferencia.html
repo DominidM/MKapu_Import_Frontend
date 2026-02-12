@@ -12,6 +12,13 @@
       </div>
       <div class="transferencia-header-actions flex w-full md:w-auto md:justify-content-end">
         <p-button
+          icon="pi pi-bell"
+          text
+          severity="secondary"
+          styleClass="transferencia-icon-btn transferencia-bell-btn"
+          [routerLink]="['/admin/transferencia/notificacion']"
+        ></p-button>
+        <p-button
           label="Nueva Transferencia"
           icon="pi pi-plus"
           styleClass="transferencia-pill w-full md:w-auto"
@@ -136,6 +143,7 @@
     <div class="transferencia-table-scroll">
       <p-table
         [value]="filteredTransferencias"
+        [loading]="loading"
         styleClass="transferencia-table"
         [paginator]="true"
         [rows]="10"
@@ -144,12 +152,12 @@
       >
       <ng-template pTemplate="header">
         <tr>
-          <th>CODIGO</th>
-          <th>PRODUCTO</th>
-          <th>RUTA (ORIGEN -> DESTINO)</th>
-          <th>CANTIDAD</th>
-          <th>ESTADO</th>
-          <th>ACCIONES</th>
+          <th class="col-codigo">CODIGO</th>
+          <th class="col-producto">PRODUCTO</th>
+          <th class="col-ruta">RUTA (ORIGEN -> DESTINO)</th>
+          <th class="col-cantidad">CANTIDAD</th>
+          <th class="col-estado">ESTADO</th>
+          <th class="col-acciones">ACCIONES</th>
         </tr>
       </ng-template>
       <ng-template pTemplate="body" let-transferencia>
@@ -173,17 +181,17 @@
               <span class="transferencia-ruta-sede transferencia-ruta-destino">{{ transferencia.destino }}</span>
             </div>
           </td>
-          <td>
+          <td class="col-cantidad">
             <span class="transferencia-cantidad">{{ transferencia.cantidad }}</span>
           </td>
-          <td>
+          <td class="col-estado">
             <p-tag
               [value]="transferencia.estado"
               [severity]="getEstadoSeverity(transferencia.estado)"
               styleClass="transferencia-tag"
             ></p-tag>
           </td>
-          <td>
+          <td class="col-acciones">
             <div class="transferencia-actions">
               <p-button
                 icon="pi pi-eye"
@@ -204,11 +212,13 @@
               <div class="transferencia-empty-icon">
                 <i class="pi pi-inbox"></i>
               </div>
-              <div class="transferencia-empty-title">No se encontraron transferencias</div>
-              <div class="transferencia-empty-text">
+              <div class="transferencia-empty-title">
+                {{ hasActiveFilters ? 'No se encontraron transferencias' : 'Aun no hay transferencias' }}
+              </div>
+              <div class="transferencia-empty-text" *ngIf="hasActiveFilters">
                 Ajusta los filtros o prueba con otro termino de busqueda.
               </div>
-              <div class="transferencia-empty-actions">
+              <div class="transferencia-empty-actions" *ngIf="hasActiveFilters">
                 <p-button
                   label="Limpiar filtros"
                   icon="pi pi-filter-slash"

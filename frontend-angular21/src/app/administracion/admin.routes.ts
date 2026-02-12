@@ -70,6 +70,13 @@ export const ADMIN_ROUTES: Routes = [
             (m) => m.DetalleTransferencia,
           ),
       },
+      {
+        path: 'notificacion',
+        loadComponent: () =>
+          import('./pages/reportes/pages/notificacion-transferencia/notificacion-transferencia').then(
+            (m) => m.NotificacionTransferencia,
+          ),
+      },
     ],
   },
 

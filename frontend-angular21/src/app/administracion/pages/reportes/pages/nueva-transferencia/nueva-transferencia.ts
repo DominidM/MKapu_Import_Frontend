@@ -13,11 +13,14 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { AutoCompleteModule } from 'primeng/autocomplete';
-import { ProductosService, Producto } from '../../../../../core/services/productos.service';
-import { SedeService } from '../../../../../core/services/sede.service';
+import { ProductoService } from '../../../../services/producto.service';
+import { ProductoAutocomplete, ProductoInterface } from '../../../../interfaces/producto.interface';
+import { SedeService } from '../../../../services/sede.service';
+import { map } from 'rxjs';
+import { Headquarter } from '../../../../interfaces/sedes.interface';
 
 interface TransferProducto {
-  id: number;
+  id: string;
   nombre: string;
   sku: string;
   categoria: string;
@@ -52,9 +55,12 @@ export class NuevaTransferencia implements OnInit {
     private messageService: MessageService,
     private confirmationService: ConfirmationService,
     private router: Router,
-    private productosService: ProductosService,
+    private productoService: ProductoService,
     private sedeService: SedeService,
   ) {}
+
+  idSede: number = 1;
+  productosAutocomplete: TransferProducto[] = [];
 
   tituloKicker = 'ADMINISTRACION - REPORTES';
   subtituloKicker = 'NUEVA TRANSFERENCIA';
@@ -64,6 +70,7 @@ export class NuevaTransferencia implements OnInit {
   steps = ['Producto y Sedes', 'Cantidad y Motivo', 'Fechas', 'Confirmacion'];
 
   sedes: { label: string; value: string }[] = [];
+  sedesRaw: Headquarter[] = [];
 
   motivos = [
     { label: 'Reposicion', value: 'reposicion' },
@@ -78,11 +85,9 @@ export class NuevaTransferencia implements OnInit {
     { label: 'Encargado de despacho', value: 'despacho' },
   ];
 
-  productos: TransferProducto[] = [];
-
-  productoId: number | null = null;
+  productoId: string | null = null;
   productoQuery: string | null = null;
-  productosSugeridos: TransferProducto[] = [];
+  productos: TransferProducto[] = [];
   sedeOrigen: string | null = null;
   sedeDestino: string | null = null;
   cantidad = 1;
@@ -120,23 +125,6 @@ export class NuevaTransferencia implements OnInit {
     return this.responsables.find((item) => item.value === responsable)?.label || '-';
   }
 
-  getStockBadges(
-    producto: TransferProducto | null,
-  ): { label: string; stock: number; className: string }[] {
-    if (!producto) {
-      return [];
-    }
-
-    return this.sedes.map((sede) => {
-      const stock = producto.stockPorSede[sede.value] ?? 0;
-      return {
-        label: sede.label,
-        stock,
-        className: this.getStockClass(stock),
-      };
-    });
-  }
-
   getStockClassForSede(producto: TransferProducto | null, sede: string | null): string {
     if (!producto || !sede) {
       return '';
@@ -166,13 +154,15 @@ export class NuevaTransferencia implements OnInit {
 
   private cargarSedes(): void {
     this.sedeService.getSedes().subscribe({
-      next: (sedes) => {
-        this.sedes = sedes.map((sede) => ({
+      next: (response) => {
+        this.sedesRaw = response.headquarters ?? [];
+        this.sedes = (response.headquarters ?? []).map((sede) => ({
           label: sede.nombre,
           value: sede.nombre,
         }));
         if (!this.sedeOrigen && this.sedes.length > 0) {
           this.sedeOrigen = this.sedes[0].value;
+          this.idSede = this.sedesRaw[0]?.id_sede ?? this.idSede;
         }
         this.cargarProductos(this.sedeOrigen);
       },
@@ -184,6 +174,7 @@ export class NuevaTransferencia implements OnInit {
           detail: 'No se pudieron cargar las sedes',
         });
         this.cargarProductos();
+        this.sedes = [];
       },
     });
   }
@@ -192,70 +183,73 @@ export class NuevaTransferencia implements OnInit {
     this.productoId = null;
     this.productoQuery = null;
     this.cantidad = 1;
+    const sedeId = this.sedesRaw.find((sede) => sede.nombre === this.sedeOrigen)?.id_sede;
+    if (sedeId) {
+      this.idSede = sedeId;
+    }
     this.cargarProductos(this.sedeOrigen);
   }
 
   private cargarProductos(sede?: string | null): void {
-    const productos = this.productosService.getProductos(sede ?? undefined, 'Activo');
-    this.productos = this.normalizarProductos(productos);
-    this.productosSugeridos = this.productos.slice(0, 8);
-  }
-
-  private normalizarProductos(productosBase: Producto[]): TransferProducto[] {
-    const map = new Map<string, TransferProducto>();
-
-    productosBase.forEach((producto) => {
-      const clave = producto.codigo;
-      if (map.has(clave)) {
-        return;
-      }
-
-      const variantes = this.productosService.getProductosPorCodigo(clave);
-      const stockPorSede: Record<string, number> = {};
-
-      variantes.forEach((variante) => {
-        // ✅ VALIDAR QUE LA SEDE EXISTA ANTES DE USARLA COMO ÍNDICE
-        if (variante.sede) {
-          stockPorSede[variante.sede] = variante.stock ?? 0;
-        }
-      });
-
-      if (producto.id) {
-        map.set(clave, {
-          id: producto.id,
-          nombre: producto.nombre,
-          sku: producto.codigo,
-          categoria: producto.familia,
-          marca: 'N/A',
-          stockPorSede,
-        });
-      }
+    void sede;
+    this.productoService.getProductos(1, 10, true).subscribe({
+      next: (response) => {
+        this.productos = this.mapProductos(response.products);
+        this.productosAutocomplete = this.productos.slice(0, 8);
+      },
+      error: (error) => {
+        console.error('Error al cargar productos:', error);
+        this.productos = [];
+        this.productosAutocomplete = [];
+      },
     });
-
-    return Array.from(map.values());
   }
 
-  buscarProducto(event: { query: string }): void {
-    const query = event.query.toLowerCase().trim();
-    if (!query) {
-      this.productosSugeridos = this.productos.slice(0, 8);
-      return;
-    }
-
-    this.productosSugeridos = this.productos
-      .filter((producto) => {
-        return (
-          producto.nombre.toLowerCase().includes(query) ||
-          producto.sku.toLowerCase().includes(query)
-        );
-      })
-      .slice(0, 10);
+  private mapProductos(productosBase: ProductoInterface[]): TransferProducto[] {
+    return productosBase.map((producto) => ({
+      id: String(producto.id_producto),
+      nombre: producto.anexo,
+      sku: producto.codigo,
+      categoria: producto.categoriaNombre,
+      marca: 'N/A',
+      stockPorSede: {},
+    }));
   }
+
+  buscarProductos(event: any) {
+    const query = event.query;
+
+    if (!query || !this.idSede) return;
+
+    this.productoService
+      .getProductosAutocomplete(query, this.idSede)
+      .pipe(map((resp) => resp.data))
+      .subscribe((data) => {
+        this.productosAutocomplete = this.mapAutocompleteProductos(data, this.sedeOrigen);
+      });
+  }
+
+  private mapAutocompleteProductos(
+    productos: ProductoAutocomplete[],
+    sedeNombre?: string | null,
+  ): TransferProducto[] {
+    return productos.map((producto) => ({
+      id: String(producto.id_producto),
+      nombre: producto.nombre,
+      sku: producto.codigo,
+      categoria: '',
+      marca: 'N/A',
+      stockPorSede: sedeNombre ? { [sedeNombre]: producto.stock } : {},
+    }));
+  }
+
 
   onSelectProducto(event: { value: TransferProducto }): void {
     const producto = event.value;
     this.productoId = producto.id;
     this.productoQuery = producto.nombre;
+    const restantes = this.productos.filter((p) => p.id !== producto.id);
+    this.productos = [...restantes, producto];
   }
 
   onClearProducto(): void {
