@@ -277,7 +277,9 @@ export class NuevaTransferencia implements OnInit {
   }
 
   nextStep(): void {
-    if (this.validarStepActual()) {
+    const valido = this.validarStepActual();
+    console.log('[Transferencia] Validación step', this.activeStep, '=>', valido);
+    if (valido) {
       this.activeStep++;
     }
   }
@@ -374,6 +376,17 @@ export class NuevaTransferencia implements OnInit {
   }
 
   confirmarTransferencia(): void {
+    console.log('[Transferencia] Confirmar transferencia click', {
+      productoId: this.productoId,
+      sedeOrigen: this.sedeOrigen,
+      sedeDestino: this.sedeDestino,
+      cantidad: this.cantidad,
+      motivo: this.motivo,
+      observacion: this.observacion,
+      fechaEnvio: this.fechaEnvio,
+      fechaLlegada: this.fechaLlegada,
+      responsable: this.responsable,
+    });
     this.confirmationService.confirm({
       message: 'Desea confirmar esta transferencia?',
       header: 'Confirmar Transferencia',
@@ -383,12 +396,14 @@ export class NuevaTransferencia implements OnInit {
       acceptButtonProps: { severity: 'warning' },
       rejectButtonProps: { severity: 'secondary', outlined: true },
       accept: () => {
+        console.log('[Transferencia] Confirmación aceptada. Registrando transferencia...');
         this.messageService.add({
           severity: 'success',
           summary: 'Registro exitoso',
           detail: 'La transferencia fue registrada correctamente',
           life: 3000,
         });
+        console.log('[Transferencia] Navegando a /admin/transferencia');
         this.router.navigate(['/admin/transferencia']);
         this.resetForm();
       },

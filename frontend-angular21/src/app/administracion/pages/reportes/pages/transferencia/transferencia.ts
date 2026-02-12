@@ -24,6 +24,7 @@ interface TransferenciaRow {
   origen: string;
   destino: string;
   cantidad: number;
+  solicitud: string;
   responsable: string;
   estado: string;
   fechaEnvio: string;
@@ -56,6 +57,7 @@ export class Transferencia implements OnInit {
   transferenciaSuggestions: TransferenciaRow[] = [];
   searchTerm = '';
   estadoFilter: string | null = null;
+  solicitudFilter: string | null = null;
   loading = false;
   private sedeNombrePorId = new Map<string, string>();
   private productoNombrePorId = new Map<string, string>();
@@ -65,6 +67,11 @@ export class Transferencia implements OnInit {
     { label: 'En transito', value: 'En transito' },
     { label: 'Completada', value: 'Completada' },
     { label: 'Incidencia', value: 'Incidencia' },
+  ];
+  solicitudOptions = [
+    { label: 'Todas', value: null },
+    { label: 'Externas', value: 'Externas' },
+    { label: 'Internas', value: 'Internas' },
   ];
 
   constructor(
@@ -143,6 +150,7 @@ export class Transferencia implements OnInit {
       origen: this.getSedeNombre(transferencia.originHeadquartersId),
       destino: this.getSedeNombre(transferencia.destinationHeadquartersId),
       cantidad: transferencia.totalQuantity ?? 0,
+      solicitud: '-',
       responsable: '-',
       estado: this.mapEstado(transferencia.status),
       fechaEnvio,
@@ -241,11 +249,12 @@ export class Transferencia implements OnInit {
   clearSearch(): void {
     this.searchTerm = '';
     this.estadoFilter = null;
+    this.solicitudFilter = null;
     this.filtrar('');
   }
 
   get hasActiveFilters(): boolean {
-    return !!(this.searchTerm || this.estadoFilter);
+    return !!(this.searchTerm || this.estadoFilter || this.solicitudFilter);
   }
 
   confirmDelete(transferencia: any): void {
@@ -288,7 +297,8 @@ export class Transferencia implements OnInit {
         campo.toLowerCase().includes(v),
       );
       const matchesEstado = this.estadoFilter ? t.estado === this.estadoFilter : true;
-      return matchesText && matchesEstado;
+      const matchesSolicitud = this.solicitudFilter ? t.solicitud === this.solicitudFilter : true;
+      return matchesText && matchesEstado && matchesSolicitud;
     });
 
     this.transferenciaSuggestions = [...this.filteredTransferencias];

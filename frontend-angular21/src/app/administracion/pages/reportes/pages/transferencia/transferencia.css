@@ -314,6 +314,7 @@
   gap: 0.75rem;
 }
 
+
 :host ::ng-deep .transferencia-bell-btn.p-button,
 :host ::ng-deep .transferencia-bell-btn.p-button:hover,
 :host ::ng-deep .transferencia-bell-btn.p-button:focus,
@@ -342,6 +343,8 @@
 
 .transferencia-table .p-datatable-thead > tr > th.col-cantidad,
 .transferencia-table .p-datatable-tbody > tr > td.col-cantidad,
+.transferencia-table .p-datatable-thead > tr > th.col-solicitud,
+.transferencia-table .p-datatable-tbody > tr > td.col-solicitud,
 .transferencia-table .p-datatable-thead > tr > th.col-estado,
 .transferencia-table .p-datatable-tbody > tr > td.col-estado,
 .transferencia-table .p-datatable-thead > tr > th.col-acciones,
@@ -356,6 +359,17 @@
 .transferencia-table .p-datatable-tbody > tr > td.col-producto,
 .transferencia-table .p-datatable-tbody > tr > td.col-ruta {
   text-align: left;
+}
+
+.transferencia-solicitud {
+  font-weight: 600;
+  font-size: 0.75rem;
+  color: #475569;
+  text-transform: uppercase;
+}
+
+:host-context(.app-dark) .transferencia-solicitud {
+  color: #cbd5f5;
 }
 
 .transferencia-section-icon {

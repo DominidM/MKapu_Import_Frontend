@@ -6,7 +6,7 @@
           <i class="pi pi-bell"></i>
         </span>
         <div>
-          <p class="notificacion-kicker">ADMINISTRADOR - REPORTES - TRANSFERENCIAS - NOTIFICACIONES</p>
+          <p class="notificacion-kicker">ADMINISTRADOR - NOTIFICACIONES</p>
           <h2 class="notificacion-title">NOTIFICACIONES</h2>
         </div>
       </div>
@@ -21,7 +21,7 @@
       </div>
     </div>
 
-    <div class="notificacion-list">
+    <div class="notificacion-list" *ngIf="notificaciones.length > 0; else emptyState">
       <div class="notificacion-card" *ngFor="let item of notificaciones">
         <span class="notificacion-accent" [class.accent-warning]="item.tipo === 'estado'"></span>
         <div class="notificacion-icon" [class.icon-warning]="item.tipo === 'estado'">
@@ -41,5 +41,16 @@
         </button>
       </div>
     </div>
+    <ng-template #emptyState>
+      <div class="notificacion-empty">
+        <div class="notificacion-empty-icon">
+          <i class="pi pi-inbox"></i>
+        </div>
+        <div class="notificacion-empty-title">No hay notificaciones</div>
+        <div class="notificacion-empty-text">
+          No tienes solicitudes de transferencia para tu sede.
+        </div>
+      </div>
+    </ng-template>
   </div>
 </div>

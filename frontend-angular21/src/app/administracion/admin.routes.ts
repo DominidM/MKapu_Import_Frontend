@@ -5,7 +5,7 @@ export const ADMIN_ROUTES: Routes = [
   {
     path: 'notificaciones',
     loadComponent: () =>
-      import('./pages/dashboard/dashboard').then((m) => m.Dashboard),
+      import('./pages/reportes/pages/notificacion-transferencia/notificacion-transferencia').then((m) => m.NotificacionTransferencia),
   },
   {
     path: 'dashboard',

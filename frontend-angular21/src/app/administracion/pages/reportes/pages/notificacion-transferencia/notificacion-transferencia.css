@@ -199,6 +199,39 @@
   background: rgba(246, 175, 51, 0.08);
  }
 
+ .notificacion-empty {
+  border: 1px dashed var(--notif-border);
+  border-radius: 16px;
+  padding: 2rem;
+  text-align: center;
+  color: var(--notif-muted);
+  background: var(--notif-panel);
+ }
+
+ .notificacion-empty-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 0.75rem;
+  background: rgba(246, 175, 51, 0.12);
+  color: var(--notif-accent);
+  font-size: 1.35rem;
+ }
+
+ .notificacion-empty-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--notif-text);
+  margin-bottom: 0.25rem;
+ }
+
+ .notificacion-empty-text {
+  font-size: 0.85rem;
+  color: var(--notif-muted);
+ }
+
  @media (max-width: 768px) {
   .notificacion-header {
     flex-direction: column;
