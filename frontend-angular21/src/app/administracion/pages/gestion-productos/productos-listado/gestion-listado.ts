@@ -26,7 +26,7 @@ import { DialogStockSedes } from '../../../shared/dialog-stock-sedes/dialog-stoc
 import { CategoriaService } from '../../../services/categoria.service';
 import { Categoria, CategoriaResponse } from '../../../interfaces/categoria.interface';
 import { ProductoService } from '../../../services/producto.service';
-import { ProductoInterface, ProductoResponse, ProductoStock } from '../../../interfaces/producto.interface';
+import { ProductoAutocomplete, ProductoInterface, ProductoResponse, ProductoStock } from '../../../interfaces/producto.interface';
 import { SedeService } from '../../../services/sede.service';
 import { Headquarter, HeadquarterResponse } from '../../../interfaces/sedes.interface';
 
@@ -117,7 +117,8 @@ export class GestionListado implements OnInit {
   page: number = 1;
   size: number = 5;
   idSede: number = 1;
-
+  productosAutocomplete$!: Observable<ProductoAutocomplete[]>;
+  productosAutocomplete: ProductoAutocomplete[] = [];
   // ----------------
 
   constructor(
@@ -224,6 +225,8 @@ export class GestionListado implements OnInit {
     this.confirmationService.close();
   }
   */
+
+
 
   private actualizarCabecera() {
 
@@ -509,13 +512,17 @@ export class GestionListado implements OnInit {
     this.aplicarPaginacion();
   }
 
-  searchBuscar(event: any) {
-    const query = event.query?.toLowerCase() || '';
-    this.items = this.productosAgrupados.filter((p: ProductoAgrupado) =>
-      p.nombre.toLowerCase().includes(query) ||
-      p.codigo.toLowerCase().includes(query) ||
-      p.familia.toLowerCase().includes(query)
-    ).slice(0, 10);
+  buscarProductos(event: any) {
+    const query = event.query;
+
+    if (!query || !this.idSede) return;
+
+    this.productoService
+      .getProductosAutocomplete(query, this.idSede)
+      .pipe(map(resp => resp.data))
+      .subscribe(data => {
+        this.productosAutocomplete = data;
+      });
   }
 
   filtrarPorBusqueda(event: any) {

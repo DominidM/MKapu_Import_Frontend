@@ -48,3 +48,14 @@ export interface ProductoStockResponse {
     total_pages: number;
   };
 }
+
+export interface ProductoAutocomplete {
+  id_producto: number;
+  codigo: string;
+  nombre: string;
+  stock: number;
+}
+
+export interface ProductoAutocompleteResponse {
+  data: ProductoAutocomplete[];
+}

@@ -77,7 +77,7 @@
             <label class="font-medium mb-2 block">Buscar Producto</label>
 
             <p-autocomplete *ngIf="!esVistaEliminados" [(ngModel)]="buscarValue" name="buscarActivos"
-              [suggestions]="items" (completeMethod)="searchBuscar($event)" (onSelect)="filtrarPorBusqueda($event)"
+              [suggestions]="productosAutocomplete" (completeMethod)="buscarProductos($event)" (onSelect)="filtrarPorBusqueda($event)"
               placeholder="Nombre o código del producto..." fluid styleClass="autocomplete-productos">
               <ng-template let-item pTemplate="item">
                 <div class="autocomplete-item-custom">
@@ -117,8 +117,8 @@
 
           <div class="flex flex-column w-16rem h-full">
             <label class="font-medium mb-2 block">Filtrar por Sede</label>
-            <p-select [(ngModel)]="sedeValue" name="sedeSelect" [options]="sedesOptions" optionLabel="label"
-              optionValue="value" placeholder="Todas las sedes" (onChange)="onSelectSede()" class="w-full"
+            <p-select [(ngModel)]="sedeValue" name="nombre" [options]="sedes$ | async " optionLabel="nombre"
+              optionValue="id_sede" placeholder="Todas las sedes" (onChange)="onSelectSede()" class="w-full"
               [showClear]="true">
             </p-select>
           </div>

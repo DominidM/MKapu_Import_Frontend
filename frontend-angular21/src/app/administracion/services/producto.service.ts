@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { environment } from '../../../enviroments/enviroment';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { ProductoResponse, ProductoStockResponse } from '../interfaces/producto.interface';
+import { ProductoAutocompleteResponse, ProductoResponse, ProductoStockResponse } from '../interfaces/producto.interface';
 import { Observable } from 'rxjs';
 
 @Injectable({
@@ -70,5 +70,21 @@ export class ProductoService {
       { params }
     );
   }
+
+  getProductosAutocomplete(
+    search: string,
+    idSede: number
+  ): Observable<ProductoAutocompleteResponse> {
+
+    const params = new HttpParams()
+      .set('search', search)
+      .set('id_sede', idSede);
+
+    return this.http.get<ProductoAutocompleteResponse>(
+      `${this.api}/logistics/products/autocomplete`,
+      { params }
+    );
+  }
+
 
 }

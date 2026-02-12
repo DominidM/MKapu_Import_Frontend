@@ -44,6 +44,7 @@ export class EmpleadosService {
   private empleadoActual: Empleado | null = null;
 
   private empleadosMock: Empleado[] = [
+    /*
     {
       id_empleado: 'EMP-001',
       nombres: 'Juan Carlos',
@@ -134,6 +135,7 @@ export class EmpleadosService {
       estado: true,
       fecha_contratacion: new Date('2023-01-01'),
     },
+    */
   ];
 
   constructor() {
