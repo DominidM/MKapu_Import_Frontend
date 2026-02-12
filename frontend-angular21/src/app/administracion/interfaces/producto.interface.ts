@@ -29,3 +29,22 @@ export interface ProductoResponse {
   total: number;
   meta: ProductoMeta;
 }
+
+export interface ProductoStock {
+  id_producto: number;
+  codigo: string;
+  nombre: string;
+  familia: string;
+  sede: string;
+  stock: number;
+}
+
+export interface ProductoStockResponse {
+  data: ProductoStock[];
+  pagination: {
+    page: number;
+    size: number;
+    total_records: number;
+    total_pages: number;
+  };
+}
