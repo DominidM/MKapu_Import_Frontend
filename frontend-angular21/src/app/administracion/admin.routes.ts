@@ -261,6 +261,32 @@ export const ADMIN_ROUTES: Routes = [
         .then( (m) => m.ComisionReportes),
   },
 
+    /* =======================
+     GESTIÓN DE Conteos
+  ======================= */
+  {
+    path: 'conteo-inventario',
+    loadComponent: () =>
+      import('./pages/conteo-inventario/conteoinventario')
+        .then( (m) => m.ConteoInventarios),
+  },
+
+  {
+    path: 'conteo-crear',
+    loadComponent: () =>
+      import('./pages/conteo-crear/conteocrear')
+        .then( (m) => m.ConteoCrear),
+  },
+  {
+    path: 'conteo-detalle',
+    loadComponent: () =>
+      import('./pages/conteo-detalle/conteodetalle')
+        .then( (m) => m.ConteoDetalle),
+  },
+
+
+
+
   /* =======================
      MERMAS / REMATES
   ======================= */
