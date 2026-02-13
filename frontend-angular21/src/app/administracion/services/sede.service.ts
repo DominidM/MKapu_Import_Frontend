@@ -1,11 +1,12 @@
 import { Injectable, computed, signal } from '@angular/core';
 import { environment } from '../../../enviroments/enviroment';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { finalize, tap } from 'rxjs/operators';
-import { Observable } from 'rxjs';
+import { finalize, tap, catchError } from 'rxjs/operators';
+import { Observable, throwError } from 'rxjs';
 import { Headquarter, HeadquarterResponse } from '../interfaces/sedes.interface';
 
 export type CreateHeadquarterRequest = Omit<Headquarter, 'id_sede' | 'activo'>;
+export type UpdateHeadquarterRequest = Partial<Omit<Headquarter, 'id_sede'>>;
 
 @Injectable({ providedIn: 'root' })
 export class SedeService {
@@ -38,6 +39,10 @@ export class SedeService {
       })
       .pipe(
         tap((res) => this._sedesResponse.set(res)),
+        catchError((err) => {
+          this._error.set('No se pudo cargar sedes.');
+          return throwError(() => err);
+        }),
         finalize(() => this._loading.set(false))
       );
   }
@@ -55,7 +60,7 @@ export class SedeService {
       })
       .pipe(
         tap((created) => {
-            const prev = this._sedesResponse();
+          const prev = this._sedesResponse();
           if (!prev) return;
 
           this._sedesResponse.set({
@@ -63,13 +68,97 @@ export class SedeService {
             total: prev.total + 1,
           });
         }),
+        catchError((err) => {
+          this._error.set('No se pudo registrar la sede.');
+          return throwError(() => err);
+        }),
         finalize(() => this._loading.set(false))
       );
   }
 
+  // GET /admin/headquarters/:id
+  getSedeById(
+    id: number,
+    role: string = 'Administrador'
+  ): Observable<Headquarter> {
+    this._loading.set(true);
+    this._error.set(null);
+
+    return this.http
+      .get<Headquarter>(`${this.api}/admin/headquarters/${id}`, {
+        headers: this.buildHeaders(role),
+      })
+      .pipe(
+        catchError((err) => {
+          this._error.set('No se pudo cargar la sede.');
+          return throwError(() => err);
+        }),
+        finalize(() => this._loading.set(false))
+      );
+  }
+
+  // PUT /admin/headquarters/:id  (actualiza datos generales)
+  updateSede(
+    id: number,
+    payload: UpdateHeadquarterRequest,
+    role: string = 'Administrador'
+  ): Observable<Headquarter> {
+    this._loading.set(true);
+    this._error.set(null);
+
+    return this.http
+      .put<Headquarter>(`${this.api}/admin/headquarters/${id}`, payload, {
+        headers: this.buildHeaders(role),
+      })
+      .pipe(
+        tap((updated) => this.patchCachedHeadquarter(id, updated)),
+        catchError((err) => {
+          this._error.set('No se pudo actualizar la sede.');
+          return throwError(() => err);
+        }),
+        finalize(() => this._loading.set(false))
+      );
+  }
+
+  // PUT /admin/headquarters/:id/status (actualiza SOLO el estado activo/inactivo)
+  updateSedeStatus(
+    id: number,
+    status: boolean,
+    role: string = 'Administrador'
+  ): Observable<Headquarter> {
+    this._loading.set(true);
+    this._error.set(null);
+
+    return this.http
+      .put<Headquarter>(
+        `${this.api}/admin/headquarters/${id}/status`,
+        { status },
+        { headers: this.buildHeaders(role) }
+      )
+      .pipe(
+        tap((updated) => this.patchCachedHeadquarter(id, updated)),
+        catchError((err) => {
+          this._error.set('No se pudo actualizar el estado de la sede.');
+          return throwError(() => err);
+        }),
+        finalize(() => this._loading.set(false))
+      );
+  }
+
+  // opcional: solo observable, sin tocar signals
   getSedes(role: string = 'Administrador'): Observable<HeadquarterResponse> {
     return this.http.get<HeadquarterResponse>(`${this.api}/admin/headquarters`, {
       headers: this.buildHeaders(role),
+    });
+  }
+
+  private patchCachedHeadquarter(id: number, updated: Headquarter): void {
+    const prev = this._sedesResponse();
+    if (!prev) return;
+
+    this._sedesResponse.set({
+      ...prev,
+      headquarters: prev.headquarters.map((h) => (h.id_sede === id ? updated : h)),
     });
   }
 }
