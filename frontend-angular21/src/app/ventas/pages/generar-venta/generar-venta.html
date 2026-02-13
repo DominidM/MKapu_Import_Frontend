@@ -1,3 +1,5 @@
+<!-- src/app/ventas/pages/generar-venta/generar-venta.html -->
+
 <div class="p-2">
   <p-card styleClass="ventas-header-card mb-4 ventas-header-bordered">
     <div class="flex align-items-center justify-content-between flex-wrap gap-2">
@@ -37,6 +39,7 @@
 
 <div class="p-2">
   <p-card styleClass="wizard-card">
+    <!-- Wizard Steps -->
     <div class="wizard-steps">
       <div
         *ngFor="let step of steps; let i = index"
@@ -54,7 +57,9 @@
 
     <p-divider styleClass="wizard-divider" />
 
+    <!-- Wizard Content -->
     <div class="wizard-content">
+      <!-- PASO 1: Datos del Comprobante y Cliente -->
       <div *ngIf="activeStep === 0" class="step-content">
         <div class="step-header">
           <i class="pi pi-file-edit step-icon"></i>
@@ -62,6 +67,7 @@
         </div>
 
         <div class="content-centrado">
+          <!-- Tipo de Comprobante -->
           <div class="comprobante-section">
             <label class="section-label">
               <i class="pi pi-file-edit"></i>
@@ -88,6 +94,7 @@
 
           <p-divider styleClass="section-divider" />
 
+          <!-- Datos del Cliente -->
           <div class="cliente-section">
             <label class="section-label">
               <i class="pi pi-users"></i>
@@ -95,7 +102,7 @@
             </label>
 
             <div class="buscar-cliente-section">
-              <label class="input-label">{{ tipoComprobante === '03' ? 'DNI' : 'RUC' }}</label>
+              <label class="input-label">{{ tipoComprobante === 2 ? 'DNI' : 'RUC' }}</label>
 
               <div class="flex gap-2 align-items-center">
                 <div style="flex: 1; min-width: 0">
@@ -104,15 +111,16 @@
                     [(ngModel)]="clienteAutoComplete"
                     class="w-full autocomplete-clientes"
                     [placeholder]="
-                      tipoComprobante === '03'
+                      tipoComprobante === 2
                         ? 'Ingrese DNI (8 dígitos)'
                         : 'Ingrese RUC (11 dígitos)'
                     "
-                    [maxlength]="tipoComprobante === '03' ? 8 : 11"
+                    [maxlength]="tipoComprobante === 2 ? 8 : 11"
                     inputmode="numeric"
                     pattern="[0-9]*"
                     (input)="validarSoloNumeros($event); onInputCambioDocumento()"
                     (keyup.enter)="manejarAccionCliente()"
+                    [disabled]="loading"
                   />
                 </div>
 
@@ -120,15 +128,16 @@
                   <p-button
                     [label]="textoBotonCliente"
                     [icon]="iconoBotonCliente"
-                    [severity]="severityBotonCliente"
+                    severity="primary"
                     (onClick)="manejarAccionCliente()"
-                    [disabled]="!botonClienteHabilitado || clienteEncontrado !== null"
+                    [disabled]="!botonClienteHabilitado || clienteEncontrado !== null || loading"
+                    [loading]="loading"
                     styleClass="w-full btn-buscar-cliente"
                     [pTooltip]="
                       clienteEncontrado
                         ? 'Cliente ya seleccionado'
                         : !botonClienteHabilitado
-                          ? 'Complete ' + (tipoComprobante === '03' ? '8' : '11') + ' dígitos'
+                          ? 'Complete ' + (tipoComprobante === 2 ? '8' : '11') + ' dígitos'
                           : ''
                     "
                     tooltipPosition="bottom"
@@ -137,24 +146,22 @@
               </div>
 
               <div
-                *ngIf="clienteAutoComplete && !clienteEncontrado"
+                *ngIf="clienteAutoComplete && !clienteEncontrado && !loading"
                 class="mt-2 flex align-items-center gap-2"
               >
                 <i class="pi pi-info-circle text-500"></i>
                 <small class="text-600">
                   {{ clienteAutoComplete.length || 0 }} /
-                  {{ tipoComprobante === '03' ? '8' : '11' }} dígitos
+                  {{ tipoComprobante === 2 ? '8' : '11' }} dígitos
                   <span
-                    *ngIf="(clienteAutoComplete.length || 0) < (tipoComprobante === '03' ? 8 : 11)"
+                    *ngIf="(clienteAutoComplete.length || 0) < (tipoComprobante === 2 ? 8 : 11)"
                     class="text-orange-500"
                   >
-                    ({{ (tipoComprobante === '03' ? 8 : 11) - (clienteAutoComplete.length || 0) }}
+                    ({{ (tipoComprobante === 2 ? 8 : 11) - (clienteAutoComplete.length || 0) }}
                     restantes)
                   </span>
                   <span
-                    *ngIf="
-                      (clienteAutoComplete.length || 0) === (tipoComprobante === '03' ? 8 : 11)
-                    "
+                    *ngIf="(clienteAutoComplete.length || 0) === (tipoComprobante === 2 ? 8 : 11)"
                     class="text-green-500"
                   >
                     ✓ Completo
@@ -163,17 +170,14 @@
               </div>
             </div>
 
+            <!-- Cliente Encontrado -->
             <div *ngIf="clienteEncontrado" class="cliente-encontrado-card mt-3">
               <p-card styleClass="cliente-card-success">
                 <div class="cliente-content">
                   <div class="cliente-cabecera-row">
                     <div class="cliente-row">
                       <h4 class="cliente-nombre">
-                        {{
-                          tipoComprobante === '03'
-                            ? clienteEncontrado.nombres + ' ' + clienteEncontrado.apellidos
-                            : clienteEncontrado.razon_social
-                        }}
+                        {{ clienteEncontrado.name }}
                       </h4>
                       <span class="badge-verified">
                         <i class="pi pi-check-circle"></i>
@@ -195,11 +199,22 @@
                   <div class="cliente-row mt-3">
                     <span class="info-badge dni">
                       <i class="pi pi-id-card"></i>
-                      {{ clienteEncontrado.tipo_doc }}: {{ clienteEncontrado.num_doc }}
+                      {{ clienteEncontrado.documentTypeDescription }}
                     </span>
-                    <span class="info-badge telefono" *ngIf="clienteEncontrado.telefono">
+                    <span class="info-badge dni">
+                      <i class="pi pi-hashtag"></i>
+                      {{ clienteEncontrado.documentValue }}
+                    </span>
+                  </div>
+
+                  <div class="cliente-row mt-3" *ngIf="clienteEncontrado.phone || clienteEncontrado.status !== null">
+                    <span class="info-badge telefono" *ngIf="clienteEncontrado.phone">
                       <i class="pi pi-phone"></i>
-                      {{ clienteEncontrado.telefono }}
+                      {{ clienteEncontrado.phone }}
+                    </span>
+                    <span class="info-badge" [class.activo]="clienteEncontrado.status" [class.inactivo]="!clienteEncontrado.status" *ngIf="clienteEncontrado.status !== null">
+                      <i class="pi" [class.pi-check-circle]="clienteEncontrado.status" [class.pi-times-circle]="!clienteEncontrado.status"></i>
+                      {{ clienteEncontrado.status ? 'Activo' : 'Inactivo' }}
                     </span>
                   </div>
 
@@ -210,129 +225,32 @@
                     </span>
                   </div>
 
-                  <div class="cliente-row mt-3" *ngIf="clienteEncontrado.direccion">
+                  <div class="cliente-row mt-3" *ngIf="clienteEncontrado.address">
                     <span class="info-badge direccion">
                       <i class="pi pi-map-marker"></i>
-                      {{ clienteEncontrado.direccion }}
+                      {{ clienteEncontrado.address }}
                     </span>
                   </div>
                 </div>
               </p-card>
             </div>
 
-            <div *ngIf="mostrarFormulario" class="nuevo-cliente-form mt-3">
-              <p-divider align="center">
-                <span class="divider-text">
-                  <i class="pi pi-user-plus mr-2"></i>
-                  Registrar nuevo cliente
-                </span>
-              </p-divider>
-
-              <div class="form-grid">
-
-                <div class="form-field full-width" *ngIf="!nuevoCliente.num_doc">
-                  <label>{{ tipoComprobante === '03' ? 'DNI' : 'RUC' }} *</label>
-                  <input
-                    pInputText
-                    [(ngModel)]="nuevoCliente.num_doc"
-                    [placeholder]="
-                      'Ingrese ' +
-                      (tipoComprobante === '03' ? 'DNI (8 dígitos)' : 'RUC (11 dígitos)')
-                    "
-                    class="w-full"
-                    [maxlength]="tipoComprobante === '03' ? 8 : 11"
-                    inputmode="numeric"
-                    pattern="[0-9]*"
-                    (input)="validarSoloNumerosFormulario($event)"
-                  />
+            <!-- Cliente No Encontrado -->
+            <div *ngIf="busquedaRealizada && !clienteEncontrado && !loading" class="cliente-no-encontrado mt-3">
+              <p-card styleClass="cliente-card-success">
+                <div class="text-center">
+                  <i class="pi pi-exclamation-triangle text-orange-500" style="font-size: 2rem"></i>
+                  <h4 class="mt-3 mb-2">Cliente no encontrado</h4>
+                  <p class="text-600">El documento ingresado no está registrado en el sistema.</p>
+                  <small class="text-500">Contacte al administrador para registrar nuevos clientes.</small>
                 </div>
-
-                <div class="form-field" *ngIf="tipoComprobante === '03'">
-                  <label>Nombres *</label>
-                  <input
-                    pInputText
-                    [(ngModel)]="nuevoCliente.nombres"
-                    placeholder="Ingresar Nombres"
-                    class="w-full"
-                  />
-                </div>
-
-                <div class="form-field" *ngIf="tipoComprobante === '03'">
-                  <label>Apellidos *</label>
-                  <input
-                    pInputText
-                    [(ngModel)]="nuevoCliente.apellidos"
-                    placeholder="Ingresar Apellidos"
-                    class="w-full"
-                  />
-                </div>
-
-                <div class="form-field full-width" *ngIf="tipoComprobante === '01'">
-                  <label>Razón Social *</label>
-                  <input
-                    pInputText
-                    [(ngModel)]="nuevoCliente.razon_social"
-                    placeholder="Ingresa Razon Social"
-                    class="w-full"
-                  />
-                </div>
-
-                <div class="form-field">
-                  <label>Dirección</label>
-                  <input
-                    pInputText
-                    [(ngModel)]="nuevoCliente.direccion"
-                    placeholder="Ingrese Dirección"
-                    class="w-full"
-                  />
-                </div>
-
-                <div class="form-field">
-                  <label>Teléfono</label>
-                  <input
-                    pInputText
-                    [(ngModel)]="nuevoCliente.telefono"
-                    placeholder="Ingrese Teléfono"
-                    class="w-full"
-                    maxlength="9"
-                    inputmode="numeric"
-                    pattern="[0-9]*"
-                  />
-                </div>
-
-                <div class="form-field full-width">
-                  <label>Email (opcional)</label>
-                  <input
-                    pInputText
-                    [(ngModel)]="nuevoCliente.email"
-                    placeholder="Ingrese Email"
-                    class="w-full"
-                    type="email"
-                  />
-                </div>
-
-                <div class="form-field full-width flex gap-2">
-                  <p-button
-                    label="Cancelar"
-                    icon="pi pi-times"
-                    [outlined]="true"
-                    severity="secondary"
-                    (onClick)="limpiarCliente()"
-                    styleClass="flex-1"
-                  />
-                  <p-button
-                    label="Guardar Cliente"
-                    icon="pi pi-check"
-                    (onClick)="registrarNuevoCliente()"
-                    styleClass="flex-1 btn-registrar-cliente"
-                  />
-                </div>
-              </div>
+              </p-card>
             </div>
           </div>
         </div>
       </div>
 
+      <!-- PASO 2: Seleccionar Productos -->
       <div *ngIf="activeStep === 1" class="step-content">
         <div class="step-header">
           <i class="pi pi-box step-icon"></i>
@@ -340,6 +258,7 @@
         </div>
 
         <div class="productos-container">
+          <!-- Sección de Búsquedas y Filtros -->
           <div class="seccion-busquedas">
             <div class="filtros-productos">
               <div class="buscar-producto-auto">
@@ -416,7 +335,9 @@
             </div>
           </div>
 
+          <!-- Sección Productos Disponibles y Agregar al Carrito -->
           <div class="seccion-productos-agregar">
+            <!-- Columna Productos Disponibles -->
             <div class="columna-productos-disponibles">
               <div class="columna-header">
                 <h4>
@@ -466,6 +387,7 @@
               </div>
             </div>
 
+            <!-- Columna Agregar al Carrito -->
             <div class="columna-agregar-carrito">
               <div class="columna-header">
                 <h4>
@@ -560,6 +482,7 @@
             </div>
           </div>
 
+          <!-- Sección Carrito Completo -->
           <div class="seccion-carrito-completo">
             <div class="carrito-header">
               <h4>
@@ -588,20 +511,20 @@
                   <ng-template pTemplate="body" let-item let-rowIndex="rowIndex">
                     <tr>
                       <td>
-                        <span class="codigo-tabla">{{ item.cod_prod }}</span>
+                        <span class="codigo-tabla">{{ item.productId }}</span>
                       </td>
                       <td>
-                        <span class="producto-nombre-tabla">{{ item.descripcion }}</span>
+                        <span class="producto-nombre-tabla">{{ item.description }}</span>
                       </td>
                       <td class="text-right">
-                        <span class="cantidad-badge">{{ item.cantidad }}</span>
+                        <span class="cantidad-badge">{{ item.quantity }}</span>
                       </td>
                       <td class="text-right">
-                        <strong>S/. {{ item.pre_uni | number: '1.2-2' }}</strong>
+                        <strong>S/. {{ item.unitPrice | number: '1.2-2' }}</strong>
                       </td>
                       <td class="text-right">
                         <strong class="subtotal-item">
-                          S/. {{ item.pre_uni * item.cantidad | number: '1.2-2' }}
+                          S/. {{ item.total | number: '1.2-2' }}
                         </strong>
                       </td>
                       <td class="text-center">
@@ -652,104 +575,14 @@
         </div>
       </div>
 
+      <!-- PASO 3: Forma de Pago -->
       <div *ngIf="activeStep === 2" class="step-content">
         <div class="step-header">
           <i class="pi pi-credit-card step-icon"></i>
-          <h3>Modalidad y Forma de Pago</h3>
+          <h3>Forma de Pago</h3>
         </div>
 
         <div class="content-centrado">
-          <div class="tipo-venta-section mb-4">
-            <label class="section-label">
-              <i class="pi pi-send"></i>
-              Tipo de Venta
-            </label>
-            <div class="flex justify-content-center">
-              <p-selectButton
-                [(ngModel)]="tipoVenta"
-                [options]="tipoVentaOptions"
-                optionLabel="label"
-                optionValue="value"
-                styleClass="select-inline"
-              >
-                <ng-template let-item>
-                  <div class="option-inline">
-                    <i [class]="item.icon"></i>
-                    <span>{{ item.label }}</span>
-                  </div>
-                </ng-template>
-              </p-selectButton>
-            </div>
-
-            <div *ngIf="tipoVenta === 'ENVIO'" class="mt-3">
-              <label class="input-label">Departamento de Envío *</label>
-              <input
-                pInputText
-                [(ngModel)]="departamento"
-                placeholder="Ej: Lima, Arequipa, Cusco"
-                class="w-full"
-              />
-            </div>
-          </div>
-
-          <p-divider styleClass="section-divider" />
-
-          <div class="tipo-venta-section mb-4">
-            <label class="section-label">
-              <i class="pi pi-ticket"></i>
-              Promociones
-            </label>
-
-            <div class="buscar-cliente-section">
-              <label class="input-label">Código Promocional</label>
-              <div class="flex gap-2 align-items-stretch">
-                <div class="flex-1">
-                  <input
-                    pInputText
-                    [(ngModel)]="codigoPromocion"
-                    (ngModelChange)="onCodigoPromocionChange()"
-                    placeholder="Ingrese código promocional"
-                    [disabled]="!!promocionAplicada"
-                    [ngStyle]="{ height: '42px', width: '100%' }"
-                  />
-                </div>
-                <p-button
-                  *ngIf="!promocionAplicada"
-                  label="Aplicar"
-                  icon="pi pi-check"
-                  (onClick)="aplicarPromocion()"
-                  [disabled]="!codigoPromocion.trim()"
-                  styleClass="btn-buscar-cliente"
-                  [ngStyle]="{ 'flex-shrink': '0', width: 'auto', 'min-width': '140px' }"
-                />
-                <p-button
-                  *ngIf="promocionAplicada"
-                  icon="pi pi-times"
-                  (onClick)="limpiarPromocion()"
-                  styleClass="p-button-danger btn-remover-promo"
-                  pTooltip="Remover promoción"
-                />
-              </div>
-
-              <div *ngIf="promocionAplicada" class="mt-3">
-                <div class="monto-destacado-box promo-aplicada">
-                  <i class="pi pi-check-circle promo-icon"></i>
-                  <span class="promo-texto">{{ promocionAplicada.descripcion }}</span>
-                  <strong class="promo-descuento">
-                    - S/ {{ descuentoPromocion.toFixed(2) }}
-                  </strong>
-                </div>
-              </div>
-
-              <small class="promocion-ayuda mt-2 block">
-                <i class="pi pi-info-circle"></i>
-                Códigos válidos: VERANO2026, DESCUENTO10, PROMO50
-              </small>
-            </div>
-          </div>
-
-          <p-divider styleClass="section-divider" />
-
           <div class="tipo-pago-section">
             <label class="section-label">
               <i class="pi pi-wallet"></i>
@@ -757,23 +590,24 @@
             </label>
             <div class="metodos-pago-grid">
               <div
-                *ngFor="let metodo of tipoPagoOptions"
+                *ngFor="let metodo of metodoPagoOptions"
                 class="metodo-pago-card"
-                [class.selected]="tipoPago === metodo.value"
-                (click)="tipoPago = metodo.value"
+                [class.selected]="metodoPagoSeleccionado === metodo.value"
+                (click)="metodoPagoSeleccionado = metodo.value"
               >
                 <div class="metodo-icon">
                   <i [class]="metodo.icon"></i>
                 </div>
                 <span class="metodo-label">{{ metodo.label }}</span>
-                <div class="check-indicator" *ngIf="tipoPago === metodo.value">
+                <div class="check-indicator" *ngIf="metodoPagoSeleccionado === metodo.value">
                   <i class="pi pi-check"></i>
                 </div>
               </div>
             </div>
 
-            <div class="pago-detalles-wrapper">
-              <div *ngIf="tipoPago === 'EFECTIVO'" class="pago-detalles-animated">
+            <div class="pago-detalles-wrapper mt-4">
+              <!-- Pago en Efectivo -->
+              <div *ngIf="metodoPagoSeleccionado === 1" class="pago-detalles-animated">
                 <div class="monto-destacado-box">
                   <i class="pi pi-tag"></i>
                   <span>Total a Pagar:</span>
@@ -794,13 +628,14 @@
                   />
                 </div>
 
-                <div *ngIf="montoRecibido >= calcularTotal()" class="vuelto-display">
+                <div *ngIf="montoRecibido >= calcularTotal()" class="vuelto-display mt-3">
                   <span>Vuelto:</span>
                   <span class="vuelto-valor">S/. {{ calcularVuelto() | number: '1.2-2' }}</span>
                 </div>
               </div>
 
-              <div *ngIf="tipoPago === 'TARJETA'" class="pago-detalles-animated">
+              <!-- Otros Métodos de Pago -->
+              <div *ngIf="metodoPagoSeleccionado !== 1" class="pago-detalles-animated">
                 <div class="monto-destacado-box">
                   <i class="pi pi-tag"></i>
                   <span>Total a Pagar:</span>
@@ -809,58 +644,12 @@
                   >
                 </div>
 
-                <div class="pago-header-inline">
-                  <i class="pi pi-credit-card"></i>
-                  <span>Detalles de Pago - Transferencia</span>
-                </div>
-
-                <div class="campos-pago-grid">
-                  <div class="campo-pago-item">
-                    <div class="campo-pago-header">
-                      <i class="pi pi-building"></i>
-                      <span>Banco Destino *</span>
-                    </div>
-                    <p-select
-                      [(ngModel)]="bancoSeleccionado"
-                      [options]="bancosDisponibles"
-                      placeholder="Seleccione un banco"
-                      styleClass="w-full"
-                    />
-                  </div>
-
-                  <div class="campo-pago-item">
-                    <div class="campo-pago-header">
-                      <i class="pi pi-hashtag"></i>
-                      <span>N° de Operación *</span>
-                    </div>
-                    <input
-                      pInputText
-                      [(ngModel)]="numeroOperacion"
-                      placeholder="Ingrese número de operación"
-                      class="w-full input-operacion"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div
-                *ngIf="tipoPago === 'YAPE' || tipoPago === 'PLIN'"
-                class="pago-detalles-animated"
-              >
-                <div class="monto-destacado-box">
-                  <i class="pi pi-tag"></i>
-                  <span>Total a Pagar:</span>
-                  <strong class="monto-destacado"
-                    >S/. {{ calcularTotal() | number: '1.2-2' }}</strong
-                  >
-                </div>
-
-                <div class="pago-header-inline">
+                <div class="pago-header-inline mt-3">
                   <i class="pi pi-mobile"></i>
-                  <span>Detalles de Pago - {{ tipoPago }}</span>
+                  <span>Detalles del Pago</span>
                 </div>
 
-                <div class="campo-pago-item">
+                <div class="campo-pago-item mt-3">
                   <div class="campo-pago-header">
                     <i class="pi pi-hashtag"></i>
                     <span>N° de Operación *</span>
@@ -878,6 +667,7 @@
         </div>
       </div>
 
+      <!-- PASO 4: Confirmar Venta -->
       <div *ngIf="activeStep === 3" class="step-content">
         <div *ngIf="!comprobanteGenerado">
           <div class="step-header">
@@ -899,12 +689,7 @@
                     Cliente:
                   </span>
                   <strong class="resumen-value">
-                    <ng-container *ngIf="tipoComprobante === '03'">
-                      {{ clienteEncontrado?.nombres }} {{ clienteEncontrado?.apellidos }}
-                    </ng-container>
-                    <ng-container *ngIf="tipoComprobante === '01'">
-                      {{ clienteEncontrado?.razon_social }}
-                    </ng-container>
+                    {{ clienteEncontrado?.name }}
                   </strong>
                 </div>
 
@@ -914,8 +699,8 @@
                     Tipo de Comprobante:
                   </span>
                   <p-tag
-                    [value]="tipoComprobante === '03' ? 'BOLETA' : 'FACTURA'"
-                    [severity]="tipoComprobante === '03' ? 'info' : 'success'"
+                    [value]="clienteEncontrado?.invoiceType || 'N/A'"
+                    [severity]="clienteEncontrado?.invoiceType === 'BOLETA' ? 'info' : 'success'"
                     styleClass="resumen-tag"
                   />
                 </div>
@@ -923,9 +708,33 @@
                 <div class="resumen-item">
                   <span class="label">
                     <i class="pi pi-id-card"></i>
-                    Documento:
+                    {{ clienteEncontrado?.documentTypeDescription || 'Documento' }}:
                   </span>
-                  <strong class="resumen-value">{{ clienteEncontrado?.num_doc }}</strong>
+                  <strong class="resumen-value">{{ clienteEncontrado?.documentValue }}</strong>
+                </div>
+
+                <div class="resumen-item">
+                  <span class="label">
+                    <i class="pi pi-phone"></i>
+                    Teléfono:
+                  </span>
+                  <strong class="resumen-value">{{ clienteEncontrado?.phone || 'No registrado' }}</strong>
+                </div>
+
+                <div class="resumen-item">
+                  <span class="label">
+                    <i class="pi pi-envelope"></i>
+                    Email:
+                  </span>
+                  <strong class="resumen-value">{{ clienteEncontrado?.email || 'No registrado' }}</strong>
+                </div>
+
+                <div class="resumen-item">
+                  <span class="label">
+                    <i class="pi pi-map-marker"></i>
+                    Dirección:
+                  </span>
+                  <strong class="resumen-value">{{ clienteEncontrado?.address || 'No registrada' }}</strong>
                 </div>
 
                 <div class="resumen-item">
@@ -941,22 +750,14 @@
 
                 <div class="resumen-item">
                   <span class="label">
-                    <i class="pi pi-send"></i>
-                    Tipo de Venta:
-                  </span>
-                  <p-tag
-                    [value]="tipoVenta"
-                    [severity]="tipoVenta === 'DELIVERY' ? 'warn' : 'secondary'"
-                    styleClass="resumen-tag"
-                  />
-                </div>
-
-                <div class="resumen-item">
-                  <span class="label">
                     <i class="pi pi-wallet"></i>
                     Método de Pago:
                   </span>
-                  <p-tag [value]="tipoPago" severity="info" styleClass="resumen-tag" />
+                  <p-tag 
+                    [value]="getLabelMetodoPago(metodoPagoSeleccionado)" 
+                    severity="info" 
+                    styleClass="resumen-tag" 
+                  />
                 </div>
               </div>
 
@@ -990,6 +791,7 @@
           </div>
         </div>
 
+        <!-- Venta Exitosa -->
         <div *ngIf="comprobanteGenerado" class="venta-exitosa">
           <div class="success-animation">
             <i class="pi pi-check-circle"></i>
@@ -1002,13 +804,11 @@
                 <div class="comprobante-numero">
                   <span class="numero-label">COMPROBANTE N°:</span>
                   <h3 class="numero-valor">
-                    {{ comprobanteGenerado.serie }}-{{
-                      comprobanteGenerado.numero.toString().padStart(8, '0')
-                    }}
+                    {{ comprobanteGenerado.serie }}-{{ comprobanteGenerado.receiptNumber }}
                   </h3>
                 </div>
                 <p-tag
-                  [value]="comprobanteGenerado.tipo_comprobante === '03' ? 'BOLETA' : 'FACTURA'"
+                  [value]="clienteEncontrado?.invoiceType || 'COMPROBANTE'"
                   severity="success"
                   styleClass="comprobante-tipo-tag"
                 />
@@ -1022,21 +822,21 @@
                     <i class="pi pi-user"></i>
                     Cliente:
                   </span>
-                  <strong>{{ comprobanteGenerado.cliente_nombre }}</strong>
+                  <strong>{{ clienteEncontrado?.name }}</strong>
                 </div>
                 <div class="info-item">
                   <span class="label">
                     <i class="pi pi-id-card"></i>
                     Documento:
                   </span>
-                  <strong>{{ comprobanteGenerado.cliente_doc }}</strong>
+                  <strong>{{ clienteEncontrado?.documentValue }}</strong>
                 </div>
                 <div class="info-item">
                   <span class="label">
                     <i class="pi pi-calendar"></i>
                     Fecha:
                   </span>
-                  <strong>{{ comprobanteGenerado.fec_emision | date: 'dd/MM/yyyy HH:mm' }}</strong>
+                  <strong>{{ comprobanteGenerado.createdAt | date: 'dd/MM/yyyy HH:mm' }}</strong>
                 </div>
                 <div class="info-item">
                   <span class="label">
@@ -1052,12 +852,6 @@
           </div>
 
           <div class="action-buttons-final mt-4">
-            <p-button
-              label="Imprimir Comprobante"
-              icon="pi pi-print"
-              (onClick)="imprimirComprobante()"
-              styleClass="w-full btn-accion-final"
-            />
             <p-button
               label="Nueva Venta"
               icon="pi pi-plus"
@@ -1079,6 +873,7 @@
 
     <p-divider styleClass="wizard-divider" />
 
+    <!-- Step Actions -->
     <div *ngIf="activeStep < 3 || !comprobanteGenerado" class="step-actions">
       <p-button
         *ngIf="activeStep > 0"
