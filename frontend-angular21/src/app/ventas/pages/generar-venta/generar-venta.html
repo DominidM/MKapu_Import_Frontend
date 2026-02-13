@@ -1,5 +1,3 @@
-<!-- src/app/ventas/pages/generar-venta/generar-venta.html -->
-
 <div class="p-2">
   <p-card styleClass="ventas-header-card mb-4 ventas-header-bordered">
     <div class="flex align-items-center justify-content-between flex-wrap gap-2">
@@ -39,7 +37,6 @@
 
 <div class="p-2">
   <p-card styleClass="wizard-card">
-    <!-- Wizard Steps -->
     <div class="wizard-steps">
       <div
         *ngFor="let step of steps; let i = index"
@@ -57,9 +54,7 @@
 
     <p-divider styleClass="wizard-divider" />
 
-    <!-- Wizard Content -->
     <div class="wizard-content">
-      <!-- PASO 1: Datos del Comprobante y Cliente -->
       <div *ngIf="activeStep === 0" class="step-content">
         <div class="step-header">
           <i class="pi pi-file-edit step-icon"></i>
@@ -67,7 +62,6 @@
         </div>
 
         <div class="content-centrado">
-          <!-- Tipo de Comprobante -->
           <div class="comprobante-section">
             <label class="section-label">
               <i class="pi pi-file-edit"></i>
@@ -94,7 +88,6 @@
 
           <p-divider styleClass="section-divider" />
 
-          <!-- Datos del Cliente -->
           <div class="cliente-section">
             <label class="section-label">
               <i class="pi pi-users"></i>
@@ -111,9 +104,7 @@
                     [(ngModel)]="clienteAutoComplete"
                     class="w-full autocomplete-clientes"
                     [placeholder]="
-                      tipoComprobante === 2
-                        ? 'Ingrese DNI (8 dígitos)'
-                        : 'Ingrese RUC (11 dígitos)'
+                      tipoComprobante === 2 ? 'Ingrese DNI (8 dígitos)' : 'Ingrese RUC (11 dígitos)'
                     "
                     [maxlength]="tipoComprobante === 2 ? 8 : 11"
                     inputmode="numeric"
@@ -170,7 +161,6 @@
               </div>
             </div>
 
-            <!-- Cliente Encontrado -->
             <div *ngIf="clienteEncontrado" class="cliente-encontrado-card mt-3">
               <p-card styleClass="cliente-card-success">
                 <div class="cliente-content">
@@ -207,13 +197,25 @@
                     </span>
                   </div>
 
-                  <div class="cliente-row mt-3" *ngIf="clienteEncontrado.phone || clienteEncontrado.status !== null">
+                  <div
+                    class="cliente-row mt-3"
+                    *ngIf="clienteEncontrado.phone || clienteEncontrado.status !== null"
+                  >
                     <span class="info-badge telefono" *ngIf="clienteEncontrado.phone">
                       <i class="pi pi-phone"></i>
                       {{ clienteEncontrado.phone }}
                     </span>
-                    <span class="info-badge" [class.activo]="clienteEncontrado.status" [class.inactivo]="!clienteEncontrado.status" *ngIf="clienteEncontrado.status !== null">
-                      <i class="pi" [class.pi-check-circle]="clienteEncontrado.status" [class.pi-times-circle]="!clienteEncontrado.status"></i>
+                    <span
+                      class="info-badge"
+                      [class.activo]="clienteEncontrado.status"
+                      [class.inactivo]="!clienteEncontrado.status"
+                      *ngIf="clienteEncontrado.status !== null"
+                    >
+                      <i
+                        class="pi"
+                        [class.pi-check-circle]="clienteEncontrado.status"
+                        [class.pi-times-circle]="!clienteEncontrado.status"
+                      ></i>
                       {{ clienteEncontrado.status ? 'Activo' : 'Inactivo' }}
                     </span>
                   </div>
@@ -235,14 +237,18 @@
               </p-card>
             </div>
 
-            <!-- Cliente No Encontrado -->
-            <div *ngIf="busquedaRealizada && !clienteEncontrado && !loading" class="cliente-no-encontrado mt-3">
+            <div
+              *ngIf="busquedaRealizada && !clienteEncontrado && !loading"
+              class="cliente-no-encontrado mt-3"
+            >
               <p-card styleClass="cliente-card-success">
                 <div class="text-center">
                   <i class="pi pi-exclamation-triangle text-orange-500" style="font-size: 2rem"></i>
                   <h4 class="mt-3 mb-2">Cliente no encontrado</h4>
                   <p class="text-600">El documento ingresado no está registrado en el sistema.</p>
-                  <small class="text-500">Contacte al administrador para registrar nuevos clientes.</small>
+                  <small class="text-500"
+                    >Contacte al administrador para registrar nuevos clientes.</small
+                  >
                 </div>
               </p-card>
             </div>
@@ -250,7 +256,6 @@
         </div>
       </div>
 
-      <!-- PASO 2: Seleccionar Productos -->
       <div *ngIf="activeStep === 1" class="step-content">
         <div class="step-header">
           <i class="pi pi-box step-icon"></i>
@@ -258,7 +263,6 @@
         </div>
 
         <div class="productos-container">
-          <!-- Sección de Búsquedas y Filtros -->
           <div class="seccion-busquedas">
             <div class="filtros-productos">
               <div class="buscar-producto-auto">
@@ -335,9 +339,7 @@
             </div>
           </div>
 
-          <!-- Sección Productos Disponibles y Agregar al Carrito -->
           <div class="seccion-productos-agregar">
-            <!-- Columna Productos Disponibles -->
             <div class="columna-productos-disponibles">
               <div class="columna-header">
                 <h4>
@@ -387,7 +389,6 @@
               </div>
             </div>
 
-            <!-- Columna Agregar al Carrito -->
             <div class="columna-agregar-carrito">
               <div class="columna-header">
                 <h4>
@@ -453,12 +454,12 @@
                     label="Agregar al Carrito"
                     icon="pi pi-plus"
                     (onClick)="agregarProducto()"
-                    [disabled]="cantidadTemp <= 0 || cantidadTemp > (productoTemp.stock ?? 0)"
+                    [disabled]="cantidadTemp <= 0 || cantidadTemp > productoTemp.stock"
                     styleClass="w-full btn-agregar-producto"
                   />
 
                   <small
-                    *ngIf="cantidadTemp > (productoTemp.stock ?? 0)"
+                    *ngIf="cantidadTemp > productoTemp.stock"
                     class="text-red-500 mt-2 block text-center"
                   >
                     <i class="pi pi-exclamation-triangle"></i>
@@ -466,7 +467,7 @@
                   </small>
 
                   <small
-                    *ngIf="cantidadTemp > 0 && cantidadTemp <= (productoTemp.stock ?? 0)"
+                    *ngIf="cantidadTemp > 0 && cantidadTemp <= productoTemp.stock"
                     class="text-green-500 mt-2 block text-center"
                   >
                     <i class="pi pi-check-circle"></i>
@@ -482,7 +483,6 @@
             </div>
           </div>
 
-          <!-- Sección Carrito Completo -->
           <div class="seccion-carrito-completo">
             <div class="carrito-header">
               <h4>
@@ -575,7 +575,6 @@
         </div>
       </div>
 
-      <!-- PASO 3: Forma de Pago -->
       <div *ngIf="activeStep === 2" class="step-content">
         <div class="step-header">
           <i class="pi pi-credit-card step-icon"></i>
@@ -605,8 +604,52 @@
               </div>
             </div>
 
+            <div class="promociones-section mt-4">
+              <div class="promociones-header">
+                <div class="flex align-items-center gap-2">
+                  <i class="pi pi-percentage"></i>
+                  <span>Aplicar Promoción</span>
+                </div>
+                <p-tag value="Próximamente" severity="warn" styleClass="tag-proximamente" />
+              </div>
+
+              <div class="buscar-promocion-wrapper">
+                <label class="input-label mb-2">Código de Promoción</label>
+                <div class="flex gap-2 align-items-center">
+                  <div style="flex: 1; min-width: 0">
+                    <input
+                      pInputText
+                      class="w-full input-promocion"
+                      placeholder="Ingrese código promocional (ej: VERANO2026)"
+                      disabled
+                    />
+                  </div>
+                  <div style="flex: 0 0 160px">
+                    <p-button
+                      label="Aplicar"
+                      icon="pi pi-check"
+                      severity="success"
+                      styleClass="w-full btn-aplicar-promo"
+                      disabled
+                      pTooltip="Función disponible próximamente"
+                      tooltipPosition="bottom"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div class="promociones-footer">
+                <i class="pi pi-info-circle"></i>
+                <small
+                  >Las promociones estarán disponibles próximamente. Podrás aplicar descuentos
+                  especiales usando códigos promocionales.</small
+                >
+              </div>
+            </div>
+
+            <p-divider styleClass="section-divider" />
+
             <div class="pago-detalles-wrapper mt-4">
-              <!-- Pago en Efectivo -->
               <div *ngIf="metodoPagoSeleccionado === 1" class="pago-detalles-animated">
                 <div class="monto-destacado-box">
                   <i class="pi pi-tag"></i>
@@ -634,7 +677,6 @@
                 </div>
               </div>
 
-              <!-- Otros Métodos de Pago -->
               <div *ngIf="metodoPagoSeleccionado !== 1" class="pago-detalles-animated">
                 <div class="monto-destacado-box">
                   <i class="pi pi-tag"></i>
@@ -667,7 +709,6 @@
         </div>
       </div>
 
-      <!-- PASO 4: Confirmar Venta -->
       <div *ngIf="activeStep === 3" class="step-content">
         <div *ngIf="!comprobanteGenerado">
           <div class="step-header">
@@ -718,7 +759,9 @@
                     <i class="pi pi-phone"></i>
                     Teléfono:
                   </span>
-                  <strong class="resumen-value">{{ clienteEncontrado?.phone || 'No registrado' }}</strong>
+                  <strong class="resumen-value">{{
+                    clienteEncontrado?.phone || 'No registrado'
+                  }}</strong>
                 </div>
 
                 <div class="resumen-item">
@@ -726,7 +769,9 @@
                     <i class="pi pi-envelope"></i>
                     Email:
                   </span>
-                  <strong class="resumen-value">{{ clienteEncontrado?.email || 'No registrado' }}</strong>
+                  <strong class="resumen-value">{{
+                    clienteEncontrado?.email || 'No registrado'
+                  }}</strong>
                 </div>
 
                 <div class="resumen-item">
@@ -734,7 +779,9 @@
                     <i class="pi pi-map-marker"></i>
                     Dirección:
                   </span>
-                  <strong class="resumen-value">{{ clienteEncontrado?.address || 'No registrada' }}</strong>
+                  <strong class="resumen-value">{{
+                    clienteEncontrado?.address || 'No registrada'
+                  }}</strong>
                 </div>
 
                 <div class="resumen-item">
@@ -753,10 +800,10 @@
                     <i class="pi pi-wallet"></i>
                     Método de Pago:
                   </span>
-                  <p-tag 
-                    [value]="getLabelMetodoPago(metodoPagoSeleccionado)" 
-                    severity="info" 
-                    styleClass="resumen-tag" 
+                  <p-tag
+                    [value]="getLabelMetodoPago(metodoPagoSeleccionado)"
+                    severity="info"
+                    styleClass="resumen-tag"
                   />
                 </div>
               </div>
@@ -791,7 +838,6 @@
           </div>
         </div>
 
-        <!-- Venta Exitosa -->
         <div *ngIf="comprobanteGenerado" class="venta-exitosa">
           <div class="success-animation">
             <i class="pi pi-check-circle"></i>
@@ -873,7 +919,6 @@
 
     <p-divider styleClass="wizard-divider" />
 
-    <!-- Step Actions -->
     <div *ngIf="activeStep < 3 || !comprobanteGenerado" class="step-actions">
       <p-button
         *ngIf="activeStep > 0"

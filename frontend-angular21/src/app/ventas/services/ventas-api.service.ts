@@ -1,5 +1,3 @@
-// src/app/ventas/services/ventas-api.service.ts
-
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
@@ -14,7 +12,7 @@ import {
   OPERATION_TYPE_VENTA_INTERNA,
   CURRENCY_PEN,
   IGV_RATE
-} from '../interfaces/venta.interface';
+} from '../interfaces';
 
 @Injectable({
   providedIn: 'root'
@@ -54,11 +52,13 @@ export class VentasApiService {
     items: ItemVenta[];
     dueDate?: string | null;
   }): RegistroVentaRequest {
+    const fechaVencimiento = params.dueDate || new Date().toISOString();
+
     return {
       customerId: params.customerId,
       saleTypeId: 1,
       receiptTypeId: params.receiptTypeId,
-      dueDate: params.dueDate || null,
+      dueDate: fechaVencimiento,
       operationType: OPERATION_TYPE_VENTA_INTERNA,
       subtotal: params.subtotal,
       igv: params.igv,

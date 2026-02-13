@@ -144,11 +144,6 @@ export class Sidebar implements OnInit {
       icon: 'pi pi-folder',
     },
 
-
-
-
-
-
     // ==================== VENTAS ====================
     {
       path: '/ventas/dashboard-ventas',
@@ -174,7 +169,6 @@ export class Sidebar implements OnInit {
       label: 'Reclamos y Garantías',
       icon: 'pi pi-shield',
     },
-
 
     // ==================== ALMACÉN ====================
     {
@@ -206,11 +200,11 @@ export class Sidebar implements OnInit {
 
     if (user) {
       this.username = user.username;
-      this.roleName = ROLE_NAMES[user.roleId] || 'Invitado';
+      // ✅ LÍNEA 209 - Agregar cast explícito
+      this.roleName = ROLE_NAMES[user.roleId as keyof typeof ROLE_NAMES] || 'Invitado';
       console.log('👤 Usuario actual:', { username: this.username, role: this.roleName });
     }
   }
-
   /**
    * Carga el menú filtrado según el rol del usuario
    */
