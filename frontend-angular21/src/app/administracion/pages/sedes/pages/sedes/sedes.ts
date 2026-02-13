@@ -1,168 +1,96 @@
-import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 
+import { AutoCompleteModule } from 'primeng/autocomplete';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
-import { SelectModule } from 'primeng/select';
-import { InputTextModule } from 'primeng/inputtext';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { MessageModule } from 'primeng/message';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
-import { InputNumberModule } from 'primeng/inputnumber';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { ConfirmationService, MessageService } from 'primeng/api';
-import { AutoCompleteModule } from 'primeng/autocomplete';
 import { ToastModule } from 'primeng/toast';
+
+import { ConfirmationService, MessageService } from 'primeng/api';
+
+import { SedeService } from '../../../../services/sede.service';
+import { Headquarter } from '../../../../interfaces/sedes.interface';
 
 @Component({
   selector: 'app-sedes',
+  standalone: true,
   imports: [
     CommonModule,
     FormsModule,
-    ButtonModule,
+    RouterModule,
+
     CardModule,
-    SelectModule,
-    InputTextModule,
+    ButtonModule,
+    AutoCompleteModule,
     TableModule,
     TagModule,
-    RouterModule,
-    InputNumberModule,
-    ConfirmDialogModule,
-    AutoCompleteModule,
     ToastModule,
+    ConfirmDialogModule,
+    MessageModule,
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './sedes.html',
   styleUrl: './sedes.css',
 })
 export class Sedes implements OnInit {
-  sedes = [
-    {
-      codigo: 'SJL-FL15',
-      nombre: 'Flores 15',
-      ciudad: 'San Juan de Lurigancho',
-      telefono: '+51 987654324',
-      direccion: 'Av. Las Flores 15-16, Urb. Las Flores',
-    },
-    {
-      codigo: 'LRN-26',
-      nombre: 'Lurin',
-      ciudad: 'Lurin',
-      telefono: '+51 987654325',
-      direccion: 'Av. San Pedro 890',
-    },
-    {
-      codigo: 'CLL-04',
-      nombre: 'Callao',
-      ciudad: 'Callao',
-      telefono: '+51 987654326',
-      direccion: 'Jr. Lima 105',
-    },
-    {
-      codigo: 'ATE-09',
-      nombre: 'Ate',
-      ciudad: 'Ate',
-      telefono: '+51 987654327',
-      direccion: 'Av. Metropolitana 220',
-    },
-  ];
-  filteredSedes = [...this.sedes];
-  sedeSuggestions = [...this.sedes];
-  searchTerm = '';
+  private readonly sedeService = inject(SedeService);
 
-  constructor(
-    private confirmationService: ConfirmationService,
-    private messageService: MessageService
-  ) {}
+  readonly loading = this.sedeService.loading;
+  readonly error = this.sedeService.error;
+
+  readonly searchTerm = signal<string>('');
+
+  readonly sedes = computed(() => this.sedeService.sedes());
+  readonly inactiveSedes = computed(() => this.sedes().filter(s => s.activo === false));
+
+  readonly filteredSedes = computed(() => {
+    const term = this.searchTerm().trim().toLowerCase();
+    const base = this.inactiveSedes();
+
+    if (!term) return base;
+
+    return base.filter(s =>
+      [s.codigo, s.nombre, s.ciudad].some(f => f.toLowerCase().includes(term))
+    );
+  });
+
+  readonly sedeSuggestions = computed(() => this.filteredSedes());
 
   ngOnInit(): void {
-    const rawToast = sessionStorage.getItem('sedesToast');
-    if (!rawToast) return;
-    sessionStorage.removeItem('sedesToast');
-    try {
-      const toast = JSON.parse(rawToast);
-      this.messageService.add(toast);
-    } catch {
-      this.messageService.add({
-        severity: 'info',
-        summary: 'Aviso',
-        detail: 'Accion completada.',
-      });
-    }
+    this.sedeService.loadSedes('Administrador').subscribe();
   }
 
   onSearch(event: { query: string }): void {
-    this.updateFilteredSedes(event.query);
+    this.searchTerm.set(event.query);
   }
 
-  onSearchChange(term: string | { nombre?: string } | null): void {
-    this.updateFilteredSedes(this.getSearchValue(term));
+  onSearchChange(term: unknown): void {
+    if (typeof term === 'string') {
+      this.searchTerm.set(term);
+      return;
+    }
+    if (term && typeof term === 'object' && 'nombre' in (term as any)) {
+      this.searchTerm.set(String((term as any).nombre ?? ''));
+      return;
+    }
+    this.searchTerm.set('');
   }
 
-  onSelectSede(event: { value?: { nombre?: string } } | null): void {
-    const value = this.getSearchValue(event?.value ?? this.searchTerm);
-    this.searchTerm = value;
-    this.updateFilteredSedes(value);
+  onSelectSede(event: any): void {
+    const value = event?.value?.nombre ?? '';
+    this.searchTerm.set(String(value));
   }
 
   clearSearch(): void {
-    this.searchTerm = '';
-    this.updateFilteredSedes('');
+    this.searchTerm.set('');
   }
 
-  confirmDelete(sede: { codigo: string; nombre: string }): void {
-    this.confirmationService.confirm({
-      header: 'Confirmacion',
-      message: `¿Seguro que deseas eliminar la sede ${sede.nombre}?`,
-      icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'Eliminar',
-      rejectLabel: 'Cancelar',
-      acceptButtonProps: {
-        severity: 'danger',
-      },
-      rejectButtonProps: {
-        severity: 'secondary',
-        outlined: true,
-      },
-      accept: () => {
-        this.sedes = this.sedes.filter(item => item.codigo !== sede.codigo);
-        this.updateFilteredSedes(this.searchTerm);
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Sede eliminada',
-          detail: `Se elimino la sede ${sede.nombre}.`,
-        });
-      },
-    });
-  }
-
-  private updateFilteredSedes(term: string): void {
-    const value = term?.trim().toLowerCase();
-
-    if (!value) {
-      this.filteredSedes = [...this.sedes];
-      this.sedeSuggestions = [...this.sedes];
-      return;
-    }
-
-    this.filteredSedes = this.sedes.filter(sede =>
-      [sede.codigo, sede.nombre, sede.ciudad].some(field =>
-        field.toLowerCase().includes(value)
-      )
-    );
-    this.sedeSuggestions = [...this.filteredSedes];
-  }
-
-  private getSearchValue(term: string | { nombre?: string } | null): string {
-    if (!term) {
-      return '';
-    }
-
-    if (typeof term === 'string') {
-      return term;
-    }
-
-    return term.nombre ?? '';
+  confirmDelete(sede: Headquarter): void {
   }
 }
