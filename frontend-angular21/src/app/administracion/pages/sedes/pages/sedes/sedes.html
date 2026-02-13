@@ -6,35 +6,12 @@
           <i class="pi pi-list"></i>
         </span>
         <div>
-          <p class="sedes-kicker">
-            ADMINISTRADOR - ADMINISTRACION - SEDE {{ viewMode() === 'activas' ? 'ACTIVAS' : 'INACTIVAS' }}
-          </p>
+          <p class="sedes-kicker">ADMINISTRADOR - ADMINISTRACION - SEDES</p>
           <h2 class="sedes-title">GESTION DE SEDES</h2>
         </div>
       </div>
 
       <div class="flex justify-items-end gap-2">
-        <!-- Toggle -->
-        <p-button
-          label="Activas"
-          icon="pi pi-check-circle"
-          [outlined]="viewMode() !== 'activas'"
-          severity="success"
-          styleClass="sedes-pill"
-          type="button"
-          (click)="setViewMode('activas')"
-        ></p-button>
-
-        <p-button
-          label="Inactivas"
-          icon="pi pi-times-circle"
-          [outlined]="viewMode() !== 'inactivas'"
-          severity="danger"
-          styleClass="sedes-pill"
-          type="button"
-          (click)="setViewMode('inactivas')"
-        ></p-button>
-
         <p-button
           label="Agregar Sede"
           icon="pi pi-plus"
@@ -72,6 +49,16 @@
       </div>
 
       <div class="flex align-items-center gap-2 sedes-filter-actions">
+        <p-select
+          [options]="viewOptions"
+          optionLabel="label"
+          optionValue="value"
+          [ngModel]="viewMode()"
+          (ngModelChange)="onViewModeChange($event)"
+          placeholder="Todos"
+          class="sedes-filter-select"
+        ></p-select>
+
         <p-button
           label="Limpiar Filtros"
           icon="pi pi-filter-slash"
@@ -99,12 +86,18 @@
         </span>
 
         <span class="text-sm font-semibold text-700">
-          {{ viewMode() === 'activas' ? 'SEDES ACTIVAS' : 'SEDES INACTIVAS' }}
+          {{
+            viewMode() === 'activas'
+              ? 'SEDES ACTIVAS'
+              : viewMode() === 'inactivas'
+                ? 'SEDES INACTIVAS'
+                : 'SEDES (TODAS)'
+          }}
         </span>
 
         <p-tag
           [value]="'[' + filteredSedes().length + '] Sedes'"
-          [severity]="viewMode() === 'activas' ? 'success' : 'danger'"
+          [severity]="viewMode() === 'activas' ? 'success' : viewMode() === 'inactivas' ? 'danger' : 'info'"
         ></p-tag>
       </div>
 
@@ -177,14 +170,13 @@
                 [queryParams]="{ id: sede.id_sede }"
               ></p-button>
 
-              <!-- Botón de activar/desactivar según modo -->
               <p-button
-                [icon]="viewMode() === 'activas' ? 'pi pi-times' : 'pi pi-check'"
+                [icon]="sede.activo ? 'pi pi-times' : 'pi pi-check'"
                 text
-                [severity]="viewMode() === 'activas' ? 'danger' : 'success'"
+                [severity]="sede.activo ? 'danger' : 'success'"
                 styleClass="sedes-icon-btn"
                 (click)="confirmToggleStatus(sede)"
-                [title]="viewMode() === 'activas' ? 'Desactivar sede' : 'Activar sede'"
+                [title]="sede.activo ? 'Desactivar sede' : 'Activar sede'"
               ></p-button>
             </div>
           </td>

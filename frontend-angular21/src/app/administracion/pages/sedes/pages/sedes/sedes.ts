@@ -11,13 +11,14 @@ import { MessageModule } from 'primeng/message';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
+import { SelectModule } from 'primeng/select';
 
 import { ConfirmationService, MessageService } from 'primeng/api';
 
 import { SedeService } from '../../../../services/sede.service';
 import { Headquarter } from '../../../../interfaces/sedes.interface';
 
-type ViewMode = 'activas' | 'inactivas';
+type ViewMode = 'todas' | 'activas' | 'inactivas';
 
 @Component({
   selector: 'app-sedes',
@@ -35,6 +36,7 @@ type ViewMode = 'activas' | 'inactivas';
     ToastModule,
     ConfirmDialogModule,
     MessageModule,
+    SelectModule, 
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './sedes.html',
@@ -48,18 +50,25 @@ export class Sedes implements OnInit {
   readonly loading = this.sedeService.loading;
   readonly error = this.sedeService.error;
 
-  // Toggle 
-  readonly viewMode = signal<ViewMode>('inactivas');
-
   readonly searchTerm = signal<string>('');
   readonly sedes = computed(() => this.sedeService.sedes());
 
-  readonly activeSedes = computed(() => this.sedes().filter((s) => s.activo === true));
-  readonly inactiveSedes = computed(() => this.sedes().filter((s) => s.activo === false));
+  readonly viewMode = signal<ViewMode>('todas');
 
-  readonly visibleSedes = computed(() =>
-    this.viewMode() === 'activas' ? this.activeSedes() : this.inactiveSedes()
-  );
+  readonly viewOptions: { label: string; value: ViewMode }[] = [
+    { label: 'Todos', value: 'todas' },
+    { label: 'Activas', value: 'activas' },
+    { label: 'Inactivas', value: 'inactivas' },
+  ];
+
+  readonly visibleSedes = computed(() => {
+    const mode = this.viewMode();
+    const all = this.sedes();
+
+    if (mode === 'activas') return all.filter((s) => s.activo === true);
+    if (mode === 'inactivas') return all.filter((s) => s.activo === false);
+    return all;
+  });
 
   readonly filteredSedes = computed(() => {
     const term = this.searchTerm().trim().toLowerCase();
@@ -80,15 +89,14 @@ export class Sedes implements OnInit {
     this.sedeService.loadSedes('Administrador').subscribe();
   }
 
-  setViewMode(mode: ViewMode): void {
+  onViewModeChange(mode: ViewMode): void {
     this.viewMode.set(mode);
-    this.clearSearch();
   }
 
+  // ... (resto igual)
   onSearch(event: { query: string }): void {
     this.searchTerm.set(event.query);
   }
-
   onSearchChange(term: unknown): void {
     if (typeof term === 'string') {
       this.searchTerm.set(term);
@@ -100,26 +108,20 @@ export class Sedes implements OnInit {
     }
     this.searchTerm.set('');
   }
-
   onSelectSede(event: any): void {
     const value = event?.value?.nombre ?? '';
     this.searchTerm.set(String(value));
   }
-
   clearSearch(): void {
     this.searchTerm.set('');
   }
 
-  // Acción dinámica según modo:
-  // - en INACTIVAS => Activar (status=true)
-  // - en ACTIVAS   => Desactivar (status=false)
   confirmToggleStatus(sede: Headquarter): void {
-    const activating = this.viewMode() === 'inactivas';
-    const nextStatus = activating ? true : false;
+    const nextStatus = !sede.activo;
 
-    const verb = activating ? 'activar' : 'desactivar';
-    const acceptLabel = activating ? 'Activar' : 'Desactivar';
-    const acceptSeverity = activating ? 'success' : 'danger';
+    const verb = nextStatus ? 'activar' : 'desactivar';
+    const acceptLabel = nextStatus ? 'Activar' : 'Desactivar';
+    const acceptSeverity = nextStatus ? 'success' : 'danger';
 
     this.confirmationService.confirm({
       header: 'Confirmación',
@@ -130,29 +132,25 @@ export class Sedes implements OnInit {
       acceptButtonProps: { severity: acceptSeverity as any },
       rejectButtonProps: { severity: 'secondary', outlined: true },
       accept: () => {
-        this.sedeService
-          .updateSedeStatus(sede.id_sede, nextStatus, 'Administrador')
-          .subscribe({
-            next: () => {
-              this.messageService.add({
-                severity: 'success',
-                summary: activating ? 'Sede activada' : 'Sede desactivada',
-                detail: activating
-                  ? `Se activó la sede ${sede.nombre}.`
-                  : `Se desactivó la sede ${sede.nombre}.`,
-              });
-            },
-            error: (err) => {
-              console.error(err);
-              this.messageService.add({
-                severity: 'error',
-                summary: 'Error',
-                detail:
-                  err?.error?.message ??
-                  'No se pudo cambiar el estado de la sede.',
-              });
-            },
-          });
+        this.sedeService.updateSedeStatus(sede.id_sede, nextStatus, 'Administrador').subscribe({
+          next: () => {
+            this.messageService.add({
+              severity: 'success',
+              summary: nextStatus ? 'Sede activada' : 'Sede desactivada',
+              detail: nextStatus
+                ? `Se activó la sede ${sede.nombre}.`
+                : `Se desactivó la sede ${sede.nombre}.`,
+            });
+          },
+          error: (err) => {
+            console.error(err);
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error',
+              detail: err?.error?.message ?? 'No se pudo cambiar el estado de la sede.',
+            });
+          },
+        });
       },
     });
   }
