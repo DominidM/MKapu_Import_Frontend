@@ -6,11 +6,35 @@
           <i class="pi pi-list"></i>
         </span>
         <div>
-          <p class="sedes-kicker">ADMINISTRADOR - ADMINISTRACION - SEDE INACTIVAS</p>
+          <p class="sedes-kicker">
+            ADMINISTRADOR - ADMINISTRACION - SEDE {{ viewMode() === 'activas' ? 'ACTIVAS' : 'INACTIVAS' }}
+          </p>
           <h2 class="sedes-title">GESTION DE SEDES</h2>
         </div>
       </div>
+
       <div class="flex justify-items-end gap-2">
+        <!-- Toggle -->
+        <p-button
+          label="Activas"
+          icon="pi pi-check-circle"
+          [outlined]="viewMode() !== 'activas'"
+          severity="success"
+          styleClass="sedes-pill"
+          type="button"
+          (click)="setViewMode('activas')"
+        ></p-button>
+
+        <p-button
+          label="Inactivas"
+          icon="pi pi-times-circle"
+          [outlined]="viewMode() !== 'inactivas'"
+          severity="danger"
+          styleClass="sedes-pill"
+          type="button"
+          (click)="setViewMode('inactivas')"
+        ></p-button>
+
         <p-button
           label="Agregar Sede"
           icon="pi pi-plus"
@@ -26,7 +50,6 @@
       <div class="sedes-search-container flex-1">
         <span class="sedes-search-label">Buscar Sede</span>
 
-        <!-- searchTerm es signal -->
         <p-autoComplete
           class="sedes-search-input"
           [ngModel]="searchTerm()"
@@ -54,6 +77,7 @@
           icon="pi pi-filter-slash"
           severity="danger"
           styleClass="sedes-pill sedes-pill-danger"
+          type="button"
           (click)="clearSearch()"
         ></p-button>
       </div>
@@ -73,11 +97,17 @@
         <span class="sedes-section-icon">
           <i class="pi pi-user"></i>
         </span>
-        <span class="text-sm font-semibold text-700">SEDES INACTIVAS</span>
 
-        <!-- filteredSedes es computed(signal) -->
-        <p-tag [value]="'[' + filteredSedes().length + '] Sedes'" severity="danger"></p-tag>
+        <span class="text-sm font-semibold text-700">
+          {{ viewMode() === 'activas' ? 'SEDES ACTIVAS' : 'SEDES INACTIVAS' }}
+        </span>
+
+        <p-tag
+          [value]="'[' + filteredSedes().length + '] Sedes'"
+          [severity]="viewMode() === 'activas' ? 'success' : 'danger'"
+        ></p-tag>
       </div>
+
       <p-button icon="pi pi-id-card" text severity="secondary" styleClass="sedes-icon-btn"></p-button>
     </div>
 
@@ -94,6 +124,7 @@
         icon="pi pi-filter-slash"
         severity="danger"
         styleClass="sedes-pill sedes-pill-danger"
+        type="button"
         (click)="clearSearch()"
       ></p-button>
     </div>
@@ -145,12 +176,15 @@
                 [routerLink]="['/admin/sedes/editar-sede']"
                 [queryParams]="{ id: sede.id_sede }"
               ></p-button>
+
+              <!-- Botón de activar/desactivar según modo -->
               <p-button
-                icon="pi pi-trash"
+                [icon]="viewMode() === 'activas' ? 'pi pi-times' : 'pi pi-check'"
                 text
-                severity="danger"
+                [severity]="viewMode() === 'activas' ? 'danger' : 'success'"
                 styleClass="sedes-icon-btn"
-                (click)="confirmDelete(sede)"
+                (click)="confirmToggleStatus(sede)"
+                [title]="viewMode() === 'activas' ? 'Desactivar sede' : 'Activar sede'"
               ></p-button>
             </div>
           </td>
