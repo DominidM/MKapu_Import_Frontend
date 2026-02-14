@@ -8,9 +8,9 @@ export const ADMIN_ROUTES: Routes = [
       import('./pages/reportes/pages/notificacion-transferencia/notificacion-transferencia').then((m) => m.NotificacionTransferencia),
   },
   {
-    path: 'dashboard',
+    path: 'dashboard-admin',
     loadComponent: () =>
-      import('./pages/dashboard/dashboard').then((m) => m.Dashboard),
+      import('./pages/dashboard-admin/dashboard-admin').then((m) => m.DashboardAdmin),
   },
 
   /* =======================

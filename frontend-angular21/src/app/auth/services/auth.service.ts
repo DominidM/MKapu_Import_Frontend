@@ -75,9 +75,9 @@ export class AuthService {
 
   private redirectByRole(roleId: UserRole): void {
     const routes: Record<UserRole, string> = {
-      [UserRole.ADMIN]: '/admin/dashboard',
+      [UserRole.ADMIN]: '/admin/dashboard-admin',
       [UserRole.VENTAS]: '/ventas/dashboard-ventas',
-      [UserRole.ALMACEN]: '/almacen/dashboard',
+      [UserRole.ALMACEN]: '/almacen/dashboard-almacen',
     };
 
     const route = routes[roleId];

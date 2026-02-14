@@ -1,34 +1,34 @@
-<div class="card">
-    <p-toolbar>
-        <ng-template #start>
-             <p-button
-                icon="pi pi-bars"
-                class="mr-2 menu-button"
-                text
-                severity="secondary"
-                (onClick)="toggleSidebar.emit()"
-            ></p-button>
-        </ng-template>
-        <ng-template #center>
-            <input pInputText type="text" placeholder="Buscar" />
-        </ng-template>
-        <ng-template #end>
-            <div class="header-bell-wrapper">
-                <p-button
-                icon="pi pi-bell"
-                class="mr-2"
-                text
-                severity="secondary"
-                [routerLink]="['/admin/notificaciones']" />
-                <span class="header-bell-badge" *ngIf="notifCount > 0">{{ notifCount }}</span>
-            </div>
-            <p-button
-            [icon]="themeService.isDark() ? 'pi pi-sun' : 'pi pi-moon'"
-            class="mr-2"
-            text
-            severity="secondary"
-            (click)="toggleTheme()">
-            </p-button>
-        </ng-template>
-    </p-toolbar>
+<div class="app-header-card">
+  <p-toolbar styleClass="app-toolbar">
+    <ng-template pTemplate="start">
+      <p-button
+        icon="pi pi-bars"
+        class="mr-2 menu-button"
+        text
+        severity="secondary"
+        (onClick)="toggleSidebar.emit()"
+      ></p-button>
+    </ng-template>
+
+    <ng-template pTemplate="end">
+      <div class="header-bell-wrapper">
+        <p-button
+          icon="pi pi-bell"
+          class="mr-2"
+          text
+          severity="secondary"
+          [routerLink]="['/admin/notificaciones']"
+        ></p-button>
+        <span class="header-bell-badge" *ngIf="notifCount > 0">{{ notifCount }}</span>
+      </div>
+
+      <p-button
+        [icon]="themeService.isDark() ? 'pi pi-sun' : 'pi pi-moon'"
+        class="mr-2"
+        text
+        severity="secondary"
+        (click)="toggleTheme()"
+      ></p-button>
+    </ng-template>
+  </p-toolbar>
 </div>

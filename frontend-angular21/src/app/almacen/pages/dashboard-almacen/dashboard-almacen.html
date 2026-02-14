@@ -1,0 +1,203 @@
+<div class="p-3">
+  <div class="flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="text-3xl font-semibold m-0 mb-2">Dashboard de Almacén</h1>
+      <p class="text-500 m-0">
+        Resumen de rendimiento de movimientos e inventario
+      </p>
+    </div>
+  </div>
+
+  <!-- FILA 1: KPIs -->
+  <div class="grid mb-3">
+    <div class="col-12 md:col-6 lg:col-3" *ngFor="let kpi of kpis">
+      <p-card class="border-round shadow-2">
+        <div class="flex align-items-center gap-3 p-2">
+          <div
+            class="flex align-items-center justify-content-center border-round"
+            style="width: 50px; height: 50px"
+            [ngStyle]="{ 'background-color': kpi.color + '33' }"
+          >
+            <i class="{{ kpi.icon }} text-xl" [ngStyle]="{ color: kpi.color }"></i>
+          </div>
+          <div class="flex-1">
+            <span class="text-500 text-xs block mb-1">{{ kpi.label }}</span>
+            <div class="text-xl font-bold mb-1">{{ kpi.value }}</div>
+            <span class="text-500 text-xs">{{ kpi.trend }}</span>
+          </div>
+        </div>
+      </p-card>
+    </div>
+  </div>
+
+  <!-- FILA 2: Rendimiento + Salud de stock -->
+  <div class="grid">
+    <div class="col-12 lg:col-8">
+      <p-card class="border-round shadow-2">
+        <ng-template pTemplate="header">
+          <div
+            class="flex justify-content-between align-items-center p-3 border-bottom-1 surface-border"
+          >
+            <div class="flex align-items-center gap-2">
+              <i class="pi pi-chart-line text-primary"></i>
+              <span class="font-semibold text-lg">Rendimiento de Almacén</span>
+            </div>
+            <p-select
+              [options]="periodosOptions"
+              [(ngModel)]="periodoRendimiento"
+              (onChange)="onPeriodoRendimientoChange()"
+              optionLabel="label"
+              optionValue="value"
+              styleClass="w-8rem"
+            ></p-select>
+          </div>
+        </ng-template>
+        <div class="p-3">
+          <p-chart
+            type="line"
+            [data]="rendimientoChart"
+            [options]="rendimientoChartOptions"
+            [height]="'320px'"
+          ></p-chart>
+        </div>
+      </p-card>
+    </div>
+
+    <div class="col-12 lg:col-4">
+      <p-card class="border-round shadow-2">
+        <ng-template pTemplate="header">
+          <div
+            class="flex justify-content-between align-items-center p-3 border-bottom-1 surface-border"
+          >
+            <div class="flex align-items-center gap-2">
+              <i class="pi pi-chart-pie text-primary"></i>
+              <span class="font-semibold text-lg">Salud de Stock</span>
+            </div>
+            <p-select
+              [options]="aniosOptions"
+              [(ngModel)]="anioSeleccionado"
+              (onChange)="onAnioChange()"
+              optionLabel="label"
+              optionValue="value"
+              styleClass="w-7rem"
+            ></p-select>
+          </div>
+        </ng-template>
+        <div class="p-3 flex justify-content-center">
+          <p-chart
+            type="doughnut"
+            [data]="saludStockChart"
+            [options]="saludStockChartOptions"
+            [height]="'320px'"
+          ></p-chart>
+        </div>
+      </p-card>
+    </div>
+  </div>
+
+  <!-- FILA 3: Productos críticos + Movimientos recientes -->
+  <div class="grid mt-3">
+    <div class="col-12 lg:col-6">
+      <p-card class="border-round shadow-2 h-full">
+        <ng-template pTemplate="header">
+          <div
+            class="flex justify-content-between align-items-center p-3 border-bottom-1 surface-border"
+          >
+            <div class="flex align-items-center gap-2">
+              <i class="pi pi-exclamation-triangle text-primary"></i>
+              <span class="font-semibold text-lg">Productos Críticos</span>
+            </div>
+          </div>
+        </ng-template>
+        <div class="p-0">
+          <p-table
+            [value]="productosCriticos"
+            [rows]="5"
+            [paginator]="false"
+            styleClass="p-datatable-sm"
+          >
+            <ng-template pTemplate="header">
+              <tr>
+                <th>SKU</th>
+                <th>Descripción</th>
+                <th class="text-right">Stock</th>
+                <th class="text-right">Mínimo</th>
+                <th class="text-right">Rotación</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-prod>
+              <tr>
+                <td>{{ prod.codigo }}</td>
+                <td>{{ prod.descripcion }}</td>
+                <td class="text-right">
+                  <p-tag
+                    [value]="prod.stock"
+                    [severity]="getSeveridadStock(prod)"
+                  ></p-tag>
+                </td>
+                <td class="text-right">{{ prod.stockMinimo }}</td>
+                <td class="text-right">{{ prod.rotacion | number : '1.1-1' }}</td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+      </p-card>
+    </div>
+
+    <div class="col-12 lg:col-6">
+      <p-card class="border-round shadow-2 h-full">
+        <ng-template pTemplate="header">
+          <div
+            class="flex justify-content-between align-items-center p-3 border-bottom-1 surface-border"
+          >
+            <div class="flex align-items-center gap-2">
+              <i class="pi pi-clock text-primary"></i>
+              <span class="font-semibold text-lg">Movimientos Recientes</span>
+            </div>
+          </div>
+        </ng-template>
+        <div class="p-2" style="max-height: 320px; overflow-y: auto">
+          <div
+            *ngFor="let mov of movimientosRecientes; let last = last"
+            class="flex gap-3 p-3"
+            [class.border-bottom-1]="!last"
+            [class.surface-border]="!last"
+          >
+            <div
+              class="flex align-items-center justify-content-center border-round flex-shrink-0"
+              style="width: 40px; height: 40px"
+              [ngClass]="{
+                'bg-green-100': mov.tipo === 'INGRESO',
+                'bg-red-100': mov.tipo === 'SALIDA',
+                'bg-yellow-100': mov.tipo === 'AJUSTE'
+              }"
+            >
+              <i
+                class="pi"
+                [ngClass]="{
+                  'pi-arrow-down': mov.tipo === 'INGRESO',
+                  'pi-arrow-up': mov.tipo === 'SALIDA',
+                  'pi-pencil': mov.tipo === 'AJUSTE'
+                }"
+              ></i>
+            </div>
+            <div class="flex-1">
+              <div class="flex justify-content-between align-items-center mb-1">
+                <div class="font-semibold text-sm">
+                  {{ mov.tipo }} - {{ mov.referencia }}
+                </div>
+                <div class="text-500 text-xs">{{ mov.fecha }}</div>
+              </div>
+              <div class="text-500 text-sm mb-1">
+                {{ mov.producto }} · {{ mov.cantidad }} unidades
+              </div>
+              <div class="text-500 text-xs">
+                Registrado por {{ mov.usuario }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </p-card>
+    </div>
+  </div>
+</div>
