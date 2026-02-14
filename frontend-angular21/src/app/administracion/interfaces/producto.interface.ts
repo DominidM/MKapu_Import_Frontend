@@ -29,3 +29,68 @@ export interface ProductoResponse {
   total: number;
   meta: ProductoMeta;
 }
+
+export interface ProductoStock {
+  id_producto: number;
+  codigo: string;
+  nombre: string;
+  familia: string;
+  sede: string;
+  stock: number;
+}
+
+export interface ProductoStockResponse {
+  data: ProductoStock[];
+  pagination: {
+    page: number;
+    size: number;
+    total_records: number;
+    total_pages: number;
+  };
+}
+
+export interface ProductoAutocomplete {
+  id_producto: number;
+  codigo: string;
+  nombre: string;
+  stock: number;
+}
+
+export interface ProductoAutocompleteResponse {
+  data: ProductoAutocomplete[];
+}
+
+export interface ProductoDetalleStockResponse {
+  producto: ProductoDetalle;
+  stock: ProductoStockDetalle;
+}
+
+export interface ProductoDetalle {
+  id_producto: number;
+  codigo: string;
+  nombre: string;
+  descripcion: string;
+  categoria: {
+    id_categoria: number;
+    nombre: string;
+  };
+  precio_compra: number;
+  precio_unitario: number;
+  precio_mayor: number;
+  precio_caja: number;
+  unidad_medida: {
+    id: number | null;
+    nombre: string;
+  };
+  estado: number;
+  fecha_creacion: string;
+  fecha_edicion: string;
+}
+
+export interface ProductoStockDetalle {
+  id_sede: number;
+  sede: string;
+  id_almacen: number;
+  cantidad: number;
+  estado: string;
+}

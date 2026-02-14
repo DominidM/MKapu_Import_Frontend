@@ -137,6 +137,18 @@ export class Sidebar implements OnInit {
       icon: 'pi pi-trash',
     },
 
+    {
+      path: '/admin/conteo-inventario',
+      allowedRoles: [UserRole.ADMIN],
+      label: 'Conteo Inventario',
+      icon: 'pi pi-folder',
+    },
+
+
+
+
+
+
     // ==================== VENTAS ====================
     {
       path: '/ventas/dashboard-ventas',

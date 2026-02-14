@@ -89,8 +89,9 @@ export class Dashboard implements OnInit {
 
   mesSeleccionado: string = 'mes';
   mesesOptions = [{ label: 'Seleccione Mes', value: 'mes' }];
-
+  username: string = '';
   ngOnInit(): void {
+    this.username = this.getUserName();
     this.cargarEstadisticas();
     this.cargarGraficos();
     this.cargarTopProductos();
@@ -114,6 +115,23 @@ export class Dashboard implements OnInit {
     this.variacionTicket = 5.2;
     this.variacionClientes = 15.7;
   }
+
+  getUserName(): string {
+  const userString = localStorage.getItem('user');
+
+  if (!userString) {
+    return '';
+  }
+
+  try {
+    const user = JSON.parse(userString);
+    return user.nombres || '';
+  } catch (error) {
+    console.error('Error parseando usuario del localStorage', error);
+    return '';
+  }
+}
+
 
   cargarGraficos(): void {
     this.cargarGraficoVentasPorDia();

@@ -551,3 +551,153 @@
 .form-card {
     animation: fadeIn 0.4s ease-out;
 }
+
+/* ===== DARK MODE ===== */
+:host-context(.app-dark) .registro-page {
+    background: #0f1115;
+}
+
+:host-context(.app-dark) :host ::ng-deep .registro-header-card,
+:host-context(.app-dark) :host ::ng-deep .form-card,
+:host-context(.app-dark) :host ::ng-deep .resumen-card,
+:host-context(.app-dark) :host ::ng-deep .actions-card {
+    background: #18181B;
+    border-color: #27272a;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+:host-context(.app-dark) :host ::ng-deep .registro-header-card .p-card-body,
+:host-context(.app-dark) :host ::ng-deep .form-card .p-card-body,
+:host-context(.app-dark) :host ::ng-deep .resumen-card .p-card-body,
+:host-context(.app-dark) :host ::ng-deep .actions-card .p-card-body {
+    background: #18181B;
+}
+
+:host-context(.app-dark) .registro-kicker {
+    color: #a1a1aa;
+}
+
+:host-context(.app-dark) .registro-title,
+:host-context(.app-dark) .section-title,
+:host-context(.app-dark) .resumen-title,
+:host-context(.app-dark) .field-label {
+    color: #f8fafc;
+}
+
+:host-context(.app-dark) .section-subtitle,
+:host-context(.app-dark) .field-hint,
+:host-context(.app-dark) .info-label,
+:host-context(.app-dark) .producto-item-categoria,
+:host-context(.app-dark) .producto-item-stock {
+    color: #94a3b8;
+}
+
+:host-context(.app-dark) :host ::ng-deep .p-inputtext,
+:host-context(.app-dark) :host ::ng-deep .p-dropdown,
+:host-context(.app-dark) :host ::ng-deep .p-autocomplete,
+:host-context(.app-dark) :host ::ng-deep .p-inputtextarea,
+:host-context(.app-dark) :host ::ng-deep .form-grid .p-inputnumber input {
+    background: #09090b;
+    border-color: #27272a;
+    color: #f8fafc;
+}
+
+:host-context(.app-dark) :host ::ng-deep .p-inputtext::placeholder,
+:host-context(.app-dark) :host ::ng-deep .p-inputtextarea::placeholder {
+    color: #71717a;
+}
+
+:host-context(.app-dark) :host ::ng-deep .p-inputtext:focus,
+:host-context(.app-dark) :host ::ng-deep .p-dropdown:focus,
+:host-context(.app-dark) :host ::ng-deep .p-autocomplete:focus,
+:host-context(.app-dark) :host ::ng-deep .p-inputtextarea:focus,
+:host-context(.app-dark) :host ::ng-deep .p-inputnumber:focus-within {
+    border-color: #F6AF33;
+    box-shadow: 0 0 0 2px rgba(246, 175, 51, 0.15);
+}
+
+:host-context(.app-dark) .tipo-option {
+    background: #111318;
+    border-color: #27272a;
+}
+
+:host-context(.app-dark) .tipo-option:hover {
+    border-color: #F6AF33;
+    box-shadow: 0 4px 12px rgba(246, 175, 51, 0.15);
+}
+
+:host-context(.app-dark) .tipo-option.selected {
+    background: #1f1f23;
+    border-color: #F6AF33;
+}
+
+:host-context(.app-dark) .tipo-title,
+:host-context(.app-dark) .producto-item-nombre,
+:host-context(.app-dark) .info-value {
+    color: #f8fafc;
+}
+
+:host-context(.app-dark) .producto-item-precio,
+:host-context(.app-dark) .precio-value {
+    color: #34d399;
+}
+
+:host-context(.app-dark) .producto-info-card {
+    background: #111318;
+    border-color: #27272a;
+}
+
+:host-context(.app-dark) .producto-info-row:not(:last-child) {
+    border-bottom-color: #27272a;
+}
+
+:host-context(.app-dark) .cantidad-input .p-inputnumber-input {
+    color: #f8fafc;
+}
+
+:host-context(.app-dark) .descuento-card {
+    background: #0f1f18;
+    border-color: #1f3d2e;
+}
+
+:host-context(.app-dark) .descuento-info {
+    border-bottom-color: #1f3d2e;
+}
+
+:host-context(.app-dark) .descuento-info strong,
+:host-context(.app-dark) .descuento-label {
+    color: #a7f3d0;
+}
+
+:host-context(.app-dark) .descuento-precio.original {
+    color: #94a3b8;
+}
+
+:host-context(.app-dark) .resumen-item {
+    background: #111318;
+    border-color: #27272a;
+}
+
+:host-context(.app-dark) .resumen-label {
+    color: #94a3b8;
+}
+
+:host-context(.app-dark) .resumen-value {
+    color: #f8fafc;
+}
+
+:host-context(.app-dark) .badge-merma {
+    background: rgba(248, 113, 113, 0.2);
+    color: #fecaca;
+    border-color: #f87171;
+}
+
+:host-context(.app-dark) .badge-remate {
+    background: rgba(52, 211, 153, 0.2);
+    color: #86efac;
+    border-color: #34d399;
+}
+
+:host-context(.app-dark) :host ::ng-deep .p-radiobutton .p-radiobutton-box {
+    border-color: #3f3f46;
+}

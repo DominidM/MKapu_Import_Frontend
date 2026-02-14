@@ -1,15 +1,15 @@
-export interface SedeInterface {
+export interface Headquarter {
   id_sede: number;
   codigo: string;
   nombre: string;
   ciudad: string;
   departamento: string;
+  direccion: string;
+  telefono: string;
   activo: boolean;
-  createdAt: string;
-  updatedAt: string;
 }
 
-export interface SedeResponse {
-  headquarters: SedeInterface[];
+export interface HeadquarterResponse {
+  headquarters: Headquarter[];
   total: number;
 }

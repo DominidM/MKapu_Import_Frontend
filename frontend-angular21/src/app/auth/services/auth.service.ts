@@ -9,7 +9,7 @@ import { EmpleadosService } from '../../core/services/empleados.service';
 import {
   AuthInterface,
   AuthInterfaceResponse,
-  AuthUserBackend,
+  AuthAccountBackend,
 } from '../interfaces/auth.interface';
 
 import { ROLE_NAME_TO_ID } from '../../core/constants/roles.constants';
@@ -56,13 +56,18 @@ export class AuthService {
     return roleId;
   }
 
-  private transformUser(backendUser: AuthUserBackend): User {
-    // ← Usar AuthUserBackend
+  private transformUser(account: AuthAccountBackend) {
     return {
-      userId: backendUser.id,
-      username: backendUser.nombre_usuario,
-      roleId: this.mapRoleToRoleId(backendUser.rol_nombre),
-      email: backendUser.email,
+      userId: account.usuario.id_usuario,
+      username: account.username,
+      email: account.email_emp,
+      roleId: account.roles[0]?.id_rol,
+      roleName: account.roles[0]?.nombre,
+      idSede: account.id_sede,
+      sedeNombre: account.sede_nombre,
+      permisos: account.permisos.map(p => p.nombre),
+      nombres: account.usuario.nombres,
+      apellidos: `${account.usuario.ape_pat} ${account.usuario.ape_mat}`
     };
   }
 
@@ -79,20 +84,28 @@ export class AuthService {
   }
 
   login(username: string, password: string): Observable<AuthInterfaceResponse> {
+
     const loginData: AuthInterface = { username, password };
 
-    return this.http.post<AuthInterfaceResponse>(`${this.api}/auth/auth/login`, loginData).pipe(
-      tap((response) => {
-        const transformedUser = this.transformUser(response.user);
+    return this.http
+      .post<AuthInterfaceResponse>(`${this.api}/auth/auth/login`, loginData)
+      .pipe(
+        tap((response) => {
 
-        this.currentUser = transformedUser;
-        localStorage.setItem('token', response.token);
-        localStorage.setItem('user', JSON.stringify(transformedUser));
+          const account = response.account;
 
-        this.empleadosService.sincronizarDesdeAuth();
-        this.redirectByRole(transformedUser.roleId);
-      }),
-    );
+          const transformedUser = this.transformUser(account);
+
+          this.currentUser = transformedUser;
+
+          localStorage.setItem('token', response.access_token);
+          localStorage.setItem('user', JSON.stringify(transformedUser));
+
+          this.empleadosService.sincronizarDesdeAuth();
+
+          this.redirectByRole(transformedUser.roleId);
+        })
+      );
   }
 
   logout(): void {

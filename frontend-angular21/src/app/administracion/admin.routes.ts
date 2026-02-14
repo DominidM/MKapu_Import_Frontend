@@ -5,7 +5,7 @@ export const ADMIN_ROUTES: Routes = [
   {
     path: 'notificaciones',
     loadComponent: () =>
-      import('./pages/dashboard/dashboard').then((m) => m.Dashboard),
+      import('./pages/reportes/pages/notificacion-transferencia/notificacion-transferencia').then((m) => m.NotificacionTransferencia),
   },
   {
     path: 'dashboard',
@@ -22,15 +22,22 @@ export const ADMIN_ROUTES: Routes = [
       {
         path: '',
         loadComponent: () =>
-          import('./pages/administracion-crear-usuario/administracion-crear-usuario').then(
+          import('./pages/usuarios/pages/administracion-crear-usuario/administracion-crear-usuario').then(
             (m) => m.AdministracionCrearUsuario,
           ),
       },
       {
         path: 'crear-usuario',
         loadComponent: () =>
-          import('./pages/administracion/administracion').then(
+          import('./pages/usuarios/pages/administracion/administracion').then(
             (m) => m.Administracion,
+          ),
+      },
+      {
+        path: 'editar-usuario/:id',
+        loadComponent: () =>
+          import('./pages/usuarios/pages/administracion-editar-usuario/administracion-editar-usuario').then(
+            (m) => m.AdministracionEditarUsuario,
           ),
       },
     ],
@@ -61,6 +68,13 @@ export const ADMIN_ROUTES: Routes = [
         loadComponent: () =>
           import('./pages/reportes/pages/detalle-transferencia/detalle-transferencia').then(
             (m) => m.DetalleTransferencia,
+          ),
+      },
+      {
+        path: 'notificacion',
+        loadComponent: () =>
+          import('./pages/reportes/pages/notificacion-transferencia/notificacion-transferencia').then(
+            (m) => m.NotificacionTransferencia,
           ),
       },
     ],
@@ -234,18 +248,18 @@ export const ADMIN_ROUTES: Routes = [
       import('./pages/comision/comision')
     .then( (m) => m.Comision
   ),
-       
+
   },
 
 
- 
+
   {
     path: 'comision-regla',
     loadComponent: () =>
       import('./pages/comision-regla/comisionregla')
         .then( (m) => m.ComisionRegla),
   },
-  
+
 
   {
     path: 'comision-reportes',
@@ -253,7 +267,33 @@ export const ADMIN_ROUTES: Routes = [
       import('./pages/comision-reportes/comisionreportes')
         .then( (m) => m.ComisionReportes),
   },
-  
+
+    /* =======================
+     GESTIÓN DE Conteos
+  ======================= */
+  {
+    path: 'conteo-inventario',
+    loadComponent: () =>
+      import('./pages/conteo-inventario/conteoinventario')
+        .then( (m) => m.ConteoInventarios),
+  },
+
+  {
+    path: 'conteo-crear',
+    loadComponent: () =>
+      import('./pages/conteo-crear/conteocrear')
+        .then( (m) => m.ConteoCrear),
+  },
+  {
+    path: 'conteo-detalle',
+    loadComponent: () =>
+      import('./pages/conteo-detalle/conteodetalle')
+        .then( (m) => m.ConteoDetalle),
+  },
+
+
+
+
   /* =======================
      MERMAS / REMATES
   ======================= */

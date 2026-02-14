@@ -1,7 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule, Router } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { AutoCompleteModule } from 'primeng/autocomplete';
@@ -11,8 +11,25 @@ import { TagModule } from 'primeng/tag';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmationService, MessageService } from 'primeng/api';
-import { ProductosService } from '../../../../../core/services/productos.service';
-import { SedeService } from '../../../../../core/services/sede.service';
+import { TransferenciaService } from '../../../../services/transferencia.service';
+import { SedeService } from '../../../../services/sede.service';
+import { TransferenciaInterfaceResponse } from '../../../../interfaces/transferencia.interface';
+import { Headquarter } from '../../../../interfaces/sedes.interface';
+import { ProductoService } from '../../../../services/producto.service';
+import { catchError, finalize, forkJoin, map, of, switchMap } from 'rxjs';
+
+interface TransferenciaRow {
+  codigo: string;
+  producto: string;
+  origen: string;
+  destino: string;
+  cantidad: number;
+  solicitud: string;
+  responsable: string;
+  estado: string;
+  fechaEnvio: string;
+  fechaLlegada: string;
+}
 
 @Component({
   selector: 'app-transferencia',
@@ -35,12 +52,15 @@ import { SedeService } from '../../../../../core/services/sede.service';
   providers: [ConfirmationService, MessageService],
 })
 export class Transferencia implements OnInit {
-  transferencias: any[] = [];
-  filteredTransferencias: any[] = [];
-  transferenciaSuggestions: any[] = [];
+  transferencias: TransferenciaRow[] = [];
+  filteredTransferencias: TransferenciaRow[] = [];
+  transferenciaSuggestions: TransferenciaRow[] = [];
   searchTerm = '';
   estadoFilter: string | null = null;
-  sedes: { label: string; value: string }[] = [];
+  solicitudFilter: string | null = null;
+  loading = false;
+  private sedeNombrePorId = new Map<string, string>();
+  private productoNombrePorId = new Map<string, string>();
   estadoOptions = [
     { label: 'Todos', value: null },
     { label: 'Pendiente', value: 'Pendiente' },
@@ -48,18 +68,24 @@ export class Transferencia implements OnInit {
     { label: 'Completada', value: 'Completada' },
     { label: 'Incidencia', value: 'Incidencia' },
   ];
+  solicitudOptions = [
+    { label: 'Todas', value: null },
+    { label: 'Externas', value: 'Externas' },
+    { label: 'Internas', value: 'Internas' },
+  ];
 
   constructor(
     private confirmationService: ConfirmationService,
     private messageService: MessageService,
-    private router: Router,
-    private productosService: ProductosService,
+    private transferenciaService: TransferenciaService,
     private sedeService: SedeService,
+    private productoService: ProductoService,
+    private cdr: ChangeDetectorRef,
   ) {}
 
   // 🔥 SIEMPRE SE EJECUTA AL ENTRAR A LA RUTA
   ngOnInit(): void {
-    this.cargarSedes();
+    this.cargarTransferencias();
   }
 
   // 🔁 TAMBIÉN CUANDO REGRESAS DESDE OTRA PÁGINA
@@ -68,74 +94,138 @@ export class Transferencia implements OnInit {
   }
 
   cargarTransferencias(): void {
-    const data = localStorage.getItem('transferencias');
-    if (data) {
-      this.transferencias = JSON.parse(data);
-    } else {
-      this.transferencias = this.crearTransferenciasIniciales();
-      localStorage.setItem('transferencias', JSON.stringify(this.transferencias));
+    this.loading = true;
+    const sedes$ = this.sedeService.getSedes().pipe(
+      map((response) => (Array.isArray(response) ? response : response?.headquarters ?? [])),
+    );
+
+    forkJoin({
+      transferencias: this.transferenciaService.getTransferencias(),
+      sedes: sedes$,
+    })
+      .pipe(
+        switchMap(({ transferencias, sedes }) =>
+          this.cargarNombresProductos(transferencias).pipe(
+            map(() => ({ transferencias, sedes })),
+          ),
+        ),
+        finalize(() => {
+          this.loading = false;
+          this.cdr.detectChanges();
+        }),
+      )
+      .subscribe({
+        next: ({ transferencias, sedes }) => {
+          const lista = Array.isArray(transferencias) ? transferencias : [];
+          this.indexarSedes(sedes);
+          this.transferencias = lista.map((t) => this.mapTransferencia(t));
+          this.filteredTransferencias = [...this.transferencias];
+          this.transferenciaSuggestions = [...this.transferencias];
+          this.cdr.detectChanges();
+        },
+        error: (error) => {
+          console.error('Error al cargar transferencias:', error);
+          this.transferencias = [];
+          this.filteredTransferencias = [];
+          this.transferenciaSuggestions = [];
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'No se pudieron cargar las transferencias',
+          });
+          this.cdr.detectChanges();
+        },
+      });
+  }
+
+  private mapTransferencia(transferencia: TransferenciaInterfaceResponse): TransferenciaRow {
+    const fechaEnvio = this.formatearFecha(transferencia.requestDate);
+    const productoId = transferencia.items?.[0]?.productId ?? null;
+    const productoNombre =
+      productoId !== null ? this.productoNombrePorId.get(String(productoId)) : null;
+
+    return {
+      codigo: String(transferencia.id),
+      producto: productoNombre ?? (productoId !== null ? `Producto ${productoId}` : '-'),
+      origen: this.getSedeNombre(transferencia.originHeadquartersId),
+      destino: this.getSedeNombre(transferencia.destinationHeadquartersId),
+      cantidad: transferencia.totalQuantity ?? 0,
+      solicitud: '-',
+      responsable: '-',
+      estado: this.mapEstado(transferencia.status),
+      fechaEnvio,
+      fechaLlegada: '-',
+    };
+  }
+
+  private indexarSedes(sedes: Headquarter[]): void {
+    this.sedeNombrePorId.clear();
+    sedes.forEach((sede) => {
+      this.sedeNombrePorId.set(String(sede.id_sede), sede.nombre);
+    });
+  }
+
+  private cargarNombresProductos(
+    transferencias: TransferenciaInterfaceResponse[],
+  ) {
+    this.productoNombrePorId.clear();
+    const sedeIds = Array.from(
+      new Set(
+        transferencias
+          .map((t) => t.originHeadquartersId)
+          .filter((id): id is string => !!id),
+      ),
+    );
+
+    if (sedeIds.length === 0) {
+      return of(void 0);
     }
 
-    this.filteredTransferencias = [...this.transferencias];
-    this.transferenciaSuggestions = [...this.transferencias];
-  }
-
-  private cargarSedes(): void {
-    this.sedeService.getSedes().subscribe({
-      next: (sedes) => {
-        this.sedes = sedes.map((sede) => ({
-          label: sede.nombre,
-          value: sede.id_sede,
-        }));
-        this.cargarTransferencias();
-      },
-      error: (error) => {
-        console.error('Error al cargar sedes:', error);
-        this.cargarTransferencias();
-      },
-    });
-  }
-
-  private crearTransferenciasIniciales(): any[] {
-    const productos = this.productosService.getProductos(undefined, 'Activo');
-    const sedesDisponibles =
-      this.sedes.length > 0
-        ? this.sedes
-        : [
-            { label: 'SEDE001', value: 'SEDE001' },
-            { label: 'SEDE002', value: 'SEDE002' },
-            { label: 'SEDE003', value: 'SEDE003' },
-          ];
-    const sedeLabelMap = new Map(sedesDisponibles.map((sede) => [sede.value, sede.label]));
-    const hoy = new Date();
-
-    return productos.slice(0, 3).map((producto, index) => {
-
-      const origen = producto.sede ? sedeLabelMap.get(producto.sede) || producto.sede : 'Sin sede';
-
-      const destino = sedesDisponibles.find((sede) => sede.value !== producto.sede)?.label || '-';
-      const fechaEnvio = this.formatearFecha(
-        new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - (index + 2)),
+    const requests = sedeIds.map((id) => {
+      const idSede = Number(id);
+      if (Number.isNaN(idSede)) {
+        return of(null);
+      }
+      return this.productoService.getProductosConStock(idSede, 1, 1000).pipe(
+        map((resp) => resp.data ?? []),
+        catchError(() => of([])),
       );
-      const fechaLlegada = this.formatearFecha(
-        new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - index),
-      );
-
-      return {
-        codigo: `TRF-${hoy.getFullYear()}-${String(index + 1).padStart(4, '0')}`,
-        producto: producto.nombre,
-        origen,
-        destino,
-        cantidad: Math.min(10 + index * 5, producto.stock ?? 0),
-        responsable: 'Jefatura de almacen',
-        estado: index === 0 ? 'En transito' : index === 1 ? 'Pendiente' : 'Completada',
-        fechaEnvio,
-        fechaLlegada,
-      };
     });
+
+    return forkJoin(requests).pipe(
+      map((lists) => {
+        lists.forEach((items) => {
+          if (!items) return;
+          items.forEach((producto) => {
+            const key = String(producto.id_producto);
+            if (!this.productoNombrePorId.has(key)) {
+              this.productoNombrePorId.set(key, producto.nombre);
+            }
+          });
+        });
+      }),
+    );
   }
 
-  private formatearFecha(fecha: Date): string {
+  private getSedeNombre(id: string | null | undefined): string {
+    if (!id) return '-';
+    return this.sedeNombrePorId.get(String(id)) ?? String(id);
+  }
+
+  private mapEstado(estado: string | null | undefined): string {
+    if (!estado) return 'Pendiente';
+    const normalizado = estado.toLowerCase();
+    if (normalizado.includes('aprob')) return 'En transito';
+    if (normalizado.includes('complet')) return 'Completada';
+    if (normalizado.includes('inci')) return 'Incidencia';
+    if (normalizado.includes('pende')) return 'Pendiente';
+    return estado;
+  }
+
+  private formatearFecha(iso: string | null | undefined): string {
+    if (!iso) return '-';
+    const fecha = new Date(iso);
+    if (Number.isNaN(fecha.getTime())) return '-';
     const dia = String(fecha.getDate()).padStart(2, '0');
     const mes = String(fecha.getMonth() + 1).padStart(2, '0');
     const anio = fecha.getFullYear();
@@ -159,7 +249,12 @@ export class Transferencia implements OnInit {
   clearSearch(): void {
     this.searchTerm = '';
     this.estadoFilter = null;
+    this.solicitudFilter = null;
     this.filtrar('');
+  }
+
+  get hasActiveFilters(): boolean {
+    return !!(this.searchTerm || this.estadoFilter || this.solicitudFilter);
   }
 
   confirmDelete(transferencia: any): void {
@@ -169,10 +264,8 @@ export class Transferencia implements OnInit {
       icon: 'pi pi-exclamation-triangle',
       accept: () => {
         this.transferencias = this.transferencias.filter((t) => t.codigo !== transferencia.codigo);
-
-        localStorage.setItem('transferencias', JSON.stringify(this.transferencias));
-
-        this.cargarTransferencias();
+        this.filteredTransferencias = [...this.transferencias];
+        this.transferenciaSuggestions = [...this.transferencias];
 
         this.messageService.add({
           severity: 'success',
@@ -204,7 +297,8 @@ export class Transferencia implements OnInit {
         campo.toLowerCase().includes(v),
       );
       const matchesEstado = this.estadoFilter ? t.estado === this.estadoFilter : true;
-      return matchesText && matchesEstado;
+      const matchesSolicitud = this.solicitudFilter ? t.solicitud === this.solicitudFilter : true;
+      return matchesText && matchesEstado && matchesSolicitud;
     });
 
     this.transferenciaSuggestions = [...this.filteredTransferencias];
