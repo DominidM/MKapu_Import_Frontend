@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
@@ -9,20 +9,23 @@ import { TextareaModule } from 'primeng/textarea';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { InputNumberModule } from 'primeng/inputnumber';
-import { AutoCompleteModule } from 'primeng/autocomplete';
 import { RadioButtonModule } from 'primeng/radiobutton';
+import { Select } from 'primeng/select';
+
+import { WastageService, CreateWastageDto } from '../../../../services/wastage.service';
+import { ProductoService } from '../../../../services/producto.service';
 
 interface Producto {
-  id: number;
-  nombre: string;
-  categoria: string;
-  stock: number;
-  precio: number;
-}
-
-interface TipoRegistro {
-  label: string;
-  value: 'merma' | 'remate';
+  id_producto: number;
+  id_categoria: number;
+  categoriaNombre: string;
+  codigo: string;
+  anexo: string;
+  descripcion: string;
+  pre_unit: number;
+  estado: boolean;
+  stock?: number;
+  id_almacen?: number | null;
 }
 
 interface MotivoMerma {
@@ -47,8 +50,8 @@ interface MotivoRemate {
     TextareaModule,
     ToastModule,
     InputNumberModule,
-    AutoCompleteModule,
-    RadioButtonModule
+    RadioButtonModule,
+    Select,
   ],
   templateUrl: './mermas-remates-registro.html',
   styleUrl: './mermas-remates-registro.css',
@@ -56,21 +59,28 @@ interface MotivoRemate {
 })
 export class MermasRematesRegistro implements OnInit {
   tipoRegistro: 'merma' | 'remate' | null = null;
+
+  codigoProducto = '';
   productoSeleccionado: Producto | null = null;
-  cantidad: number = 1;
-  motivo: string = '';
-  observaciones: string = '';
-  responsable: string = 'Jefatura de almacén';
+  productoNoEncontrado = false;
 
-  // Campos específicos para REMATE
-  codigoRemate: string = '';
-  precioRemate: number = 0;
+  cantidad = 1;
 
-  // Opciones
-  tiposRegistro: TipoRegistro[] = [
-    { label: 'Merma (Producto sale de stock)', value: 'merma' },
-    { label: 'Remate (Producto en oferta)', value: 'remate' }
-  ];
+  motivo = '';
+  observaciones = '';
+
+  responsableNombre = 'Usuario en sesión';
+
+  // REMATE
+  codigoRemate = '';
+  precioRemate = 0;
+
+  // Contexto (TODO: reemplazar por token/auth)
+  id_usuario_ref = 1;
+  id_sede_ref = 1;
+  id_almacen_ref = 1;
+
+  id_tipo_merma = 1;
 
   motivosMerma: MotivoMerma[] = [
     { label: 'Producto vencido', value: 'vencido' },
@@ -79,7 +89,7 @@ export class MermasRematesRegistro implements OnInit {
     { label: 'Producto obsoleto', value: 'obsoleto' },
     { label: 'Pérdida por robo', value: 'robo' },
     { label: 'Pérdida en inventario', value: 'inventario' },
-    { label: 'Otro motivo', value: 'otro' }
+    { label: 'Otro motivo', value: 'otro' },
   ];
 
   motivosRemate: MotivoRemate[] = [
@@ -89,102 +99,136 @@ export class MermasRematesRegistro implements OnInit {
     { label: 'Producto descontinuado', value: 'descontinuado' },
     { label: 'Fin de colección', value: 'fin_coleccion' },
     { label: 'Promoción especial', value: 'promocion' },
-    { label: 'Otro motivo', value: 'otro' }
+    { label: 'Otro motivo', value: 'otro' },
   ];
 
-  // Productos disponibles (simulado - en producción vendría del backend)
-  productosDisponibles: Producto[] = [
-    { id: 1, nombre: 'Smart TV LED 55" 4K RAF', categoria: 'Electrónica', stock: 15, precio: 2500.00 },
-    { id: 2, nombre: 'Lavarropas Automático 10kg RAF', categoria: 'Electrodomésticos', stock: 8, precio: 1800.00 },
-    { id: 3, nombre: 'Refrigerador No Frost 12 pies RAF', categoria: 'Electrodomésticos', stock: 12, precio: 2200.00 },
-    { id: 4, nombre: 'Microondas Digital 25L RAF', categoria: 'Electrodomésticos', stock: 20, precio: 450.00 },
-    { id: 5, nombre: 'Aspiradora Robot Inteligente RAF', categoria: 'Electrodomésticos', stock: 10, precio: 1200.00 },
-    { id: 6, nombre: 'Laptop HP Pavilion i5', categoria: 'Informática', stock: 5, precio: 3500.00 },
-    { id: 7, nombre: 'Monitor Samsung 24"', categoria: 'Informática', stock: 18, precio: 850.00 },
-    { id: 8, nombre: 'Teclado Logitech K380', categoria: 'Accesorios', stock: 30, precio: 120.00 }
-  ];
+  private readonly messageService = inject(MessageService);
+  private readonly router = inject(Router);
+  private readonly wastageService = inject(WastageService);
+  private readonly productoService = inject(ProductoService);
 
-  productosFiltrados: Producto[] = [];
-  motivosFiltrados: (MotivoMerma | MotivoRemate)[] = [];
+  // ✅ FIX NG0100
+  private readonly cdr = inject(ChangeDetectorRef);
 
+  readonly loading = this.wastageService.loading;
+  readonly error = this.wastageService.error;
 
-  constructor(
-    private messageService: MessageService,
-    private router: Router
-  ) { }
+  ngOnInit(): void {}
 
-  ngOnInit(): void {
-    // Inicialización si es necesario
-  }
-
-  // ===== MÉTODOS PARA AUTOCOMPLETE DE PRODUCTOS =====
-  buscarMotivo(event: any): void {
-    const query = event.query.toLowerCase();
-
-    const lista =
-      this.tipoRegistro === 'merma'
-        ? this.motivosMerma
-        : this.motivosRemate;
-
-    this.motivosFiltrados = lista.filter(m =>
-      m.label.toLowerCase().includes(query)
+  private isProductoValido(data: any): data is Producto {
+    return (
+      !!data &&
+      typeof data === 'object' &&
+      typeof data.id_producto === 'number' &&
+      typeof data.codigo === 'string' &&
+      typeof data.anexo === 'string' &&
+      typeof data.pre_unit === 'number'
     );
   }
 
-  buscarProducto(event: any): void {
-    const query = event.query.toLowerCase();
+  private mapDetailWithStockToProducto(resp: any): Producto | null {
+    const p = resp?.producto;
+    const s = resp?.stock;
 
-    if (!query) {
-      this.productosFiltrados = [...this.productosDisponibles];
-    } else {
-      this.productosFiltrados = this.productosDisponibles.filter(producto =>
-        producto.nombre.toLowerCase().includes(query) ||
-        producto.categoria.toLowerCase().includes(query)
-      );
-    }
+    if (!p || typeof p !== 'object') return null;
+
+    const id_producto = Number(p.id_producto);
+    if (!id_producto || Number.isNaN(id_producto)) return null;
+
+    return {
+      id_producto,
+      id_categoria: Number(p.categoria?.id_categoria ?? 0),
+      categoriaNombre: String(p.categoria?.nombre ?? ''),
+      codigo: String(p.codigo ?? ''),
+      anexo: String(p.nombre ?? ''),
+      descripcion: String(p.descripcion ?? ''),
+      pre_unit: Number(p.precio_unitario ?? 0),
+      estado: Number(p.estado ?? 0) === 1,
+      stock: Number(s?.cantidad ?? 0),
+      id_almacen: s?.id_almacen != null ? Number(s.id_almacen) : null,
+    };
   }
 
-  onProductoSelect(producto: Producto): void {
-    this.productoSeleccionado = producto;
-
-    // Si es remate y no hay precio, sugerir un precio basado en el precio original
-    if (this.tipoRegistro === 'remate' && this.precioRemate === 0 && this.productoSeleccionado) {
-      // Sugerir 50% del precio original como precio de remate
-      this.precioRemate = this.productoSeleccionado.precio * 0.5;
-    }
+  // ✅ FIX DEFINITIVO para NG0100 en Angular 21 + PrimeNG v21
+  // PrimeNG Button dispara un segundo CD tick tras el click.
+  // setTimeout(50) garantiza que el cambio ocurra DESPUÉS de ese tick.
+  private applyStateSafe(fn: () => void): void {
+    setTimeout(() => {
+      fn();
+      this.cdr.detectChanges();
+    }, 50);
   }
 
-  // ===== MÉTODOS PARA CAMBIO DE TIPO =====
+  buscarProductoPorCodigo(): void {
+    const codigo = (this.codigoProducto ?? '').trim().toUpperCase();
+
+    // reset síncrono (esto es seguro porque va de "algo" a null/false)
+    this.productoNoEncontrado = false;
+    this.productoSeleccionado = null;
+
+    if (!codigo) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Falta código',
+        detail: 'Ingrese el código del producto (ej: R6602).',
+        life: 2500,
+      });
+      return;
+    }
+
+    this.productoService.getProductoByCodigoConStock(codigo, this.id_sede_ref).subscribe({
+      next: (resp: any) => {
+        const producto = this.mapDetailWithStockToProducto(resp);
+
+        if (!producto || !this.isProductoValido(producto)) {
+          this.applyStateSafe(() => {
+            this.productoNoEncontrado = true;
+            this.productoSeleccionado = null;
+          });
+          return;
+        }
+
+        this.applyStateSafe(() => {
+          this.productoNoEncontrado = false;
+          this.productoSeleccionado = producto;
+          this.cantidad = 1;
+
+          if (this.tipoRegistro === 'remate' && this.precioRemate === 0) {
+            this.precioRemate = (producto.pre_unit ?? 0) * 0.5;
+          }
+        });
+      },
+      error: () => {
+        this.applyStateSafe(() => {
+          this.productoNoEncontrado = true;
+          this.productoSeleccionado = null;
+        });
+      },
+    });
+  }
 
   onTipoChange(): void {
-    // Limpiar campos cuando se cambia el tipo
     this.motivo = '';
     this.observaciones = '';
 
     if (this.tipoRegistro === 'remate') {
-      // Generar código de remate automático
       this.codigoRemate = this.generarCodigoRemate();
 
-      // Si ya hay producto seleccionado, sugerir precio
       if (this.productoSeleccionado && this.precioRemate === 0) {
-        this.precioRemate = this.productoSeleccionado.precio * 0.5;
+        this.precioRemate = (this.productoSeleccionado.pre_unit ?? 0) * 0.5;
       }
-    } else {
-      // Limpiar campos de remate
-      this.codigoRemate = '';
-      this.precioRemate = 0;
+      return;
     }
+
+    this.codigoRemate = '';
+    this.precioRemate = 0;
   }
 
   generarCodigoRemate(): string {
-    const fecha = new Date();
-    const año = fecha.getFullYear();
-    const timestamp = Date.now();
+    const año = new Date().getFullYear();
     const random = Math.floor(Math.random() * 1000);
     return `RMT-${año}-${String(random).padStart(3, '0')}`;
   }
-
-  // ===== VALIDACIONES =====
 
   validarFormulario(): boolean {
     if (!this.tipoRegistro) {
@@ -192,7 +236,7 @@ export class MermasRematesRegistro implements OnInit {
         severity: 'error',
         summary: 'Error de validación',
         detail: 'Debe seleccionar un tipo de registro (Merma o Remate)',
-        life: 3000
+        life: 3000,
       });
       return false;
     }
@@ -201,8 +245,18 @@ export class MermasRematesRegistro implements OnInit {
       this.messageService.add({
         severity: 'error',
         summary: 'Error de validación',
-        detail: 'Debe seleccionar un producto',
-        life: 3000
+        detail: 'Debe buscar/seleccionar un producto por código',
+        life: 3000,
+      });
+      return false;
+    }
+
+    if (!this.productoSeleccionado.id_almacen) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'No se pudo determinar almacén',
+        detail: 'No se encontró id_almacen en el stock del producto para esta sede.',
+        life: 4000,
       });
       return false;
     }
@@ -212,17 +266,18 @@ export class MermasRematesRegistro implements OnInit {
         severity: 'error',
         summary: 'Error de validación',
         detail: 'La cantidad debe ser mayor a 0',
-        life: 3000
+        life: 3000,
       });
       return false;
     }
 
-    if (this.cantidad > this.productoSeleccionado.stock) {
+    const stock = Number(this.productoSeleccionado.stock ?? 0);
+    if (this.cantidad > stock) {
       this.messageService.add({
         severity: 'error',
         summary: 'Error de validación',
-        detail: `La cantidad no puede ser mayor al stock disponible (${this.productoSeleccionado.stock} unidades)`,
-        life: 3000
+        detail: `La cantidad no puede ser mayor al stock disponible (${stock} unidades)`,
+        life: 3000,
       });
       return false;
     }
@@ -232,7 +287,7 @@ export class MermasRematesRegistro implements OnInit {
         severity: 'error',
         summary: 'Error de validación',
         detail: 'Debe seleccionar un motivo',
-        life: 3000
+        life: 3000,
       });
       return false;
     }
@@ -243,7 +298,7 @@ export class MermasRematesRegistro implements OnInit {
           severity: 'error',
           summary: 'Error de validación',
           detail: 'El código de remate es obligatorio',
-          life: 3000
+          life: 3000,
         });
         return false;
       }
@@ -253,17 +308,17 @@ export class MermasRematesRegistro implements OnInit {
           severity: 'error',
           summary: 'Error de validación',
           detail: 'El precio de remate debe ser mayor a 0',
-          life: 3000
+          life: 3000,
         });
         return false;
       }
 
-      if (this.productoSeleccionado && this.precioRemate >= this.productoSeleccionado.precio) {
+      if (this.precioRemate >= (this.productoSeleccionado.pre_unit ?? 0)) {
         this.messageService.add({
           severity: 'warn',
           summary: 'Advertencia',
           detail: 'El precio de remate debería ser menor al precio original del producto',
-          life: 4000
+          life: 4000,
         });
       }
     }
@@ -271,40 +326,84 @@ export class MermasRematesRegistro implements OnInit {
     return true;
   }
 
-  // ===== MÉTODOS PRINCIPALES =====
-
   registrar(): void {
-    if (!this.validarFormulario()) {
+    if (!this.validarFormulario()) return;
+
+    if (this.tipoRegistro === 'merma') {
+      const idAlmacen = Number(this.productoSeleccionado?.id_almacen ?? this.id_almacen_ref);
+
+      // ⚠️ Cast IDs SIEMPRE a number explícito
+      const idUsuarioRef = Number(this.id_usuario_ref);
+      const idSedeRef = Number(this.id_sede_ref);
+
+      // Validar que son números reales
+      if (!idUsuarioRef || !idSedeRef || Number.isNaN(idAlmacen)) {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Faltan datos obligatorios del usuario, sede o almacén.',
+          life: 4000,
+        });
+        return;
+      }
+
+      const detalle = {
+        id_producto: this.productoSeleccionado!.id_producto,
+        cod_prod: this.productoSeleccionado!.codigo,
+        desc_prod: this.productoSeleccionado!.anexo,
+        cantidad: this.cantidad,
+        pre_unit: this.productoSeleccionado!.pre_unit,
+        id_tipo_merma: this.id_tipo_merma,
+        observacion: this.observaciones ?? '',
+      };
+
+      const dto: CreateWastageDto = {
+        id_usuario_ref: idUsuarioRef,
+        id_sede_ref: idSedeRef,
+        id_almacen_ref: idAlmacen,
+        motivo: this.getMotivoLabel(this.motivo),
+        detalles: [detalle],
+      };
+
+      // LOG PARA DEBUG
+      console.log('[WASTAGE DTO]', JSON.stringify(dto, null, 2));
+      console.log('[detalles is Array?]', Array.isArray(dto.detalles));
+      console.log('id_usuario_ref', typeof dto.id_usuario_ref, dto.id_usuario_ref);
+      console.log('id_sede_ref', typeof dto.id_sede_ref, dto.id_sede_ref);
+
+      this.wastageService.createWastage(dto).subscribe({
+        next: (res) => {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Merma registrada',
+            detail: `Merma #${res.id_merma} registrada correctamente.`,
+            life: 3000,
+          });
+
+          setTimeout(() => this.router.navigate(['/admin/mermas-remates']), 1500);
+        },
+        error: (err) => {
+          console.error('Error createWastage:', err);
+          console.error('Backend body:', err?.error);
+
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: err?.error?.message ?? err?.error ?? 'No se pudo registrar la merma.',
+            life: 5000,
+          });
+        },
+      });
+
       return;
     }
 
-    // Construir objeto de registro
-    const registro = {
-      tipo: this.tipoRegistro,
-      producto: this.productoSeleccionado,
-      cantidad: this.cantidad,
-      motivo: this.motivo,
-      observaciones: this.observaciones,
-      responsable: this.responsable,
-      codigoRemate: this.tipoRegistro === 'remate' ? this.codigoRemate : null,
-      precioRemate: this.tipoRegistro === 'remate' ? this.precioRemate : null,
-      fechaRegistro: new Date()
-    };
-
-    // Aquí iría la lógica para guardar en el backend
-    console.log('Registro a guardar:', registro);
-
     this.messageService.add({
-      severity: 'success',
-      summary: 'Registro Exitoso',
-      detail: `${this.tipoRegistro === 'merma' ? 'Merma' : 'Remate'} registrado correctamente para ${this.productoSeleccionado?.nombre}`,
-      life: 3000
+      severity: 'info',
+      summary: 'Pendiente',
+      detail: 'El flujo de Remate aún no está conectado a un endpoint.',
+      life: 3000,
     });
-
-    // Redirigir después de un delay
-    setTimeout(() => {
-      this.router.navigate(['/admin/mermas-remates']);
-    }, 2000);
   }
 
   cancelar(): void {
@@ -313,31 +412,30 @@ export class MermasRematesRegistro implements OnInit {
 
   limpiarFormulario(): void {
     this.tipoRegistro = null;
+    this.codigoProducto = '';
     this.productoSeleccionado = null;
+    this.productoNoEncontrado = false;
     this.cantidad = 1;
     this.motivo = '';
     this.observaciones = '';
     this.codigoRemate = '';
     this.precioRemate = 0;
-    this.responsable = 'Jefatura de almacén';
+    this.responsableNombre = 'Usuario en sesión';
   }
-
-  // ===== MÉTODOS AUXILIARES =====
 
   getMotivoLabel(value: string): string {
     if (this.tipoRegistro === 'merma') {
-      const motivo = this.motivosMerma.find(m => m.value === value);
-      return motivo ? motivo.label : value;
-    } else {
-      const motivo = this.motivosRemate.find(m => m.value === value);
-      return motivo ? motivo.label : value;
+      const m = this.motivosMerma.find((x) => x.value === value);
+      return m ? m.label : value;
     }
+    const r = this.motivosRemate.find((x) => x.value === value);
+    return r ? r.label : value;
   }
 
   calcularPorcentajeDescuento(): number {
     if (!this.productoSeleccionado || !this.precioRemate) return 0;
-
-    const descuento = ((this.productoSeleccionado.precio - this.precioRemate) / this.productoSeleccionado.precio) * 100;
+    const descuento =
+      ((this.productoSeleccionado.pre_unit - this.precioRemate) / this.productoSeleccionado.pre_unit) * 100;
     return Math.round(descuento);
   }
 }

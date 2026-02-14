@@ -316,6 +316,10 @@
     font-weight: 700;
 }
 
+.codigo-uppercase input {
+  text-transform: uppercase;
+}
+
 /* ===== DESCUENTO CARD ===== */
 .descuento-card {
     background: linear-gradient(135deg, #ecfdf5, #d1fae5);
