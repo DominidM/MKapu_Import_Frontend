@@ -171,19 +171,25 @@ export class Sidebar implements OnInit {
       label: 'Dashboard',
       icon: 'pi pi-chart-line',
     },
+  //==================== LOGISTICA ====================
     {
       path: '',
       allowedRoles: [UserRole.ADMIN],
       label: 'LOGISTICA',
       isSection: true,
     },
-    
     {
       path: '/logistica/conteo-inventario',
       allowedRoles: [UserRole.ADMIN],
       label: 'Conteo inventario',
       icon: 'pi pi-bookmark',
     },
+    {
+      path: '/logistica/remision',
+      allowedRoles: [UserRole.ADMIN],
+      label: 'Remision',
+      icon: 'pi pi-truck',
+    }
   ];
 
   constructor(

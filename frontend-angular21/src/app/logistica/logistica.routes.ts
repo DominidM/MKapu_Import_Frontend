@@ -7,5 +7,8 @@ export const LOGISTICA_ROUTES:Routes = [
     {
         path:'conteo-inventario',
         loadComponent: () => import('./pages/conteo-inventario/conteo-inventario').then((m)=>m.ConteoInventario)
+    },
+    {
+        path:'remision', loadComponent: () => import('./pages/remision/remision').then((m)=> m.Remision)
     }
 ]

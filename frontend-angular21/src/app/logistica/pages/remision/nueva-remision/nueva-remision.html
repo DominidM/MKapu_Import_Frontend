@@ -1,0 +1,66 @@
+<p-drawer 
+    [(visible)]="abierto" 
+    position="right" 
+    [modal]="true" 
+    [style]="{'width': '450px'}"
+    (onHide)="cerrar()"
+    header="Generar Nueva Guía de Remisión">
+    
+    <form [formGroup]="remisionForm" class="flex flex-column gap-4 p-2">
+        
+        <div class="flex flex-column gap-2">
+            <label class="font-bold text-sm">Número de Guía (Serie-Correlativo)</label>
+            <input pInputText formControlName="numeroGuia" placeholder="T001-00000001" class="w-full" />
+        </div>
+
+        <div class="flex flex-column gap-2">
+            <label class="font-bold text-sm">Fecha de Emisión</label>
+            <p-datepicker formControlName="fechaEmision" [showIcon]="true" appendTo="body" styleClass="w-full"></p-datepicker>
+        </div>
+
+        <div class="flex flex-column gap-2">
+            <label class="font-bold text-sm">Cliente / Destinatario</label>
+            <input pInputText formControlName="clienteDestino" placeholder="Razón Social o Nombre" class="w-full" />
+        </div>
+
+        <div class="flex flex-column gap-2">
+            <label class="font-bold text-sm">Punto de Llegada</label>
+            <input pInputText formControlName="puntoLlegada" placeholder="Dirección completa de entrega" class="w-full" />
+        </div>
+
+        <div class="flex flex-column gap-2">
+            <label class="font-bold text-sm">Motivo del Traslado</label>
+            <p-select [options]="motivosTraslado" formControlName="motivo" optionLabel="label" placeholder="Seleccione un motivo" styleClass="w-full"></p-select>
+        </div>
+
+        <div formGroupName="transportista" class="p-3 border-1 surface-border border-round flex flex-column gap-3">
+            <span class="font-bold text-gray-600 italic">Información del Transportista</span>
+            <div class="flex flex-column gap-2">
+                <label class="text-xs">Nombre / Empresa de Transporte</label>
+                <input pInputText formControlName="nombre" class="p-inputtext-sm w-full" />
+            </div>
+
+            <div class="grid p-0 m-0">
+                <div class="col-6 pl-0">
+                    <label class="text-xs block mb-1">Placa Vehículo</label>
+                    <input pInputText formControlName="placa" class="p-inputtext-sm w-full" />
+                </div>
+                <div class="col-6 pr-0">
+                    <label class="text-xs block mb-1">Licencia</label>
+                    <input pInputText formControlName="licencia" class="p-inputtext-sm w-full" />
+                </div>
+            </div>
+        </div>
+
+        <div class="flex flex-column gap-2">
+            <label class="font-bold text-sm">Observaciones Adicionales</label>
+            <textarea pTextarea formControlName="observaciones" rows="3" class="w-full"></textarea>
+        </div>
+
+        <div class="flex gap-2 mt-4 pt-3 border-top-1 surface-border">
+            <p-button label="Cancelar" icon="pi pi-times" severity="secondary" [outlined]="true" class="flex-1" (onClick)="cerrar()"></p-button>
+            <p-button label="Crear Guía" icon="pi pi-check" class="flex-1" (onClick)="guardarRemision()"></p-button>
+        </div>
+
+    </form>
+</p-drawer>
