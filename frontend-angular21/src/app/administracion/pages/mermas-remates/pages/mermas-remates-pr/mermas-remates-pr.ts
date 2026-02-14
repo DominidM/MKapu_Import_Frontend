@@ -16,7 +16,7 @@ import { DialogModule } from 'primeng/dialog';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { CommonModule } from '@angular/common';
-
+import { HttpClient, HttpParams } from '@angular/common/http';
 
 interface Producto {
   codigo: string;
@@ -34,13 +34,24 @@ interface TipoFiltro {
   value: string;
 }
 
-type Severity =
-  | 'success'
-  | 'info'
-  | 'warn'
-  | 'danger'
-  | 'secondary'
-  | 'contrast';
+// ✅ Interfaces para la respuesta del backend
+interface WastageResponse {
+  id_merma: number;
+  fec_merma: string;
+  motivo: string;
+  total_items: number;
+  estado: boolean;
+}
+
+interface WastagePaginatedResponse {
+  data: WastageResponse[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+type Severity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast';
 
 @Component({
   selector: 'app-mermas-remates-pr',
@@ -65,12 +76,17 @@ type Severity =
   styleUrl: './mermas-remates-pr.css',
   providers: [ConfirmationService, MessageService],
 })
+export class MermasRematesPr implements OnInit {
+  // ✅ API URL
+  private apiUrl = 'http://localhost:3000/logistics/catalog/wastage';
 
-export class MermasRematesPr {
+  // ✅ Estado de carga
+  cargando: boolean = false;
+
   // Estadísticas
-  totalMermas: number = 18;
-  totalRemates: number = 25;
-  valorTotalRemates: number = 12500;
+  totalMermas: number = 0;
+  totalRemates: number = 0;
+  valorTotalRemates: number = 0;
 
   // Filtros
   busqueda: string = '';
@@ -98,66 +114,72 @@ export class MermasRematesPr {
     { label: 'Remate', value: 'remate' }
   ];
 
-  // Lista de productos
-  productos: Producto[] = [
-    {
-      codigo: 'TRF-2026-0001',
-      nombre: 'Smart TV LED 55" 4K RAF',
-      responsable: 'Jefatura de almacén',
-      cantidad: 3,
-      tipo: 'merma',
-      fechaRegistro: new Date('2026-01-31')
-    },
-    {
-      codigo: 'TRF-2026-0002',
-      nombre: 'Lavarropas Automático 10kg RAF',
-      responsable: 'Jefatura de almacén',
-      cantidad: 5,
-      tipo: 'remate',
-      codigoRemate: 'RMT-2026-001',
-      precioRemate: 450.00,
-      fechaRegistro: new Date('2026-01-30')
-    },
-    {
-      codigo: 'TRF-2026-0003',
-      nombre: 'Refrigerador No Frost 12 pies RAF',
-      responsable: 'Jefatura de almacén',
-      cantidad: 2,
-      tipo: 'merma',
-      fechaRegistro: new Date('2026-01-29')
-    },
-    {
-      codigo: 'TRF-2026-0004',
-      nombre: 'Microondas Digital 25L RAF',
-      responsable: 'Jefatura de almacén',
-      cantidad: 8,
-      tipo: 'remate',
-      codigoRemate: 'RMT-2026-002',
-      precioRemate: 125.00,
-      fechaRegistro: new Date('2026-01-28')
-    },
-    {
-      codigo: 'TRF-2026-0005',
-      nombre: 'Aspiradora Robot Inteligente RAF',
-      responsable: 'Jefatura de almacén',
-      cantidad: 4,
-      tipo: 'remate',
-      codigoRemate: 'RMT-2026-003',
-      precioRemate: 280.00,
-      fechaRegistro: new Date('2026-01-27')
-    }
-  ];
+  // ✅ Paginación
+  paginaActual: number = 1;
+  productosPorPagina: number = 10;
+  totalProductos: number = 0;
 
+  // Lista de productos
+  productos: Producto[] = [];
   productosFiltrados: Producto[] = [];
 
   constructor(
     private messageService: MessageService,
-    private confirmationService: ConfirmationService
-  ) { }
+    private confirmationService: ConfirmationService,
+    private http: HttpClient // ✅ Inyectar HttpClient
+  ) {}
 
   ngOnInit(): void {
     this.productoActual = this.nuevoProductoVacio();
-    this.aplicarFiltros();
+    this.cargarMermas(); // ✅ Cargar datos del backend
+  }
+
+  // ✅ Cargar datos desde el backend
+  cargarMermas(): void {
+    this.cargando = true;
+    
+    const params = new HttpParams()
+      .set('page', this.paginaActual.toString())
+      .set('limit', this.productosPorPagina.toString());
+
+    this.http.get<WastagePaginatedResponse>(this.apiUrl, { params })
+      .subscribe({
+        next: (response) => {
+          // Mapear la respuesta del backend a nuestro formato de productos
+          this.productos = response.data.map(merma => ({
+            codigo: `MER-${merma.id_merma}`,
+            nombre: merma.motivo,
+            responsable: 'Sistema',
+            cantidad: merma.total_items,
+            tipo: 'merma' as const,
+            fechaRegistro: new Date(merma.fec_merma),
+            codigoRemate: undefined,
+            precioRemate: undefined
+          }));
+
+          this.totalProductos = response.total;
+          this.actualizarEstadisticas();
+          this.aplicarFiltros();
+          this.cargando = false;
+        },
+        error: (error) => {
+          console.error('Error al cargar mermas:', error);
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'No se pudieron cargar las mermas',
+            life: 3000
+          });
+          this.cargando = false;
+        }
+      });
+  }
+
+  // ✅ Método para cambiar de página (llamado por p-table)
+  onPageChange(event: any): void {
+    this.paginaActual = event.page + 1; // PrimeNG usa índice 0
+    this.productosPorPagina = event.rows;
+    this.cargarMermas();
   }
 
   // ===== MÉTODOS DE FILTRADO =====
@@ -238,11 +260,9 @@ export class MermasRematesPr {
 
   onTipoChange(): void {
     if (this.productoActual.tipo === 'merma') {
-      // Limpiar campos de remate si se selecciona merma
       this.productoActual.codigoRemate = undefined;
       this.productoActual.precioRemate = undefined;
     } else if (this.productoActual.tipo === 'remate' && !this.productoActual.codigoRemate) {
-      // Generar código de remate automático
       this.productoActual.codigoRemate = this.generarCodigoRemate();
     }
   }
@@ -309,7 +329,6 @@ export class MermasRematesPr {
     }
 
     if (this.modoEdicion) {
-      // Actualizar producto existente
       const index = this.productos.findIndex(p => p.codigo === this.productoActual.codigo);
       if (index !== -1) {
         this.productos[index] = { ...this.productoActual };
@@ -321,7 +340,6 @@ export class MermasRematesPr {
         });
       }
     } else {
-      // Agregar nuevo producto
       this.productos.push({ ...this.productoActual });
       this.messageService.add({
         severity: 'success',
@@ -377,15 +395,11 @@ export class MermasRematesPr {
     return 'N/A';
   }
 
-  getTipoSeverity(
-    tipo: 'merma' | 'remate' | null
-  ): Severity {
-
+  getTipoSeverity(tipo: 'merma' | 'remate' | null): Severity {
     if (tipo === 'merma') return 'danger';
     if (tipo === 'remate') return 'success';
     return 'info';
   }
-
 
   getContadorTab(tab: string): number {
     if (tab === 'todos') return this.productos.length;

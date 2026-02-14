@@ -116,7 +116,17 @@
             </div>
         </div>
 
-        <p-table [value]="productosFiltrados" [tableStyle]="{ 'min-width': '100%' }" styleClass="mermas-table">
+        <p-table 
+            [value]="productosFiltrados" 
+            [tableStyle]="{ 'min-width': '100%' }" 
+            styleClass="mermas-table"
+            [paginator]="true"
+            [rows]="10"
+            [rowsPerPageOptions]="[5, 10, 20, 50]"
+            [showCurrentPageReport]="true"
+            currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} productos"
+            [loading]="cargando">
+            
             <ng-template #header>
                 <tr>
                     <th style="width: 12%">CÓDIGO</th>
@@ -128,6 +138,7 @@
                     <th style="width: 10%" class="text-center">ACCIONES</th>
                 </tr>
             </ng-template>
+            
             <ng-template #body let-producto>
                 <tr>
                     <td>
@@ -166,6 +177,7 @@
                     </td>
                 </tr>
             </ng-template>
+            
             <ng-template #emptymessage>
                 <tr>
                     <td colspan="7" class="text-center py-5">
