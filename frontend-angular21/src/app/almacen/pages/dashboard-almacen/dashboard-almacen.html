@@ -1,14 +1,11 @@
 <div class="p-3">
   <div class="flex justify-content-between align-items-center mb-4">
     <div>
-      <h1 class="text-3xl font-semibold m-0 mb-2">Dashboard de Almacén</h1>
-      <p class="text-500 m-0">
-        Resumen de rendimiento de movimientos e inventario
-      </p>
+      <h1 class="text-3xl font-semibold m-0 mb-1">Hola, {{ username || 'Usuario' }}</h1>
+      <p class="text-500 m-0">Resumen de rendimiento de movimientos e inventario</p>
     </div>
   </div>
 
-  <!-- FILA 1: KPIs -->
   <div class="grid mb-3">
     <div class="col-12 md:col-6 lg:col-3" *ngFor="let kpi of kpis">
       <p-card class="border-round shadow-2">
@@ -30,7 +27,6 @@
     </div>
   </div>
 
-  <!-- FILA 2: Rendimiento + Salud de stock -->
   <div class="grid">
     <div class="col-12 lg:col-8">
       <p-card class="border-round shadow-2">
@@ -95,7 +91,6 @@
     </div>
   </div>
 
-  <!-- FILA 3: Productos críticos + Movimientos recientes -->
   <div class="grid mt-3">
     <div class="col-12 lg:col-6">
       <p-card class="border-round shadow-2 h-full">
@@ -109,37 +104,74 @@
             </div>
           </div>
         </ng-template>
-        <div class="p-0">
-          <p-table
-            [value]="productosCriticos"
-            [rows]="5"
-            [paginator]="false"
-            styleClass="p-datatable-sm"
+
+        <div class="p-3">
+          <div
+            *ngFor="let prod of productosCriticos; let last = last"
+            class="flex align-items-center gap-3 p-3 border-bottom-1 surface-border"
+            [class.border-bottom-none]="last"
           >
-            <ng-template pTemplate="header">
-              <tr>
-                <th>SKU</th>
-                <th>Descripción</th>
-                <th class="text-right">Stock</th>
-                <th class="text-right">Mínimo</th>
-                <th class="text-right">Rotación</th>
-              </tr>
-            </ng-template>
-            <ng-template pTemplate="body" let-prod>
-              <tr>
-                <td>{{ prod.codigo }}</td>
-                <td>{{ prod.descripcion }}</td>
-                <td class="text-right">
-                  <p-tag
-                    [value]="prod.stock"
-                    [severity]="getSeveridadStock(prod)"
-                  ></p-tag>
-                </td>
-                <td class="text-right">{{ prod.stockMinimo }}</td>
-                <td class="text-right">{{ prod.rotacion | number : '1.1-1' }}</td>
-              </tr>
-            </ng-template>
-          </p-table>
+            <div
+              class="flex align-items-center justify-content-center border-round flex-shrink-0"
+              style="width: 40px; height: 40px; background-color: #fff3e0"
+            >
+              <i class="pi pi-box" style="color: #ffa726; font-size: 0.9rem"></i>
+            </div>
+
+            <div class="flex-1 min-w-0">
+              <div class="flex justify-content-between align-items-center">
+                <div
+                  class="font-semibold text-sm"
+                  style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis"
+                >
+                  {{ prod.descripcion }}
+                </div>
+                <p-tag
+                  [value]="getEstadoStockTexto(prod)"
+                  [severity]="getSeveridadStock(prod)"
+                  [rounded]="true"
+                ></p-tag>
+              </div>
+
+              <div
+                class="text-500 text-xs mt-1"
+                style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis"
+              >
+                {{ prod.codigo }} · Rotación {{ prod.rotacion | number: '1.1-1' }}
+              </div>
+
+              <div
+                class="mt-2"
+                style="
+                  height: 6px;
+                  background: var(--surface-200);
+                  border-radius: 999px;
+                  overflow: hidden;
+                "
+              >
+                <div
+                  [ngStyle]="{
+                    width: getStockPct(prod) + '%',
+                    background: getBarColor(prod),
+                    height: '6px',
+                  }"
+                ></div>
+              </div>
+
+              <div class="flex justify-content-between align-items-center mt-2">
+                <div class="text-500 text-xs">Stock actual</div>
+                <div class="text-500 text-xs">Mínimo {{ prod.stockMinimo }}</div>
+              </div>
+            </div>
+
+            <div class="flex align-items-center" style="flex: 0 0 92px; justify-content: flex-end">
+              <p-tag
+                [value]="getStockLabel(prod)"
+                [severity]="getSeveridadStock(prod)"
+                [rounded]="true"
+              ></p-tag>
+            </div>
+          </div>
         </div>
       </p-card>
     </div>
@@ -156,6 +188,7 @@
             </div>
           </div>
         </ng-template>
+
         <div class="p-2" style="max-height: 320px; overflow-y: auto">
           <div
             *ngFor="let mov of movimientosRecientes; let last = last"
@@ -169,7 +202,7 @@
               [ngClass]="{
                 'bg-green-100': mov.tipo === 'INGRESO',
                 'bg-red-100': mov.tipo === 'SALIDA',
-                'bg-yellow-100': mov.tipo === 'AJUSTE'
+                'bg-yellow-100': mov.tipo === 'AJUSTE',
               }"
             >
               <i
@@ -177,23 +210,22 @@
                 [ngClass]="{
                   'pi-arrow-down': mov.tipo === 'INGRESO',
                   'pi-arrow-up': mov.tipo === 'SALIDA',
-                  'pi-pencil': mov.tipo === 'AJUSTE'
+                  'pi-pencil': mov.tipo === 'AJUSTE',
                 }"
               ></i>
             </div>
+
             <div class="flex-1">
               <div class="flex justify-content-between align-items-center mb-1">
-                <div class="font-semibold text-sm">
-                  {{ mov.tipo }} - {{ mov.referencia }}
-                </div>
+                <div class="font-semibold text-sm">{{ mov.tipo }} - {{ mov.referencia }}</div>
                 <div class="text-500 text-xs">{{ mov.fecha }}</div>
               </div>
+
               <div class="text-500 text-sm mb-1">
                 {{ mov.producto }} · {{ mov.cantidad }} unidades
               </div>
-              <div class="text-500 text-xs">
-                Registrado por {{ mov.usuario }}
-              </div>
+
+              <div class="text-500 text-xs">Registrado por {{ mov.usuario }}</div>
             </div>
           </div>
         </div>

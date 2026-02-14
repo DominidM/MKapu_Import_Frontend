@@ -32,6 +32,8 @@ interface ProductoStock {
   rotacion: number;
 }
 
+type TagSeverity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast' | null;
+
 @Component({
   selector: 'app-dashboard-almacen',
   standalone: true,
@@ -48,13 +50,12 @@ interface ProductoStock {
   styleUrl: './dashboard-almacen.css',
 })
 export class DashboardAlmacen implements OnInit {
+  username: string = '';
+
   kpis: KpiCard[] = [];
 
   rendimientoChart: any;
   rendimientoChartOptions: any;
-
-  rotacionChart: any;
-  rotacionChartOptions: any;
 
   saludStockChart: any;
   saludStockChartOptions: any;
@@ -73,14 +74,25 @@ export class DashboardAlmacen implements OnInit {
   aniosOptions: any[] = [];
 
   ngOnInit(): void {
+    this.username = this.getUserName();
     this.generarAniosOptions();
     this.cargarKpis();
     this.cargarRendimientoChart();
-    this.cargarRotacionChart();
     this.cargarSaludStockChart();
     this.cargarMovimientosRecientes();
     this.cargarProductosCriticos();
     this.configurarOpcionesCharts();
+  }
+
+  getUserName(): string {
+    const userString = localStorage.getItem('user');
+    if (!userString) return '';
+    try {
+      const user = JSON.parse(userString);
+      return user.nombres || '';
+    } catch {
+      return '';
+    }
   }
 
   generarAniosOptions(): void {
@@ -135,7 +147,6 @@ export class DashboardAlmacen implements OnInit {
   }
 
   onAnioChange(): void {
-    this.cargarRotacionChart();
     this.cargarSaludStockChart();
   }
 
@@ -165,24 +176,6 @@ export class DashboardAlmacen implements OnInit {
           fill: true,
           tension: 0.35,
           pointRadius: 3,
-        },
-      ],
-    };
-  }
-
-  cargarRotacionChart(): void {
-    const labels = ['SKU-001', 'SKU-015', 'SKU-034', 'SKU-077', 'SKU-099'];
-    const datos = [8.2, 6.5, 5.9, 4.7, 4.1];
-
-    this.rotacionChart = {
-      labels,
-      datasets: [
-        {
-          label: 'Rotación (veces/año)',
-          data: datos,
-          backgroundColor: '#66BB6A',
-          borderColor: '#43A047',
-          borderWidth: 1,
         },
       ],
     };
@@ -243,13 +236,7 @@ export class DashboardAlmacen implements OnInit {
 
   cargarProductosCriticos(): void {
     this.productosCriticos = [
-      {
-        codigo: 'SKU-001',
-        descripcion: 'Cable HDMI 2m',
-        stock: 8,
-        stockMinimo: 20,
-        rotacion: 7.5,
-      },
+      { codigo: 'SKU-001', descripcion: 'Cable HDMI 2m', stock: 8, stockMinimo: 20, rotacion: 7.5 },
       {
         codigo: 'SKU-015',
         descripcion: 'Mouse Inalámbrico',
@@ -264,32 +251,23 @@ export class DashboardAlmacen implements OnInit {
         stockMinimo: 10,
         rotacion: 4.2,
       },
-      {
-        codigo: 'SKU-077',
-        descripcion: 'SSD 512GB',
-        stock: 6,
-        stockMinimo: 12,
-        rotacion: 6.1,
-      },
+      { codigo: 'SKU-077', descripcion: 'SSD 512GB', stock: 6, stockMinimo: 12, rotacion: 6.1 },
     ];
   }
 
   configurarOpcionesCharts(): void {
     const documentStyle = getComputedStyle(document.documentElement);
-    const textColor =
-      documentStyle.getPropertyValue('--text-color') || '#e5e7eb';
+    const textColor = documentStyle.getPropertyValue('--text-color') || '#e5e7eb';
     const textColorSecondary =
       documentStyle.getPropertyValue('--text-color-secondary') || '#9ca3af';
-    const surfaceBorder =
-      documentStyle.getPropertyValue('--surface-border') || '#374151';
+    const surfaceBorder = documentStyle.getPropertyValue('--surface-border') || '#374151';
 
     this.rendimientoChartOptions = {
       maintainAspectRatio: false,
       plugins: {
         legend: { display: false },
         tooltip: {
-          backgroundColor:
-            documentStyle.getPropertyValue('--surface-overlay') || '#111827',
+          backgroundColor: documentStyle.getPropertyValue('--surface-overlay') || '#111827',
           titleColor: textColor,
           bodyColor: textColor,
           borderColor: surfaceBorder,
@@ -297,39 +275,10 @@ export class DashboardAlmacen implements OnInit {
         },
       },
       scales: {
-        x: {
-          ticks: { color: textColorSecondary },
-          grid: { color: 'transparent' },
-        },
+        x: { ticks: { color: textColorSecondary }, grid: { color: 'transparent' } },
         y: {
           ticks: { color: textColorSecondary },
           grid: { color: surfaceBorder, drawBorder: false },
-        },
-      },
-    };
-
-    this.rotacionChartOptions = {
-      indexAxis: 'y',
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor:
-            documentStyle.getPropertyValue('--surface-overlay') || '#111827',
-          titleColor: textColor,
-          bodyColor: textColor,
-          borderColor: surfaceBorder,
-          borderWidth: 1,
-        },
-      },
-      scales: {
-        x: {
-          ticks: { color: textColorSecondary },
-          grid: { color: surfaceBorder, drawBorder: false },
-        },
-        y: {
-          ticks: { color: textColorSecondary },
-          grid: { display: false },
         },
       },
     };
@@ -340,14 +289,10 @@ export class DashboardAlmacen implements OnInit {
       plugins: {
         legend: {
           position: 'bottom',
-          labels: {
-            color: textColor,
-            usePointStyle: true,
-          },
+          labels: { color: textColor, usePointStyle: true },
         },
         tooltip: {
-          backgroundColor:
-            documentStyle.getPropertyValue('--surface-overlay') || '#111827',
+          backgroundColor: documentStyle.getPropertyValue('--surface-overlay') || '#111827',
           titleColor: textColor,
           bodyColor: textColor,
           borderColor: surfaceBorder,
@@ -357,9 +302,30 @@ export class DashboardAlmacen implements OnInit {
     };
   }
 
-  getSeveridadStock(prod: ProductoStock): 'danger' | 'warn' | 'info' {
+  getSeveridadStock(prod: ProductoStock): TagSeverity {
     if (prod.stock <= prod.stockMinimo / 2) return 'danger';
     if (prod.stock <= prod.stockMinimo) return 'warn';
-    return 'info';
+    return 'success';
+  }
+
+  getEstadoStockTexto(prod: ProductoStock): string {
+    if (prod.stock <= prod.stockMinimo / 2) return 'Crítico';
+    if (prod.stock <= prod.stockMinimo) return 'Bajo';
+    return 'OK';
+  }
+
+  getStockPct(prod: ProductoStock): number {
+    if (!prod.stockMinimo) return 0;
+    return Math.max(0, Math.min(100, (prod.stock / prod.stockMinimo) * 100));
+  }
+
+  getBarColor(prod: ProductoStock): string {
+    const sev = this.getSeveridadStock(prod);
+    if (sev === 'danger') return '#EF5350';
+    if (sev === 'warn') return '#FFA726';
+    return '#66BB6A';
+  }
+  getStockLabel(prod: ProductoStock): string {
+    return `${prod.stock}`;
   }
 }
