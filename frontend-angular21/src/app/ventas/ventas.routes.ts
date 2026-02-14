@@ -62,5 +62,4 @@ export const VENTAS_ROUTES: Routes = [
         (m) => m.ReclamosDetalles,
       ),
   },
-  
 ];

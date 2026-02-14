@@ -76,6 +76,7 @@ export class AuthService {
       [UserRole.ADMIN]: '/admin/dashboard',
       [UserRole.VENTAS]: '/ventas/dashboard-ventas',
       [UserRole.ALMACEN]: '/almacen/dashboard',
+      [UserRole.LOGISTICA]: 'logistica/dashboard'
     };
 
     const route = routes[roleId];
@@ -126,6 +127,7 @@ export class AuthService {
       [UserRole.ADMIN]: 'admin',
       [UserRole.VENTAS]: 'ventas',
       [UserRole.ALMACEN]: 'almacen',
+      [UserRole.LOGISTICA]: 'logistica'
     };
 
     return roleNames[this.currentUser.roleId] || null;
