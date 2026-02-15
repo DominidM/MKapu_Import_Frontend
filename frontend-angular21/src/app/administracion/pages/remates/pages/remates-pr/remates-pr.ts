@@ -1,10 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, WritableSignal } from '@angular/core';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { InputTextModule } from 'primeng/inputtext';
-import { AutoCompleteModule } from 'primeng/autocomplete';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
@@ -14,54 +13,32 @@ import { TooltipModule } from 'primeng/tooltip';
 import { TagModule } from 'primeng/tag';
 import { DialogModule } from 'primeng/dialog';
 import { InputNumberModule } from 'primeng/inputnumber';
-import { SelectButtonModule } from 'primeng/selectbutton';
 import { CommonModule } from '@angular/common';
-import { HttpClient, HttpParams } from '@angular/common/http';
+
+import { AuctionService, CreateAuctionDto, AuctionResponseDto } from '../../../../services/auction.service';
 
 interface Producto {
+  id_remate?: number;            // id del remate (necesario para delete)
   codigo: string;
   nombre: string;
   responsable: string;
   cantidad: number;
-  tipo: 'merma' | 'remate' | null;
+  tipo?: 'remate';
   codigoRemate?: string;
   precioRemate?: number;
   fechaRegistro: Date;
+  productId?: number;
+  id_almacen_ref?: number;
 }
-
-interface TipoFiltro {
-  label: string;
-  value: string;
-}
-
-// ✅ Interfaces para la respuesta del backend
-interface WastageResponse {
-  id_merma: number;
-  fec_merma: string;
-  motivo: string;
-  total_items: number;
-  estado: boolean;
-}
-
-interface WastagePaginatedResponse {
-  data: WastageResponse[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-}
-
-type Severity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast';
 
 @Component({
-  selector: 'app-mermas-remates-pr',
+  selector: 'app-remates-pr',
   imports: [
     CardModule,
     ButtonModule,
     RouterModule,
     FormsModule,
     InputTextModule,
-    AutoCompleteModule,
     ConfirmDialogModule,
     ToastModule,
     TableModule,
@@ -69,7 +46,6 @@ type Severity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast
     TagModule,
     DialogModule,
     InputNumberModule,
-    SelectButtonModule,
     CommonModule
   ],
   templateUrl: './remates-pr.html',
@@ -77,334 +53,217 @@ type Severity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast
   providers: [ConfirmationService, MessageService],
 })
 export class RematesPr implements OnInit {
-  // ✅ API URL
-  private apiUrl = 'http://localhost:3000/logistics/catalog/wastage';
+  // inject services as properties so field initializers can use them safely
+  private readonly auctionService = inject(AuctionService);
+  private readonly messageService = inject(MessageService);
+  private readonly confirmationService = inject(ConfirmationService);
 
-  // ✅ Estado de carga
-  cargando: boolean = false;
-
-  // Estadísticas
-  totalMermas: number = 0;
-  totalRemates: number = 0;
-  valorTotalRemates: number = 0;
-
-  // Filtros
-  busqueda: string = '';
-  tipoFiltro: string = 'todos';
-
-  tiposFiltro: TipoFiltro[] = [
-    { label: 'Todos los tipos', value: 'todos' },
-    { label: 'Solo Mermas', value: 'merma' },
-    { label: 'Solo Remates', value: 'remate' }
+  // almacenes estático (declarado antes de productoActual)
+  almacenes = [
+    { id: 1, name: 'Almacén Central' },
+    { id: 2, name: 'Almacén Sucursal' }
   ];
 
-  // Tab activa
-  tabActiva: string = 'todos';
+  // Signals local para forma/modal
+  productoActual = signal<Producto>(this.nuevoProductoVacioSeed());
+  mostrarModal = signal(false);
+  modoEdicion = signal(false);
 
-  // Modal
-  mostrarModal: boolean = false;
-  modoEdicion: boolean = false;
+  // Filtros (signals)
+  busqueda = signal('');
+  paginaActual = signal(1);
+  productosPorPagina = signal(10);
 
-  // Producto en edición
-  productoActual!: Producto;
+  // Loading proviene del servicio (computed signal)
+  cargando = this.auctionService.loading;
 
-  // Opciones de tipo para el modal
-  tiposProducto = [
-    { label: 'Merma (Sale de Stock)', value: 'merma' },
-    { label: 'Remate', value: 'remate' }
-  ];
+  // computed: mapea la señal de auctions del servicio a tu interfaz Producto (incluye id_remate)
+  productos = computed(() =>
+    this.auctionService.auctions().map((a: AuctionResponseDto) => this.mapToProducto(a))
+  );
 
-  // ✅ Paginación
-  paginaActual: number = 1;
-  productosPorPagina: number = 10;
-  totalProductos: number = 0;
+  // filtered computed (basado en productos())
+  productosFiltrados = computed(() => {
+    const q = this.busqueda().trim().toLowerCase();
+    if (!q) return this.productos();
+    return this.productos().filter(p =>
+      (p.codigo || '').toLowerCase().includes(q) ||
+      (p.nombre || '').toLowerCase().includes(q) ||
+      (p.responsable || '').toLowerCase().includes(q)
+    );
+  });
 
-  // Lista de productos
-  productos: Producto[] = [];
-  productosFiltrados: Producto[] = [];
-
-  constructor(
-    private messageService: MessageService,
-    private confirmationService: ConfirmationService,
-    private http: HttpClient // ✅ Inyectar HttpClient
-  ) {}
+  // stats computed
+  totalRemates = computed(() => this.productos().filter(p => p.tipo === 'remate').length);
+  valorTotalRemates = computed(() =>
+    this.productos()
+      .filter(p => p.tipo === 'remate')
+      .reduce((sum, p) => sum + ((p.precioRemate || 0) * p.cantidad), 0)
+  );
 
   ngOnInit(): void {
-    this.productoActual = this.nuevoProductoVacio();
-    this.cargarMermas(); // ✅ Cargar datos del backend
+    this.loadRemates();
   }
 
-  // ✅ Cargar datos desde el backend
-  cargarMermas(): void {
-    this.cargando = true;
-    
-    const params = new HttpParams()
-      .set('page', this.paginaActual.toString())
-      .set('limit', this.productosPorPagina.toString());
-
-    this.http.get<WastagePaginatedResponse>(this.apiUrl, { params })
-      .subscribe({
-        next: (response) => {
-          // Mapear la respuesta del backend a nuestro formato de productos
-          this.productos = response.data.map(merma => ({
-            codigo: `MER-${merma.id_merma}`,
-            nombre: merma.motivo,
-            responsable: 'Sistema',
-            cantidad: merma.total_items,
-            tipo: 'merma' as const,
-            fechaRegistro: new Date(merma.fec_merma),
-            codigoRemate: undefined,
-            precioRemate: undefined
-          }));
-
-          this.totalProductos = response.total;
-          this.actualizarEstadisticas();
-          this.aplicarFiltros();
-          this.cargando = false;
-        },
-        error: (error) => {
-          console.error('Error al cargar mermas:', error);
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'No se pudieron cargar las mermas',
-            life: 3000
-          });
-          this.cargando = false;
-        }
-      });
-  }
-
-  // ✅ Método para cambiar de página (llamado por p-table)
-  onPageChange(event: any): void {
-    this.paginaActual = event.page + 1; // PrimeNG usa índice 0
-    this.productosPorPagina = event.rows;
-    this.cargarMermas();
-  }
-
-  // ===== MÉTODOS DE FILTRADO =====
-
-  aplicarFiltros(): void {
-    let resultados = [...this.productos];
-
-    // Filtrar por búsqueda
-    if (this.busqueda.trim()) {
-      const busquedaLower = this.busqueda.toLowerCase();
-      resultados = resultados.filter(p =>
-        p.codigo.toLowerCase().includes(busquedaLower) ||
-        p.nombre.toLowerCase().includes(busquedaLower) ||
-        p.responsable.toLowerCase().includes(busquedaLower)
-      );
-    }
-
-    // Filtrar por tipo
-    if (this.tipoFiltro !== 'todos') {
-      resultados = resultados.filter(p => p.tipo === this.tipoFiltro);
-    }
-
-    // Filtrar por tab activa
-    if (this.tabActiva !== 'todos') {
-      resultados = resultados.filter(p => p.tipo === this.tabActiva);
-    }
-
-    this.productosFiltrados = resultados;
-  }
-
-  limpiarFiltros(): void {
-    this.busqueda = '';
-    this.tipoFiltro = 'todos';
-    this.aplicarFiltros();
-  }
-
-  cambiarTab(tab: string): void {
-    this.tabActiva = tab;
-    this.aplicarFiltros();
-  }
-
-  // ===== MÉTODOS DEL MODAL =====
-
-  abrirModal(): void {
-    this.modoEdicion = false;
-    this.productoActual = this.nuevoProductoVacio();
-    this.mostrarModal = true;
-  }
-
-  cerrarModal(): void {
-    this.mostrarModal = false;
-    this.productoActual = this.nuevoProductoVacio();
-  }
-
-  editarProducto(producto: Producto): void {
-    this.modoEdicion = true;
-    this.productoActual = { ...producto };
-    this.mostrarModal = true;
-  }
-
-  nuevoProductoVacio(): Producto {
+  // seed helper for initial productoActual (safe — almacenes already defined)
+  private nuevoProductoVacioSeed(): Producto {
+    const defaultAlmacenId = (this.almacenes && this.almacenes.length) ? this.almacenes[0].id : 1;
     return {
-      codigo: this.generarCodigoAutomatico(),
+      codigo: this.generarCodigoAutomaticoSeed(),
       nombre: '',
       responsable: 'Jefatura de almacén',
       cantidad: 1,
-      tipo: null,
-      fechaRegistro: new Date()
+      tipo: 'remate',
+      fechaRegistro: new Date(),
+      productId: undefined,
+      id_almacen_ref: defaultAlmacenId
     };
+  }
+
+  private generarCodigoAutomaticoSeed(): string {
+    const fecha = new Date();
+    const año = fecha.getFullYear();
+    return `TRF-${año}-0001`;
   }
 
   generarCodigoAutomatico(): string {
     const fecha = new Date();
     const año = fecha.getFullYear();
-    const ultimoNumero = this.productos.length + 1;
+    const ultimoNumero = this.productos().length + 1;
     return `TRF-${año}-${String(ultimoNumero).padStart(4, '0')}`;
   }
 
-  onTipoChange(): void {
-    if (this.productoActual.tipo === 'merma') {
-      this.productoActual.codigoRemate = undefined;
-      this.productoActual.precioRemate = undefined;
-    } else if (this.productoActual.tipo === 'remate' && !this.productoActual.codigoRemate) {
-      this.productoActual.codigoRemate = this.generarCodigoRemate();
-    }
+  // Map server AuctionResponseDto -> Producto UI model
+  private mapToProducto(a: AuctionResponseDto): Producto {
+    return {
+      id_remate: a.id_remate,
+      codigo: a.cod_remate || `RMT-${a.id_remate}`,
+      nombre: a.descripcion,
+      responsable: 'Sistema',
+      cantidad: a.total_items ?? (a.detalles?.reduce((s: number, d: any) => s + (d.stock_remate || 0), 0) || 0),
+      tipo: 'remate',
+      fechaRegistro: a.fec_inicio ? new Date(a.fec_inicio) : new Date(),
+      codigoRemate: a.cod_remate,
+      precioRemate: a.detalles?.[0]?.pre_remate,
+      productId: a.detalles?.[0]?.id_producto,
+      id_almacen_ref: this.almacenes[0].id
+    };
   }
 
-  generarCodigoRemate(): string {
-    const fecha = new Date();
-    const año = fecha.getFullYear();
-    const rematesExistentes = this.productos.filter(p => p.tipo === 'remate').length;
-    return `RMT-${año}-${String(rematesExistentes + 1).padStart(3, '0')}`;
-  }
-
-  guardarProducto(): void {
-    // Validaciones
-    if (!this.productoActual.nombre.trim()) {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Error',
-        detail: 'El nombre del producto es obligatorio',
-        life: 3000
-      });
-      return;
-    }
-
-    if (!this.productoActual.tipo) {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Error',
-        detail: 'Debe seleccionar un tipo de registro',
-        life: 3000
-      });
-      return;
-    }
-
-    if (this.productoActual.cantidad <= 0) {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Error',
-        detail: 'La cantidad debe ser mayor a 0',
-        life: 3000
-      });
-      return;
-    }
-
-    if (this.productoActual.tipo === 'remate') {
-      if (!this.productoActual.codigoRemate || !this.productoActual.precioRemate) {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'Los productos de remate deben tener código y precio de remate',
-          life: 3000
-        });
-        return;
-      }
-
-      if (this.productoActual.precioRemate <= 0) {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'El precio de remate debe ser mayor a 0',
-          life: 3000
-        });
-        return;
-      }
-    }
-
-    if (this.modoEdicion) {
-      const index = this.productos.findIndex(p => p.codigo === this.productoActual.codigo);
-      if (index !== -1) {
-        this.productos[index] = { ...this.productoActual };
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Producto Actualizado',
-          detail: `${this.productoActual.nombre} actualizado correctamente`,
-          life: 3000
-        });
-      }
-    } else {
-      this.productos.push({ ...this.productoActual });
-      this.messageService.add({
-        severity: 'success',
-        summary: 'Producto Registrado',
-        detail: `${this.productoActual.nombre} registrado como ${this.productoActual.tipo}`,
-        life: 3000
-      });
-    }
-
-    this.actualizarEstadisticas();
-    this.aplicarFiltros();
-    this.cerrarModal();
-  }
-
-  eliminarProducto(producto: Producto): void {
-    this.confirmationService.confirm({
-      message: `¿Está seguro de eliminar "${producto.nombre}"?`,
-      header: 'Confirmar eliminación',
-      icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'Sí, eliminar',
-      rejectLabel: 'Cancelar',
-      acceptButtonStyleClass: 'p-button-danger',
-      accept: () => {
-        const index = this.productos.findIndex(p => p.codigo === producto.codigo);
-        if (index !== -1) {
-          this.productos.splice(index, 1);
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Producto eliminado',
-            detail: `${producto.nombre} eliminado correctamente`,
-            life: 3000
-          });
-          this.actualizarEstadisticas();
-          this.aplicarFiltros();
-        }
+  // ---------- CARGA DE SUBASTAS ----------
+  loadRemates(): void {
+    this.auctionService.loadAuctions(this.paginaActual(), this.productosPorPagina()).subscribe({
+      next: () => {
+        // servicio actualizó su señal internamente; actualizar código de productoActual
+        this.productoActual.update(curr => ({ ...curr, codigo: this.generarCodigoAutomatico() }));
+      },
+      error: (err) => {
+        console.error('Error cargando remates', err);
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los remates', life: 3000 });
       }
     });
   }
 
-  // ===== MÉTODOS AUXILIARES =====
-
-  actualizarEstadisticas(): void {
-    this.totalMermas = this.productos.filter(p => p.tipo === 'merma').length;
-    this.totalRemates = this.productos.filter(p => p.tipo === 'remate').length;
-    this.valorTotalRemates = this.productos
-      .filter(p => p.tipo === 'remate')
-      .reduce((sum, p) => sum + ((p.precioRemate || 0) * p.cantidad), 0);
+  // ---------- MODAL ----------
+  abrirModal(): void {
+    this.modoEdicion.set(false);
+    this.productoActual.set({
+      ...this.nuevoProductoVacioSeed(),
+      codigo: this.generarCodigoAutomatico()
+    });
+    this.mostrarModal.set(true);
   }
 
-  getTipoLabel(tipo: 'merma' | 'remate' | null): string {
-    if (tipo === 'merma') return 'MERMA';
-    if (tipo === 'remate') return 'REMATE';
-    return 'N/A';
+  cerrarModal(): void {
+    this.mostrarModal.set(false);
+    this.productoActual.set({
+      ...this.nuevoProductoVacioSeed(),
+      codigo: this.generarCodigoAutomatico()
+    });
   }
 
-  getTipoSeverity(tipo: 'merma' | 'remate' | null): Severity {
-    if (tipo === 'merma') return 'danger';
-    if (tipo === 'remate') return 'success';
-    return 'info';
+  editarProducto(producto: Producto): void {
+    this.modoEdicion.set(true);
+    this.productoActual.set({ ...producto });
+    this.mostrarModal.set(true);
   }
 
-  getContadorTab(tab: string): number {
-    if (tab === 'todos') return this.productos.length;
-    if (tab === 'merma') return this.totalMermas;
-    if (tab === 'remate') return this.totalRemates;
-    return 0;
+  setProductoField<K extends keyof Producto>(field: K, value: Producto[K]) {
+    this.productoActual.update(curr => ({ ...curr, [field]: value }));
+  }
+
+  // ---------- GUARDAR REMATE (CALL BACKEND) ----------
+  guardarProducto(): void {
+    const p = this.productoActual();
+    // validations
+    if (!p.nombre?.trim()) {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'El nombre es obligatorio', life: 3000 });
+      return;
+    }
+    if (!p.productId) {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Debe indicar el ID del producto', life: 3000 });
+      return;
+    }
+    if (!p.precioRemate || p.precioRemate <= 0) {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Precio de remate inválido', life: 3000 });
+      return;
+    }
+
+    const payload: CreateAuctionDto = {
+      cod_remate: p.codigoRemate || p.codigo || this.generarCodigoAutomatico(),
+      descripcion: p.nombre,
+      fec_fin: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      estado: 'ACTIVO',
+      id_almacen_ref: p.id_almacen_ref || this.almacenes[0].id,
+      detalles: [
+        {
+          id_producto: Number(p.productId),
+          pre_original: Number(p.precioRemate || 0),
+          pre_remate: Number(p.precioRemate || 0),
+          stock_remate: Number(p.cantidad),
+          observacion: ''
+        }
+      ]
+    };
+
+    this.auctionService.createAuction(payload).subscribe({
+      next: (created) => {
+        this.messageService.add({ severity: 'success', summary: 'Remate creado', detail: created.cod_remate, life: 3000 });
+        // Servicio ya actualizó su señal; computed productos() se refrescará automáticamente
+        this.cerrarModal();
+      },
+      error: (err) => {
+        console.error('Error creando remate:', err);
+        const detail = err?.error?.message || 'No se pudo crear remate';
+        this.messageService.add({ severity: 'error', summary: 'Error', detail, life: 5000 });
+      }
+    });
+  }
+
+  eliminarProducto(producto: Producto): void {
+    if (!producto.id_remate) {
+      // Si no hay id_remate, solo actualizar UI localmente
+      this.productoActual(); // no-op to keep usage consistent
+      this.messageService.add({ severity: 'warn', summary: 'No eliminado', detail: 'Producto sin identificador de remate', life: 3000 });
+      return;
+    }
+
+    this.confirmationService.confirm({
+      message: `¿Está seguro de eliminar "${producto.nombre}"?`,
+      header: 'Confirmar eliminación',
+      icon: 'pi pi-exclamation-triangle',
+      accept: () => {
+        this.auctionService.deleteAuction(producto.id_remate!).subscribe({
+          next: () => {
+            this.messageService.add({ severity: 'success', summary: 'Remate eliminado', detail: `${producto.nombre} eliminado correctamente`, life: 3000 });
+            // la señal del servicio ya se actualiza dentro de deleteAuction
+          },
+          error: (err) => {
+            console.error('Error eliminando remate:', err);
+            this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo eliminar el remate', life: 4000 });
+          }
+        });
+      }
+    });
   }
 }
