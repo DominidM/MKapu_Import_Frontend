@@ -1,3 +1,4 @@
+<!-- (archivo completo actualizado con checkbox para generación automática) -->
 <div class="registro-page">
   <p-card styleClass="registro-header-card">
     <div class="flex align-items-center justify-content-between flex-wrap gap-3">
@@ -65,7 +66,16 @@
         <div class="grid">
           <div class="col-12 md:col-6">
             <label class="field-label">CÓDIGO DE REMATE</label>
-            <input pInputText [(ngModel)]="codigoRemate" class="w-full" placeholder="Ej: RMT-2026-001" />
+
+            <div class="flex align-items-center gap-2">
+              <input pInputText [(ngModel)]="codigoRemate" [disabled]="generarCodigoAuto" class="w-full" placeholder="{{ generarCodigoAuto ? 'Se generará automáticamente (dejar en blanco)' : 'Ej: RMT-2026-001' }}" />
+              <label style="display:flex;align-items:center;gap:0.5rem;white-space:nowrap;">
+                <input type="checkbox" [(ngModel)]="generarCodigoAuto" />
+                <span style="font-size:0.85rem">Generar código automáticamente</span>
+              </label>
+            </div>
+
+            <small *ngIf="generarCodigoAuto" class="field-hint">El sistema asignará un código único (recomendado).</small>
           </div>
 
           <div class="col-12 md:col-6">
@@ -104,13 +114,13 @@
       </p-card>
     </div>
 
-    <div class="col-12" *ngIf="productoSeleccionado && codigoRemate && precioRemate && motivo">
+    <div class="col-12" *ngIf="productoSeleccionado && precioRemate && motivo">
       <p-card styleClass="resumen-card">
         <h3 class="resumen-title">Resumen</h3>
         <div class="resumen-grid">
           <div class="resumen-item"><span class="resumen-label">Producto:</span><span class="resumen-value">{{ productoSeleccionado.anexo }}</span></div>
           <div class="resumen-item"><span class="resumen-label">Cantidad:</span><span class="resumen-value">{{ cantidad }} unid.</span></div>
-          <div class="resumen-item"><span class="resumen-label">Código remate:</span><span class="resumen-value">{{ codigoRemate }}</span></div>
+          <div class="resumen-item"><span class="resumen-label">Código remate:</span><span class="resumen-value">{{ generarCodigoAuto ? '(se generará automáticamente)' : codigoRemate }}</span></div>
           <div class="resumen-item"><span class="resumen-label">Precio remate:</span><span class="resumen-value">S/ {{ precioRemate | number:'1.2-2' }}</span></div>
           <div class="resumen-item"><span class="resumen-label">Fecha inicio:</span><span class="resumen-value">{{ fecInicioStr }}</span></div>
           <div class="resumen-item"><span class="resumen-label">Fecha fin:</span><span class="resumen-value">{{ fecFinStr }}</span></div>

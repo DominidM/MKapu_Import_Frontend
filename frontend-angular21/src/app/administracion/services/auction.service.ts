@@ -14,8 +14,9 @@ export interface AuctionDetailDto {
 }
 
 export interface CreateAuctionDto {
-  cod_remate: string;
+  cod_remate?: string; 
   descripcion: string;
+  fec_inicio?: string; 
   fec_fin: string;
   estado?: string;
   id_almacen_ref: number;
@@ -48,11 +49,6 @@ export interface PaginatedAuctions {
   limit: number;
 }
 
-/**
- * AuctionService (Signals-enabled)
- * - Mantiene señales privadas y expone computed públicamente
- * - Añade headers 'x-role' y Authorization Bearer token (si AuthService provee token)
- */
 @Injectable({ providedIn: 'root' })
 export class AuctionService {
   private readonly api = environment.apiUrl;
@@ -93,7 +89,6 @@ export class AuctionService {
         tap((created) => {
           const prev = this._auctions();
           this._auctions.set([created, ...prev]);
-          // optional: adjust pagination if needed (here we keep current pages)
         }),
         catchError((err) => {
           this._error.set('No se pudo crear el remate.');
@@ -118,7 +113,6 @@ export class AuctionService {
       })
       .pipe(
         tap((response) => {
-          // API: { items: [], total, page, limit }
           this._auctions.set(response.items ?? []);
           const totalItems = response.total ?? (response.items?.length ?? 0);
           const computedTotalPages = Math.max(1, Math.ceil(totalItems / (limit || 1)));
@@ -160,7 +154,6 @@ export class AuctionService {
       })
       .pipe(
         tap((updated) => {
-          // actualizar señal local si existe
           this._auctions.update(list => list.map(a => a.id_remate === updated.id_remate ? updated : a));
         }),
         catchError((err) => {
@@ -201,9 +194,7 @@ export class AuctionService {
       })
       .pipe(
         tap(() => {
-          // eliminar del listado local
           this._auctions.update(list => list.filter(a => a.id_remate !== id));
-          // recalcular totalPages en base al pageSize proporcionado
           const newTotalItems = this._auctions().length;
           const newTotalPages = Math.max(1, Math.ceil(newTotalItems / (pageSize || 1)));
           this._totalPages.set(newTotalPages);

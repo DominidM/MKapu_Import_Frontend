@@ -10,6 +10,7 @@ import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { Select } from 'primeng/select';
+import { CheckboxModule } from 'primeng/checkbox';
 
 import { AuctionService, CreateAuctionDto } from '../../../../services/auction.service';
 import { ProductoService } from '../../../../services/producto.service';
@@ -48,13 +49,13 @@ interface MotivoOption {
     ToastModule,
     InputNumberModule,
     Select,
+    CheckboxModule,
   ],
   templateUrl: './remates-registro.html',
   styleUrl: './remates-registro.css',
   providers: [MessageService],
 })
 export class RematesRegistro implements OnInit {
-  // injected services
   private readonly messageService = inject(MessageService);
   private readonly router = inject(Router);
   private readonly auctionService = inject(AuctionService);
@@ -62,7 +63,6 @@ export class RematesRegistro implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly cdr = inject(ChangeDetectorRef);
 
-  // form state
   codigoProducto = '';
   productoSeleccionado: Producto | null = null;
   productoNoEncontrado = false;
@@ -71,19 +71,17 @@ export class RematesRegistro implements OnInit {
   codigoRemate = '';
   precioRemate: number | null = null;
   observaciones = '';
-
   responsableNombre = 'Cargando...';
 
-  // fechas como strings compatibles con <input type="datetime-local">
   fecInicioStr: string | null = null;
   fecFinStr: string | null = null;
 
-  // id_sede / id_usuario
+  generarCodigoAuto = true; 
+
   id_usuario_ref = 0;
   id_sede_ref = 0;
   id_sede_code: string | null = null;
 
-  // motivos (puedes ajustarlos o cargarlos desde API)
   motivosRemate: MotivoOption[] = [
     { label: 'Liquidación', value: 1, descripcion: 'Promoción / Liquidación' },
     { label: 'Obsolescencia', value: 2, descripcion: 'Fin de ciclo' },
@@ -95,8 +93,6 @@ export class RematesRegistro implements OnInit {
 
   ngOnInit(): void {
     this.cargarDatosUsuario();
-
-    // Inicializar fechas por defecto: inicio = ahora, fin = +7 días
     const now = new Date();
     this.fecInicioStr = this.formatDateToDatetimeLocal(now);
     this.fecFinStr = this.formatDateToDatetimeLocal(new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000));
@@ -106,7 +102,7 @@ export class RematesRegistro implements OnInit {
     setTimeout(() => {
       fn();
       this.cdr.detectChanges();
-    }, 0);
+    }, 50);
   }
 
   private cargarDatosUsuario(): void {
@@ -116,7 +112,7 @@ export class RematesRegistro implements OnInit {
       this.messageService.add({
         severity: 'error',
         summary: 'Sesión no válida',
-        detail: 'No se pudo obtener la información del usuario. Por favor, inicie sesión nuevamente.',
+        detail: 'No se pudo obtener la información del usuario.',
         life: 5000,
       });
       setTimeout(() => this.authService.logout(), 1200);
@@ -140,7 +136,7 @@ export class RematesRegistro implements OnInit {
     const nombres = String(usuario.nombres ?? usuario.nombre ?? usuario.username ?? '').trim();
     const ape_pat = String(usuario.ape_pat ?? usuario.apellidos ?? '').trim();
     const ape_mat = String(usuario.ape_mat ?? '').trim();
-    this.responsableNombre = [nombres, ape_pat, ape_mat].filter(Boolean).join(' ').trim() || String(usuario.username || 'Usuario');
+    this.responsableNombre = [nombres, ape_pat, ape_mat].filter(Boolean).join(' ').trim() || 'Usuario';
   }
 
   private isProductoValido(data: any): data is Producto {
@@ -195,13 +191,18 @@ export class RematesRegistro implements OnInit {
           this.messageService.add({ severity: 'warn', summary: 'No encontrado', detail: 'Producto no encontrado o sin stock.', life: 2500 });
           return;
         }
-        this.applyStateSafe(() => { this.productoSeleccionado = producto; this.productoNoEncontrado = false; this.cantidad = 1; });
+        this.applyStateSafe(() => { 
+          this.productoSeleccionado = producto; 
+          this.productoNoEncontrado = false; 
+          this.cantidad = 1; 
+          this.precioRemate = Math.round(producto.pre_unit * 0.5 * 100) / 100;
+        });
         this.messageService.add({ severity: 'success', summary: 'Producto encontrado', detail: `${producto.codigo} - ${producto.anexo}`, life: 2000 });
       },
       error: (err: any) => {
         console.error('Error buscarProductoPorCodigo:', err);
         this.applyStateSafe(() => { this.productoSeleccionado = null; this.productoNoEncontrado = true; });
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Error al buscar producto. Intente nuevamente.', life: 3500 });
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Error al buscar producto.', life: 3500 });
       }
     });
   }
@@ -214,7 +215,6 @@ export class RematesRegistro implements OnInit {
     return Math.round(((orig - rem) / orig) * 100);
   }
 
-  // --- Helpers for datetime-local handling ---
   private formatDateToDatetimeLocal(d: Date): string {
     const pad = (n: number) => String(n).padStart(2, '0');
     const yyyy = d.getFullYear();
@@ -249,37 +249,40 @@ export class RematesRegistro implements OnInit {
       this.messageService.add({ severity: 'error', summary: 'Stock insuficiente', detail: `Stock disponible: ${this.productoSeleccionado.stock}`, life: 3000 });
       return false;
     }
-    if (!this.codigoRemate || !this.codigoRemate.trim()) {
-      this.messageService.add({ severity: 'error', summary: 'Código remate requerido', detail: 'Debe indicar un código de remate.', life: 3000 });
-      return false;
+
+    if (!this.generarCodigoAuto) {
+      if (!this.codigoRemate || !this.codigoRemate.trim()) {
+        this.messageService.add({ severity: 'error', summary: 'Código remate requerido', detail: 'Debe indicar un código de remate.', life: 3000 });
+        return false;
+      }
     }
+
     if (!this.precioRemate || this.precioRemate <= 0) {
       this.messageService.add({ severity: 'error', summary: 'Precio inválido', detail: 'Indique un precio de remate mayor a 0.', life: 3000 });
       return false;
     }
     if (!this.motivo) {
-      this.messageService.add({ severity: 'error', summary: 'Motivo requerido', detail: 'Seleccione un motivo para el remate.', life: 3000 });
+      this.messageService.add({ severity: 'error', summary: 'Motivo requerido', detail: 'Seleccione un motivo.', life: 3000 });
       return false;
     }
 
-    // Fecha inicio/fin validations using the datetime-local strings (fecInicioStr/fecFinStr)
     if (!this.fecInicioStr) {
-      this.messageService.add({ severity: 'error', summary: 'Fecha inicio requerida', detail: 'Seleccione fecha y hora de inicio', life: 3000 });
+      this.messageService.add({ severity: 'error', summary: 'Fecha inicio requerida', detail: 'Seleccione fecha de inicio.', life: 3000 });
       return false;
     }
     if (!this.fecFinStr) {
-      this.messageService.add({ severity: 'error', summary: 'Fecha fin requerida', detail: 'Seleccione fecha y hora de fin', life: 3000 });
+      this.messageService.add({ severity: 'error', summary: 'Fecha fin requerida', detail: 'Seleccione fecha de fin.', life: 3000 });
       return false;
     }
 
     const inicio = new Date(this.fecInicioStr);
     const fin = new Date(this.fecFinStr);
     if (isNaN(inicio.getTime()) || isNaN(fin.getTime())) {
-      this.messageService.add({ severity: 'error', summary: 'Fecha inválida', detail: 'Formato de fecha incorrecto', life: 3000 });
+      this.messageService.add({ severity: 'error', summary: 'Fecha inválida', detail: 'Formato de fecha incorrecto.', life: 3000 });
       return false;
     }
     if (fin <= inicio) {
-      this.messageService.add({ severity: 'error', summary: 'Fechas inválidas', detail: 'La fecha de fin debe ser posterior a la fecha de inicio', life: 3500 });
+      this.messageService.add({ severity: 'error', summary: 'Fechas inválidas', detail: 'La fecha de fin debe ser posterior a la de inicio.', life: 3500 });
       return false;
     }
 
@@ -290,8 +293,8 @@ export class RematesRegistro implements OnInit {
     if (!this.validarFormulario()) return;
 
     const almacenId = Number(this.productoSeleccionado!.id_almacen);
-    const dto: CreateAuctionDto & { fec_inicio?: string } = {
-      cod_remate: this.codigoRemate!,
+    
+    const dto: CreateAuctionDto = {
       descripcion: this.productoSeleccionado!.anexo,
       fec_fin: this.parseDatetimeLocalToISOString(this.fecFinStr!) || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
       estado: 'ACTIVO',
@@ -308,23 +311,63 @@ export class RematesRegistro implements OnInit {
     };
 
     const fecInicioIso = this.parseDatetimeLocalToISOString(this.fecInicioStr!);
-    if (fecInicioIso) dto.fec_inicio = fecInicioIso;
+    if (fecInicioIso) {
+      dto.fec_inicio = fecInicioIso;
+    }
 
-    console.log('CreateAuctionDto', dto);
+    if (!this.generarCodigoAuto && this.codigoRemate && this.codigoRemate.trim()) {
+      dto.cod_remate = this.codigoRemate.trim();
+    }
+
+    console.log('✅ CreateAuctionDto:', JSON.stringify(dto, null, 2));
+
     this.auctionService.createAuction(dto).subscribe({
       next: (created) => {
-        this.messageService.add({ severity: 'success', summary: 'Remate creado', detail: `Remate ${created.cod_remate} creado`, life: 3000 });
-        setTimeout(() => this.router.navigate(['/admin/remates']), 1200);
+        this.messageService.add({ 
+          severity: 'success', 
+          summary: '✓ Remate creado', 
+          detail: `Remate ${created.cod_remate} creado exitosamente.`, 
+          life: 3000 
+        });
+        setTimeout(() => this.router.navigate(['/admin/remates']), 1500);
       },
       error: (err) => {
-        console.error('Error creando remate:', err);
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: err?.error?.message ?? 'No se pudo crear remate', life: 5000 });
+        console.error('❌ Error creando remate:', err);
+        const errorMsg = err?.error?.message || err?.message || 'No se pudo crear el remate.';
+        this.messageService.add({ 
+          severity: 'error', 
+          summary: 'Error al crear remate', 
+          detail: errorMsg, 
+          life: 5000 
+        });
       }
     });
   }
 
   cancelar(): void {
     this.router.navigate(['/admin/remates']);
+  }
+
+  limpiarFormulario(): void {
+    this.codigoProducto = '';
+    this.productoSeleccionado = null;
+    this.productoNoEncontrado = false;
+    this.cantidad = 1;
+    this.codigoRemate = '';
+    this.precioRemate = null;
+    this.observaciones = '';
+    this.motivo = null;
+    
+    const now = new Date();
+    this.fecInicioStr = this.formatDateToDatetimeLocal(now);
+    this.fecFinStr = this.formatDateToDatetimeLocal(new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000));
+
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Formulario limpiado',
+      detail: 'Puede iniciar un nuevo registro.',
+      life: 2000
+    });
   }
 
   getMotivoLabel(id: number | null): string {
