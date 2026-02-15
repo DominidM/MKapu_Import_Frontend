@@ -74,6 +74,10 @@ export class RematesRegistro implements OnInit {
 
   responsableNombre = 'Cargando...';
 
+  // fechas como strings compatibles con <input type="datetime-local">
+  fecInicioStr: string | null = null;
+  fecFinStr: string | null = null;
+
   // id_sede / id_usuario
   id_usuario_ref = 0;
   id_sede_ref = 0;
@@ -91,13 +95,18 @@ export class RematesRegistro implements OnInit {
 
   ngOnInit(): void {
     this.cargarDatosUsuario();
+
+    // Inicializar fechas por defecto: inicio = ahora, fin = +7 días
+    const now = new Date();
+    this.fecInicioStr = this.formatDateToDatetimeLocal(now);
+    this.fecFinStr = this.formatDateToDatetimeLocal(new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000));
   }
 
   private applyStateSafe(fn: () => void): void {
     setTimeout(() => {
       fn();
       this.cdr.detectChanges();
-    });
+    }, 0);
   }
 
   private cargarDatosUsuario(): void {
@@ -205,6 +214,24 @@ export class RematesRegistro implements OnInit {
     return Math.round(((orig - rem) / orig) * 100);
   }
 
+  // --- Helpers for datetime-local handling ---
+  private formatDateToDatetimeLocal(d: Date): string {
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const yyyy = d.getFullYear();
+    const MM = pad(d.getMonth() + 1);
+    const dd = pad(d.getDate());
+    const hh = pad(d.getHours());
+    const mm = pad(d.getMinutes());
+    return `${yyyy}-${MM}-${dd}T${hh}:${mm}`;
+  }
+
+  private parseDatetimeLocalToISOString(s: string | null): string | null {
+    if (!s) return null;
+    const d = new Date(s);
+    if (isNaN(d.getTime())) return null;
+    return d.toISOString();
+  }
+
   validarFormulario(): boolean {
     if (!this.productoSeleccionado) {
       this.messageService.add({ severity: 'error', summary: 'Producto requerido', detail: 'Debe buscar y seleccionar un producto.', life: 3000 });
@@ -234,6 +261,28 @@ export class RematesRegistro implements OnInit {
       this.messageService.add({ severity: 'error', summary: 'Motivo requerido', detail: 'Seleccione un motivo para el remate.', life: 3000 });
       return false;
     }
+
+    // Fecha inicio/fin validations using the datetime-local strings (fecInicioStr/fecFinStr)
+    if (!this.fecInicioStr) {
+      this.messageService.add({ severity: 'error', summary: 'Fecha inicio requerida', detail: 'Seleccione fecha y hora de inicio', life: 3000 });
+      return false;
+    }
+    if (!this.fecFinStr) {
+      this.messageService.add({ severity: 'error', summary: 'Fecha fin requerida', detail: 'Seleccione fecha y hora de fin', life: 3000 });
+      return false;
+    }
+
+    const inicio = new Date(this.fecInicioStr);
+    const fin = new Date(this.fecFinStr);
+    if (isNaN(inicio.getTime()) || isNaN(fin.getTime())) {
+      this.messageService.add({ severity: 'error', summary: 'Fecha inválida', detail: 'Formato de fecha incorrecto', life: 3000 });
+      return false;
+    }
+    if (fin <= inicio) {
+      this.messageService.add({ severity: 'error', summary: 'Fechas inválidas', detail: 'La fecha de fin debe ser posterior a la fecha de inicio', life: 3500 });
+      return false;
+    }
+
     return true;
   }
 
@@ -241,10 +290,10 @@ export class RematesRegistro implements OnInit {
     if (!this.validarFormulario()) return;
 
     const almacenId = Number(this.productoSeleccionado!.id_almacen);
-    const dto: CreateAuctionDto = {
+    const dto: CreateAuctionDto & { fec_inicio?: string } = {
       cod_remate: this.codigoRemate!,
       descripcion: this.productoSeleccionado!.anexo,
-      fec_fin: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 días por defecto; puedes añadir campo en UI
+      fec_fin: this.parseDatetimeLocalToISOString(this.fecFinStr!) || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
       estado: 'ACTIVO',
       id_almacen_ref: almacenId,
       detalles: [
@@ -257,6 +306,9 @@ export class RematesRegistro implements OnInit {
         }
       ]
     };
+
+    const fecInicioIso = this.parseDatetimeLocalToISOString(this.fecInicioStr!);
+    if (fecInicioIso) dto.fec_inicio = fecInicioIso;
 
     console.log('CreateAuctionDto', dto);
     this.auctionService.createAuction(dto).subscribe({

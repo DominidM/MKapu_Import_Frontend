@@ -26,7 +26,8 @@
           <div class="col-12 md:col-8">
             <label class="field-label">PRODUCTO (CÓDIGO)</label>
             <div class="flex align-items-center gap-2">
-              <input pInputText [(ngModel)]="codigoProducto" class="w-full codigo-uppercase" placeholder="Ej: R6601" (input)="codigoProducto = (codigoProducto||'').toUpperCase()" (keydown.enter)="buscarProductoPorCodigo()" />
+              <input pInputText [(ngModel)]="codigoProducto" class="w-full codigo-uppercase" placeholder="Ej: R6601"
+                     (input)="codigoProducto = (codigoProducto||'').toUpperCase()" (keydown.enter)="buscarProductoPorCodigo()" />
               <p-button type="button" icon="pi pi-search" label="Buscar" (onClick)="buscarProductoPorCodigo()"></p-button>
             </div>
 
@@ -57,7 +58,7 @@
         <div class="section-header">
           <div>
             <h3 class="section-title">Detalle del Remate</h3>
-            <p class="section-subtitle">Configure código, precio y motivo</p>
+            <p class="section-subtitle">Configure código, precio, fechas y motivo</p>
           </div>
         </div>
 
@@ -70,6 +71,19 @@
           <div class="col-12 md:col-6">
             <label class="field-label">PRECIO DE REMATE</label>
             <p-inputNumber [(ngModel)]="precioRemate" mode="currency" currency="PEN" locale="es-PE" [minFractionDigits]="2" [maxFractionDigits]="2" [style]="{ width: '100%' }"></p-inputNumber>
+          </div>
+
+          <!-- Date/time using native datetime-local inputs -->
+          <div class="col-12 md:col-6">
+            <label class="field-label">FECHA/HORA INICIO</label>
+            <input type="datetime-local" class="p-inputtext w-full" [(ngModel)]="fecInicioStr" />
+            <small class="field-hint">Hora local - se guardará en UTC automáticamente</small>
+          </div>
+
+          <div class="col-12 md:col-6">
+            <label class="field-label">FECHA/HORA FIN</label>
+            <input type="datetime-local" class="p-inputtext w-full" [(ngModel)]="fecFinStr" />
+            <small class="field-hint">La fecha de fin debe ser posterior a la de inicio</small>
           </div>
 
           <div class="col-12 md:col-6">
@@ -98,6 +112,8 @@
           <div class="resumen-item"><span class="resumen-label">Cantidad:</span><span class="resumen-value">{{ cantidad }} unid.</span></div>
           <div class="resumen-item"><span class="resumen-label">Código remate:</span><span class="resumen-value">{{ codigoRemate }}</span></div>
           <div class="resumen-item"><span class="resumen-label">Precio remate:</span><span class="resumen-value">S/ {{ precioRemate | number:'1.2-2' }}</span></div>
+          <div class="resumen-item"><span class="resumen-label">Fecha inicio:</span><span class="resumen-value">{{ fecInicioStr }}</span></div>
+          <div class="resumen-item"><span class="resumen-label">Fecha fin:</span><span class="resumen-value">{{ fecFinStr }}</span></div>
           <div class="resumen-item"><span class="resumen-label">Motivo:</span><span class="resumen-value">{{ getMotivoLabel(motivo) }}</span></div>
           <div class="resumen-item"><span class="resumen-label">Responsable:</span><span class="resumen-value">{{ responsableNombre }}</span></div>
         </div>
