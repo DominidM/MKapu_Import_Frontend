@@ -72,11 +72,11 @@ type Severity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast
     SelectButtonModule,
     CommonModule
   ],
-  templateUrl: './mermas-remates-pr.html',
-  styleUrl: './mermas-remates-pr.css',
+  templateUrl: './remates-pr.html',
+  styleUrl: './remates-pr.css',
   providers: [ConfirmationService, MessageService],
 })
-export class MermasRematesPr implements OnInit {
+export class RematesPr implements OnInit {
   // ✅ API URL
   private apiUrl = 'http://localhost:3000/logistics/catalog/wastage';
 

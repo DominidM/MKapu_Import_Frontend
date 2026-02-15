@@ -131,12 +131,17 @@ export class Sidebar implements OnInit {
       icon: 'pi pi-wallet',
     },
     {
-      path: '/admin/mermas-remates',
+      path: '/admin/mermas',
       allowedRoles: [UserRole.ADMIN],
-      label: 'Mermas / Remates',
-      icon: 'pi pi-trash',
+      label: 'Mermas',
+      icon: 'pi pi-exclamation-triangle',
     },
-
+    {
+      path: '/admin/remates',
+      allowedRoles: [UserRole.ADMIN],
+      label: 'Remates',
+      icon: 'pi pi-tag',
+    },
     {
       path: '/admin/conteo-inventario',
       allowedRoles: [UserRole.ADMIN],

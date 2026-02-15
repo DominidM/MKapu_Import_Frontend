@@ -295,27 +295,52 @@ export const ADMIN_ROUTES: Routes = [
 
 
   /* =======================
-     MERMAS / REMATES
+     MERMAS 
   ======================= */
   {
-    path: 'mermas-remates',
+    path: 'mermas',
     children: [
       {
         path: '',
         loadComponent: () =>
-          import('./pages/mermas-remates/pages/mermas-remates-pr/mermas-remates-pr').then(
-            (m) => m.MermasRematesPr,
+          import('./pages/mermas/pages/mermas-pr/mermas-pr').then(
+            (m) => m.MermasPr,
           ),
       },
       {
-        path: 'registro-merma-remate',
+        path: 'registro-merma',
         loadComponent: () =>
-          import('./pages/mermas-remates/pages/mermas-remates-registro/mermas-remates-registro').then(
-            (m) => m.MermasRematesRegistro,
+          import('./pages/mermas/pages/mermas-registro/mermas-registro').then(
+            (m) => m.MermasRegistro,
           ),
       },
     ],
   },
+
+
+  /* =======================
+     REMATES 
+  ======================= */
+  {
+    path: 'remates',
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/remates/pages/remates-pr/remates-pr').then(
+            (m) => m.RematesPr,
+          ),
+      },
+    // {
+    //   path: 'registro-remate',
+    //   loadComponent: () =>
+    //     import('./pages/remates/pages/remates-registro/remates-registro').then(
+    //       (m) => m.RematesRegistro,
+    //     ),
+    // },
+    ],
+  },
+
   /* =======================
      DESPACHO PRODUCTOS
   ======================= */
