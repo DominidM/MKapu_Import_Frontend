@@ -1,7 +1,7 @@
-import { Component, OnInit, inject, signal, computed, WritableSignal } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { InputTextModule } from 'primeng/inputtext';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
@@ -11,14 +11,12 @@ import { MessageService } from 'primeng/api';
 import { TableModule } from 'primeng/table';
 import { TooltipModule } from 'primeng/tooltip';
 import { TagModule } from 'primeng/tag';
-import { DialogModule } from 'primeng/dialog';
-import { InputNumberModule } from 'primeng/inputnumber';
 import { CommonModule } from '@angular/common';
 
-import { AuctionService, CreateAuctionDto, AuctionResponseDto } from '../../../../services/auction.service';
+import { AuctionService, AuctionResponseDto } from '../../../../services/auction.service';
 
 interface Producto {
-  id_remate?: number;            // id del remate (necesario para delete)
+  id_remate?: number;
   codigo: string;
   nombre: string;
   responsable: string;
@@ -33,6 +31,7 @@ interface Producto {
 
 @Component({
   selector: 'app-remates-pr',
+  standalone: true,
   imports: [
     CardModule,
     ButtonModule,
@@ -44,8 +43,6 @@ interface Producto {
     TableModule,
     TooltipModule,
     TagModule,
-    DialogModule,
-    InputNumberModule,
     CommonModule
   ],
   templateUrl: './remates-pr.html',
@@ -53,51 +50,42 @@ interface Producto {
   providers: [ConfirmationService, MessageService],
 })
 export class RematesPr implements OnInit {
-  // inject services as properties so field initializers can use them safely
   private readonly auctionService = inject(AuctionService);
   private readonly messageService = inject(MessageService);
   private readonly confirmationService = inject(ConfirmationService);
+  private readonly router = inject(Router);
 
-  // almacenes estático (declarado antes de productoActual)
+  // almacenes (si los necesitas para mostrar)
   almacenes = [
     { id: 1, name: 'Almacén Central' },
     { id: 2, name: 'Almacén Sucursal' }
   ];
 
-  // Signals local para forma/modal
-  productoActual = signal<Producto>(this.nuevoProductoVacioSeed());
-  mostrarModal = signal(false);
-  modoEdicion = signal(false);
-
-  // Filtros (signals)
+  // filtros / paging
   busqueda = signal('');
-  paginaActual = signal(1);
   productosPorPagina = signal(10);
+  paginaActual = signal(1);
 
-  // Loading proviene del servicio (computed signal)
+  // loading proviene del servicio
   cargando = this.auctionService.loading;
 
-  // computed: mapea la señal de auctions del servicio a tu interfaz Producto (incluye id_remate)
+  // productos computed mapeando la señal del servicio
   productos = computed(() =>
     this.auctionService.auctions().map((a: AuctionResponseDto) => this.mapToProducto(a))
   );
 
-  // filtered computed (basado en productos())
   productosFiltrados = computed(() => {
     const q = this.busqueda().trim().toLowerCase();
     if (!q) return this.productos();
     return this.productos().filter(p =>
       (p.codigo || '').toLowerCase().includes(q) ||
-      (p.nombre || '').toLowerCase().includes(q) ||
-      (p.responsable || '').toLowerCase().includes(q)
+      (p.nombre || '').toLowerCase().includes(q)
     );
   });
 
-  // stats computed
-  totalRemates = computed(() => this.productos().filter(p => p.tipo === 'remate').length);
+  totalRemates = computed(() => this.productos().length);
   valorTotalRemates = computed(() =>
     this.productos()
-      .filter(p => p.tipo === 'remate')
       .reduce((sum, p) => sum + ((p.precioRemate || 0) * p.cantidad), 0)
   );
 
@@ -105,39 +93,10 @@ export class RematesPr implements OnInit {
     this.loadRemates();
   }
 
-  // seed helper for initial productoActual (safe — almacenes already defined)
-  private nuevoProductoVacioSeed(): Producto {
-    const defaultAlmacenId = (this.almacenes && this.almacenes.length) ? this.almacenes[0].id : 1;
-    return {
-      codigo: this.generarCodigoAutomaticoSeed(),
-      nombre: '',
-      responsable: 'Jefatura de almacén',
-      cantidad: 1,
-      tipo: 'remate',
-      fechaRegistro: new Date(),
-      productId: undefined,
-      id_almacen_ref: defaultAlmacenId
-    };
-  }
-
-  private generarCodigoAutomaticoSeed(): string {
-    const fecha = new Date();
-    const año = fecha.getFullYear();
-    return `TRF-${año}-0001`;
-  }
-
-  generarCodigoAutomatico(): string {
-    const fecha = new Date();
-    const año = fecha.getFullYear();
-    const ultimoNumero = this.productos().length + 1;
-    return `TRF-${año}-${String(ultimoNumero).padStart(4, '0')}`;
-  }
-
-  // Map server AuctionResponseDto -> Producto UI model
   private mapToProducto(a: AuctionResponseDto): Producto {
     return {
       id_remate: a.id_remate,
-      codigo: a.cod_remate || `RMT-${a.id_remate}`,
+      codigo: a.cod_remate,
       nombre: a.descripcion,
       responsable: 'Sistema',
       cantidad: a.total_items ?? (a.detalles?.reduce((s: number, d: any) => s + (d.stock_remate || 0), 0) || 0),
@@ -150,12 +109,10 @@ export class RematesPr implements OnInit {
     };
   }
 
-  // ---------- CARGA DE SUBASTAS ----------
   loadRemates(): void {
     this.auctionService.loadAuctions(this.paginaActual(), this.productosPorPagina()).subscribe({
       next: () => {
-        // servicio actualizó su señal internamente; actualizar código de productoActual
-        this.productoActual.update(curr => ({ ...curr, codigo: this.generarCodigoAutomatico() }));
+        // lista actualizada automáticamente por el servicio (signals)
       },
       error: (err) => {
         console.error('Error cargando remates', err);
@@ -164,106 +121,17 @@ export class RematesPr implements OnInit {
     });
   }
 
-  // ---------- MODAL ----------
-  abrirModal(): void {
-    this.modoEdicion.set(false);
-    this.productoActual.set({
-      ...this.nuevoProductoVacioSeed(),
-      codigo: this.generarCodigoAutomatico()
-    });
-    this.mostrarModal.set(true);
+  // Navegar a la página de registro (nuevo remate)
+  abrirRegistro(): void {
+    this.router.navigate(['/admin/remates/registro-remate']);
   }
 
-  cerrarModal(): void {
-    this.mostrarModal.set(false);
-    this.productoActual.set({
-      ...this.nuevoProductoVacioSeed(),
-      codigo: this.generarCodigoAutomatico()
-    });
-  }
-
+  // Editar: navegar a la página de registro con queryParam id para editar
   editarProducto(producto: Producto): void {
-    this.modoEdicion.set(true);
-    this.productoActual.set({ ...producto });
-    this.mostrarModal.set(true);
-  }
-
-  setProductoField<K extends keyof Producto>(field: K, value: Producto[K]) {
-    this.productoActual.update(curr => ({ ...curr, [field]: value }));
-  }
-
-  // ---------- GUARDAR REMATE (CALL BACKEND) ----------
-  guardarProducto(): void {
-    const p = this.productoActual();
-    // validations
-    if (!p.nombre?.trim()) {
-      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'El nombre es obligatorio', life: 3000 });
-      return;
+    if (producto.id_remate) {
+      this.router.navigate(['/admin/remates/registro-remate'], { queryParams: { id: producto.id_remate } });
+    } else {
+      this.messageService.add({ severity: 'warn', summary: 'Editar', detail: 'Remate sin id disponible para editar', life: 2500 });
     }
-    if (!p.productId) {
-      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Debe indicar el ID del producto', life: 3000 });
-      return;
-    }
-    if (!p.precioRemate || p.precioRemate <= 0) {
-      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Precio de remate inválido', life: 3000 });
-      return;
-    }
-
-    const payload: CreateAuctionDto = {
-      cod_remate: p.codigoRemate || p.codigo || this.generarCodigoAutomatico(),
-      descripcion: p.nombre,
-      fec_fin: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-      estado: 'ACTIVO',
-      id_almacen_ref: p.id_almacen_ref || this.almacenes[0].id,
-      detalles: [
-        {
-          id_producto: Number(p.productId),
-          pre_original: Number(p.precioRemate || 0),
-          pre_remate: Number(p.precioRemate || 0),
-          stock_remate: Number(p.cantidad),
-          observacion: ''
-        }
-      ]
-    };
-
-    this.auctionService.createAuction(payload).subscribe({
-      next: (created) => {
-        this.messageService.add({ severity: 'success', summary: 'Remate creado', detail: created.cod_remate, life: 3000 });
-        // Servicio ya actualizó su señal; computed productos() se refrescará automáticamente
-        this.cerrarModal();
-      },
-      error: (err) => {
-        console.error('Error creando remate:', err);
-        const detail = err?.error?.message || 'No se pudo crear remate';
-        this.messageService.add({ severity: 'error', summary: 'Error', detail, life: 5000 });
-      }
-    });
-  }
-
-  eliminarProducto(producto: Producto): void {
-    if (!producto.id_remate) {
-      // Si no hay id_remate, solo actualizar UI localmente
-      this.productoActual(); // no-op to keep usage consistent
-      this.messageService.add({ severity: 'warn', summary: 'No eliminado', detail: 'Producto sin identificador de remate', life: 3000 });
-      return;
-    }
-
-    this.confirmationService.confirm({
-      message: `¿Está seguro de eliminar "${producto.nombre}"?`,
-      header: 'Confirmar eliminación',
-      icon: 'pi pi-exclamation-triangle',
-      accept: () => {
-        this.auctionService.deleteAuction(producto.id_remate!).subscribe({
-          next: () => {
-            this.messageService.add({ severity: 'success', summary: 'Remate eliminado', detail: `${producto.nombre} eliminado correctamente`, life: 3000 });
-            // la señal del servicio ya se actualiza dentro de deleteAuction
-          },
-          error: (err) => {
-            console.error('Error eliminando remate:', err);
-            this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo eliminar el remate', life: 4000 });
-          }
-        });
-      }
-    });
   }
 }

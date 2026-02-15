@@ -331,13 +331,13 @@ export const ADMIN_ROUTES: Routes = [
             (m) => m.RematesPr,
           ),
       },
-    // {
-    //   path: 'registro-remate',
-    //   loadComponent: () =>
-    //     import('./pages/remates/pages/remates-registro/remates-registro').then(
-    //       (m) => m.RematesRegistro,
-    //     ),
-    // },
+    {
+       path: 'registro-remate',
+      loadComponent: () =>
+        import('./pages/remates/pages/remates-registro/remates-registro').then(
+          (m) => m.RematesRegistro,
+        ),
+    },
     ],
   },
 
