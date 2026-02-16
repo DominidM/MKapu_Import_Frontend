@@ -74,8 +74,8 @@ export class GenerarVenta implements OnInit, AfterViewInit {
 
   // Constantes
   readonly iconoCabecera = 'pi pi-shopping-cart';
-  readonly tituloKicker = 'Punto de Venta';
-  readonly subtituloKicker = 'Generar Nueva Venta';
+  readonly tituloKicker = 'VENTAS - GENERAR VENTA';
+  readonly subtituloKicker = 'GENERAR NUEVA VENTA';
   readonly steps = ['Comprobante y Cliente', 'Productos', 'Forma de Pago', 'Confirmar Venta'];
 
   readonly tipoComprobanteOptions = [

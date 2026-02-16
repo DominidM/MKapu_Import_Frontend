@@ -333,4 +333,24 @@ export const ADMIN_ROUTES: Routes = [
         (m) => m.DetallesDespacho,
       ),
   },
+
+
+  {
+    path: 'proveedores',
+    loadComponent: () => import('./pages/gestion-proveedor/proveedor-listado/proveedor-listado').then(m => m.ProveedorListado),
+    children: [
+      {
+        path: 'crear',
+        loadComponent: () => import('./pages/gestion-proveedor/proveedor-formulario/proveedor-formulario').then(m => m.ProveedorFormulario)
+      },
+      {
+        path: 'editar/:id',
+        loadComponent: () => import('./pages/gestion-proveedor/proveedor-formulario/proveedor-formulario').then(m => m.ProveedorFormulario)
+      },
+      {
+        path: 'ver-detalle/:id',
+        loadComponent: () => import('./pages/gestion-proveedor/proveedor-detalles/proveedor-detalles').then(m => m.ProveedorDetalles)
+      }
+    ]
+  },
 ];

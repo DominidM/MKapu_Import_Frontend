@@ -147,6 +147,12 @@ export class Sidebar implements OnInit {
       label: 'Conteo Inventario',
       icon: 'pi pi-folder',
     },
+    {
+      path: '/admin/proveedores',
+      allowedRoles: [UserRole.ADMIN],
+      label: 'Proveedores',
+      icon: 'pi pi-truck',
+    },
 
     // ==================== VENTAS ====================
     {
@@ -172,6 +178,12 @@ export class Sidebar implements OnInit {
       allowedRoles: [UserRole.VENTAS],
       label: 'Reclamos y Garantías',
       icon: 'pi pi-shield',
+    },
+        {
+      path: '/ventas/cotizaciones',
+      allowedRoles: [UserRole.VENTAS],
+      label: 'Cotizaciones',
+      icon: 'pi pi-file',
     },
 
     // ==================== ALMACÉN ====================
