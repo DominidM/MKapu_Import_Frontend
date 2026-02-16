@@ -89,7 +89,7 @@ export class DashboardAlmacen implements OnInit {
     if (!userString) return '';
     try {
       const user = JSON.parse(userString);
-      return user.nombres || '';
+      return user.nombres || user.username || '';
     } catch {
       return '';
     }

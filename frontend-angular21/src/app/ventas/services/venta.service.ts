@@ -1,37 +1,60 @@
+/* frontend-angular21/src/app/ventas/services/venta.service.ts */
+
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../enviroments/enviroment';
-import { RegistroVentaRequest, RegistroVentaResponse } from '../interfaces/venta.interface';
 
-@Injectable({
-  providedIn: 'root'
-})
+import {
+  RegistroVentaRequest,
+  RegistroVentaResponse,
+  SalesReceiptSummaryListResponse,
+  SalesReceiptWithHistoryDto,
+  CustomerPurchaseHistoryDto,
+  SalesReceiptsQuery,
+} from '../interfaces';
+
+@Injectable({ providedIn: 'root' })
 export class VentaService {
-  private apiUrl = `${environment.apiUrl}/sales`;
+  private readonly apiUrl = `${environment.apiUrl}/sales`;
 
   constructor(private http: HttpClient) {}
 
   registrarVenta(request: RegistroVentaRequest): Observable<RegistroVentaResponse> {
-    console.log('Endpoint:', `${this.apiUrl}/receipts`);
-    console.log('Request:', request);
-    
     return this.http.post<RegistroVentaResponse>(`${this.apiUrl}/receipts`, request);
   }
 
-  listarVentas(page: number = 1, limit: number = 10): Observable<any> {
-    const params = new HttpParams()
-      .set('page', page.toString())
-      .set('limit', limit.toString());
+  // ✅ ACTUALIZADO: Devuelve listado resumido enriquecido
+  listarVentas(query: SalesReceiptsQuery = {}): Observable<SalesReceiptSummaryListResponse> {
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 10;
 
-    return this.http.get<any>(this.apiUrl, { params });
+    let params = new HttpParams()
+      .set('page', String(page))
+      .set('limit', String(limit));
+
+    if (query.status) params = params.set('status', query.status);
+    if (query.customerId) params = params.set('customerId', query.customerId);
+    if (query.receiptTypeId != null) params = params.set('receiptTypeId', String(query.receiptTypeId));
+    if (query.dateFrom) params = params.set('dateFrom', query.dateFrom);
+    if (query.dateTo) params = params.set('dateTo', query.dateTo);
+    if (query.search) params = params.set('search', query.search);
+    if (query.sedeId) params = params.set('sedeId', String(query.sedeId));
+
+    return this.http.get<SalesReceiptSummaryListResponse>(`${this.apiUrl}/receipts`, { params });
   }
 
-  obtenerVentaPorId(ventaId: string): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/${ventaId}`);
+  // ✅ ACTUALIZADO: Devuelve detalle + historial
+  obtenerVentaPorId(ventaId: number): Observable<SalesReceiptWithHistoryDto> {
+    return this.http.get<SalesReceiptWithHistoryDto>(`${this.apiUrl}/receipts/${ventaId}`);
   }
 
-  anularVenta(ventaId: string, motivo: string): Observable<any> {
-    return this.http.put<any>(`${this.apiUrl}/${ventaId}/anular`, { motivo });
+  // ✅ NUEVO: Obtener historial del cliente
+  obtenerHistorialCliente(customerId: string): Observable<CustomerPurchaseHistoryDto> {
+    return this.http.get<CustomerPurchaseHistoryDto>(`${this.apiUrl}/receipts/customer/${customerId}/history`);
+  }
+
+  anularVenta(ventaId: number, reason: string): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/receipts/${ventaId}/annul`, { reason });
   }
 }
