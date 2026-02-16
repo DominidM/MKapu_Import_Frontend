@@ -17,6 +17,10 @@ export class TransferenciaService {
     return this.http.get<TransferenciaInterfaceResponse[]>(`${this.api}/logistics/warehouse/transfer`);
   }
 
+  getTransferenciaById(id: number | string): Observable<TransferenciaInterfaceResponse> {
+    return this.http.get<TransferenciaInterfaceResponse>(`${this.api}/logistics/warehouse/transfer/${id}`);
+  }
+
   postTransferencia(payload: TransferenciaRequest): Observable<TransferenciaInterfaceResponse> {
     return this.http.post<TransferenciaInterfaceResponse>(
       `${this.api}/logistics/warehouse/transfer/request`,

@@ -82,7 +82,7 @@
         <p-card *ngIf="productoSeleccionado" styleClass="transfer-subcard">
           <div class="transfer-product-title">{{ productoSeleccionado.nombre }}</div>
           <div class="transfer-meta flex flex-column md:flex-row">
-            <span>SKU: {{ productoSeleccionado.sku }}</span>
+            <span>Código: {{ productoSeleccionado.sku }}</span>
             <span>Categoria: {{ productoSeleccionado.categoria }}</span>
             <span>Marca: {{ productoSeleccionado.marca }}</span>
           </div>
@@ -119,6 +119,7 @@
               optionValue="value"
               placeholder="Seleccione sede destino"
               [(ngModel)]="sedeDestino"
+              (onChange)="onSedeDestinoChange()"
             ></p-select>
             <p-card *ngIf="sedeDestino && productoSeleccionado" styleClass="stock-mini-card">
               <div class="stock-mini-row">
@@ -142,8 +143,8 @@
           <h3>Cantidad y motivo</h3>
         </div>
 
-        <div class="grid mb-3">
-          <div class="transfer-panel col-12 lg:col-6">
+        <div class="flex flex-col xl:flex-row gap-6 xl:gap-10 w-full">
+          <div class="transfer-panel w-full xl:flex-1">
             <div class="transfer-panel-title">
               <i class="pi pi-sort-amount-up-alt"></i>
               Cantidad a transferir
@@ -186,7 +187,7 @@
             <div class="helper-text">Ajusta la cantidad con controles rapidos.</div>
           </div>
 
-          <div class="transfer-panel col-12 lg:col-6">
+          <div class="transfer-panel w-full xl:flex-1">
             <div class="transfer-panel-title">
               <i class="pi pi-flag"></i>
               Motivo de transferencia
@@ -229,8 +230,8 @@
           <h3>Fechas y responsable</h3>
         </div>
 
-        <div class="grid mb-3">
-          <div class="transfer-panel col-12 lg:col-6">
+        <div class="mb-3 flex flex-col xl:flex-row gap-6 xl:gap-10 w-full">
+          <div class="transfer-panel w-full xl:flex-1">
             <div class="transfer-panel-title">
               <i class="pi pi-send"></i>
               Fechas de traslado
@@ -266,7 +267,7 @@
             </div>
           </div>
 
-          <div class="transfer-panel col-12 lg:col-6">
+          <div class="transfer-panel w-full xl:flex-1">
             <div class="transfer-panel-title">
               <i class="pi pi-user"></i>
               Responsable

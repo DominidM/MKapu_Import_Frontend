@@ -104,7 +104,7 @@
         ></p-select>
       </div>
       <div class="transferencia-search-container transferencia-status-filter w-full md:w-14rem">
-        <span class="transferencia-search-label">Solicitudes</span>
+        <span class="transferencia-search-label">Observacion</span>
         <p-select
           styleClass="transferencia-search-input w-full"
           [options]="solicitudOptions"
@@ -161,7 +161,7 @@
           <th class="col-producto">PRODUCTO</th>
           <th class="col-ruta">RUTA (ORIGEN -> DESTINO)</th>
           <th class="col-cantidad">CANTIDAD</th>
-          <th class="col-solicitud">SOLICITUD</th>
+          <th class="col-solicitud">OBSERVACION</th>
           <th class="col-estado">ESTADO</th>
           <th class="col-acciones">ACCIONES</th>
         </tr>
@@ -207,8 +207,7 @@
                 text
                 severity="secondary"
                 styleClass="transferencia-icon-btn transferencia-icon-warn"
-                [routerLink]="['/admin/transferencia/detalle-transferencia']"
-                [queryParams]="{ codigo: transferencia.codigo }"
+                [routerLink]="['/admin/transferencia/detalle-transferencia', transferencia.codigo]"
               ></p-button>
             </div>
           </td>

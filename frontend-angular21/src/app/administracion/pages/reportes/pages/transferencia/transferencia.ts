@@ -13,10 +13,12 @@ import { ToastModule } from 'primeng/toast';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { TransferenciaService } from '../../../../services/transferencia.service';
 import { SedeService } from '../../../../services/sede.service';
-import { TransferenciaInterfaceResponse } from '../../../../interfaces/transferencia.interface';
+import {
+  TransferenciaCreatorUserResponse,
+  TransferenciaInterfaceResponse,
+} from '../../../../interfaces/transferencia.interface';
 import { Headquarter } from '../../../../interfaces/sedes.interface';
-import { ProductoService } from '../../../../services/producto.service';
-import { catchError, finalize, forkJoin, map, of, switchMap } from 'rxjs';
+import { finalize, forkJoin, map } from 'rxjs';
 
 interface TransferenciaRow {
   codigo: string;
@@ -60,7 +62,6 @@ export class Transferencia implements OnInit {
   solicitudFilter: string | null = null;
   loading = false;
   private sedeNombrePorId = new Map<string, string>();
-  private productoNombrePorId = new Map<string, string>();
   estadoOptions = [
     { label: 'Todos', value: null },
     { label: 'Pendiente', value: 'Pendiente' },
@@ -70,8 +71,8 @@ export class Transferencia implements OnInit {
   ];
   solicitudOptions = [
     { label: 'Todas', value: null },
-    { label: 'Externas', value: 'Externas' },
-    { label: 'Internas', value: 'Internas' },
+    { label: 'Con observacion', value: 'Con observacion' },
+    { label: 'Sin observacion', value: 'Sin observacion' },
   ];
 
   constructor(
@@ -79,7 +80,6 @@ export class Transferencia implements OnInit {
     private messageService: MessageService,
     private transferenciaService: TransferenciaService,
     private sedeService: SedeService,
-    private productoService: ProductoService,
     private cdr: ChangeDetectorRef,
   ) {}
 
@@ -104,11 +104,6 @@ export class Transferencia implements OnInit {
       sedes: sedes$,
     })
       .pipe(
-        switchMap(({ transferencias, sedes }) =>
-          this.cargarNombresProductos(transferencias).pipe(
-            map(() => ({ transferencias, sedes })),
-          ),
-        ),
         finalize(() => {
           this.loading = false;
           this.cdr.detectChanges();
@@ -140,22 +135,39 @@ export class Transferencia implements OnInit {
 
   private mapTransferencia(transferencia: TransferenciaInterfaceResponse): TransferenciaRow {
     const fechaEnvio = this.formatearFecha(transferencia.requestDate);
-    const productoId = transferencia.items?.[0]?.productId ?? null;
-    const productoNombre =
-      productoId !== null ? this.productoNombrePorId.get(String(productoId)) : null;
+    const producto = transferencia.items?.[0]?.producto?.[0];
+    const responsable = this.getResponsableNombre(transferencia.creatorUser?.[0]);
+    const observacion = transferencia.observation?.trim() || '-';
+    const solicitud = transferencia.observation?.trim() ? 'Con observacion' : 'Sin observacion';
 
     return {
       codigo: String(transferencia.id),
-      producto: productoNombre ?? (productoId !== null ? `Producto ${productoId}` : '-'),
+      producto: producto?.anexo || producto?.descripcion || producto?.codigo || '-',
       origen: this.getSedeNombre(transferencia.originHeadquartersId),
       destino: this.getSedeNombre(transferencia.destinationHeadquartersId),
       cantidad: transferencia.totalQuantity ?? 0,
-      solicitud: '-',
-      responsable: '-',
+      solicitud: `${solicitud}: ${observacion}`,
+      responsable,
       estado: this.mapEstado(transferencia.status),
       fechaEnvio,
       fechaLlegada: '-',
     };
+  }
+
+  private getResponsableNombre(creator: TransferenciaCreatorUserResponse | undefined): string {
+    if (!creator) return '-';
+
+    const nombre = creator.usuNom || creator.nombres || '';
+    const apellidos = creator.apellidos || [creator.apePat, creator.apeMat].filter(Boolean).join(' ');
+    const fullName = [nombre, apellidos].filter(Boolean).join(' ').trim();
+    const idLabel = creator.idUsuario ? `#${creator.idUsuario}` : '';
+
+    if (fullName && idLabel) {
+      return `${idLabel} - ${fullName}`;
+    }
+    if (fullName) return fullName;
+    if (idLabel) return `Usuario ${idLabel}`;
+    return '-';
   }
 
   private indexarSedes(sedes: Headquarter[]): void {
@@ -163,48 +175,6 @@ export class Transferencia implements OnInit {
     sedes.forEach((sede) => {
       this.sedeNombrePorId.set(String(sede.id_sede), sede.nombre);
     });
-  }
-
-  private cargarNombresProductos(
-    transferencias: TransferenciaInterfaceResponse[],
-  ) {
-    this.productoNombrePorId.clear();
-    const sedeIds = Array.from(
-      new Set(
-        transferencias
-          .map((t) => t.originHeadquartersId)
-          .filter((id): id is string => !!id),
-      ),
-    );
-
-    if (sedeIds.length === 0) {
-      return of(void 0);
-    }
-
-    const requests = sedeIds.map((id) => {
-      const idSede = Number(id);
-      if (Number.isNaN(idSede)) {
-        return of(null);
-      }
-      return this.productoService.getProductosConStock(idSede, 1, 1000).pipe(
-        map((resp) => resp.data ?? []),
-        catchError(() => of([])),
-      );
-    });
-
-    return forkJoin(requests).pipe(
-      map((lists) => {
-        lists.forEach((items) => {
-          if (!items) return;
-          items.forEach((producto) => {
-            const key = String(producto.id_producto);
-            if (!this.productoNombrePorId.has(key)) {
-              this.productoNombrePorId.set(key, producto.nombre);
-            }
-          });
-        });
-      }),
-    );
   }
 
   private getSedeNombre(id: string | null | undefined): string {
@@ -293,11 +263,12 @@ export class Transferencia implements OnInit {
     const v = valor.toLowerCase();
 
     this.filteredTransferencias = this.transferencias.filter((t) => {
-      const matchesText = [t.codigo, t.producto, t.origen, t.destino].some((campo) =>
-        campo.toLowerCase().includes(v),
-      );
+      const matchesText = [t.codigo, t.producto, t.origen, t.destino, t.responsable, t.solicitud]
+        .some((campo) => campo.toLowerCase().includes(v));
       const matchesEstado = this.estadoFilter ? t.estado === this.estadoFilter : true;
-      const matchesSolicitud = this.solicitudFilter ? t.solicitud === this.solicitudFilter : true;
+      const matchesSolicitud = this.solicitudFilter
+        ? t.solicitud.toLowerCase().startsWith(this.solicitudFilter.toLowerCase())
+        : true;
       return matchesText && matchesEstado && matchesSolicitud;
     });
 

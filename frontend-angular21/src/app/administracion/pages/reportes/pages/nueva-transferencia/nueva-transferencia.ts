@@ -18,6 +18,8 @@ import { ProductoAutocomplete, ProductoInterface } from '../../../../interfaces/
 import { SedeService } from '../../../../services/sede.service';
 import { map } from 'rxjs';
 import { Headquarter } from '../../../../interfaces/sedes.interface';
+import { TransferenciaService } from '../../../../services/transferencia.service';
+import { TransferenciaRequest } from '../../../../interfaces/transferencia.interface';
 
 interface TransferProducto {
   id: string;
@@ -27,6 +29,8 @@ interface TransferProducto {
   marca: string;
   stockPorSede: Record<string, number>;
 }
+
+const DEFAULT_TRANSFER_SERIES = ['SERIE-D-001', 'SERIE-D-002'];
 
 @Component({
   selector: 'app-nueva-transferencia',
@@ -57,6 +61,7 @@ export class NuevaTransferencia implements OnInit {
     private router: Router,
     private productoService: ProductoService,
     private sedeService: SedeService,
+    private transferenciaService: TransferenciaService,
   ) {}
 
   idSede: number = 1;
@@ -96,6 +101,7 @@ export class NuevaTransferencia implements OnInit {
   fechaEnvio: Date | null = null;
   fechaLlegada: Date | null = null;
   responsable: string | null = null;
+  submitting = false;
   readonly today = this.getToday();
 
   ngOnInit(): void {
@@ -190,6 +196,10 @@ export class NuevaTransferencia implements OnInit {
     this.cargarProductos(this.sedeOrigen);
   }
 
+  onSedeDestinoChange(): void {
+    this.cargarStockProductoSeleccionadoEnSedes();
+  }
+
   private cargarProductos(sede?: string | null): void {
     void sede;
     this.productoService.getProductos(1, 10, true).subscribe({
@@ -250,11 +260,68 @@ export class NuevaTransferencia implements OnInit {
     this.productoQuery = producto.nombre;
     const restantes = this.productos.filter((p) => p.id !== producto.id);
     this.productos = [...restantes, producto];
+    this.cargarStockProductoSeleccionadoEnSedes();
   }
 
   onClearProducto(): void {
     this.productoId = null;
     this.productoQuery = null;
+  }
+
+  private cargarStockProductoSeleccionadoEnSedes(): void {
+    if (!this.productoId) return;
+    this.cargarStockProductoEnSede(this.productoId, this.sedeOrigen);
+    this.cargarStockProductoEnSede(this.productoId, this.sedeDestino);
+  }
+
+  private cargarStockProductoEnSede(productoId: string, sedeNombre: string | null): void {
+    if (!sedeNombre) return;
+    const sedeId = this.getSedeIdByNombre(sedeNombre);
+    if (!sedeId) return;
+
+    this.productoService.getProductoDetalleStock(Number(productoId), sedeId).subscribe({
+      next: (resp) => {
+        const stock = resp?.stock?.cantidad ?? 0;
+        this.actualizarStockProductoEnMemoria(productoId, sedeNombre, stock);
+      },
+      error: (error) => {
+        console.error('Error al cargar stock por sede:', error);
+        this.actualizarStockProductoEnMemoria(productoId, sedeNombre, 0);
+      },
+    });
+  }
+
+  private getSedeIdByNombre(sedeNombre: string): number | null {
+    const sede = this.sedesRaw.find((item) => item.nombre === sedeNombre);
+    return sede?.id_sede ?? null;
+  }
+
+  private actualizarStockProductoEnMemoria(
+    productoId: string,
+    sedeNombre: string,
+    stock: number,
+  ): void {
+    this.productos = this.productos.map((producto) => {
+      if (producto.id !== productoId) return producto;
+      return {
+        ...producto,
+        stockPorSede: {
+          ...producto.stockPorSede,
+          [sedeNombre]: stock,
+        },
+      };
+    });
+
+    this.productosAutocomplete = this.productosAutocomplete.map((producto) => {
+      if (producto.id !== productoId) return producto;
+      return {
+        ...producto,
+        stockPorSede: {
+          ...producto.stockPorSede,
+          [sedeNombre]: stock,
+        },
+      };
+    });
   }
 
   ajustarCantidad(delta: number): void {
@@ -396,18 +463,102 @@ export class NuevaTransferencia implements OnInit {
       acceptButtonProps: { severity: 'warning' },
       rejectButtonProps: { severity: 'secondary', outlined: true },
       accept: () => {
-        console.log('[Transferencia] Confirmación aceptada. Registrando transferencia...');
+        this.registrarTransferencia();
+      },
+    });
+  }
+
+  private registrarTransferencia(): void {
+    if (this.submitting) return;
+
+    const payload = this.buildTransferenciaPayload();
+    if (!payload) return;
+
+    this.submitting = true;
+    this.transferenciaService.postTransferencia(payload).subscribe({
+      next: () => {
         this.messageService.add({
           severity: 'success',
           summary: 'Registro exitoso',
           detail: 'La transferencia fue registrada correctamente',
           life: 3000,
         });
-        console.log('[Transferencia] Navegando a /admin/transferencia');
         this.router.navigate(['/admin/transferencia']);
         this.resetForm();
       },
+      error: (error) => {
+        console.error('Error al registrar transferencia:', error);
+        this.submitting = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudo registrar la transferencia',
+          life: 3500,
+        });
+      },
+      complete: () => {
+        this.submitting = false;
+      },
     });
+  }
+
+  private buildTransferenciaPayload(): TransferenciaRequest | null {
+    if (!this.productoId || !this.sedeOrigen || !this.sedeDestino) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Datos incompletos',
+        detail: 'Faltan datos para registrar la transferencia',
+      });
+      return null;
+    }
+
+    const user = this.getCurrentUserFromStorage();
+    const userId = user?.userId;
+    if (!userId) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Sesion invalida',
+        detail: 'No se encontro el usuario actual para registrar la transferencia',
+      });
+      return null;
+    }
+
+    const originSedeId = this.getSedeIdByNombre(this.sedeOrigen);
+    const destinationSedeId = this.getSedeIdByNombre(this.sedeDestino);
+
+    if (!originSedeId || !destinationSedeId) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Sedes invalidas',
+        detail: 'No se pudieron resolver las sedes seleccionadas',
+      });
+      return null;
+    }
+
+    return {
+      originHeadquartersId: String(originSedeId),
+      originWarehouseId: originSedeId,
+      destinationHeadquartersId: String(destinationSedeId),
+      destinationWarehouseId: destinationSedeId,
+      userId,
+      observation: this.observacion?.trim() || this.getMotivoLabel(this.motivo),
+      items: [
+        {
+          productId: Number(this.productoId),
+          series: DEFAULT_TRANSFER_SERIES,
+        },
+      ],
+    };
+  }
+
+  private getCurrentUserFromStorage(): { userId?: number; nombres?: string; apellidos?: string } | null {
+    try {
+      const raw = localStorage.getItem('user');
+      return raw ? JSON.parse(raw) : null;
+    } catch (error) {
+      console.error('Error leyendo usuario desde localStorage:', error);
+      return null;
+    }
   }
 
   resetForm(): void {
