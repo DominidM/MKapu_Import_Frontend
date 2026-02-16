@@ -28,7 +28,7 @@
           (onClick)="nuevaVenta()"
           pTooltip="Reiniciar formulario"
           tooltipPosition="bottom"
-          [disabled]="!comprobanteGenerado"
+          [disabled]="!comprobanteGenerado()"
         />
       </div>
     </div>
@@ -41,12 +41,12 @@
       <div
         *ngFor="let step of steps; let i = index"
         class="wizard-step"
-        [class.active]="activeStep === i"
-        [class.completed]="activeStep > i"
+        [class.active]="activeStep() === i"
+        [class.completed]="activeStep() > i"
       >
         <div class="step-number">
-          <i *ngIf="activeStep > i" class="pi pi-check"></i>
-          <span *ngIf="activeStep <= i">{{ i + 1 }}</span>
+          <i *ngIf="activeStep() > i" class="pi pi-check"></i>
+          <span *ngIf="activeStep() <= i">{{ i + 1 }}</span>
         </div>
         <div class="step-title">{{ step }}</div>
       </div>
@@ -55,7 +55,8 @@
     <p-divider styleClass="wizard-divider" />
 
     <div class="wizard-content">
-      <div *ngIf="activeStep === 0" class="step-content">
+      <!-- PASO 1: Comprobante y Cliente -->
+      <div *ngIf="activeStep() === 0" class="step-content">
         <div class="step-header">
           <i class="pi pi-file-edit step-icon"></i>
           <h3>Datos del Comprobante y Cliente</h3>
@@ -69,12 +70,12 @@
             </label>
             <div class="flex justify-content-center">
               <p-selectButton
-                [(ngModel)]="tipoComprobante"
+                [ngModel]="tipoComprobante()"
+                (ngModelChange)="onTipoComprobanteChange($event)"
                 [options]="tipoComprobanteOptions"
                 optionLabel="label"
                 optionValue="value"
                 styleClass="select-comprobante-inline"
-                (onChange)="onTipoComprobanteChange()"
               >
                 <ng-template let-item>
                   <div class="option-inline">
@@ -95,40 +96,41 @@
             </label>
 
             <div class="buscar-cliente-section">
-              <label class="input-label">{{ tipoComprobante === 2 ? 'DNI' : 'RUC' }}</label>
+              <label class="input-label">{{ tipoComprobante() === 2 ? 'DNI' : 'RUC' }}</label>
 
               <div class="flex gap-2 align-items-center">
                 <div style="flex: 1; min-width: 0">
                   <input
                     pInputText
-                    [(ngModel)]="clienteAutoComplete"
+                    [ngModel]="clienteAutoComplete()"
+                    (ngModelChange)="clienteAutoComplete.set($event)"
                     class="w-full autocomplete-clientes"
                     [placeholder]="
-                      tipoComprobante === 2 ? 'Ingrese DNI (8 dígitos)' : 'Ingrese RUC (11 dígitos)'
+                      tipoComprobante() === 2 ? 'Ingrese DNI (8 dígitos)' : 'Ingrese RUC (11 dígitos)'
                     "
-                    [maxlength]="tipoComprobante === 2 ? 8 : 11"
+                    [maxlength]="tipoComprobante() === 2 ? 8 : 11"
                     inputmode="numeric"
                     pattern="[0-9]*"
                     (input)="validarSoloNumeros($event); onInputCambioDocumento()"
                     (keyup.enter)="manejarAccionCliente()"
-                    [disabled]="loading"
+                    [disabled]="loading()"
                   />
                 </div>
 
                 <div style="flex: 0 0 200px">
                   <p-button
-                    [label]="textoBotonCliente"
-                    [icon]="iconoBotonCliente"
+                    [label]="textoBotonCliente()"
+                    [icon]="iconoBotonCliente()"
                     severity="primary"
                     (onClick)="manejarAccionCliente()"
-                    [disabled]="!botonClienteHabilitado || clienteEncontrado !== null || loading"
-                    [loading]="loading"
+                    [disabled]="!botonClienteHabilitado() || clienteEncontrado() !== null || loading()"
+                    [loading]="loading()"
                     styleClass="w-full btn-buscar-cliente"
                     [pTooltip]="
-                      clienteEncontrado
+                      clienteEncontrado()
                         ? 'Cliente ya seleccionado'
-                        : !botonClienteHabilitado
-                          ? 'Complete ' + (tipoComprobante === 2 ? '8' : '11') + ' dígitos'
+                        : !botonClienteHabilitado()
+                          ? 'Complete ' + (tipoComprobante() === 2 ? '8' : '11') + ' dígitos'
                           : ''
                     "
                     tooltipPosition="bottom"
@@ -137,22 +139,22 @@
               </div>
 
               <div
-                *ngIf="clienteAutoComplete && !clienteEncontrado && !loading"
+                *ngIf="clienteAutoComplete() && !clienteEncontrado() && !loading()"
                 class="mt-2 flex align-items-center gap-2"
               >
                 <i class="pi pi-info-circle text-500"></i>
                 <small class="text-600">
-                  {{ clienteAutoComplete.length || 0 }} /
-                  {{ tipoComprobante === 2 ? '8' : '11' }} dígitos
+                  {{ clienteAutoComplete().length || 0 }} /
+                  {{ tipoComprobante() === 2 ? '8' : '11' }} dígitos
                   <span
-                    *ngIf="(clienteAutoComplete.length || 0) < (tipoComprobante === 2 ? 8 : 11)"
+                    *ngIf="(clienteAutoComplete().length || 0) < (tipoComprobante() === 2 ? 8 : 11)"
                     class="text-orange-500"
                   >
-                    ({{ (tipoComprobante === 2 ? 8 : 11) - (clienteAutoComplete.length || 0) }}
+                    ({{ (tipoComprobante() === 2 ? 8 : 11) - (clienteAutoComplete().length || 0) }}
                     restantes)
                   </span>
                   <span
-                    *ngIf="(clienteAutoComplete.length || 0) === (tipoComprobante === 2 ? 8 : 11)"
+                    *ngIf="(clienteAutoComplete().length || 0) === (tipoComprobante() === 2 ? 8 : 11)"
                     class="text-green-500"
                   >
                     ✓ Completo
@@ -161,13 +163,13 @@
               </div>
             </div>
 
-            <div *ngIf="clienteEncontrado" class="cliente-encontrado-card mt-3">
+            <div *ngIf="clienteEncontrado()" class="cliente-encontrado-card mt-3">
               <p-card styleClass="cliente-card-success">
                 <div class="cliente-content">
                   <div class="cliente-cabecera-row">
                     <div class="cliente-row">
                       <h4 class="cliente-nombre">
-                        {{ clienteEncontrado.name }}
+                        {{ clienteEncontrado()!.name }}
                       </h4>
                       <span class="badge-verified">
                         <i class="pi pi-check-circle"></i>
@@ -189,48 +191,48 @@
                   <div class="cliente-row mt-3">
                     <span class="info-badge dni">
                       <i class="pi pi-id-card"></i>
-                      {{ clienteEncontrado.documentTypeDescription }}
+                      {{ clienteEncontrado()!.documentTypeDescription }}
                     </span>
                     <span class="info-badge dni">
                       <i class="pi pi-hashtag"></i>
-                      {{ clienteEncontrado.documentValue }}
+                      {{ clienteEncontrado()!.documentValue }}
                     </span>
                   </div>
 
                   <div
                     class="cliente-row mt-3"
-                    *ngIf="clienteEncontrado.phone || clienteEncontrado.status !== null"
+                    *ngIf="clienteEncontrado()!.phone || clienteEncontrado()!.status !== null"
                   >
-                    <span class="info-badge telefono" *ngIf="clienteEncontrado.phone">
+                    <span class="info-badge telefono" *ngIf="clienteEncontrado()!.phone">
                       <i class="pi pi-phone"></i>
-                      {{ clienteEncontrado.phone }}
+                      {{ clienteEncontrado()!.phone }}
                     </span>
                     <span
                       class="info-badge"
-                      [class.activo]="clienteEncontrado.status"
-                      [class.inactivo]="!clienteEncontrado.status"
-                      *ngIf="clienteEncontrado.status !== null"
+                      [class.activo]="clienteEncontrado()!.status"
+                      [class.inactivo]="!clienteEncontrado()!.status"
+                      *ngIf="clienteEncontrado()!.status !== null"
                     >
                       <i
                         class="pi"
-                        [class.pi-check-circle]="clienteEncontrado.status"
-                        [class.pi-times-circle]="!clienteEncontrado.status"
+                        [class.pi-check-circle]="clienteEncontrado()!.status"
+                        [class.pi-times-circle]="!clienteEncontrado()!.status"
                       ></i>
-                      {{ clienteEncontrado.status ? 'Activo' : 'Inactivo' }}
+                      {{ clienteEncontrado()!.status ? 'Activo' : 'Inactivo' }}
                     </span>
                   </div>
 
-                  <div class="cliente-row mt-3" *ngIf="clienteEncontrado.email">
+                  <div class="cliente-row mt-3" *ngIf="clienteEncontrado()!.email">
                     <span class="info-badge email">
                       <i class="pi pi-envelope"></i>
-                      {{ clienteEncontrado.email }}
+                      {{ clienteEncontrado()!.email }}
                     </span>
                   </div>
 
-                  <div class="cliente-row mt-3" *ngIf="clienteEncontrado.address">
+                  <div class="cliente-row mt-3" *ngIf="clienteEncontrado()!.address">
                     <span class="info-badge direccion">
                       <i class="pi pi-map-marker"></i>
-                      {{ clienteEncontrado.address }}
+                      {{ clienteEncontrado()!.address }}
                     </span>
                   </div>
                 </div>
@@ -238,7 +240,7 @@
             </div>
 
             <div
-              *ngIf="busquedaRealizada && !clienteEncontrado && !loading"
+              *ngIf="busquedaRealizada() && !clienteEncontrado() && !loading()"
               class="cliente-no-encontrado mt-3"
             >
               <p-card styleClass="cliente-card-success">
@@ -256,7 +258,8 @@
         </div>
       </div>
 
-      <div *ngIf="activeStep === 1" class="step-content">
+      <!-- PASO 2: Productos -->
+      <div *ngIf="activeStep() === 1" class="step-content">
         <div class="step-header">
           <i class="pi pi-box step-icon"></i>
           <h3>Seleccionar Productos</h3>
@@ -268,8 +271,9 @@
               <div class="buscar-producto-auto">
                 <label class="font-semibold mb-2 block">Buscar producto</label>
                 <p-autocomplete
-                  [(ngModel)]="productoSeleccionadoBusqueda"
-                  [suggestions]="productosSugeridos"
+                  [ngModel]="productoSeleccionadoBusqueda()"
+                  (ngModelChange)="productoSeleccionadoBusqueda.set($event)"
+                  [suggestions]="productosSugeridos()"
                   (completeMethod)="buscarProductos($event)"
                   (onSelect)="onProductoSeleccionado($event)"
                   (onClear)="onLimpiarBusqueda()"
@@ -313,9 +317,9 @@
               <div class="familia-selector">
                 <label class="font-semibold mb-2 block">Familia</label>
                 <p-select
-                  [(ngModel)]="familiaSeleccionada"
-                  [options]="familiasDisponibles"
-                  (onChange)="onFamiliaChange()"
+                  [ngModel]="familiaSeleccionada()"
+                  (ngModelChange)="onFamiliaChange($event)"
+                  [options]="familiasDisponibles()"
                   placeholder="Todas las familias"
                   [showClear]="true"
                   styleClass="w-full"
@@ -344,14 +348,14 @@
               <div class="columna-header">
                 <h4>
                   <i class="pi pi-box"></i>
-                  Productos Disponibles ({{ productosFiltrados.length }})
+                  Productos Disponibles ({{ productosFiltrados().length }})
                 </h4>
               </div>
               <div class="columna-scroll">
                 <div
-                  *ngFor="let producto of productosFiltrados"
+                  *ngFor="let producto of productosFiltrados()"
                   class="producto-item"
-                  [class.selected]="productoTemp?.id === producto.id"
+                  [class.selected]="productoTemp()?.id === producto.id"
                   (click)="seleccionarProducto(producto)"
                 >
                   <div class="flex justify-content-between align-items-center mb-2">
@@ -382,7 +386,7 @@
                   </div>
                 </div>
 
-                <div *ngIf="productosFiltrados.length === 0" class="no-productos">
+                <div *ngIf="productosFiltrados().length === 0" class="no-productos">
                   <i class="pi pi-inbox"></i>
                   <p>No se encontraron productos</p>
                 </div>
@@ -397,15 +401,15 @@
                 </h4>
               </div>
               <div class="columna-scroll">
-                <div *ngIf="productoTemp" class="form-agregar">
+                <div *ngIf="productoTemp()" class="form-agregar">
                   <div class="producto-seleccionado mb-3">
-                    <strong class="block mb-1">{{ productoTemp.nombre }}</strong>
-                    <small class="text-600">{{ productoTemp.codigo }}</small>
+                    <strong class="block mb-1">{{ productoTemp()!.nombre }}</strong>
+                    <small class="text-600">{{ productoTemp()!.codigo }}</small>
 
                     <div class="mt-2">
                       <p-tag
-                        [value]="'Stock disponible: ' + productoTemp.stock"
-                        [severity]="obtenerSeveridadStock(productoTemp.stock)"
+                        [value]="'Stock disponible: ' + productoTemp()!.stock"
+                        [severity]="obtenerSeveridadStock(productoTemp()!.stock)"
                         icon="pi pi-box"
                       />
                     </div>
@@ -414,7 +418,8 @@
                   <div class="form-field mb-3">
                     <label class="block mb-2 font-semibold">Tipo de Precio</label>
                     <p-selectButton
-                      [(ngModel)]="tipoPrecioTemp"
+                      [ngModel]="tipoPrecioTemp()"
+                      (ngModelChange)="tipoPrecioTemp.set($event)"
                       [options]="opcionesTipoPrecio"
                       optionLabel="label"
                       optionValue="value"
@@ -425,28 +430,29 @@
                   <div class="form-field mb-3">
                     <label class="block mb-2 font-semibold">Cantidad</label>
                     <p-inputNumber
-                      [(ngModel)]="cantidadTemp"
+                      [ngModel]="cantidadTemp()"
+                      (ngModelChange)="cantidadTemp.set($event)"
                       [min]="1"
-                      [max]="productoTemp.stock"
+                      [max]="productoTemp()!.stock"
                       [showButtons]="true"
                       styleClass="w-full"
                     />
                     <small class="text-600 mt-1 block"
-                      >Máximo: {{ productoTemp.stock }} unidades</small
+                      >Máximo: {{ productoTemp()!.stock }} unidades</small
                     >
                   </div>
 
                   <div class="precio-display mb-3">
                     <span>Precio Unitario</span>
                     <span class="precio-valor">
-                      S/. {{ getPrecioSegunTipo(productoTemp) | number: '1.2-2' }}
+                      S/. {{ precioSegunTipo() | number: '1.2-2' }}
                     </span>
                   </div>
 
                   <div class="total-display mb-3">
                     <span>Total</span>
                     <span class="total-valor">
-                      S/. {{ getPrecioSegunTipo(productoTemp) * cantidadTemp | number: '1.2-2' }}
+                      S/. {{ precioSegunTipo() * cantidadTemp() | number: '1.2-2' }}
                     </span>
                   </div>
 
@@ -454,20 +460,20 @@
                     label="Agregar al Carrito"
                     icon="pi pi-plus"
                     (onClick)="agregarProducto()"
-                    [disabled]="cantidadTemp <= 0 || cantidadTemp > productoTemp.stock"
+                    [disabled]="cantidadTemp() <= 0 || cantidadTemp() > productoTemp()!.stock"
                     styleClass="w-full btn-agregar-producto"
                   />
 
                   <small
-                    *ngIf="cantidadTemp > productoTemp.stock"
+                    *ngIf="cantidadTemp() > productoTemp()!.stock"
                     class="text-red-500 mt-2 block text-center"
                   >
                     <i class="pi pi-exclamation-triangle"></i>
-                    Stock insuficiente. Disponible: {{ productoTemp.stock }} unidades
+                    Stock insuficiente. Disponible: {{ productoTemp()!.stock }} unidades
                   </small>
 
                   <small
-                    *ngIf="cantidadTemp > 0 && cantidadTemp <= productoTemp.stock"
+                    *ngIf="cantidadTemp() > 0 && cantidadTemp() <= productoTemp()!.stock"
                     class="text-green-500 mt-2 block text-center"
                   >
                     <i class="pi pi-check-circle"></i>
@@ -475,7 +481,7 @@
                   </small>
                 </div>
 
-                <div *ngIf="!productoTemp" class="no-seleccion">
+                <div *ngIf="!productoTemp()" class="no-seleccion">
                   <i class="pi pi-hand-pointer"></i>
                   <p>Seleccione un producto de la lista</p>
                 </div>
@@ -487,14 +493,14 @@
             <div class="carrito-header">
               <h4>
                 <i class="pi pi-shopping-cart"></i>
-                Carrito de Compras ({{ productosSeleccionados.length }} items)
+                Carrito de Compras ({{ productosSeleccionados().length }} items)
               </h4>
             </div>
 
             <div class="carrito-contenido">
-              <div *ngIf="productosSeleccionados.length > 0" class="carrito-tabla">
+              <div *ngIf="productosSeleccionados().length > 0" class="carrito-tabla">
                 <p-table
-                  [value]="productosSeleccionados"
+                  [value]="productosSeleccionados()"
                   styleClass="p-datatable-sm tabla-carrito-productos"
                   [tableStyle]="{ 'min-width': '100%' }"
                 >
@@ -548,24 +554,24 @@
                     <div class="total-line">
                       <span class="label">Subtotal (Base imponible):</span>
                       <span class="total-valor"
-                        >S/. {{ calcularSubtotal() | number: '1.2-2' }}</span
+                        >S/. {{ subtotal() | number: '1.2-2' }}</span
                       >
                     </div>
 
                     <div class="total-line">
                       <span class="label">IGV (18%):</span>
-                      <span class="total-valor">S/. {{ calcularIGV() | number: '1.2-2' }}</span>
+                      <span class="total-valor">S/. {{ igv() | number: '1.2-2' }}</span>
                     </div>
 
                     <div class="total-line total-final">
                       <span class="label">TOTAL A PAGAR:</span>
-                      <span class="total-valor">S/. {{ calcularTotal() | number: '1.2-2' }}</span>
+                      <span class="total-valor">S/. {{ total() | number: '1.2-2' }}</span>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div *ngIf="productosSeleccionados.length === 0" class="carrito-vacio">
+              <div *ngIf="productosSeleccionados().length === 0" class="carrito-vacio">
                 <i class="pi pi-shopping-cart"></i>
                 <p>El carrito está vacío</p>
                 <small>Agregue productos para continuar con la venta</small>
@@ -575,7 +581,8 @@
         </div>
       </div>
 
-      <div *ngIf="activeStep === 2" class="step-content">
+      <!-- PASO 3: Forma de Pago -->
+      <div *ngIf="activeStep() === 2" class="step-content">
         <div class="step-header">
           <i class="pi pi-credit-card step-icon"></i>
           <h3>Forma de Pago</h3>
@@ -591,14 +598,14 @@
               <div
                 *ngFor="let metodo of metodoPagoOptions"
                 class="metodo-pago-card"
-                [class.selected]="metodoPagoSeleccionado === metodo.value"
-                (click)="metodoPagoSeleccionado = metodo.value"
+                [class.selected]="metodoPagoSeleccionado() === metodo.value"
+                (click)="metodoPagoSeleccionado.set(metodo.value)"
               >
                 <div class="metodo-icon">
                   <i [class]="metodo.icon"></i>
                 </div>
                 <span class="metodo-label">{{ metodo.label }}</span>
-                <div class="check-indicator" *ngIf="metodoPagoSeleccionado === metodo.value">
+                <div class="check-indicator" *ngIf="metodoPagoSeleccionado() === metodo.value">
                   <i class="pi pi-check"></i>
                 </div>
               </div>
@@ -650,19 +657,20 @@
             <p-divider styleClass="section-divider" />
 
             <div class="pago-detalles-wrapper mt-4">
-              <div *ngIf="metodoPagoSeleccionado === 1" class="pago-detalles-animated">
+              <div *ngIf="metodoPagoSeleccionado() === 1" class="pago-detalles-animated">
                 <div class="monto-destacado-box">
                   <i class="pi pi-tag"></i>
                   <span>Total a Pagar:</span>
                   <strong class="monto-destacado"
-                    >S/. {{ calcularTotal() | number: '1.2-2' }}</strong
+                    >S/. {{ total() | number: '1.2-2' }}</strong
                   >
                 </div>
 
                 <div class="form-field">
                   <label class="input-label">Monto Recibido *</label>
                   <p-inputNumber
-                    [(ngModel)]="montoRecibido"
+                    [ngModel]="montoRecibido()"
+                    (ngModelChange)="montoRecibido.set($event)"
                     mode="currency"
                     currency="PEN"
                     locale="es-PE"
@@ -671,18 +679,18 @@
                   />
                 </div>
 
-                <div *ngIf="montoRecibido >= calcularTotal()" class="vuelto-display mt-3">
+                <div *ngIf="montoRecibido() >= total()" class="vuelto-display mt-3">
                   <span>Vuelto:</span>
-                  <span class="vuelto-valor">S/. {{ calcularVuelto() | number: '1.2-2' }}</span>
+                  <span class="vuelto-valor">S/. {{ vuelto() | number: '1.2-2' }}</span>
                 </div>
               </div>
 
-              <div *ngIf="metodoPagoSeleccionado !== 1" class="pago-detalles-animated">
+              <div *ngIf="metodoPagoSeleccionado() !== 1" class="pago-detalles-animated">
                 <div class="monto-destacado-box">
                   <i class="pi pi-tag"></i>
                   <span>Total a Pagar:</span>
                   <strong class="monto-destacado"
-                    >S/. {{ calcularTotal() | number: '1.2-2' }}</strong
+                    >S/. {{ total() | number: '1.2-2' }}</strong
                   >
                 </div>
 
@@ -698,7 +706,8 @@
                   </div>
                   <input
                     pInputText
-                    [(ngModel)]="numeroOperacion"
+                    [ngModel]="numeroOperacion()"
+                    (ngModelChange)="numeroOperacion.set($event)"
                     placeholder="Ingrese número de operación"
                     class="w-full input-operacion"
                   />
@@ -709,8 +718,9 @@
         </div>
       </div>
 
-      <div *ngIf="activeStep === 3" class="step-content">
-        <div *ngIf="!comprobanteGenerado">
+      <!-- PASO 4: Confirmar Venta -->
+      <div *ngIf="activeStep() === 3" class="step-content">
+        <div *ngIf="!comprobanteGenerado()">
           <div class="step-header">
             <i class="pi pi-check-circle step-icon"></i>
             <h3>Confirmar Venta</h3>
@@ -730,7 +740,7 @@
                     Cliente:
                   </span>
                   <strong class="resumen-value">
-                    {{ clienteEncontrado?.name }}
+                    {{ clienteEncontrado()?.name }}
                   </strong>
                 </div>
 
@@ -740,8 +750,8 @@
                     Tipo de Comprobante:
                   </span>
                   <p-tag
-                    [value]="clienteEncontrado?.invoiceType || 'N/A'"
-                    [severity]="clienteEncontrado?.invoiceType === 'BOLETA' ? 'info' : 'success'"
+                    [value]="clienteEncontrado()?.invoiceType || 'N/A'"
+                    [severity]="clienteEncontrado()?.invoiceType === 'BOLETA' ? 'info' : 'success'"
                     styleClass="resumen-tag"
                   />
                 </div>
@@ -749,9 +759,9 @@
                 <div class="resumen-item">
                   <span class="label">
                     <i class="pi pi-id-card"></i>
-                    {{ clienteEncontrado?.documentTypeDescription || 'Documento' }}:
+                    {{ clienteEncontrado()?.documentTypeDescription || 'Documento' }}:
                   </span>
-                  <strong class="resumen-value">{{ clienteEncontrado?.documentValue }}</strong>
+                  <strong class="resumen-value">{{ clienteEncontrado()?.documentValue }}</strong>
                 </div>
 
                 <div class="resumen-item">
@@ -760,7 +770,7 @@
                     Teléfono:
                   </span>
                   <strong class="resumen-value">{{
-                    clienteEncontrado?.phone || 'No registrado'
+                    clienteEncontrado()?.phone || 'No registrado'
                   }}</strong>
                 </div>
 
@@ -770,7 +780,7 @@
                     Email:
                   </span>
                   <strong class="resumen-value">{{
-                    clienteEncontrado?.email || 'No registrado'
+                    clienteEncontrado()?.email || 'No registrado'
                   }}</strong>
                 </div>
 
@@ -780,7 +790,7 @@
                     Dirección:
                   </span>
                   <strong class="resumen-value">{{
-                    clienteEncontrado?.address || 'No registrada'
+                    clienteEncontrado()?.address || 'No registrada'
                   }}</strong>
                 </div>
 
@@ -790,8 +800,8 @@
                     Productos:
                   </span>
                   <strong class="resumen-value">
-                    {{ productosSeleccionados.length }}
-                    {{ productosSeleccionados.length === 1 ? 'item' : 'items' }}
+                    {{ productosSeleccionados().length }}
+                    {{ productosSeleccionados().length === 1 ? 'item' : 'items' }}
                   </strong>
                 </div>
 
@@ -801,7 +811,7 @@
                     Método de Pago:
                   </span>
                   <p-tag
-                    [value]="getLabelMetodoPago(metodoPagoSeleccionado)"
+                    [value]="getLabelMetodoPago(metodoPagoSeleccionado())"
                     severity="info"
                     styleClass="resumen-tag"
                   />
@@ -813,15 +823,15 @@
               <div class="resumen-totales">
                 <div class="total-line">
                   <span>Subtotal:</span>
-                  <span>S/. {{ calcularSubtotal() | number: '1.2-2' }}</span>
+                  <span>S/. {{ subtotal() | number: '1.2-2' }}</span>
                 </div>
                 <div class="total-line">
                   <span>IGV (18%):</span>
-                  <span>S/. {{ calcularIGV() | number: '1.2-2' }}</span>
+                  <span>S/. {{ igv() | number: '1.2-2' }}</span>
                 </div>
                 <div class="total-line total-final">
                   <span>TOTAL:</span>
-                  <span class="total-valor">S/. {{ calcularTotal() | number: '1.2-2' }}</span>
+                  <span class="total-valor">S/. {{ total() | number: '1.2-2' }}</span>
                 </div>
               </div>
             </p-card>
@@ -830,7 +840,7 @@
               <p-button
                 label="Generar Venta"
                 icon="pi pi-check"
-                [loading]="loading"
+                [loading]="loading()"
                 (onClick)="generarVenta()"
                 styleClass="w-full btn-generar-venta"
               />
@@ -838,7 +848,7 @@
           </div>
         </div>
 
-        <div *ngIf="comprobanteGenerado" class="venta-exitosa">
+        <div *ngIf="comprobanteGenerado()" class="venta-exitosa">
           <div class="success-animation">
             <i class="pi pi-check-circle"></i>
           </div>
@@ -850,11 +860,11 @@
                 <div class="comprobante-numero">
                   <span class="numero-label">COMPROBANTE N°:</span>
                   <h3 class="numero-valor">
-                    {{ comprobanteGenerado.serie }}-{{ comprobanteGenerado.receiptNumber }}
+                    {{ comprobanteGenerado()!.serie }}-{{ comprobanteGenerado()!.receiptNumber }}
                   </h3>
                 </div>
                 <p-tag
-                  [value]="clienteEncontrado?.invoiceType || 'COMPROBANTE'"
+                  [value]="clienteEncontrado()?.invoiceType || 'COMPROBANTE'"
                   severity="success"
                   styleClass="comprobante-tipo-tag"
                 />
@@ -868,21 +878,21 @@
                     <i class="pi pi-user"></i>
                     Cliente:
                   </span>
-                  <strong>{{ clienteEncontrado?.name }}</strong>
+                  <strong>{{ clienteEncontrado()?.name }}</strong>
                 </div>
                 <div class="info-item">
                   <span class="label">
                     <i class="pi pi-id-card"></i>
                     Documento:
                   </span>
-                  <strong>{{ clienteEncontrado?.documentValue }}</strong>
+                  <strong>{{ clienteEncontrado()?.documentValue }}</strong>
                 </div>
                 <div class="info-item">
                   <span class="label">
                     <i class="pi pi-calendar"></i>
                     Fecha:
                   </span>
-                  <strong>{{ comprobanteGenerado.createdAt | date: 'dd/MM/yyyy HH:mm' }}</strong>
+                  <strong>{{ comprobanteGenerado()!.createdAt | date: 'dd/MM/yyyy HH:mm' }}</strong>
                 </div>
                 <div class="info-item">
                   <span class="label">
@@ -890,7 +900,7 @@
                     Monto Total:
                   </span>
                   <strong class="monto-total">
-                    S/. {{ comprobanteGenerado.total | number: '1.2-2' }}
+                    S/. {{ comprobanteGenerado()!.total | number: '1.2-2' }}
                   </strong>
                 </div>
               </div>
@@ -919,18 +929,18 @@
 
     <p-divider styleClass="wizard-divider" />
 
-    <div *ngIf="activeStep < 3 || !comprobanteGenerado" class="step-actions">
+    <div *ngIf="activeStep() < 3 || !comprobanteGenerado()" class="step-actions">
       <p-button
-        *ngIf="activeStep > 0"
+        *ngIf="activeStep() > 0"
         label="Anterior"
         icon="pi pi-arrow-left"
         [outlined]="true"
         severity="secondary"
         (onClick)="prevStep()"
       />
-      <span *ngIf="activeStep === 0"></span>
+      <span *ngIf="activeStep() === 0"></span>
       <p-button
-        *ngIf="activeStep < 3"
+        *ngIf="activeStep() < 3"
         label="Siguiente"
         icon="pi pi-arrow-right"
         iconPos="right"

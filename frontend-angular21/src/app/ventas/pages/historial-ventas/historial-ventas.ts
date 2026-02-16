@@ -1,11 +1,6 @@
 /* frontend-angular21/src/app/ventas/pages/historial-ventas/historial-ventas.ts */
 
-import {
-  Component,
-  OnInit,
-  OnDestroy,
-  ChangeDetectorRef,
-} from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, computed, effect, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -51,24 +46,17 @@ interface FiltroVentas {
 interface ComprobanteVentaVM {
   id: number;
   id_sede: number;
-
   serie: string;
   numero: number;
   fec_emision: string;
-
   tipo_comprobante: string;
   tipo_pago: string;
-
   idCliente: string;
   idResponsableRef: number;
-
   cliente_nombre: string;
   cliente_doc: string;
-
   responsable: string;
-
   total: number;
-
   estado: boolean;
   estadoSunat: ReceiptStatus;
 }
@@ -95,62 +83,96 @@ interface ComprobanteVentaVM {
   styleUrls: ['./historial-ventas.css'],
 })
 export class HistorialVentas implements OnInit, OnDestroy {
-  tituloKicker = 'VENTAS - HISTORIAL DE VENTAS';
-  subtituloKicker = 'CONSULTA Y GESTIÓN DE VENTAS';
-  iconoCabecera = 'pi pi-list';
+  // Inyección de dependencias
+  private readonly router = inject(Router);
+  private readonly ventasApi = inject(VentasApiService);
+  private readonly authService = inject(AuthService);
+  private readonly sedeService = inject(SedeService);
+  private readonly comprobantesService = inject(ComprobantesService);
+  private readonly posService = inject(PosService);
+  private readonly messageService = inject(MessageService);
+  private readonly confirmationService = inject(ConfirmationService);
 
+  // Constantes
+  readonly tituloKicker = 'VENTAS - HISTORIAL DE VENTAS';
+  readonly subtituloKicker = 'CONSULTA Y GESTIÓN DE VENTAS';
+  readonly iconoCabecera = 'pi pi-list';
+
+  // Subscriptions
   private subscriptions = new Subscription();
 
-  comprobantes: ComprobanteVentaVM[] = [];
-  comprobantesFiltrados: ComprobanteVentaVM[] = [];
-  comprobanteSeleccionado: ComprobanteVentaVM | null = null;
+  // ✅ Signals principales
+  comprobantes = signal<ComprobanteVentaVM[]>([]);
+  comprobanteSeleccionado = signal<ComprobanteVentaVM | null>(null);
 
-  sedes: Sede[] = [];
-  sedeActual: Sede | null = null;
+  sedes = signal<Sede[]>([]);
+  sedeActual = signal<Sede | null>(null);
 
-  filtros: FiltroVentas = {
+  filtros = signal<FiltroVentas>({
     tipoComprobante: null,
     estado: null,
     fechaInicio: null,
     fechaFin: null,
     busqueda: '',
     tipoPago: null,
-  };
+  });
 
-  tiposComprobante: any[] = [];
-  estadosComprobante: any[] = [];
-  tiposPago: any[] = [];
+  tiposComprobante = signal<any[]>([]);
+  estadosComprobante = signal<any[]>([]);
+  tiposPago = signal<any[]>([]);
 
-  sugerenciasBusqueda: string[] = [];
-  todasLasSugerencias: string[] = [];
+  sugerenciasBusqueda = signal<string[]>([]);
+  todasLasSugerencias = signal<string[]>([]);
 
-  loading = false;
-  mostrarDetalle = false;
+  loading = signal(false);
+  mostrarDetalle = signal(false);
 
-  totalVentas = 0;
-  numeroVentas = 0;
-  totalBoletas = 0;
-  totalFacturas = 0;
+  totalRecords = signal(0);
 
-  inicioSemana: Date = new Date();
-  finSemana: Date = new Date();
+  inicioSemana = signal(new Date());
+  finSemana = signal(new Date());
 
-  totalRecords = 0;
+  private currentUser = signal<User | null>(null);
+  private sedeRefEmpleado = signal<number | null>(null);
 
-  private currentUser: User | null = null;
-  private sedeRefEmpleado: number | null = null;
+  // ✅ Computed signals
+  comprobantesFiltrados = computed(() => {
+    return this.comprobantes();
+  });
 
-  constructor(
-    private router: Router,
-    private ventasApi: VentasApiService,
-    private authService: AuthService,
-    private sedeService: SedeService,
-    private comprobantesService: ComprobantesService,
-    private posService: PosService,
-    private messageService: MessageService,
-    private confirmationService: ConfirmationService,
-    private cdr: ChangeDetectorRef,
-  ) {}
+  ventasSemana = computed(() => {
+    const inicio = this.inicioSemana();
+    const fin = this.finSemana();
+
+    return this.comprobantesFiltrados().filter((c) => {
+      const fechaVenta = new Date(c.fec_emision);
+      return fechaVenta >= inicio && fechaVenta <= fin;
+    });
+  });
+
+  totalVentas = computed(() => {
+    return this.ventasSemana().reduce((sum, c) => sum + (c.total || 0), 0);
+  });
+
+  numeroVentas = computed(() => {
+    return this.ventasSemana().length;
+  });
+
+  totalBoletas = computed(() => {
+    return this.ventasSemana().filter((c) => c.tipo_comprobante === '03').length;
+  });
+
+  totalFacturas = computed(() => {
+    return this.ventasSemana().filter((c) => c.tipo_comprobante === '01').length;
+  });
+
+  // ✅ Effect para actualizar sugerencias cuando cambien los comprobantes
+  constructor() {
+    effect(() => {
+      const comprobantes = this.comprobantesFiltrados();
+      this.actualizarSugerenciasBusqueda(comprobantes);
+    });
+  }
 
   ngOnInit(): void {
     this.calcularRangoSemana();
@@ -166,10 +188,11 @@ export class HistorialVentas implements OnInit, OnDestroy {
   }
 
   private cargarUsuarioYSede(): void {
-    this.currentUser = this.authService.getCurrentUser();
-    this.sedeRefEmpleado = this.currentUser?.idSede ?? null;
+    const user = this.authService.getCurrentUser();
+    this.currentUser.set(user);
+    this.sedeRefEmpleado.set(user?.idSede ?? null);
 
-    if (!this.currentUser) {
+    if (!user) {
       this.messageService.add({
         severity: 'error',
         summary: 'Error de autenticación',
@@ -183,45 +206,40 @@ export class HistorialVentas implements OnInit, OnDestroy {
     this.messageService.add({
       severity: 'info',
       summary: 'Sede actual',
-      detail: `Mostrando ventas de: ${this.currentUser.sedeNombre || 'Sede'}`,
+      detail: `Mostrando ventas de: ${user.sedeNombre || 'Sede'}`,
       life: 2000,
     });
   }
 
   private cargarHistorialDesdeBackend(): void {
-    this.loading = true;
+    this.loading.set(true);
 
-    const dateFrom = this.filtros.fechaInicio ? new Date(this.filtros.fechaInicio) : null;
-    const dateTo = this.filtros.fechaFin ? new Date(this.filtros.fechaFin) : null;
+    const filtros = this.filtros();
+    const dateFrom = filtros.fechaInicio ? new Date(filtros.fechaInicio) : null;
+    const dateTo = filtros.fechaFin ? new Date(filtros.fechaFin) : null;
     if (dateTo) dateTo.setHours(23, 59, 59, 999);
 
     const query: SalesReceiptsQuery = {
       page: 1,
       limit: 100,
-      status: this.filtros.estado ?? undefined,
-      search: this.filtros.busqueda?.trim() || undefined,
+      status: filtros.estado ?? undefined,
+      search: filtros.busqueda?.trim() || undefined,
       dateFrom: dateFrom ? dateFrom.toISOString() : undefined,
       dateTo: dateTo ? dateTo.toISOString() : undefined,
-      receiptTypeId: this.mapTipoComprobanteToReceiptTypeId(this.filtros.tipoComprobante),
-      sedeId: this.sedeRefEmpleado ?? undefined,
+      receiptTypeId: this.mapTipoComprobanteToReceiptTypeId(filtros.tipoComprobante),
+      sedeId: this.sedeRefEmpleado() ?? undefined,
     };
 
     const sub = this.ventasApi.listarHistorialVentas(query).subscribe({
       next: (res: SalesReceiptSummaryListResponse) => {
-        // ✅ El backend ya trae los datos enriquecidos con TCP
-        this.comprobantes = res.receipts.map((r) => this.toVM(r));
-        this.comprobantesFiltrados = [...this.comprobantes];
-        this.totalRecords = res.total;
-
-        this.cargarSugerenciasBusqueda();
-        this.calcularEstadisticas();
-
-        this.loading = false;
-        this.cdr.detectChanges();
+        const comprobantes = res.receipts.map((r) => this.toVM(r));
+        this.comprobantes.set(comprobantes);
+        this.totalRecords.set(res.total);
+        this.loading.set(false);
       },
       error: (err: unknown) => {
         console.error('Error historial:', err);
-        this.loading = false;
+        this.loading.set(false);
 
         this.messageService.add({
           severity: 'error',
@@ -229,8 +247,6 @@ export class HistorialVentas implements OnInit, OnDestroy {
           detail: 'No se pudo cargar el historial de ventas',
           life: 3000,
         });
-
-        this.cdr.detectChanges();
       },
     });
 
@@ -238,10 +254,9 @@ export class HistorialVentas implements OnInit, OnDestroy {
   }
 
   private toVM(r: SalesReceiptSummaryDto): ComprobanteVentaVM {
-    // ✅ Mapeo de tipo de comprobante a código SUNAT
     const tipoComprobanteMap: Record<string, string> = {
-      'FACTURA': '01',
-      'BOLETA': '03',
+      FACTURA: '01',
+      BOLETA: '03',
       'NOTA DE CREDITO': '07',
       'NOTA DE DEBITO': '08',
     };
@@ -251,24 +266,17 @@ export class HistorialVentas implements OnInit, OnDestroy {
     return {
       id: r.idComprobante,
       id_sede: r.idSede,
-
       serie: r.serie,
       numero: r.numero,
       fec_emision: r.fecEmision,
-
       tipo_comprobante: tipoSunat,
       tipo_pago: r.metodoPago || 'N/A',
-
-      idCliente: r.clienteNombre, // Para compatibilidad
+      idCliente: r.clienteNombre,
       idResponsableRef: Number(r.idResponsable),
-
-      // ✅ Datos enriquecidos por TCP
       cliente_nombre: r.clienteNombre,
       cliente_doc: r.clienteDocumento,
       responsable: r.responsableNombre,
-
       total: r.total,
-
       estadoSunat: r.estado,
       estado: r.estado === 'EMITIDO',
     };
@@ -276,36 +284,50 @@ export class HistorialVentas implements OnInit, OnDestroy {
 
   private mapTipoComprobanteToReceiptTypeId(tipo: string | null): number | undefined {
     if (!tipo) return undefined;
-    if (tipo === '01') return 1; // Factura
-    if (tipo === '03') return 2; // Boleta
-    if (tipo === '07') return 3; // Nota de crédito
+    if (tipo === '01') return 1;
+    if (tipo === '03') return 2;
+    if (tipo === '07') return 3;
     return undefined;
   }
 
-  // ====== UI existente ======
+  private actualizarSugerenciasBusqueda(comprobantes: ComprobanteVentaVM[]): void {
+    const sugerencias = new Set<string>();
+
+    comprobantes.forEach((c) => {
+      sugerencias.add(this.getNumeroFormateado(c));
+      if (c.cliente_nombre?.trim()) sugerencias.add(c.cliente_nombre.trim());
+      if (c.cliente_doc?.trim()) sugerencias.add(c.cliente_doc.trim());
+    });
+
+    this.todasLasSugerencias.set(Array.from(sugerencias).sort());
+  }
+
   calcularRangoSemana(): void {
     const hoy = new Date();
     const diaSemana = hoy.getDay();
     const diasDesdeInicio = diaSemana === 0 ? 6 : diaSemana - 1;
 
-    this.inicioSemana = new Date(hoy);
-    this.inicioSemana.setDate(hoy.getDate() - diasDesdeInicio);
-    this.inicioSemana.setHours(0, 0, 0, 0);
+    const inicio = new Date(hoy);
+    inicio.setDate(hoy.getDate() - diasDesdeInicio);
+    inicio.setHours(0, 0, 0, 0);
 
-    this.finSemana = new Date(this.inicioSemana);
-    this.finSemana.setDate(this.inicioSemana.getDate() + 6);
-    this.finSemana.setHours(23, 59, 59, 999);
+    const fin = new Date(inicio);
+    fin.setDate(inicio.getDate() + 6);
+    fin.setHours(23, 59, 59, 999);
+
+    this.inicioSemana.set(inicio);
+    this.finSemana.set(fin);
   }
 
   cargarOpcionesFiltros(): void {
-    this.tiposComprobante = this.comprobantesService.getTiposComprobanteOptions();
-    this.estadosComprobante = this.comprobantesService.getEstadosComprobanteOptions();
-    this.tiposPago = this.posService.getTiposPagoOptions();
+    this.tiposComprobante.set(this.comprobantesService.getTiposComprobanteOptions());
+    this.estadosComprobante.set(this.comprobantesService.getEstadosComprobanteOptions());
+    this.tiposPago.set(this.posService.getTiposPagoOptions());
   }
 
   cargarSedes(): void {
     const sub = this.sedeService.getSedes().subscribe({
-      next: (sedes) => (this.sedes = sedes),
+      next: (sedes) => this.sedes.set(sedes),
       error: () => {
         this.messageService.add({
           severity: 'error',
@@ -318,26 +340,15 @@ export class HistorialVentas implements OnInit, OnDestroy {
     this.subscriptions.add(sub);
   }
 
-  cargarSugerenciasBusqueda(): void {
-    const sugerencias = new Set<string>();
-
-    this.comprobantesFiltrados.forEach((c) => {
-      sugerencias.add(this.getNumeroFormateado(c));
-      if (c.cliente_nombre?.trim()) sugerencias.add(c.cliente_nombre.trim());
-      if (c.cliente_doc?.trim()) sugerencias.add(c.cliente_doc.trim());
-    });
-
-    this.todasLasSugerencias = Array.from(sugerencias).sort();
-  }
-
   buscarSugerencias(event: any): void {
     const query = (event.query || '').toLowerCase().trim();
+    const todas = this.todasLasSugerencias();
 
-    if (!query) this.sugerenciasBusqueda = this.todasLasSugerencias.slice(0, 10);
-    else {
-      this.sugerenciasBusqueda = this.todasLasSugerencias
-        .filter((item) => item.toLowerCase().includes(query))
-        .slice(0, 15);
+    if (!query) {
+      this.sugerenciasBusqueda.set(todas.slice(0, 10));
+    } else {
+      const filtradas = todas.filter((item) => item.toLowerCase().includes(query)).slice(0, 15);
+      this.sugerenciasBusqueda.set(filtradas);
     }
   }
 
@@ -346,14 +357,14 @@ export class HistorialVentas implements OnInit, OnDestroy {
   }
 
   limpiarFiltros(): void {
-    this.filtros = {
+    this.filtros.set({
       tipoComprobante: null,
       estado: null,
       fechaInicio: null,
       fechaFin: null,
       busqueda: '',
       tipoPago: null,
-    };
+    });
     this.cargarHistorialDesdeBackend();
 
     this.messageService.add({
@@ -362,18 +373,6 @@ export class HistorialVentas implements OnInit, OnDestroy {
       detail: 'Se restablecieron todos los filtros',
       life: 2000,
     });
-  }
-
-  calcularEstadisticas(): void {
-    const ventasSemana = this.comprobantesFiltrados.filter((c) => {
-      const fechaVenta = new Date(c.fec_emision);
-      return fechaVenta >= this.inicioSemana && fechaVenta <= this.finSemana;
-    });
-
-    this.totalVentas = ventasSemana.reduce((sum, c) => sum + (c.total || 0), 0);
-    this.numeroVentas = ventasSemana.length;
-    this.totalBoletas = ventasSemana.filter((c) => c.tipo_comprobante === '03').length;
-    this.totalFacturas = ventasSemana.filter((c) => c.tipo_comprobante === '01').length;
   }
 
   getEstadoComprobante(comprobante: ComprobanteVentaVM): string {
@@ -406,8 +405,8 @@ export class HistorialVentas implements OnInit, OnDestroy {
   }
 
   cerrarDetalle(): void {
-    this.mostrarDetalle = false;
-    this.comprobanteSeleccionado = null;
+    this.mostrarDetalle.set(false);
+    this.comprobanteSeleccionado.set(null);
   }
 
   imprimirComprobante(comprobante: ComprobanteVentaVM): void {
@@ -429,8 +428,14 @@ export class HistorialVentas implements OnInit, OnDestroy {
       rejectLabel: 'Cancelar',
       acceptButtonStyleClass: 'p-button-danger',
       accept: () => {
-        comprobante.estadoSunat = 'ANULADO';
-        comprobante.estado = false;
+        const comprobantes = this.comprobantes();
+        const index = comprobantes.findIndex((c) => c.id === comprobante.id);
+
+        if (index !== -1) {
+          comprobantes[index].estadoSunat = 'ANULADO';
+          comprobantes[index].estado = false;
+          this.comprobantes.set([...comprobantes]);
+        }
 
         this.messageService.add({
           severity: 'success',
@@ -438,13 +443,35 @@ export class HistorialVentas implements OnInit, OnDestroy {
           detail: `${this.getNumeroFormateado(comprobante)} fue anulado exitosamente`,
           life: 3000,
         });
-
-        this.cdr.detectChanges();
       },
     });
   }
 
   nuevaVenta(): void {
     this.router.navigate(['/ventas/generar-venta']);
+  }
+
+  actualizarFiltroBusqueda(valor: string): void {
+    this.filtros.update((f) => ({ ...f, busqueda: valor }));
+  }
+
+  actualizarFiltroFechaInicio(valor: Date | null): void {
+    this.filtros.update((f) => ({ ...f, fechaInicio: valor }));
+  }
+
+  actualizarFiltroFechaFin(valor: Date | null): void {
+    this.filtros.update((f) => ({ ...f, fechaFin: valor }));
+  }
+
+  actualizarFiltroTipoComprobante(valor: string | null): void {
+    this.filtros.update((f) => ({ ...f, tipoComprobante: valor }));
+  }
+
+  actualizarFiltroTipoPago(valor: string | null): void {
+    this.filtros.update((f) => ({ ...f, tipoPago: valor }));
+  }
+
+  actualizarFiltroEstado(valor: ReceiptStatus | null): void {
+    this.filtros.update((f) => ({ ...f, estado: valor }));
   }
 }
