@@ -13,8 +13,7 @@ export const VENTAS_ROUTES: Routes = [
   },
   {
     path: 'generar-ventas',
-    loadComponent: () => 
-      import('./pages/generar-venta/generar-venta').then((m) => m.GenerarVenta),
+    loadComponent: () => import('./pages/generar-venta/generar-venta').then((m) => m.GenerarVenta),
   },
   {
     path: 'historial-ventas',
@@ -30,7 +29,7 @@ export const VENTAS_ROUTES: Routes = [
   },
   {
     path: 'ver-detalle/:id',
-    loadComponent: () => 
+    loadComponent: () =>
       import('./shared/detalles-venta/detalle-venta').then((m) => m.DetalleVenta),
   },
   {
@@ -39,7 +38,6 @@ export const VENTAS_ROUTES: Routes = [
       import('./pages/reclamos-garantia/reclamos-listado/reclamos-listado').then(
         (m) => m.ReclamosListado,
       ),
-      
   },
   {
     path: 'reclamos/crear',
@@ -62,5 +60,9 @@ export const VENTAS_ROUTES: Routes = [
         (m) => m.ReclamosDetalles,
       ),
   },
-  
+
+  {
+    path: 'cotizaciones',
+    loadComponent: () => import('./pages/cotizaciones/cotizaciones').then((m) => m.Cotizaciones),
+  },
 ];

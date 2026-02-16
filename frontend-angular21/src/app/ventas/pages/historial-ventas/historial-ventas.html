@@ -30,7 +30,7 @@
         <i class="pi pi-chart-line"></i>
         <div>
           <span class="estadistica-label">Total Ventas</span>
-          <span class="estadistica-valor">S/. {{ totalVentas | number: '1.2-2' }}</span>
+          <span class="estadistica-valor">S/. {{ totalVentas() | number: '1.2-2' }}</span>
         </div>
       </div>
 
@@ -38,7 +38,7 @@
         <i class="pi pi-shopping-cart"></i>
         <div>
           <span class="estadistica-label">Cantidad de Ventas</span>
-          <span class="estadistica-valor">{{ numeroVentas }}</span>
+          <span class="estadistica-valor">{{ numeroVentas() }}</span>
         </div>
       </div>
 
@@ -46,7 +46,7 @@
         <i class="pi pi-file"></i>
         <div>
           <span class="estadistica-label">Boletas</span>
-          <span class="estadistica-valor">{{ totalBoletas }}</span>
+          <span class="estadistica-valor">{{ totalBoletas() }}</span>
         </div>
       </div>
 
@@ -54,7 +54,7 @@
         <i class="pi pi-file-edit"></i>
         <div>
           <span class="estadistica-label">Facturas</span>
-          <span class="estadistica-valor">{{ totalFacturas }}</span>
+          <span class="estadistica-valor">{{ totalFacturas() }}</span>
         </div>
       </div>
     </div>
@@ -70,8 +70,9 @@
         <div class="filtro-item filtro-cliente-50">
           <label>Cliente (DNI/RUC)</label>
           <p-autocomplete
-            [(ngModel)]="filtros.busqueda"
-            [suggestions]="sugerenciasBusqueda"
+            [ngModel]="filtros().busqueda"
+            (ngModelChange)="actualizarFiltroBusqueda($event)"
+            [suggestions]="sugerenciasBusqueda()"
             (completeMethod)="buscarSugerencias($event)"
             (onSelect)="aplicarFiltros()"
             (onClear)="aplicarFiltros()"
@@ -87,7 +88,8 @@
           <label>Rango de Fechas</label>
           <div class="fechas-con-guion">
             <p-datepicker
-              [(ngModel)]="filtros.fechaInicio"
+              [ngModel]="filtros().fechaInicio"
+              (ngModelChange)="actualizarFiltroFechaInicio($event)"
               dateFormat="dd/mm/yy"
               placeholder="Fecha Inicio"
               (onSelect)="aplicarFiltros()"
@@ -100,7 +102,8 @@
             <span class="fecha-separador">-</span>
 
             <p-datepicker
-              [(ngModel)]="filtros.fechaFin"
+              [ngModel]="filtros().fechaFin"
+              (ngModelChange)="actualizarFiltroFechaFin($event)"
               dateFormat="dd/mm/yy"
               placeholder="Fecha Fin"
               (onSelect)="aplicarFiltros()"
@@ -117,8 +120,9 @@
         <div class="filtro-item filtro-compacto">
           <label>Tipo</label>
           <p-select
-            [(ngModel)]="filtros.tipoComprobante"
-            [options]="tiposComprobante"
+            [ngModel]="filtros().tipoComprobante"
+            (ngModelChange)="actualizarFiltroTipoComprobante($event)"
+            [options]="tiposComprobante()"
             placeholder="Todos"
             optionLabel="label"
             optionValue="value"
@@ -130,8 +134,9 @@
         <div class="filtro-item filtro-compacto">
           <label>Tipo de Pago</label>
           <p-select
-            [(ngModel)]="filtros.tipoPago"
-            [options]="tiposPago"
+            [ngModel]="filtros().tipoPago"
+            (ngModelChange)="actualizarFiltroTipoPago($event)"
+            [options]="tiposPago()"
             placeholder="Todos"
             optionLabel="label"
             optionValue="value"
@@ -143,8 +148,9 @@
         <div class="filtro-item filtro-compacto">
           <label>Estado</label>
           <p-select
-            [(ngModel)]="filtros.estado"
-            [options]="estadosComprobante"
+            [ngModel]="filtros().estado"
+            (ngModelChange)="actualizarFiltroEstado($event)"
+            [options]="estadosComprobante()"
             placeholder="Todos"
             optionLabel="label"
             optionValue="value"
@@ -178,11 +184,11 @@
       </div>
 
       <p-table
-        [value]="comprobantesFiltrados"
+        [value]="comprobantesFiltrados()"
         [paginator]="true"
         [rows]="10"
-        [rowsPerPageOptions]="[10, 25, 50, 100]"
-        [loading]="loading"
+        [totalRecords]="totalRecords()"
+        [loading]="loading()"
         [tableStyle]="{ 'min-width': '70rem' }"
         styleClass="p-datatable-striped"
         currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} registros"

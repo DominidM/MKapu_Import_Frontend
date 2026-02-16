@@ -8,9 +8,9 @@ export const ADMIN_ROUTES: Routes = [
       import('./pages/reportes/pages/notificacion-transferencia/notificacion-transferencia').then((m) => m.NotificacionTransferencia),
   },
   {
-    path: 'dashboard',
+    path: 'dashboard-admin',
     loadComponent: () =>
-      import('./pages/dashboard/dashboard').then((m) => m.Dashboard),
+      import('./pages/dashboard-admin/dashboard-admin').then((m) => m.DashboardAdmin),
   },
 
   /* =======================
@@ -357,5 +357,25 @@ export const ADMIN_ROUTES: Routes = [
       import('./pages/despacho-productos/pages/detalles-despacho/detalles-despacho').then(
         (m) => m.DetallesDespacho,
       ),
+  },
+
+
+  {
+    path: 'proveedores',
+    loadComponent: () => import('./pages/gestion-proveedor/proveedor-listado/proveedor-listado').then(m => m.ProveedorListado),
+    children: [
+      {
+        path: 'crear',
+        loadComponent: () => import('./pages/gestion-proveedor/proveedor-formulario/proveedor-formulario').then(m => m.ProveedorFormulario)
+      },
+      {
+        path: 'editar/:id',
+        loadComponent: () => import('./pages/gestion-proveedor/proveedor-formulario/proveedor-formulario').then(m => m.ProveedorFormulario)
+      },
+      {
+        path: 'ver-detalle/:id',
+        loadComponent: () => import('./pages/gestion-proveedor/proveedor-detalles/proveedor-detalles').then(m => m.ProveedorDetalles)
+      }
+    ]
   },
 ];

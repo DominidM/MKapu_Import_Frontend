@@ -2,6 +2,31 @@
   display: none;
 }
 
+@media (max-width: 768px) {
+  .menu-button {
+    display: inline-flex;
+  }
+}
+
+.app-header-card {
+  border: 0 !important;
+  box-shadow: none !important;
+  background: transparent;
+}
+
+:host ::ng-deep .app-toolbar.p-toolbar,
+:host ::ng-deep .app-toolbar {
+  border: 0 !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+:host ::ng-deep .app-toolbar .p-toolbar-group-start,
+:host ::ng-deep .app-toolbar .p-toolbar-group-end,
+:host ::ng-deep .app-toolbar .p-toolbar-group-center {
+  border: 0 !important;
+}
+
 .header-bell-wrapper {
   position: relative;
   display: inline-flex;
@@ -27,8 +52,7 @@
   box-shadow: 0 4px 10px rgba(246, 175, 51, 0.35);
 }
 
-@media (max-width: 768px) {
-  .menu-button {
-    display: inline-flex;
-  }
+html.p-dark :host ::ng-deep .app-toolbar.p-toolbar,
+html.p-dark :host ::ng-deep .app-toolbar {
+  background: #1f1f1f !important;
 }

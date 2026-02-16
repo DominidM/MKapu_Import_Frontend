@@ -20,7 +20,7 @@ export class Header implements OnInit {
 
   notifCount = 0;
 
-  constructor(public themeService: ThemeService, private router: Router) {} // público para usarlo en template
+  constructor(public themeService: ThemeService, private router: Router) {}
   @Output() toggleSidebar = new EventEmitter<void>();
   toggleTheme(): void {
     this.themeService.toggleTheme();

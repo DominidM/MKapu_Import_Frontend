@@ -44,13 +44,12 @@ export class Sidebar implements OnInit {
   private readonly SIDEBAR_ROUTES: RouteConfig[] = [
     // ==================== ADMIN ====================
     {
-      path: '/admin/dashboard',
+      path: '/admin/dashboard-admin',
       allowedRoles: [UserRole.ADMIN],
       label: 'Dashboard',
       icon: 'pi pi-home',
     },
 
-    // SECCIÓN VENTAS (solo para Admin)
     {
       path: '',
       allowedRoles: [UserRole.ADMIN],
@@ -76,6 +75,12 @@ export class Sidebar implements OnInit {
       icon: 'pi pi-list',
     },
     {
+      path: '',
+      allowedRoles: [UserRole.ADMIN],
+      label: 'ALMACÉN',
+      isSection: true,
+    },
+    {
       path: '/almacen/dashboard',
       allowedRoles: [UserRole.ADMIN],
       label: 'Dashboard Almacén',
@@ -88,6 +93,12 @@ export class Sidebar implements OnInit {
       icon: 'pi pi-download',
     },
     {
+      path: '',
+      allowedRoles: [UserRole.ADMIN],
+      label: 'ADMINISTRACIÓN',
+      isSection: true,
+    },
+    {
       path: '/admin/transferencia',
       allowedRoles: [UserRole.ADMIN],
       label: 'Transferencias',
@@ -98,13 +109,6 @@ export class Sidebar implements OnInit {
       allowedRoles: [UserRole.ADMIN],
       label: 'Despacho',
       icon: 'pi pi-truck',
-    },
-
-    {
-      path: '',
-      allowedRoles: [UserRole.ADMIN],
-      label: 'ADMINISTRACIÓN',
-      isSection: true,
     },
     {
       path: '/admin/usuarios',
@@ -148,11 +152,12 @@ export class Sidebar implements OnInit {
       label: 'Conteo Inventario',
       icon: 'pi pi-folder',
     },
-
-
-
-
-
+    {
+      path: '/admin/proveedores',
+      allowedRoles: [UserRole.ADMIN],
+      label: 'Proveedores',
+      icon: 'pi pi-truck',
+    },
 
     // ==================== VENTAS ====================
     {
@@ -179,7 +184,12 @@ export class Sidebar implements OnInit {
       label: 'Reclamos y Garantías',
       icon: 'pi pi-shield',
     },
-
+        {
+      path: '/ventas/cotizaciones',
+      allowedRoles: [UserRole.VENTAS],
+      label: 'Cotizaciones',
+      icon: 'pi pi-file',
+    },
 
     // ==================== ALMACÉN ====================
     {
@@ -211,11 +221,11 @@ export class Sidebar implements OnInit {
 
     if (user) {
       this.username = user.username;
-      this.roleName = ROLE_NAMES[user.roleId] || 'Invitado';
+
+      this.roleName = ROLE_NAMES[user.roleId as keyof typeof ROLE_NAMES] || 'Invitado';
       console.log('👤 Usuario actual:', { username: this.username, role: this.roleName });
     }
   }
-
   /**
    * Carga el menú filtrado según el rol del usuario
    */

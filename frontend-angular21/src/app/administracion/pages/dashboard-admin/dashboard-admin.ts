@@ -14,6 +14,7 @@ import { PosService } from '../../../core/services/pos.service';
 import { PromocionesService } from '../../../core/services/promociones.service';
 import { ReclamosService } from '../../../core/services/reclamo.service';
 import { SedeService } from '../../../core/services/sede.service';
+import { EmpleadosService } from '../../../core/services/empleados.service';
 
 interface TopProducto {
   nombre: string;
@@ -30,6 +31,14 @@ interface ActividadReciente {
   color: string;
 }
 
+interface MejorVendedor {
+  nombre: string;
+  totalVentas: number;
+  montoTotal: string;
+  ticketPromedio: string;
+  sede: string;
+}
+
 @Component({
   selector: 'app-dashboard',
   imports: [
@@ -42,11 +51,11 @@ interface ActividadReciente {
     SelectModule,
     FormsModule,
   ],
-  templateUrl: './dashboard.html',
+  templateUrl: './dashboard-admin.html',
   standalone: true,
-  styleUrl: './dashboard.css',
+  styleUrl: './dashboard-admin.css',
 })
-export class Dashboard implements OnInit {
+export class DashboardAdmin implements OnInit {
   private ventasService = inject(VentasService);
   private productosService = inject(ProductosService);
   private clientesService = inject(ClientesService);
@@ -54,6 +63,7 @@ export class Dashboard implements OnInit {
   private promocionesService = inject(PromocionesService);
   private reclamosService = inject(ReclamosService);
   private sedeService = inject(SedeService);
+  private empleadosService = inject(EmpleadosService);
 
   totalVentas: number = 0;
   totalOrdenes: number = 0;
@@ -77,61 +87,91 @@ export class Dashboard implements OnInit {
   doughnutChartOptions: any;
 
   topProductos: TopProducto[] = [];
-
   actividadReciente: ActividadReciente[] = [];
+  mejoresVendedores: MejorVendedor[] = [];
 
-  periodoSeleccionado: string = 'dia';
+  periodoVentasDia: string = 'anio';
+  mesVentasDistrito: string = '';
+  mesMetodosPago: string = '';
+  mesVentasSede: string = '';
+  mesTopProductos: string = '';
+  mesMejoresVendedores: string = '';
+
   periodosOptions = [
-    { label: 'Día', value: 'dia' },
-    { label: 'Semana', value: 'semana' },
-    { label: 'Mes', value: 'mes' },
+    { label: 'Última Semana', value: 'semana' },
+    { label: 'Último Mes', value: 'mes' },
+    { label: 'Último Trimestre', value: 'trimestre' },
+    { label: 'Año Actual', value: 'anio' },
   ];
 
-  mesSeleccionado: string = 'mes';
-  mesesOptions = [{ label: 'Seleccione Mes', value: 'mes' }];
+  aniosOptions: any[] = [];
   username: string = '';
+
   ngOnInit(): void {
     this.username = this.getUserName();
+    this.inicializarFechas();
+    this.generarOpcionesAnios();
     this.cargarEstadisticas();
     this.cargarGraficos();
     this.cargarTopProductos();
     this.cargarActividadReciente();
+    this.cargarMejoresVendedores();
     this.configurarOpcionesGraficos();
+  }
+
+  inicializarFechas(): void {
+    const anioActual = this.getAnioActual();
+    this.mesVentasDistrito = anioActual;
+    this.mesMetodosPago = anioActual;
+    this.mesVentasSede = anioActual;
+    this.mesTopProductos = anioActual;
+    this.mesMejoresVendedores = anioActual;
+  }
+
+  getAnioActual(): string {
+    const fecha = new Date();
+    return fecha.getFullYear().toString();
+  }
+
+  generarOpcionesAnios(): void {
+    const anioActual = new Date().getFullYear();
+    this.aniosOptions = [];
+    
+    for (let i = 0; i < 5; i++) {
+      const anio = anioActual - i;
+      this.aniosOptions.push({
+        label: anio.toString(),
+        value: anio.toString(),
+      });
+    }
+  }
+
+  getUserName(): string {
+    const userString = localStorage.getItem('user');
+    if (!userString) {
+      return '';
+    }
+    try {
+      const user = JSON.parse(userString);
+      return user.nombres || user.username || '';
+    } catch (error) {
+      console.error('Error parseando usuario del localStorage', error);
+      return '';
+    }
   }
 
   cargarEstadisticas(): void {
     const comprobantes = this.ventasService.getComprobantesPorEstado(true);
-
     this.totalVentas = comprobantes.reduce((sum, c) => sum + c.total, 0);
-
     this.totalOrdenes = comprobantes.length;
-
-    this.ticketPromedio = this.totalOrdenes > 0 ? this.totalVentas / this.totalOrdenes : 0;
-
+    this.ticketPromedio =
+      this.totalOrdenes > 0 ? this.totalVentas / this.totalOrdenes : 0;
     this.nuevosClientes = this.clientesService.getTotalClientes();
-
     this.variacionVentas = 12.5;
     this.variacionOrdenes = 8.3;
     this.variacionTicket = 5.2;
     this.variacionClientes = 15.7;
   }
-
-  getUserName(): string {
-  const userString = localStorage.getItem('user');
-
-  if (!userString) {
-    return '';
-  }
-
-  try {
-    const user = JSON.parse(userString);
-    return user.nombres || '';
-  } catch (error) {
-    console.error('Error parseando usuario del localStorage', error);
-    return '';
-  }
-}
-
 
   cargarGraficos(): void {
     this.cargarGraficoVentasPorDia();
@@ -141,18 +181,72 @@ export class Dashboard implements OnInit {
     this.cargarGraficoVentasPorDistrito();
   }
 
+  onPeriodoVentasDiaChange(): void {
+    this.cargarGraficoVentasPorDia();
+  }
+
+  onMesVentasDistritoChange(): void {
+    this.cargarGraficoVentasPorDistrito();
+  }
+
+  onMesMetodosPagoChange(): void {
+    this.cargarGraficoMetodosPago();
+  }
+
+  onMesVentasSedeChange(): void {
+    this.cargarGraficoVentasPorSede();
+  }
+
+  onMesTopProductosChange(): void {
+    this.cargarTopProductos();
+  }
+
+  onMesMejoresVendedoresChange(): void {
+    this.cargarMejoresVendedores();
+  }
+
+  extraerDistrito(direccion: string | null): string {
+    if (!direccion) return 'Sin Distrito';
+    const partes = direccion.split(',');
+    if (partes.length > 1) {
+      return partes[partes.length - 1].trim();
+    }
+    return 'Sin Distrito';
+  }
+
   cargarGraficoVentasPorDia(): void {
     const comprobantes = this.ventasService.getComprobantesPorEstado(true);
+    const fechaActual = new Date();
+    let fechaInicio = new Date();
+
+    switch (this.periodoVentasDia) {
+      case 'semana':
+        fechaInicio.setDate(fechaActual.getDate() - 7);
+        break;
+      case 'mes':
+        fechaInicio.setMonth(fechaActual.getMonth() - 1);
+        break;
+      case 'trimestre':
+        fechaInicio.setMonth(fechaActual.getMonth() - 3);
+        break;
+      case 'anio':
+        fechaInicio = new Date(fechaActual.getFullYear(), 0, 1);
+        break;
+    }
+
+    const comprobantesFiltrados = comprobantes.filter(
+      (c) => new Date(c.fec_emision) >= fechaInicio,
+    );
 
     const ventasPorDia = new Map<string, number>();
-    comprobantes.forEach((c) => {
+    comprobantesFiltrados.forEach((c) => {
       const fecha = new Date(c.fec_emision);
       const dia = `${String(fecha.getDate()).padStart(2, '0')} ${fecha.toLocaleDateString('es-PE', { month: 'short' })}`;
       ventasPorDia.set(dia, (ventasPorDia.get(dia) || 0) + c.total);
     });
 
-    const labels = Array.from(ventasPorDia.keys()).slice(-11);
-    const data = Array.from(ventasPorDia.values()).slice(-11);
+    const labels = Array.from(ventasPorDia.keys());
+    const data = Array.from(ventasPorDia.values());
 
     this.ventasPorDiaChart = {
       labels: labels,
@@ -197,18 +291,42 @@ export class Dashboard implements OnInit {
       datasets: [
         {
           data: sortedFamilias.map((f) => f[1]),
-          backgroundColor: ['#42A5F5', '#66BB6A', '#FFA726', '#AB47BC', '#26A69A'],
-          hoverBackgroundColor: ['#64B5F6', '#81C784', '#FFB74D', '#BA68C8', '#4DB6AC'],
+          backgroundColor: [
+            '#42A5F5',
+            '#66BB6A',
+            '#FFA726',
+            '#AB47BC',
+            '#26A69A',
+          ],
+          hoverBackgroundColor: [
+            '#64B5F6',
+            '#81C784',
+            '#FFB74D',
+            '#BA68C8',
+            '#4DB6AC',
+          ],
         },
       ],
     };
   }
 
   cargarGraficoMetodosPago(): void {
+    const anio = parseInt(this.mesMetodosPago);
     const pagos = this.posService.getPagos();
-    const metodosPago = new Map<string, number>();
 
-    pagos.forEach((p) => {
+    const pagosFiltrados = pagos.filter((p) => {
+      const comprobante = this.ventasService
+        .getComprobantes()
+        .find((c) => c.id_comprobante === p.id_comprobante);
+      if (comprobante) {
+        const fecha = new Date(comprobante.fec_emision);
+        return fecha.getFullYear() === anio;
+      }
+      return false;
+    });
+
+    const metodosPago = new Map<string, number>();
+    pagosFiltrados.forEach((p) => {
       metodosPago.set(p.med_pago, (metodosPago.get(p.med_pago) || 0) + p.monto);
     });
 
@@ -228,12 +346,18 @@ export class Dashboard implements OnInit {
   }
 
   cargarGraficoVentasPorSede(): void {
+    const anio = parseInt(this.mesVentasSede);
     const sedes = ['LAS FLORES', 'LURIN', 'VES'];
+
     const ventasPorSede = sedes.map((sede) => {
       const comprobantes = this.ventasService.getComprobantesPorSede(
         `SEDE00${sedes.indexOf(sede) + 1}`,
       );
-      return comprobantes.filter((c) => c.estado).reduce((sum, c) => sum + c.total, 0);
+      const comprobantesFiltrados = comprobantes.filter((c) => {
+        const fecha = new Date(c.fec_emision);
+        return c.estado && fecha.getFullYear() === anio;
+      });
+      return comprobantesFiltrados.reduce((sum, c) => sum + c.total, 0);
     });
 
     this.ventasPorSedeChart = {
@@ -249,21 +373,36 @@ export class Dashboard implements OnInit {
   }
 
   cargarGraficoVentasPorDistrito(): void {
-    const distritos = [
-      'San Juan de Lurigancho',
-      'Lurín',
-      'Villa El Salvador',
-      'Lima',
-      'San Isidro',
-    ];
-    const ventas = [45000, 32000, 28000, 25000, 18000];
+    const comprobantes = this.ventasService.getComprobantesPorEstado(true);
+    const anio = parseInt(this.mesVentasDistrito);
+
+    const comprobantesFiltrados = comprobantes.filter((c) => {
+      const fecha = new Date(c.fec_emision);
+      return fecha.getFullYear() === anio;
+    });
+
+    const ventasPorDistrito = new Map<string, number>();
+    comprobantesFiltrados.forEach((c) => {
+      const cliente = this.clientesService.getClientePorId(c.id_cliente);
+      if (cliente) {
+        const distrito = this.extraerDistrito(cliente.direccion);
+        ventasPorDistrito.set(
+          distrito,
+          (ventasPorDistrito.get(distrito) || 0) + c.total,
+        );
+      }
+    });
+
+    const sortedDistritos = Array.from(ventasPorDistrito.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5);
 
     this.ventasPorDistritoChart = {
-      labels: distritos,
+      labels: sortedDistritos.map((d) => d[0]),
       datasets: [
         {
           label: 'Ventas por Distrito',
-          data: ventas,
+          data: sortedDistritos.map((d) => d[1]),
           backgroundColor: '#42A5F5',
           borderColor: '#1E88E5',
           borderWidth: 1,
@@ -274,12 +413,19 @@ export class Dashboard implements OnInit {
 
   cargarTopProductos(): void {
     const comprobantes = this.ventasService.getComprobantesPorEstado(true);
+    const anio = parseInt(this.mesTopProductos);
+
+    const comprobantesFiltrados = comprobantes.filter((c) => {
+      const fecha = new Date(c.fec_emision);
+      return fecha.getFullYear() === anio;
+    });
+
     const ventasPorProducto = new Map<
       string,
       { cantidad: number; ingresos: number; nombre: string }
     >();
 
-    comprobantes.forEach((c) => {
+    comprobantesFiltrados.forEach((c) => {
       c.detalles.forEach((d) => {
         const key = d.cod_prod;
         const actual = ventasPorProducto.get(key) || {
@@ -304,14 +450,71 @@ export class Dashboard implements OnInit {
     }));
   }
 
+  cargarMejoresVendedores(): void {
+    const comprobantes = this.ventasService.getComprobantesPorEstado(true);
+    const anio = parseInt(this.mesMejoresVendedores);
+
+    const comprobantesFiltrados = comprobantes.filter((c) => {
+      const fecha = new Date(c.fec_emision);
+      return fecha.getFullYear() === anio;
+    });
+
+    const ventasPorVendedor = new Map<
+      string,
+      {
+        nombre: string;
+        totalVentas: number;
+        montoTotal: number;
+        sede: string;
+      }
+    >();
+
+    comprobantesFiltrados.forEach((c) => {
+      const key = c.id_empleado || c.id_sede || 'SIN-VENDEDOR';
+      
+      const actual = ventasPorVendedor.get(key) || {
+        nombre: 'Vendedor General',
+        totalVentas: 0,
+        montoTotal: 0,
+        sede: c.id_sede,
+      };
+
+      actual.totalVentas += 1;
+      actual.montoTotal += c.total;
+      ventasPorVendedor.set(key, actual);
+    });
+
+    const sedesMap: { [key: string]: string } = {
+      'SEDE001': 'Las Flores',
+      'SEDE002': 'Lurín',
+      'SEDE003': 'VES',
+    };
+
+    this.mejoresVendedores = Array.from(ventasPorVendedor.values())
+      .sort((a, b) => b.montoTotal - a.montoTotal)
+      .slice(0, 5)
+      .map((v) => ({
+        nombre: v.nombre,
+        totalVentas: v.totalVentas,
+        montoTotal: `S/ ${v.montoTotal.toLocaleString('es-PE', { minimumFractionDigits: 0 })}`,
+        ticketPromedio: `S/ ${(v.montoTotal / v.totalVentas).toLocaleString('es-PE', { minimumFractionDigits: 0 })}`,
+        sede: sedesMap[v.sede] || v.sede,
+      }));
+  }
+
   cargarActividadReciente(): void {
     const comprobantes = this.ventasService
       .getComprobantes()
-      .sort((a, b) => new Date(b.fec_emision).getTime() - new Date(a.fec_emision).getTime())
+      .sort(
+        (a, b) =>
+          new Date(b.fec_emision).getTime() - new Date(a.fec_emision).getTime(),
+      )
       .slice(0, 5);
 
     this.actividadReciente = comprobantes.map((c) => {
-      const minutos = Math.floor((Date.now() - new Date(c.fec_emision).getTime()) / 60000);
+      const minutos = Math.floor(
+        (Date.now() - new Date(c.fec_emision).getTime()) / 60000,
+      );
       const tiempo =
         minutos < 60
           ? `Hace ${minutos} minutos`
@@ -350,10 +553,12 @@ export class Dashboard implements OnInit {
 
   configurarOpcionesGraficos(): void {
     const documentStyle = getComputedStyle(document.documentElement);
-    const textColor = documentStyle.getPropertyValue('--text-color') || '#495057';
+    const textColor =
+      documentStyle.getPropertyValue('--text-color') || '#495057';
     const textColorSecondary =
       documentStyle.getPropertyValue('--text-color-secondary') || '#6c757d';
-    const surfaceBorder = documentStyle.getPropertyValue('--surface-border') || '#dee2e6';
+    const surfaceBorder =
+      documentStyle.getPropertyValue('--surface-border') || '#dee2e6';
 
     this.chartOptions = {
       maintainAspectRatio: false,
@@ -363,7 +568,8 @@ export class Dashboard implements OnInit {
           display: false,
         },
         tooltip: {
-          backgroundColor: documentStyle.getPropertyValue('--surface-overlay') || '#ffffff',
+          backgroundColor:
+            documentStyle.getPropertyValue('--surface-overlay') || '#ffffff',
           titleColor: textColor,
           bodyColor: textColor,
           borderColor: surfaceBorder,
@@ -411,7 +617,8 @@ export class Dashboard implements OnInit {
           display: false,
         },
         tooltip: {
-          backgroundColor: documentStyle.getPropertyValue('--surface-overlay') || '#ffffff',
+          backgroundColor:
+            documentStyle.getPropertyValue('--surface-overlay') || '#ffffff',
           titleColor: textColor,
           bodyColor: textColor,
           borderColor: surfaceBorder,
@@ -456,7 +663,8 @@ export class Dashboard implements OnInit {
           display: false,
         },
         tooltip: {
-          backgroundColor: documentStyle.getPropertyValue('--surface-overlay') || '#ffffff',
+          backgroundColor:
+            documentStyle.getPropertyValue('--surface-overlay') || '#ffffff',
           titleColor: textColor,
           bodyColor: textColor,
           borderColor: surfaceBorder,
@@ -516,7 +724,8 @@ export class Dashboard implements OnInit {
           },
         },
         tooltip: {
-          backgroundColor: documentStyle.getPropertyValue('--surface-overlay') || '#ffffff',
+          backgroundColor:
+            documentStyle.getPropertyValue('--surface-overlay') || '#ffffff',
           titleColor: textColor,
           bodyColor: textColor,
           borderColor: surfaceBorder,
@@ -531,10 +740,5 @@ export class Dashboard implements OnInit {
         },
       },
     };
-  }
-
-  onPeriodoChange(): void {
-    this.cargarEstadisticas();
-    this.cargarGraficos();
   }
 }

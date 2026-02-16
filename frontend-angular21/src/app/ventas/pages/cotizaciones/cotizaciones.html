@@ -1,0 +1,201 @@
+<!-- src/app/ventas/pages/cotizaciones/cotizaciones.html -->
+
+<div class="p-2">
+  <p-card styleClass="cotiz-header-card mb-4 cotiz-header-bordered">
+    <div class="flex align-items-center justify-content-between flex-wrap gap-2">
+      <div class="flex align-items-center gap-3">
+        <span class="cotiz-title-icon">
+          <i class="pi pi-file"></i>
+        </span>
+        <div>
+          <p class="cotiz-kicker mb-0">VENTAS - COTIZACIONES</p>
+          <h2 class="cotiz-title mb-0">GESTION DE PROFORMA</h2>
+        </div>
+      </div>
+      <div class="flex gap-2">
+        <p-button
+          label="Nueva Cotización"
+          icon="pi pi-plus"
+          styleClass="cotiz-pill cotiz-pill-primary"
+          (onClick)="irNueva()"
+        ></p-button>
+      </div>
+    </div>
+  </p-card>
+</div>
+
+<div class="p-2">
+  <div *ngIf="!isRutaHija()">
+    <div class="surface-card border-round-xl shadow-1 mb-4">
+      <div class="p-3">
+        <div class="grid gap-3 align-items-end">
+          <div class="col-12 md:col-5">
+            <label class="font-medium mb-2 block">Buscar</label>
+            <input
+              pInputText
+              [(ngModel)]="buscarValue"
+              (keyup.enter)="cargarCotizaciones()"
+              placeholder="N° cotización, cliente o RUC..."
+            />
+          </div>
+
+          <div class="col-6 md:col-3">
+            <label class="font-medium mb-2 block">Estado</label>
+            <p-select
+              [(ngModel)]="estadoFiltro"
+              [options]="estadosOptions"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Todos"
+              (onChange)="cargarCotizaciones()"
+            ></p-select>
+          </div>
+
+          <div class="col-6 md:col-3 flex align-items-end justify-content-end gap-2">
+            <p-button
+              icon="pi pi-search"
+              label="Buscar"
+              (onClick)="cargarCotizaciones()"
+            ></p-button>
+            <p-button
+              icon="pi pi-filter-slash"
+              label="Limpiar"
+              severity="danger"
+              (onClick)="limpiarFiltros()"
+            ></p-button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      *ngIf="cotizacionesPaginadas.length > 0"
+      class="surface-card border-round-xl shadow-1 overflow-hidden"
+    >
+      <p-table
+        [value]="cotizacionesPaginadas"
+        [loading]="loading"
+        dataKey="id_cotizacion"
+        [paginator]="false"
+        styleClass="cotiz-table"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th style="width: 10%">N°</th>
+            <th style="width: 12%">Fecha</th>
+            <th style="width: 28%">Cliente</th>
+            <th style="width: 15%">RUC</th>
+            <th style="width: 15%">Total</th>
+            <th style="width: 10%">Estado</th>
+            <th style="width: 10%">Acciones</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-c>
+          <tr>
+            <td class="font-semibold">{{ c.numero }}</td>
+            <td>{{ c.fecha | date: 'dd/MM/yyyy' }}</td>
+            <td>{{ c.cliente.razon_social }}</td>
+            <td>{{ c.cliente.ruc }}</td>
+            <td>{{ c.total | currency: 'PEN':'S/ ' }}</td>
+            <td>
+              <p-tag
+                [value]="c.estado"
+                [severity]="mapEstadoSeverity(c.estado)"
+                styleClass="font-bold"
+              ></p-tag>
+            </td>
+            <td>
+              <div class="flex align-items-center gap-2">
+                <p-button
+                  icon="pi pi-eye"
+                  text
+                  severity="secondary"
+                  pTooltip="Ver Detalle"
+                  (onClick)="irDetalle(c.id_cotizacion)"
+                ></p-button>
+
+                <p-button
+                  icon="pi pi-pencil"
+                  text
+                  severity="secondary"
+                  pTooltip="Editar"
+                  (onClick)="irEditar(c.id_cotizacion)"
+                  *ngIf="c.estado === 'BORRADOR'"
+                ></p-button>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="7" class="text-center py-6">
+              <i class="pi pi-inbox text-4xl text-400 mb-3 block"></i>
+              <p class="text-900 font-medium mb-0">No se encontraron cotizaciones</p>
+              <p class="text-600 mt-2">Ajusta los filtros o crea una nueva cotización</p>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+
+    <div
+      *ngIf="cotizacionesPaginadas.length > 0"
+      class="flex justify-content-between align-items-center gap-6 mt-4 p-3 surface-50 border-round-xl"
+    >
+      <div class="text-600 font-medium">
+        Mostrando {{ first + 1 }}-{{ getLast() }} de {{ totalRecords }} cotizaciones
+      </div>
+      <p-paginator
+        [rows]="rows"
+        [first]="first"
+        [totalRecords]="totalRecords"
+        (onPageChange)="onPageChange($event)"
+        styleClass="flex-1 justify-content-center"
+      ></p-paginator>
+      <div class="flex align-items-center gap-2">
+        <span class="text-600 mr-2">Filas:</span>
+        <p-select
+          [ngModel]="rows"
+          (ngModelChange)="cambiarFilas($event)"
+          [options]="pageSizeOptions"
+          class="w-6rem"
+        ></p-select>
+      </div>
+    </div>
+
+    <div
+      *ngIf="cotizacionesPaginadas.length === 0 && !loading"
+      class="surface-card p-8 text-center py-12 border-round-xl"
+    >
+      <div class="flex flex-column align-items-center gap-4">
+        <i class="pi pi-inbox text-7xl text-400 mb-4"></i>
+        <h2 class="text-3xl font-bold text-900 mb-3">Sin Cotizaciones</h2>
+        <p class="text-xl text-600 mb-6 max-w-30rem">
+          No hay cotizaciones registradas con los filtros aplicados
+        </p>
+        <div class="flex gap-4 flex-wrap justify-content-center">
+          <p-button
+            icon="pi pi-filter-slash"
+            label="Limpiar Filtros"
+            severity="danger"
+            styleClass="cotiz-pill"
+            (onClick)="limpiarFiltros()"
+          ></p-button>
+          <p-button
+            label="Crear Primera Cotización"
+            icon="pi pi-plus"
+            severity="success"
+            (onClick)="irNueva()"
+          ></p-button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div
+    class="router-child-outlet surface-section"
+    [style.min-height]="isRutaHija() ? '400px' : '0'"
+  >
+    <router-outlet></router-outlet>
+  </div>
+</div>
