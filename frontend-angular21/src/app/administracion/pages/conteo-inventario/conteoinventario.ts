@@ -12,12 +12,8 @@ import { DatePickerModule } from 'primeng/datepicker';
 import { AutoCompleteModule } from 'primeng/autocomplete';
 import { InputTextModule } from 'primeng/inputtext';
 
-interface ConteoInventario {
-  fecha: string;
-  detalle: string;
-  estado: string;
-  familia: string;
-}
+/* SERVICE */
+import { ConteoService, ConteoInventario } from '../../services/conteo.service';
 
 @Component({
   selector: 'app-conteo-inventario',
@@ -39,11 +35,9 @@ interface ConteoInventario {
 })
 export class ConteoInventarios implements OnInit {
 
-  // ================= DATA =================
   conteos: ConteoInventario[] = [];
   conteosFiltrados: ConteoInventario[] = [];
 
-  // ================= FILTROS =================
   filtroBusqueda: string = '';
   fechaSeleccionada: Date | null = null;
 
@@ -68,50 +62,19 @@ export class ConteoInventarios implements OnInit {
   estadoSeleccionado: any = this.estados[0];
   familiaSeleccionada: any = this.familias[0];
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private conteoService: ConteoService
+  ) {}
 
   ngOnInit() {
     this.cargarData();
   }
 
   cargarData() {
-    this.conteos = [
-      {
-        fecha: '08/02/2026',
-        detalle: 'Conteo mensual licuadoras',
-        estado: 'Inicio',
-        familia: 'Licuadoras'
-      },
-      {
-        fecha: '07/02/2026',
-        detalle: 'Revisión anual freidoras',
-        estado: 'Finalizado',
-        familia: 'Freidoras'
-      },
-      {
-        fecha: '06/02/2026',
-        detalle: 'Conteo REFRIS - Sede Norte',
-        estado: 'Anulado',
-        familia: 'Refris'
-      },
-      {
-        fecha: '05/02/2026',
-        detalle: 'Stock Cocinas industriales',
-        estado: 'Inicio',
-        familia: 'Cocinas'
-      },
-      {
-        fecha: '04/02/2026',
-        detalle: 'Inventario licuadoras portátiles',
-        estado: 'Finalizado',
-        familia: 'Licuadoras'
-      }
-    ];
-
+    this.conteos = this.conteoService.getConteos();
     this.aplicarFiltros();
   }
-
-  // ================= AUTOCOMPLETE =================
 
   filtrarEstados(event: any) {
     const query = event.query?.toLowerCase() || '';
@@ -126,8 +89,6 @@ export class ConteoInventarios implements OnInit {
       f.nombre.toLowerCase().includes(query)
     );
   }
-
-  // ================= FILTROS =================
 
   aplicarFiltros() {
 
@@ -161,16 +122,9 @@ export class ConteoInventarios implements OnInit {
     });
   }
 
-  // ================= ACCIONES =================
-
   verDetalle(row: ConteoInventario) {
-    this.router.navigate(['/conteo-detalle'], {
-        state: { conteo: row }
-      });
-      
-      }
-      
-  
+    this.router.navigate(['/conteo-detalle', row.id]);
+  }
 
   crearConteo() {
     this.router.navigate(['/admin/conteo-crear']);

@@ -278,7 +278,7 @@ export const ADMIN_ROUTES: Routes = [
         .then( (m) => m.ConteoCrear),
   },
   {
-    path: 'conteo-detalle',
+    path: 'conteo-detalle/:id',
     loadComponent: () =>
       import('./pages/conteo-detalle/conteodetalle')
         .then( (m) => m.ConteoDetalle),

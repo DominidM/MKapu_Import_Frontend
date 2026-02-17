@@ -1,15 +1,21 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterModule } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
+
+/* PrimeNG */
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { ProgressBarModule } from 'primeng/progressbar';
 
+/* SERVICE */
+import { ConteoService, ConteoInventario } from '../../services/conteo.service';
+
 interface ProductoDetalle {
   codigo: string;
   producto: string;
+  categoria: string;
   stockSistema: number;
   conteoReal: number;
 }
@@ -23,41 +29,71 @@ interface ProductoDetalle {
     ButtonModule,
     TableModule,
     TagModule,
-    ProgressBarModule,
-    RouterModule
+    ProgressBarModule
   ],
   templateUrl: './conteodetalle.html',
   styleUrls: ['./conteodetalle.css']
 })
 export class ConteoDetalle implements OnInit {
 
-  conteo: any;
+  conteo!: ConteoInventario;
   productos: ProductoDetalle[] = [];
 
   totalSistema = 0;
   totalReal = 0;
   diferenciaNeta = 0;
-  exactitud = 92;
+  exactitud = 0;
 
-  constructor(private router: Router) {}
+  sede = 'SJL - Principal';
 
-  ngOnInit() {
-    this.conteo = history.state.conteo;
+  constructor(
+    private router: Router,
+    private route: ActivatedRoute,
+    private conteoService: ConteoService
+  ) {}
 
-    if (!this.conteo) {
-      this.router.navigate(['/admin/conteo-inventario']);
+  ngOnInit(): void {
+
+    const id = Number(this.route.snapshot.paramMap.get('id'));
+
+    const conteoEncontrado = this.conteoService.getConteoById(id);
+
+    if (!conteoEncontrado) {
+      this.router.navigate(['/conteo-inventario']);
+      return;
     }
 
-    this.cargarDetalleMock();
+    this.conteo = conteoEncontrado;
+
+    this.cargarProductosPorFamilia(this.conteo.familia);
   }
 
-  cargarDetalleMock() {
-    this.productos = [
-      { codigo: 'MK-7721', producto: 'Licuadora Industrial 2L', stockSistema: 45, conteoReal: 45 },
-      { codigo: 'MK-8816', producto: 'Freidora Aire Digital', stockSistema: 12, conteoReal: 10 },
-      { codigo: 'MK-1022', producto: 'Hervidor Eléctrico 1.7L', stockSistema: 30, conteoReal: 31 },
-      { codigo: 'MK-5541', producto: 'Cafetera Expreso Duo', stockSistema: 8, conteoReal: 8 }
-    ];
+  cargarProductosPorFamilia(familia: string) {
+
+    const dataMock: { [key: string]: ProductoDetalle[] } = {
+
+      Licuadoras: [
+        { codigo: 'LIC-01', producto: 'Licuadora Industrial 2L', categoria: 'Licuadoras', stockSistema: 40, conteoReal: 39 },
+        { codigo: 'LIC-02', producto: 'Licuadora Portátil USB', categoria: 'Licuadoras', stockSistema: 25, conteoReal: 25 }
+      ],
+
+      Freidoras: [
+        { codigo: 'FRE-01', producto: 'Freidora Aire Digital', categoria: 'Freidoras', stockSistema: 12, conteoReal: 10 },
+        { codigo: 'FRE-02', producto: 'Freidora Industrial 8L', categoria: 'Freidoras', stockSistema: 6, conteoReal: 6 }
+      ],
+
+      Refris: [
+        { codigo: 'REF-01', producto: 'Refrigeradora 300L', categoria: 'Refris', stockSistema: 15, conteoReal: 14 },
+        { codigo: 'REF-02', producto: 'Frigobar Ejecutivo', categoria: 'Refris', stockSistema: 9, conteoReal: 9 }
+      ],
+
+      Cocinas: [
+        { codigo: 'COC-01', producto: 'Cocina Industrial 4 Hornillas', categoria: 'Cocinas', stockSistema: 8, conteoReal: 7 },
+        { codigo: 'COC-02', producto: 'Cocina Empotrable 5Q', categoria: 'Cocinas', stockSistema: 11, conteoReal: 11 }
+      ]
+    };
+
+    this.productos = dataMock[familia] || [];
 
     this.calcularTotales();
   }
@@ -66,18 +102,25 @@ export class ConteoDetalle implements OnInit {
     return row.conteoReal - row.stockSistema;
   }
 
+  getEstadoSeverity(row: ProductoDetalle) {
+    const dif = this.calcularDiferencia(row);
+    if (dif === 0) return 'success';
+    if (dif < 0) return 'danger';
+    return 'warn';
+  }
+
   calcularTotales() {
     this.totalSistema = this.productos.reduce((a, b) => a + b.stockSistema, 0);
     this.totalReal = this.productos.reduce((a, b) => a + b.conteoReal, 0);
     this.diferenciaNeta = this.totalReal - this.totalSistema;
+
+    this.exactitud = this.totalSistema > 0
+      ? Number(((this.totalReal / this.totalSistema) * 100).toFixed(1))
+      : 0;
   }
 
   regresar() {
     this.router.navigate(['/admin/conteo-inventario']);
-  }
-
-  descargarPDF() {
-    console.log('Descargar PDF');
   }
 
 }
