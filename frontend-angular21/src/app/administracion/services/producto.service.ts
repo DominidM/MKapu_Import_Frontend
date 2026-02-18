@@ -2,8 +2,10 @@ import { Injectable } from '@angular/core';
 import { environment } from '../../../enviroments/enviroment';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import {
+  CreateProductoDto,
   ProductoAutocompleteResponse,
   ProductoDetalleStockResponse,
+  ProductoInterface,
   ProductoResponse,
   ProductoStockResponse,
 } from '../interfaces/producto.interface';
@@ -80,7 +82,12 @@ export class ProductoService {
       { params }
     );
   }
+  
+  // Crear producto
 
+  crearProducto(producto: CreateProductoDto): Observable<ProductoInterface> {
+    return this.http.post<ProductoInterface>(`${this.api}/logistics/products`, producto);
+  }
   
 
 }
