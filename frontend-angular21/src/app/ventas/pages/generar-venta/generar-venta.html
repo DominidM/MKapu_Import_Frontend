@@ -106,7 +106,9 @@
                     (ngModelChange)="clienteAutoComplete.set($event)"
                     class="w-full autocomplete-clientes"
                     [placeholder]="
-                      tipoComprobante() === 2 ? 'Ingrese DNI (8 dígitos)' : 'Ingrese RUC (11 dígitos)'
+                      tipoComprobante() === 2
+                        ? 'Ingrese DNI (8 dígitos)'
+                        : 'Ingrese RUC (11 dígitos)'
                     "
                     [maxlength]="tipoComprobante() === 2 ? 8 : 11"
                     inputmode="numeric"
@@ -123,7 +125,9 @@
                     [icon]="iconoBotonCliente()"
                     severity="primary"
                     (onClick)="manejarAccionCliente()"
-                    [disabled]="!botonClienteHabilitado() || clienteEncontrado() !== null || loading()"
+                    [disabled]="
+                      !botonClienteHabilitado() || clienteEncontrado() !== null || loading()
+                    "
                     [loading]="loading()"
                     styleClass="w-full btn-buscar-cliente"
                     [pTooltip]="
@@ -154,7 +158,9 @@
                     restantes)
                   </span>
                   <span
-                    *ngIf="(clienteAutoComplete().length || 0) === (tipoComprobante() === 2 ? 8 : 11)"
+                    *ngIf="
+                      (clienteAutoComplete().length || 0) === (tipoComprobante() === 2 ? 8 : 11)
+                    "
                     class="text-green-500"
                   >
                     ✓ Completo
@@ -173,7 +179,7 @@
                       </h4>
                       <span class="badge-verified">
                         <i class="pi pi-check-circle"></i>
-                        Verificado
+                        {{ clienteEncontrado()!.status ? 'Activo' : 'Inactivo' }}
                       </span>
                       <p-button
                         icon="pi pi-times-circle"
@@ -191,34 +197,11 @@
                   <div class="cliente-row mt-3">
                     <span class="info-badge dni">
                       <i class="pi pi-id-card"></i>
-                      {{ clienteEncontrado()!.documentTypeDescription }}
+                      {{ formatearDocumentoCompleto() }}
                     </span>
-                    <span class="info-badge dni">
-                      <i class="pi pi-hashtag"></i>
-                      {{ clienteEncontrado()!.documentValue }}
-                    </span>
-                  </div>
-
-                  <div
-                    class="cliente-row mt-3"
-                    *ngIf="clienteEncontrado()!.phone || clienteEncontrado()!.status !== null"
-                  >
                     <span class="info-badge telefono" *ngIf="clienteEncontrado()!.phone">
                       <i class="pi pi-phone"></i>
                       {{ clienteEncontrado()!.phone }}
-                    </span>
-                    <span
-                      class="info-badge"
-                      [class.activo]="clienteEncontrado()!.status"
-                      [class.inactivo]="!clienteEncontrado()!.status"
-                      *ngIf="clienteEncontrado()!.status !== null"
-                    >
-                      <i
-                        class="pi"
-                        [class.pi-check-circle]="clienteEncontrado()!.status"
-                        [class.pi-times-circle]="!clienteEncontrado()!.status"
-                      ></i>
-                      {{ clienteEncontrado()!.status ? 'Activo' : 'Inactivo' }}
                     </span>
                   </div>
 
@@ -553,9 +536,7 @@
                   <div class="totales-contenido">
                     <div class="total-line">
                       <span class="label">Subtotal (Base imponible):</span>
-                      <span class="total-valor"
-                        >S/. {{ subtotal() | number: '1.2-2' }}</span
-                      >
+                      <span class="total-valor">S/. {{ subtotal() | number: '1.2-2' }}</span>
                     </div>
 
                     <div class="total-line">
@@ -661,9 +642,7 @@
                 <div class="monto-destacado-box">
                   <i class="pi pi-tag"></i>
                   <span>Total a Pagar:</span>
-                  <strong class="monto-destacado"
-                    >S/. {{ total() | number: '1.2-2' }}</strong
-                  >
+                  <strong class="monto-destacado">S/. {{ total() | number: '1.2-2' }}</strong>
                 </div>
 
                 <div class="form-field">
@@ -689,9 +668,7 @@
                 <div class="monto-destacado-box">
                   <i class="pi pi-tag"></i>
                   <span>Total a Pagar:</span>
-                  <strong class="monto-destacado"
-                    >S/. {{ total() | number: '1.2-2' }}</strong
-                  >
+                  <strong class="monto-destacado">S/. {{ total() | number: '1.2-2' }}</strong>
                 </div>
 
                 <div class="pago-header-inline mt-3">
@@ -759,7 +736,9 @@
                 <div class="resumen-item">
                   <span class="label">
                     <i class="pi pi-id-card"></i>
-                    {{ clienteEncontrado()?.documentTypeDescription || 'Documento' }}:
+                    {{
+                      obtenerSiglasDocumento(clienteEncontrado()?.documentTypeDescription || '')
+                    }}:
                   </span>
                   <strong class="resumen-value">{{ clienteEncontrado()?.documentValue }}</strong>
                 </div>
