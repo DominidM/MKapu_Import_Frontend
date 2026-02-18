@@ -86,35 +86,23 @@ export const ADMIN_ROUTES: Routes = [
   {
     path: 'gestion-productos',
     loadComponent: () =>
-      import('./pages/gestion-productos/productos-listado/gestion-listado').then(
-        (m) => m.GestionListado,
-      ),
+      import('./pages/gestion-productos/productos-listado/gestion-listado').then((m) => m.GestionListado),
     children: [
-      {
-        path: '',
-        redirectTo: '',
-        pathMatch: 'full',
-      },
+      // Elimina el path: '' con redirectTo: ''
       {
         path: 'ver-detalle-producto/:id',
         loadComponent: () =>
-          import('./pages/gestion-productos/productos-detalles/productos-detalles').then(
-            (m) => m.ProductosDetalles,
-          ),
+          import('./pages/gestion-productos/productos-detalles/productos-detalles').then((m) => m.ProductosDetalles),
       },
       {
         path: 'crear-producto',
         loadComponent: () =>
-          import('./pages/gestion-productos/productos-formulario/productos-formulario').then(
-            (m) => m.ProductosFormulario,
-          ),
+          import('./pages/gestion-productos/productos-formulario/productos-formulario').then((m) => m.ProductosFormulario),
       },
       {
         path: 'editar-producto/:id',
         loadComponent: () =>
-          import('./pages/gestion-productos/productos-formulario/productos-formulario').then(
-            (m) => m.ProductosFormulario,
-          ),
+          import('./pages/gestion-productos/productos-formulario/productos-formulario').then((m) => m.ProductosFormulario),
       },
     ],
   },

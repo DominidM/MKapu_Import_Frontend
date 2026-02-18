@@ -1,6 +1,5 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef, AfterViewInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, ActivatedRoute, NavigationEnd } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { Subject, filter, takeUntil } from 'rxjs';
 
@@ -15,7 +14,7 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { InputTextModule } from 'primeng/inputtext';
 import { TooltipModule } from 'primeng/tooltip';
 import { PaginatorModule } from 'primeng/paginator';
-import { RouterOutlet, RouterModule } from '@angular/router';
+import { Router, NavigationEnd, RouterModule, RouterOutlet } from '@angular/router';
 import { ConfirmDialog } from 'primeng/confirmdialog';
 import { DialogModule } from 'primeng/dialog';
 import { ToastModule } from 'primeng/toast';
@@ -27,6 +26,7 @@ import { ProductoService } from '../../../services/producto.service';
 import { ProductoAutocomplete, ProductoInterface, ProductoStock } from '../../../interfaces/producto.interface';
 import { SedeService } from '../../../services/sede.service';
 import { CategoriaService } from '../../../services/categoria.service';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-gestion-productos',
@@ -42,7 +42,7 @@ import { CategoriaService } from '../../../services/categoria.service';
   providers: [ConfirmationService, MessageService]
 })
 export class GestionListado implements OnInit {
-
+  public router = inject(Router);
   private productoService = inject(ProductoService);
   private sedeService = inject(SedeService);
   private categoriaService = inject(CategoriaService);
@@ -56,6 +56,15 @@ export class GestionListado implements OnInit {
 
   buscarValue = signal<ProductoAutocomplete | string | null>(null);
   sugerencias = signal<ProductoAutocomplete[]>([]);
+
+  currentUrl = signal<string>('');
+
+  isRutaHija = computed(() => {
+    const url = this.currentUrl();
+    return url.includes('crear-producto') || 
+           url.includes('editar-producto') || 
+           url.includes('ver-detalle-producto');
+  });
 
   // Signals para la Paginación (Server-Side)
   totalRecords = signal<number>(0);
@@ -81,11 +90,18 @@ export class GestionListado implements OnInit {
     return this.productos().reduce((suma, producto) => suma + producto.stock, 0);
   });
 
-  constructor(
-    public router: Router,
-
-  ) {
-    this.actualizarCabecera();
+constructor() {
+    // Escuchamos los cambios de ruta en tiempo real y actualizamos la signal
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd),
+      takeUntilDestroyed()
+    ).subscribe((event: any) => {
+      this.currentUrl.set(event.urlAfterRedirects);
+      this.actualizarCabecera(); // Actualizamos la cabecera automáticamente aquí
+    });
+    
+    // Set inicial de la URL
+    this.currentUrl.set(this.router.url);
     this.obtenerSedeDeUsuario();
   }
 
@@ -145,28 +161,27 @@ export class GestionListado implements OnInit {
     }
   }
 
-  private actualizarCabecera() {
-
+private actualizarCabecera() {
     Promise.resolve().then(() => {
-      if (this.esVistaEliminados) {
-        this.tituloKicker = 'ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS ELIMINADOS';
-        this.iconoCabecera = 'pi pi-trash';
-      } else {
-        const url = this.router.url;
+      const url = this.router.url;
 
-        if (url.includes('crear-producto')) {
-          this.tituloKicker = 'ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS CREACIÓN';
-          this.iconoCabecera = 'pi pi-plus-circle';
-        } else if (url.includes('editar-producto')) {
-          this.tituloKicker = 'ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS EDICIÓN';
-          this.iconoCabecera = 'pi pi-pencil';
-        } else if (url.includes('ver-detalle-producto')) {
-          this.tituloKicker = 'ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS DETALLE';
-          this.iconoCabecera = 'pi pi-eye';
-        } else {
-          this.tituloKicker = 'ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS ACTIVOS';
-          this.iconoCabecera = 'pi pi-building';
-        }
+      if (url.includes('crear-producto')) {
+        this.tituloKicker = 'ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS CREACIÓN';
+        this.subtituloKicker = 'CREAR PRODUCTO'; // Añadido
+        this.iconoCabecera = 'pi pi-plus-circle';
+      } else if (url.includes('editar-producto')) {
+        this.tituloKicker = 'ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS EDICIÓN';
+        this.subtituloKicker = 'EDITAR PRODUCTO'; // Añadido
+        this.iconoCabecera = 'pi pi-pencil';
+      } else if (url.includes('ver-detalle-producto')) {
+        this.tituloKicker = 'ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS DETALLE';
+        this.subtituloKicker = 'DETALLE DE PRODUCTO'; // Añadido
+        this.iconoCabecera = 'pi pi-eye';
+      } else {
+        // RUTA PRINCIPAL
+        this.tituloKicker = 'ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS ACTIVOS';
+        this.subtituloKicker = 'GESTIÓN DE PRODUCTOS'; // Esto es lo que se estaba perdiendo
+        this.iconoCabecera = 'pi pi-building';
       }
     });
   }
@@ -271,5 +286,18 @@ seleccionarProductoBusqueda(event: any) {
     this.cargarProductos(); // Volvemos a cargar todos los productos de la sede
   }
 
+  irCrear() { 
+    this.router.navigate(['/admin/gestion-productos/crear-producto']);
+  }
+  
+  irEditar(id: number) { 
+    this.router.navigate(['/admin/gestion-productos/editar-producto', id], {
+      queryParams: { returnUrl: '/admin/gestion-productos' }
+    });
+  }
+
+  irDetalle(id: number) { 
+    this.router.navigate(['/admin/gestion-productos/ver-detalle-producto', id]);
+  }
 
 }
