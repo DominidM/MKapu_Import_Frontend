@@ -66,7 +66,6 @@
       <div class="col-12 md:col-6">
         <label class="filter-label">Buscar Merma</label>
         <span class="p-input-icon-left">
-          <i class="pi pi-search"></i>
           <input pInputText type="text" placeholder="Buscar por código, motivo o responsable..."
                  class="w-full"
                  [ngModel]="busqueda()"
@@ -113,7 +112,7 @@
       [tableStyle]="{ 'min-width': '100%' }"
       styleClass="mermas-table"
       [paginator]="true"
-      [rows]="10"
+      [rows]="5"
       [rowsPerPageOptions]="[5, 10, 20, 50]"
       [showCurrentPageReport]="true"
       currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} mermas"
