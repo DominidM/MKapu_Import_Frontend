@@ -59,8 +59,8 @@
             <p-autocomplete
               class="w-full"
               [(ngModel)]="productoQuery"
-              [suggestions]="productosSugeridos"
-              (completeMethod)="buscarProducto($event)"
+              [suggestions]="productosAutocomplete"
+              (completeMethod)="buscarProductos($event)"
               (onSelect)="onSelectProducto($event)"
               (onClear)="onClearProducto()"
               [forceSelection]="true"

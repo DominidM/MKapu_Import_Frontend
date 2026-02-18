@@ -5,12 +5,12 @@ export const ADMIN_ROUTES: Routes = [
   {
     path: 'notificaciones',
     loadComponent: () =>
-      import('./pages/dashboard/dashboard').then((m) => m.Dashboard),
+      import('./pages/reportes/pages/notificacion-transferencia/notificacion-transferencia').then((m) => m.NotificacionTransferencia),
   },
   {
-    path: 'dashboard',
+    path: 'dashboard-admin',
     loadComponent: () =>
-      import('./pages/dashboard/dashboard').then((m) => m.Dashboard),
+      import('./pages/dashboard-admin/dashboard-admin').then((m) => m.DashboardAdmin),
   },
 
   /* =======================
@@ -68,6 +68,13 @@ export const ADMIN_ROUTES: Routes = [
         loadComponent: () =>
           import('./pages/reportes/pages/detalle-transferencia/detalle-transferencia').then(
             (m) => m.DetalleTransferencia,
+          ),
+      },
+      {
+        path: 'notificacion',
+        loadComponent: () =>
+          import('./pages/reportes/pages/notificacion-transferencia/notificacion-transferencia').then(
+            (m) => m.NotificacionTransferencia,
           ),
       },
     ],
@@ -288,23 +295,23 @@ export const ADMIN_ROUTES: Routes = [
 
 
   /* =======================
-     MERMAS / REMATES
+     MERMAS 
   ======================= */
   {
-    path: 'mermas-remates',
+    path: 'mermas',
     children: [
       {
         path: '',
         loadComponent: () =>
-          import('./pages/mermas-remates/pages/mermas-remates-pr/mermas-remates-pr').then(
-            (m) => m.MermasRematesPr,
+          import('./pages/mermas/pages/mermas-pr/mermas-pr').then(
+            (m) => m.MermasPr,
           ),
       },
       {
-        path: 'registro-merma-remate',
+        path: 'registro-merma',
         loadComponent: () =>
-          import('./pages/mermas-remates/pages/mermas-remates-registro/mermas-remates-registro').then(
-            (m) => m.MermasRematesRegistro,
+          import('./pages/mermas/pages/mermas-registro/mermas-registro').then(
+            (m) => m.MermasRegistro,
           ),
       },
       {
@@ -316,6 +323,31 @@ export const ADMIN_ROUTES: Routes = [
       },
     ],
   },
+
+
+  /* =======================
+     REMATES 
+  ======================= */
+  {
+    path: 'remates',
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/remates/pages/remates-pr/remates-pr').then(
+            (m) => m.RematesPr,
+          ),
+      },
+    {
+       path: 'registro-remate',
+      loadComponent: () =>
+        import('./pages/remates/pages/remates-registro/remates-registro').then(
+          (m) => m.RematesRegistro,
+        ),
+    },
+    ],
+  },
+
   /* =======================
      DESPACHO PRODUCTOS
   ======================= */
@@ -332,5 +364,25 @@ export const ADMIN_ROUTES: Routes = [
       import('./pages/despacho-productos/pages/detalles-despacho/detalles-despacho').then(
         (m) => m.DetallesDespacho,
       ),
+  },
+
+
+  {
+    path: 'proveedores',
+    loadComponent: () => import('./pages/gestion-proveedor/proveedor-listado/proveedor-listado').then(m => m.ProveedorListado),
+    children: [
+      {
+        path: 'crear',
+        loadComponent: () => import('./pages/gestion-proveedor/proveedor-formulario/proveedor-formulario').then(m => m.ProveedorFormulario)
+      },
+      {
+        path: 'editar/:id',
+        loadComponent: () => import('./pages/gestion-proveedor/proveedor-formulario/proveedor-formulario').then(m => m.ProveedorFormulario)
+      },
+      {
+        path: 'ver-detalle/:id',
+        loadComponent: () => import('./pages/gestion-proveedor/proveedor-detalles/proveedor-detalles').then(m => m.ProveedorDetalles)
+      }
+    ]
   },
 ];

@@ -2,9 +2,9 @@ import { Routes } from '@angular/router';
 
 export const ALMACEN_ROUTES: Routes = [
   {
-    path: 'dashboard',
+    path: 'dashboard-almacen',
     loadComponent: () => 
-      import('./pages/almacen/almacen').then((m) => m.Almacen),
+      import('./pages/dashboard-almacen/dashboard-almacen').then((m) => m.DashboardAlmacen),
   },
   {
     path: '',

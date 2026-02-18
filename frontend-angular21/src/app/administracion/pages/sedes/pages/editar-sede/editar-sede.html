@@ -24,102 +24,127 @@
     ></p-button>
   </div>
 
+  <!-- loading/error (signals del service) -->
+  <div class="mb-3">
+    <p-message *ngIf="loading()" severity="info" text="Cargando..."></p-message>
+    <p-message *ngIf="!loading() && error() as e" severity="error" [text]="e"></p-message>
+  </div>
+
   <p-card styleClass="sede-card">
-    <form #sedeForm="ngForm" novalidate>
-    <div class="sede-section">
-      <div class="sede-section-title">UBICACION:</div>
+    <!-- IMPORTANTE: ngSubmit para que el submit llame updateSede() -->
+    <form #sedeForm="ngForm" novalidate (ngSubmit)="updateSede()">
+      <div class="sede-section">
+        <div class="sede-section-title">UBICACION:</div>
+        <p-divider></p-divider>
+      </div>
+
+      <div class="grid form-grid">
+        <div class="col-12 md:col-6">
+          <label class="field-label" for="codigo">CODIGO:</label>
+          <input
+            id="codigo"
+            pInputText
+            class="w-full"
+            placeholder="Ingrese datos"
+            [(ngModel)]="sede.codigo"
+            name="codigo"
+            readonly
+          />
+        </div>
+
+        <div class="col-12 md:col-6">
+          <label class="field-label" for="nombre">NOMBRE:</label>
+          <input
+            id="nombre"
+            pInputText
+            class="w-full"
+            placeholder="Ingrese datos"
+            [(ngModel)]="sede.nombre"
+            name="nombre"
+            required
+          />
+        </div>
+
+        <div class="col-12 md:col-6">
+          <label class="field-label" for="ciudad">CIUDAD:</label>
+          <input
+            id="ciudad"
+            pInputText
+            class="w-full"
+            placeholder="Ingrese datos"
+            [(ngModel)]="sede.ciudad"
+            name="ciudad"
+            required
+          />
+        </div>
+
+        <div class="col-12 md:col-6">
+          <label class="field-label" for="telefono">TELEFONO:</label>
+          <!-- Recomendado: telefono como string -->
+          <input
+            id="telefono"
+            pInputText
+            class="w-full"
+            placeholder="Ingrese datos"
+            [(ngModel)]="sede.telefono"
+            name="telefono"
+            required
+          />
+        </div>
+
+        <div class="col-12">
+          <label class="field-label" for="departamento">DEPARTAMENTO:</label>
+          <input
+            id="departamento"
+            pInputText
+            class="w-full"
+            placeholder="Ingrese datos"
+            [(ngModel)]="sede.departamento"
+            name="departamento"
+            required
+          />
+        </div>
+
+        <div class="col-12">
+          <label class="field-label" for="direccion">DIRECCION:</label>
+          <input
+            id="direccion"
+            pInputText
+            class="w-full"
+            placeholder="Ingrese datos"
+            [(ngModel)]="sede.direccion"
+            name="direccion"
+            required
+          />
+        </div>
+
+        <!-- Si quieres editar activo, agrega un control aquí (ej. p-checkbox/p-inputSwitch) -->
+        <!-- Por ahora NO lo muestro para no romperte imports -->
+      </div>
+
       <p-divider></p-divider>
-    </div>
 
-    <div class="grid form-grid">
-      <div class="col-12 md:col-6">
-        <label class="field-label" for="codigo">CODIGO:</label>
-        <input
-          id="codigo"
-          pInputText
-          class="w-full"
-          placeholder="Ingrese datos"
-          [(ngModel)]="sede.codigo"
-          name="codigo"
-        />
-      </div>
-      <div class="col-12 md:col-6">
-        <label class="field-label" for="nombre">NOMBRE:</label>
-        <input
-          id="nombre"
-          pInputText
-          class="w-full"
-          placeholder="Ingrese datos"
-          [(ngModel)]="sede.nombre"
-          name="nombre"
-        />
-      </div>
-      <div class="col-12 md:col-6">
-        <label class="field-label" for="ciudad">CIUDAD:</label>
-        <input
-          id="ciudad"
-          pInputText
-          class="w-full"
-          placeholder="Ingrese datos"
-          [(ngModel)]="sede.ciudad"
-          name="ciudad"
-        />
-      </div>
-      <div class="col-12 md:col-6">
-        <label class="field-label" for="telefono">TELEFONO:</label>
-        <p-inputnumber
-          class="w-full"
-          [(ngModel)]="sede.telefono"
-          inputId="telefono"
-          placeholder="Ingrese datos"
-          [useGrouping]="false"
-          [maxlength]="9"
-          name="telefono"
-        />
-      </div>
-      <div class="col-12">
-        <label class="field-label" for="departamento">DEPARTAMENTO:</label>
-        <input
-          id="departamento"
-          pInputText
-          class="w-full"
-          placeholder="Ingrese datos"
-          [(ngModel)]="sede.departamento"
-          name="departamento"
-        />
-      </div>
-      <div class="col-12">
-        <label class="field-label" for="direccion">DIRECCION:</label>
-        <input
-          id="direccion"
-          pInputText
-          class="w-full"
-          placeholder="Ingrese datos"
-          [(ngModel)]="sede.direccion"
-          name="direccion"
-        />
-      </div>
-    </div>
+      <div class="flex align-items-center justify-content-center gap-3 mt-3">
+        <p-button
+          label="Cancelar"
+          outlined
+          severity="secondary"
+          styleClass="sede-btn-cancel"
+          type="button"
+          (click)="confirmCancel()"
+        ></p-button>
 
-    <p-divider></p-divider>
-
-    <div class="flex align-items-center justify-content-center gap-3 mt-3">
-      <p-button
-        label="Cancelar"
-        outlined
-        severity="secondary"
-        styleClass="sede-btn-cancel"
-        (click)="confirmCancel()"
-      ></p-button>
-      <p-button
-        label="Modificar Sede"
-        icon="pi pi-check"
-        styleClass="sede-btn-primary"
-        (click)="updateSede()"
-      ></p-button>
-    </div>
+        <p-button
+          label="Modificar Sede"
+          icon="pi pi-check"
+          styleClass="sede-btn-primary"
+          type="submit"
+          [disabled]="sedeForm.invalid || loading()"
+        ></p-button>
+      </div>
     </form>
   </p-card>
+
   <p-toast position="top-right" />
   <p-confirmdialog />
 </div>

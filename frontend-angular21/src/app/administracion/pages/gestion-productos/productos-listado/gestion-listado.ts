@@ -1,8 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute, NavigationEnd } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { Observable, Subject, filter, map, takeUntil } from 'rxjs';
+import { Subject, filter, takeUntil } from 'rxjs';
 
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
@@ -23,12 +23,6 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 
 import { ProductosService, Producto } from '../../../../core/services/productos.service';
 import { DialogStockSedes } from '../../../shared/dialog-stock-sedes/dialog-stock-sedes';
-import { CategoriaService } from '../../../services/categoria.service';
-import { Categoria, CategoriaResponse } from '../../../interfaces/categoria.interface';
-import { ProductoService } from '../../../services/producto.service';
-import { ProductoAutocomplete, ProductoInterface, ProductoResponse, ProductoStock } from '../../../interfaces/producto.interface';
-import { SedeService } from '../../../services/sede.service';
-import { Headquarter, HeadquarterResponse } from '../../../interfaces/sedes.interface';
 
 interface ProductoAgrupado {
   codigo: string;
@@ -53,8 +47,8 @@ interface ProductoAgrupado {
   styleUrl: './gestion-listado.css',
   providers: [ConfirmationService, MessageService]
 })
-export class GestionListado implements OnInit {
-  //private destroy$ = new Subject<void>();
+export class GestionListado implements OnInit, OnDestroy, AfterViewInit {
+  private destroy$ = new Subject<void>();
 
   tituloKicker = 'ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS ACTIVOS';
   subtituloKicker = 'GESTION DE PRODUCTOS'
@@ -63,7 +57,7 @@ export class GestionListado implements OnInit {
   productosAgrupados: ProductoAgrupado[] = [];
   productosAgrupadosFiltrados: ProductoAgrupado[] = [];
   productosAgrupadosPaginados: ProductoAgrupado[] = [];
-
+  
   loading = false;
   vistaLista: boolean = true;
 
@@ -86,11 +80,11 @@ export class GestionListado implements OnInit {
   buscarValue: string | null = null;
   items: ProductoAgrupado[] = [];
 
-  sedesOptions: { label: string, value: string | null }[] = [];
-  familias: { label: string, value: string }[] = [];
+  sedesOptions: {label: string, value: string | null}[] = [];
+  familias: {label: string, value: string}[] = [];
 
   familiaValueEliminados: string | null = null;
-  familiasEliminados: { label: string, value: string | null }[] = [];
+  familiasEliminados: {label: string, value: string | null}[] = [];
 
   totalSedesActivas = 0;
   totalProductosActivos = 0;
@@ -104,182 +98,84 @@ export class GestionListado implements OnInit {
 
   esVistaEliminados = false;
 
-
-  // nuevas variables 
-
-  familias$!: Observable<Categoria[]>;
-  familiasTotal$!: Observable<number>;
-  productos$!: Observable<ProductoInterface[]>;
-  productosStock$!: Observable<ProductoStock[]>;
-  productosStockTotal$!: Observable<number>;
-  sedes$!: Observable<Headquarter[]>;
-  sedesTotal$!: Observable<number>;
-  page: number = 1;
-  size: number = 5;
-  idSede: number = 1;
-  productosAutocomplete$!: Observable<ProductoAutocomplete[]>;
-  productosAutocomplete: ProductoAutocomplete[] = [];
-  // ----------------
-
   constructor(
     public router: Router,
     private activatedRoute: ActivatedRoute,
     private productosService: ProductosService,
+    private cdr: ChangeDetectorRef,
     private confirmationService: ConfirmationService,
-    private messageService: MessageService,
-    private categoriaService: CategoriaService,
-    private productoService: ProductoService,
-    private sedeService: SedeService
+    private messageService: MessageService
   ) {
     this.actualizarCabecera();
   }
 
   ngOnInit() {
-    this.getSedes()
-    this.getProductos();
-    this.getCategories();
-    this.getProductosStock()
-
-    this.router.events
-      .pipe(filter(event => event instanceof NavigationEnd))
-      .subscribe(() => {
-        this.actualizarCabecera();
-      });
-
+    this.cargarProductosAgrupados();
+    this.loadingEliminados = false;
     this.actualizarCabecera();
-  }
-
-  getSedes() {
-    const response$ = this.sedeService.getSedes();
-
-    this.sedes$ = response$.pipe(
-      map(resp => resp.headquarters)
-    );
-
-    this.sedesTotal$ = response$.pipe(
-      map(resp => resp.headquarters.length)
-    );
-
-
-    this.sedes$.subscribe(data => {
-      console.log("sedes reales:", data);
-    });
-
-  }
-
-  getCategories() {
-    const response$ = this.categoriaService.getCategorias();
-
-    this.familias$ = response$.pipe(
-      map(resp => resp.categories)
-    );
-
-    this.familiasTotal$ = response$.pipe(
-      map(resp => resp.total)
-    );
-  }
-
-  getProductos() {
-    this.productos$ = this.productoService
-      .getProductos(this.page, this.size)
+    
+    this.router.events
       .pipe(
-        map(resp => resp.products)
-      );
-  }
-
-  getProductosStock() {
-    const response$ = this.productoService.getProductosConStock(this.idSede, this.page, this.size);
-
-    this.productosStock$ = response$.pipe(
-      map(resp => resp.data)
-    );
-
-    this.productosStockTotal$ = response$.pipe(
-      map(resp => resp.data.length)
-    );
-
-    this.productosStock$.subscribe(data => {
-      console.log("productos reales:", data);
-    });
-  }
-
-  buscarProductos(event: any) {
-    const query = event.query;
-
-    if (!query || !this.idSede) return;
-
-    this.productoService
-      .getProductosAutocomplete(query, this.idSede)
-      .pipe(map(resp => resp.data))
-      .subscribe(data => {
-        this.productosAutocomplete = data;
+        filter(event => event instanceof NavigationEnd),
+        takeUntil(this.destroy$)
+      )
+      .subscribe((event: NavigationEnd) => {
+        this.actualizarCabecera();
+        
+        if (event.url === '/admin/gestion-productos' || 
+            event.url.startsWith('/admin/gestion-productos?')) {
+          this.cargarProductosAgrupados();
+        }
+        
+        this.cdr.detectChanges();
       });
   }
 
-  private actualizarCabecera() {
-
-    if (this.esVistaEliminados) {
-      this.tituloKicker = 'ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS ELIMINADOS';
-      this.iconoCabecera = 'pi pi-trash';
-      return;
-    }
-
-    const url = this.router.url;
-
-    if (url.includes('crear-producto')) {
-      this.tituloKicker = 'ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS CREACIÓN';
-      this.iconoCabecera = 'pi pi-plus-circle';
-
-    } else if (url.includes('editar-producto')) {
-      this.tituloKicker = 'ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS EDICIÓN';
-      this.iconoCabecera = 'pi pi-pencil';
-
-    } else if (url.includes('ver-detalle-producto')) {
-      this.tituloKicker = 'ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS DETALLE';
-      this.iconoCabecera = 'pi pi-eye';
-
-    } else {
-      this.tituloKicker = 'ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS ACTIVOS';
-      this.iconoCabecera = 'pi pi-building';
-    }
+  ngAfterViewInit() {
+    this.cdr.detectChanges();
   }
-  /*
-  
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+    this.confirmationService.close();
+  }
+
   private actualizarCabecera() {
 
     Promise.resolve().then(() => {
-      if (this.esVistaEliminados) {
-        this.tituloKicker = 'ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS ELIMINADOS';
-        this.iconoCabecera = 'pi pi-trash';
+    if (this.esVistaEliminados) {
+      this.tituloKicker = 'ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS ELIMINADOS';
+      this.iconoCabecera = 'pi pi-trash';
+    } else {
+      const url = this.router.url;
+      
+      if (url.includes('crear-producto')) {
+        this.tituloKicker = 'ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS CREACIÓN';
+        this.iconoCabecera = 'pi pi-plus-circle';
+      } else if (url.includes('editar-producto')) {
+        this.tituloKicker = 'ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS EDICIÓN';
+        this.iconoCabecera = 'pi pi-pencil';
+      } else if (url.includes('ver-detalle-producto')) {
+        this.tituloKicker = 'ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS DETALLE';
+        this.iconoCabecera = 'pi pi-eye';
       } else {
-        const url = this.router.url;
-
-        if (url.includes('crear-producto')) {
-          this.tituloKicker = 'ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS CREACIÓN';
-          this.iconoCabecera = 'pi pi-plus-circle';
-        } else if (url.includes('editar-producto')) {
-          this.tituloKicker = 'ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS EDICIÓN';
-          this.iconoCabecera = 'pi pi-pencil';
-        } else if (url.includes('ver-detalle-producto')) {
-          this.tituloKicker = 'ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS DETALLE';
-          this.iconoCabecera = 'pi pi-eye';
-        } else {
-          this.tituloKicker = 'ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS ACTIVOS';
-          this.iconoCabecera = 'pi pi-building';
-        }
+        this.tituloKicker = 'ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS ACTIVOS';
+        this.iconoCabecera = 'pi pi-building';
       }
-      //this.cdr.detectChanges();
-    });
-  }
+    }
+    this.cdr.detectChanges();
+  });
+}
 
-  */
+
   cargarProductosAgrupados() {
     this.loading = true;
-
+    
     const todosProductos = this.productosService.getProductos(undefined, 'Activo');
-
+    
     const productosPorCodigo = new Map<string, Producto[]>();
-
+    
     todosProductos.forEach(p => {
       if (!productosPorCodigo.has(p.codigo)) {
         productosPorCodigo.set(p.codigo, []);
@@ -307,7 +203,7 @@ export class GestionListado implements OnInit {
     this.familias = this.productosService.getFamilias().map(f => ({ label: f, value: f }));
     this.totalSedesActivas = this.productosService.getSedes().length;
     this.totalProductosActivos = this.productosAgrupados.length;
-
+    
     this.aplicarTodosLosFiltros();
     this.loading = false;
     this.resetPaginador();
@@ -338,7 +234,7 @@ export class GestionListado implements OnInit {
   irEliminados() {
     this.esVistaEliminados = true;
     this.vistaListaEliminados = true;
-    //this.cargarProductosEliminados();
+    this.cargarProductosEliminados();
     this.cargarFamiliasEliminados();
     this.actualizarCabecera();
   }
@@ -351,7 +247,6 @@ export class GestionListado implements OnInit {
     this.cargarProductosAgrupados();
   }
 
-  /*
   cargarProductosEliminados() {
     this.loadingEliminados = true;
     this.cdr.detectChanges();
@@ -382,11 +277,10 @@ export class GestionListado implements OnInit {
       }
     }, 300);
   }
-  */
 
   agruparProductosEliminados() {
     const productosPorCodigo = new Map<string, Producto[]>();
-
+    
     this.productosEliminadosFiltrados.forEach(p => {
       if (!productosPorCodigo.has(p.codigo)) {
         productosPorCodigo.set(p.codigo, []);
@@ -414,18 +308,16 @@ export class GestionListado implements OnInit {
   cargarFamiliasEliminados() {
     const productos = this.productosService.getProductosEliminados();
     const familiasUnicas = [...new Set(productos.map(p => p.familia))];
-
+    
     this.familiasEliminados = [
       { label: 'Todas las familias', value: null },
       ...familiasUnicas.map(familia => ({ label: familia, value: familia }))
     ];
   }
 
-  /*
   onSelectFamiliaEliminados() {
     this.cargarProductosEliminados();
   }
-    */
 
   onPageChange(event: any) {
     this.first = event.first;
@@ -480,7 +372,6 @@ export class GestionListado implements OnInit {
   }
 
   onSelectFamilia() {
-    console.log("familia seleccionada:", this.familiaValue)
     this.aplicarTodosLosFiltros();
   }
 
@@ -492,31 +383,31 @@ export class GestionListado implements OnInit {
     }
 
     this.productosAgrupadosFiltrados = this.productosAgrupados.filter((p: ProductoAgrupado) => {
-      const matchesSede = !this.sedeValue ||
+      const matchesSede = !this.sedeValue || 
         p.variantes.some(v => v.variantes?.some(vr => vr.sede === this.sedeValue));
-
+      
       const matchesFamilia = !this.familiaValue || p.familia === this.familiaValue;
-
+      
       let query = '';
       if (this.buscarValue && typeof this.buscarValue === 'string') {
         query = this.buscarValue.toLowerCase();
       }
-
-      const matchesBusqueda = !query ||
+      
+      const matchesBusqueda = !query || 
         p.nombre.toLowerCase().includes(query) ||
         p.codigo.toLowerCase().includes(query) ||
         p.familia.toLowerCase().includes(query);
-
+      
       return matchesSede && matchesFamilia && matchesBusqueda;
     });
 
     if (this.sedeValue) {
       this.productosAgrupadosFiltrados = this.productosAgrupadosFiltrados.map(p => {
-        const variantesFiltradas = p.variantes.filter(v =>
+        const variantesFiltradas = p.variantes.filter(v => 
           v.variantes?.some(vr => vr.sede === this.sedeValue)
         );
         const stockFiltrado = variantesFiltradas.reduce((sum, v) => sum + (v.stockTotal || 0), 0);
-
+        
         return {
           ...p,
           stockTotal: stockFiltrado,
@@ -525,8 +416,17 @@ export class GestionListado implements OnInit {
         };
       });
     }
-
+    
     this.aplicarPaginacion();
+  }
+
+  searchBuscar(event: any) {
+    const query = event.query?.toLowerCase() || '';
+    this.items = this.productosAgrupados.filter((p: ProductoAgrupado) => 
+      p.nombre.toLowerCase().includes(query) || 
+      p.codigo.toLowerCase().includes(query) ||
+      p.familia.toLowerCase().includes(query)
+    ).slice(0, 10);
   }
 
   filtrarPorBusqueda(event: any) {
@@ -541,12 +441,12 @@ export class GestionListado implements OnInit {
       this.productosEliminadosFiltrados = [...this.productosEliminados];
     } else {
       const query = this.buscarValueEliminados.toLowerCase();
-      this.productosEliminadosFiltrados = this.productosEliminados.filter(p =>
-        p.nombre.toLowerCase().includes(query) ||
+      this.productosEliminadosFiltrados = this.productosEliminados.filter(p => 
+        p.nombre.toLowerCase().includes(query) || 
         p.codigo.toLowerCase().includes(query)
       );
     }
-
+    
     this.agruparProductosEliminados();
     this.totalRecordsEliminados = this.productosEliminadosAgrupados.length;
   }
@@ -587,9 +487,9 @@ export class GestionListado implements OnInit {
 
   seleccionarSedeEliminar(variante: Producto) {
     if (!variante.id) return;
-
+    
     const sedeNombre = variante.variantes?.[0]?.sede || 'desconocida';
-
+    
     this.confirmationService.confirm({
       message: `¿Eliminar el producto "<strong>${variante.nombre}</strong>" de la sede <strong>${this.formatearNombreSede(sedeNombre)}</strong>?`,
       header: 'Confirmar Eliminación',
@@ -633,7 +533,7 @@ export class GestionListado implements OnInit {
           });
           this.cargarProductosAgrupados();
         }
-
+        
         this.cerrarDialogEliminar();
       }
     });
@@ -641,10 +541,10 @@ export class GestionListado implements OnInit {
 
   ejecutarEliminacion(producto: Producto) {
     if (!producto.id) return;
-
+    
     const sedeNombre = producto.variantes?.[0]?.sede || 'desconocida';
     const exito = this.productosService.eliminarProducto(producto.id);
-
+    
     if (exito) {
       this.messageService.add({
         severity: 'success',
@@ -664,7 +564,7 @@ export class GestionListado implements OnInit {
   restaurarProducto(producto: ProductoAgrupado, event: Event) {
     const varianteId = producto.variantes[0]?.id;
     if (!varianteId) return;
-
+    
     if (producto.cantidadSedes === 1) {
       this.confirmationService.confirm({
         target: event.target as EventTarget,
@@ -684,7 +584,7 @@ export class GestionListado implements OnInit {
               detail: `"${producto.nombre}" restaurado exitosamente`,
               life: 3000
             });
-            //this.cargarProductosEliminados();
+            this.cargarProductosEliminados();
           }
         }
       });
@@ -703,7 +603,7 @@ export class GestionListado implements OnInit {
       this.buscarValueEliminados = null;
       this.familiaValueEliminados = null;
       this.filtrarEliminados();
-      //this.cargarProductosEliminados();
+      this.cargarProductosEliminados();
     } else {
       this.sedeValue = null;
       this.familiaValue = null;
@@ -717,35 +617,37 @@ export class GestionListado implements OnInit {
     return item.codigo || item.id;
   }
 
-  irDetalle(id: number) {
-    this.router.navigate(
-      ['/admin/gestion-productos/ver-detalle-producto', id]
-    );
+  irDetalle(id: number) { 
+    setTimeout(() => {
+      this.router.navigate(['/admin/gestion-productos/ver-detalle-producto', id]);
+      this.actualizarCabecera();
+      this.cdr.detectChanges();
+    }, 0);
   }
-
-  irCrear() {
+  
+  irCrear() { 
     setTimeout(() => {
       this.router.navigate(['/admin/gestion-productos/crear-producto']);
       this.actualizarCabecera();
-      //this.cdr.detectChanges();
+      this.cdr.detectChanges();
     }, 0);
   }
-
-  irEditar(id: number) {
+  
+  irEditar(id: number) { 
     setTimeout(() => {
       this.router.navigate(['/admin/gestion-productos/editar-producto', id], {
         queryParams: { returnUrl: '/admin/gestion-productos' }
       });
       this.actualizarCabecera();
-      //this.cdr.detectChanges();
+      this.cdr.detectChanges();
     }, 0);
   }
 
   isRutaHija(): boolean {
     const url = this.router.url;
-    return url.includes('crear-producto') ||
-      url.includes('editar-producto') ||
-      url.includes('ver-detalle-producto');
+    return url.includes('crear-producto') || 
+           url.includes('editar-producto') || 
+           url.includes('ver-detalle-producto');
   }
 
   get stockTotalGeneral(): number {

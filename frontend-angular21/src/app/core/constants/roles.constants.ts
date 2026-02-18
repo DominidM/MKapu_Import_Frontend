@@ -1,17 +1,19 @@
 export enum UserRole {
   ADMIN = 1,
-  VENTAS = 2,
-  ALMACEN = 3
+  ALMACEN = 2,
+  VENTAS = 3,
+
 }
 
 export const ROLE_NAMES = {
   [UserRole.ADMIN]: 'ADMIN',
-  [UserRole.VENTAS]: 'VENTAS',
-  [UserRole.ALMACEN]: 'ALMACEN'
+  [UserRole.ALMACEN]: 'ALMACEN',
+  [UserRole.VENTAS]: 'VENTAS'
+
 };
 
 export const ROLE_NAME_TO_ID: Record<string, UserRole> = {
   'administrador': UserRole.ADMIN,
-  'ventas': UserRole.VENTAS,
   'almacen': UserRole.ALMACEN,
+  'ventas': UserRole.VENTAS
 };

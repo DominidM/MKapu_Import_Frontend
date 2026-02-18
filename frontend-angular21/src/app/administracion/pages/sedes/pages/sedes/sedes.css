@@ -217,3 +217,48 @@
 :host-context(.app-dark) .sedes-search-input {
   color: #e2e8f0;
 }
+
+.sedes-filter-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+:host {
+  --sedes-filter-height: 42px;
+}
+
+:host ::ng-deep .sedes-filter-select {
+  display: inline-flex;
+  height: var(--sedes-filter-height);
+  min-width: 140px; 
+}
+
+:host ::ng-deep .sedes-filter-select .p-select {
+  height: var(--sedes-filter-height);
+  border-radius: 8px !important;  
+  width: 100%;
+}
+
+:host ::ng-deep .sedes-filter-select .p-select-label {
+  height: var(--sedes-filter-height);
+  line-height: calc(var(--sedes-filter-height) - 2px);
+  padding: 0 0.75rem !important;
+  background: transparent !important;
+}
+
+:host ::ng-deep .sedes-filter-select .p-select-trigger {
+  height: var(--sedes-filter-height);
+  width: 2.5rem;
+  border-radius: 0 8px 8px 0 !important;
+}
+
+:host-context(.app-dark) ::ng-deep .sedes-filter-select .p-select {
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  background: rgba(17, 24, 39, 0.2) !important;
+}
+
+:host-context(.app-dark) ::ng-deep .sedes-filter-select .p-select-label,
+:host-context(.app-dark) ::ng-deep .sedes-filter-select .p-select-trigger {
+  color: #e2e8f0 !important;
+}
