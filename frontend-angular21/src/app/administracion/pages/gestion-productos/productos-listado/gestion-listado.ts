@@ -166,20 +166,20 @@ private actualizarCabecera() {
       const url = this.router.url;
 
       if (url.includes('crear-producto')) {
-        this.tituloKicker = 'ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS CREACIÓN';
+        this.tituloKicker = 'ADMINISTRACIÓN - PRODUCTOS CREACIÓN';
         this.subtituloKicker = 'CREAR PRODUCTO'; // Añadido
         this.iconoCabecera = 'pi pi-plus-circle';
       } else if (url.includes('editar-producto')) {
-        this.tituloKicker = 'ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS EDICIÓN';
+        this.tituloKicker = 'ADMINISTRACIÓN - PRODUCTOS EDICIÓN';
         this.subtituloKicker = 'EDITAR PRODUCTO'; // Añadido
         this.iconoCabecera = 'pi pi-pencil';
       } else if (url.includes('ver-detalle-producto')) {
-        this.tituloKicker = 'ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS DETALLE';
+        this.tituloKicker = 'ADMINISTRACIÓN - PRODUCTOS DETALLE';
         this.subtituloKicker = 'DETALLE DE PRODUCTO'; // Añadido
         this.iconoCabecera = 'pi pi-eye';
       } else {
         // RUTA PRINCIPAL
-        this.tituloKicker = 'ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS ACTIVOS';
+        this.tituloKicker = 'ADMINISTRACIÓN - PRODUCTOS ACTIVOS';
         this.subtituloKicker = 'GESTIÓN DE PRODUCTOS'; // Esto es lo que se estaba perdiendo
         this.iconoCabecera = 'pi pi-building';
       }

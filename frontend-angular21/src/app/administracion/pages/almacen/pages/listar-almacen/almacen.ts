@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { DialogModule } from 'primeng/dialog';
+import { switchMap, take } from 'rxjs/operators';
 import { AutoCompleteModule } from 'primeng/autocomplete';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
@@ -12,22 +12,23 @@ import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { SelectModule } from 'primeng/select';
-
+import { DialogModule } from 'primeng/dialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
 
-import { SedeService } from '../../../../services/sede.service';
-import { Headquarter } from '../../../../interfaces/sedes.interface';
+import { AlmacenService } from '../../../../services/almacen.service';
+import { Headquarter } from '../../../../interfaces/almacen.interface';
 
 type ViewMode = 'todas' | 'activas' | 'inactivas';
 
 @Component({
-  selector: 'app-sedes',
+  selector: 'app-almacen-listado',
   standalone: true,
   imports: [
     CommonModule,
     FormsModule,
     RouterModule,
     DialogModule,
+
     CardModule,
     ButtonModule,
     AutoCompleteModule,
@@ -36,73 +37,87 @@ type ViewMode = 'todas' | 'activas' | 'inactivas';
     ToastModule,
     ConfirmDialogModule,
     MessageModule,
-    SelectModule, 
+    SelectModule,
   ],
   providers: [ConfirmationService, MessageService],
-  templateUrl: './sedes.html',
-  styleUrl: './sedes.css',
+  templateUrl: './almacen.html',
+  styleUrl: './almacen.css',
 })
-export class Sedes implements OnInit {
-  private readonly sedeService = inject(SedeService);
+export class AlmacenListado implements OnInit {
+  private readonly almacenService = inject(AlmacenService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly messageService = inject(MessageService);
 
-  readonly loading = this.sedeService.loading;
-  readonly error = this.sedeService.error;
+  readonly loading = this.almacenService.loading;
+  readonly error = this.almacenService.error;
   dialogVisible = false;
-  readonly sedeSeleccionada = signal<any | null>(null);
+  readonly almacenSeleccionado = signal<Headquarter | null>(null);
 
-  verDetalle(sede: any): void {
-    this.sedeSeleccionada.set(sede);
+  verDetalle(almacen: Headquarter): void {
+    this.almacenSeleccionado.set(almacen);
     this.dialogVisible = true;
-  }
+}
+  // Search + data signals
   readonly searchTerm = signal<string>('');
-  readonly sedes = computed(() => this.sedeService.sedes());
+  readonly almacenes = computed(() => this.almacenService.sedes()); // el service expone 'sedes'
 
   readonly viewMode = signal<ViewMode>('activas');
 
   readonly viewOptions: { label: string; value: ViewMode }[] = [
     { label: 'Todos', value: 'todas' },
-    { label: 'Activas', value: 'activas' },
-    { label: 'Inactivas', value: 'inactivas' },
+    { label: 'Activos', value: 'activas' },
+    { label: 'Inactivos', value: 'inactivas' },
   ];
 
-  readonly visibleSedes = computed(() => {
+  readonly visibleAlmacenes = computed(() => {
     const mode = this.viewMode();
-    const all = this.sedes();
+    const all = this.almacenes() ?? [];
 
     if (mode === 'activas') return all.filter((s) => s.activo === true);
     if (mode === 'inactivas') return all.filter((s) => s.activo === false);
     return all;
   });
 
-  readonly filteredSedes = computed(() => {
+  readonly filteredAlmacenes = computed(() => {
     const term = this.searchTerm().trim().toLowerCase();
-    const base = this.visibleSedes();
+    const base = this.visibleAlmacenes();
 
     if (!term) return base;
 
     return base.filter((s) =>
-      [s.codigo, s.nombre, s.ciudad].some((f) =>
+      [s.codigo, s.nombre, s.ciudad, s.departamento, s.provincia].some((f) =>
         String(f ?? '').toLowerCase().includes(term)
       )
     );
   });
 
-  readonly sedeSuggestions = computed(() => this.filteredSedes());
+  readonly almacenSuggestions = computed(() => this.filteredAlmacenes());
 
   ngOnInit(): void {
-    this.sedeService.loadSedes('Administrador').subscribe();
+    // Carga inicial
+    this.almacenService.loadAlmacen('Administrador').subscribe({
+      next: () => {
+        // loaded (signals are updated in service)
+      },
+      error: (err: any) => {
+        console.error('Error cargando almacenes', err);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: err?.message ?? 'No se pudieron cargar los almacenes.',
+        });
+      },
+    });
   }
 
   onViewModeChange(mode: ViewMode): void {
     this.viewMode.set(mode);
   }
 
-  // ... (resto igual)
   onSearch(event: { query: string }): void {
     this.searchTerm.set(event.query);
   }
+
   onSearchChange(term: unknown): void {
     if (typeof term === 'string') {
       this.searchTerm.set(term);
@@ -114,49 +129,57 @@ export class Sedes implements OnInit {
     }
     this.searchTerm.set('');
   }
-  onSelectSede(event: any): void {
+
+  onSelectAlmacen(event: any): void {
     const value = event?.value?.nombre ?? '';
     this.searchTerm.set(String(value));
   }
+
   clearSearch(): void {
     this.searchTerm.set('');
   }
 
-  confirmToggleStatus(sede: Headquarter): void {
-    const nextStatus = !sede.activo;
-
+  confirmToggleStatus(almacen: Headquarter): void {
+    const nextStatus = !almacen.activo;
     const verb = nextStatus ? 'activar' : 'desactivar';
     const acceptLabel = nextStatus ? 'Activar' : 'Desactivar';
     const acceptSeverity = nextStatus ? 'success' : 'danger';
 
     this.confirmationService.confirm({
       header: 'Confirmación',
-      message: `¿Deseas ${verb} la sede ${sede.nombre} (${sede.codigo})?`,
+      message: `¿Deseas ${verb} el almacén ${almacen.nombre} (${almacen.codigo})?`,
       icon: 'pi pi-exclamation-triangle',
       acceptLabel,
       rejectLabel: 'Cancelar',
       acceptButtonProps: { severity: acceptSeverity as any },
       rejectButtonProps: { severity: 'secondary', outlined: true },
       accept: () => {
-        this.sedeService.updateSedeStatus(sede.id_sede, nextStatus, 'Administrador').subscribe({
-          next: () => {
-            this.messageService.add({
-              severity: 'success',
-              summary: nextStatus ? 'Sede activada' : 'Sede desactivada',
-              detail: nextStatus
-                ? `Se activó la sede ${sede.nombre}.`
-                : `Se desactivó la sede ${sede.nombre}.`,
-            });
-          },
-          error: (err) => {
-            console.error(err);
-            this.messageService.add({
-              severity: 'error',
-              summary: 'Error',
-              detail: err?.error?.message ?? 'No se pudo cambiar el estado de la sede.',
-            });
-          },
-        });
+        const id = almacen.id_almacen ?? almacen.id ?? 0;
+
+        this.almacenService
+          .updateAlmacenStatus(id, nextStatus, 'Administrador')
+          .pipe(
+            switchMap(() => this.almacenService.loadAlmacen('Administrador')),
+            take(1)  // ← evita múltiples emisiones
+          )
+          .subscribe({
+            next: () => {
+              this.messageService.add({
+                severity: 'success',
+                summary: nextStatus ? 'Almacén activado' : 'Almacén desactivado',
+                detail: nextStatus
+                  ? `Se activó el almacén ${almacen.nombre}.`
+                  : `Se desactivó el almacén ${almacen.nombre}.`,
+              });
+            },
+            error: (err: any) => {
+              this.messageService.add({
+                severity: 'error',
+                summary: 'Error',
+                detail: err?.error?.message ?? 'No se pudo cambiar el estado del almacén.',
+              });
+            },
+          });
       },
     });
   }

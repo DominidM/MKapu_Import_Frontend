@@ -168,71 +168,91 @@
     </p-table>
   </p-card>
 
-  <!-- Modal de Detalle de Merma -->
   <p-dialog
     [visible]="mostrarModalDetalle()"
     (onHide)="cerrarModalDetalle()"
-    header="Detalle de Merma"
     [modal]="true"
-    [style]="{ width: '700px' }"
     [draggable]="false"
-    [resizable]="false"
+    [style]="{ width: '700px', 'border-radius': '16px', overflow: 'hidden' }"
+    [contentStyle]="{ padding: '0' }"
     styleClass="mermas-dialog">
-    
+
+    <ng-template pTemplate="header"><span></span></ng-template>
+
     <ng-container *ngIf="mermaSeleccionada() as ms">
-      <div class="grid form-grid">
-        <div class="col-12">
-          <div class="mb-3">
-            <label class="field-label">CÓDIGO DE MERMA</label>
-            <p class="text-lg font-semibold">{{ ms.codigo }}</p>
+      <div class="merma-detail-modal">
+
+        <!-- BANNER -->
+        <div class="mdm-banner">
+          <div class="mdm-banner-icon">
+            <i class="pi pi-exclamation-triangle"></i>
           </div>
+          <div class="mdm-banner-info">
+            <span class="mdm-kicker">MERMA</span>
+            <h3 class="mdm-nombre">{{ ms.codigo }}</h3>
+          </div>
+          <button class="mdm-close-btn" (click)="cerrarModalDetalle()">
+            <i class="pi pi-times"></i>
+          </button>
         </div>
 
-        <div class="col-12">
-          <div class="mb-3">
-            <label class="field-label">MOTIVO</label>
-            <p class="text-base">{{ ms.motivo }}</p>
-          </div>
+        <!-- TIPO + CANTIDAD -->
+        <div class="mdm-code-row">
+          <span class="mdm-code-badge">
+            <i class="pi pi-tag"></i>
+            {{ getTipoMermaLabel(ms.tipoMerma) }}
+          </span>
+          <span class="mdm-cantidad-badge">
+            <i class="pi pi-box"></i>
+            {{ ms.cantidad }} unidades
+          </span>
         </div>
 
-        <div class="col-6">
-          <div class="mb-3">
-            <label class="field-label">TIPO DE MERMA</label>
-            <p-tag [value]="getTipoMermaLabel(ms.tipoMerma)" [severity]="getTipoMermaSeverity(ms.tipoMerma)"></p-tag>
+        <!-- INFO GRID -->
+        <div class="mdm-info-grid">
+
+          <div class="mdm-info-item mdm-info-item--full">
+            <span class="mdm-info-icon"><i class="pi pi-comment"></i></span>
+            <div class="mdm-info-content">
+              <span class="mdm-info-label">Motivo</span>
+              <span class="mdm-info-value">{{ ms.motivo }}</span>
+            </div>
           </div>
+
+          <div class="mdm-info-item">
+            <span class="mdm-info-icon"><i class="pi pi-user"></i></span>
+            <div class="mdm-info-content">
+              <span class="mdm-info-label">Responsable</span>
+              <span class="mdm-info-value">{{ ms.responsable }}</span>
+            </div>
+          </div>
+
+          <div class="mdm-info-item">
+            <span class="mdm-info-icon"><i class="pi pi-calendar"></i></span>
+            <div class="mdm-info-content">
+              <span class="mdm-info-label">Fecha</span>
+              <span class="mdm-info-value">{{ ms.fechaRegistro | date:'dd/MM/yyyy HH:mm' }}</span>
+            </div>
+          </div>
+
+          <div class="mdm-info-item mdm-info-item--full" *ngIf="ms.observacion">
+            <span class="mdm-info-icon"><i class="pi pi-info-circle"></i></span>
+            <div class="mdm-info-content">
+              <span class="mdm-info-label">Observaciones</span>
+              <span class="mdm-info-value">{{ ms.observacion }}</span>
+            </div>
+          </div>
+
         </div>
 
-        <div class="col-6">
-          <div class="mb-3">
-            <label class="field-label">CANTIDAD TOTAL</label>
-            <p class="text-base font-semibold">{{ ms.cantidad }} unidades</p>
+        <!-- TABLA PRODUCTOS -->
+        <div class="mdm-productos" *ngIf="ms.detalles && ms.detalles.length > 0">
+          <div class="mdm-productos-header">
+            <i class="pi pi-box"></i>
+            <span>PRODUCTOS AFECTADOS</span>
+            <span class="mdm-productos-count">{{ ms.detalles.length }}</span>
           </div>
-        </div>
-
-        <div class="col-6">
-          <div class="mb-3">
-            <label class="field-label">RESPONSABLE</label>
-            <p class="text-base">{{ ms.responsable }}</p>
-          </div>
-        </div>
-
-        <div class="col-6">
-          <div class="mb-3">
-            <label class="field-label">FECHA DE REGISTRO</label>
-            <p class="text-base">{{ ms.fechaRegistro | date: 'dd/MM/yyyy HH:mm' }}</p>
-          </div>
-        </div>
-
-        <div class="col-12" *ngIf="ms.observacion">
-          <div class="mb-3">
-            <label class="field-label">OBSERVACIONES</label>
-            <p class="text-base">{{ ms.observacion }}</p>
-          </div>
-        </div>
-
-        <div class="col-12" *ngIf="ms.detalles && ms.detalles.length > 0">
-          <label class="field-label mb-2">PRODUCTOS AFECTADOS</label>
-          <p-table [value]="ms.detalles" styleClass="p-datatable-sm">
+          <p-table [value]="ms.detalles" styleClass="p-datatable-sm mdm-table">
             <ng-template pTemplate="header">
               <tr>
                 <th>Código</th>
@@ -251,16 +271,21 @@
             </ng-template>
           </p-table>
         </div>
+
+        <!-- FOOTER -->
+        <div class="mdm-footer">
+          <p-button
+            label="Cerrar"
+            icon="pi pi-times"
+            severity="secondary"
+            [outlined]="true"
+            styleClass="mdm-btn-close"
+            (onClick)="cerrarModalDetalle()">
+          </p-button>
+        </div>
+
       </div>
     </ng-container>
-
-    <ng-template pTemplate="footer">
-      <div class="flex justify-content-center gap-2 mt-3">
-        <p-button label="Cerrar" icon="pi pi-times" [outlined]="true"
-                  severity="secondary" (onClick)="cerrarModalDetalle()">
-        </p-button>
-      </div>
-    </ng-template>
   </p-dialog>
 
   <p-toast></p-toast>

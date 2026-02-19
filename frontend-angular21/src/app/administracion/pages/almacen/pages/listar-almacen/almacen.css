@@ -204,6 +204,10 @@
   color: #e2e8f0 !important;
 }
 
+/* ============================================
+   ALMACÉN DETAIL MODAL
+   ============================================ */
+
 :host ::ng-deep .p-dialog .p-dialog-content {
   padding: 0 !important;
   border-radius: 16px;
@@ -219,14 +223,16 @@
   box-shadow: 0 32px 64px rgba(0,0,0,0.6) !important;
 }
 
-.sede-detail-modal {
+/* ── Contenedor principal ─────────────────── */
+.almacen-detail-modal {
   display: flex;
   flex-direction: column;
   border-radius: 16px;
   overflow: hidden;
 }
 
-.sdm-banner {
+/* ── Banner superior ─────────────────────── */
+.adm-banner {
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -234,7 +240,7 @@
   position: relative;
 }
 
-.sdm-banner-icon {
+.adm-banner-icon {
   width: 48px;
   height: 48px;
   border-radius: 12px;
@@ -247,9 +253,12 @@
   flex-shrink: 0;
 }
 
-.sdm-banner-info { flex: 1; min-width: 0; }
+.adm-banner-info {
+  flex: 1;
+  min-width: 0;
+}
 
-.sdm-kicker {
+.adm-kicker {
   display: block;
   font-size: 0.65rem;
   font-weight: 700;
@@ -259,7 +268,7 @@
   margin-bottom: 0.2rem;
 }
 
-.sdm-nombre {
+.adm-nombre {
   margin: 0;
   font-size: 1.05rem;
   font-weight: 700;
@@ -269,10 +278,12 @@
   text-overflow: ellipsis;
 }
 
-.sdm-close-btn {
+.adm-close-btn {
   position: absolute;
-  top: 1rem; right: 1rem;
-  width: 32px; height: 32px;
+  top: 1rem;
+  right: 1rem;
+  width: 32px;
+  height: 32px;
   border-radius: 8px;
   border: 1px solid rgba(255,255,255,0.08);
   background: rgba(255,255,255,0.04);
@@ -283,9 +294,13 @@
   font-size: 0.75rem;
   transition: all 0.15s;
 }
-.sdm-close-btn:hover { background: rgba(255,255,255,0.1); color: #f1f5f9; }
+.adm-close-btn:hover {
+  background: rgba(255,255,255,0.1);
+  color: #f1f5f9;
+}
 
-.sdm-code-row {
+/* ── Fila de código ────────────────────────── */
+.adm-code-row {
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -294,7 +309,7 @@
   border-bottom: 1px solid rgba(255,255,255,0.05);
 }
 
-.sdm-code-badge {
+.adm-code-badge {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
@@ -309,7 +324,15 @@
   text-transform: uppercase;
 }
 
-.sdm-status-badge {
+.adm-code-value {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+
+.adm-status-badge {
   margin-left: auto;
   display: inline-flex;
   align-items: center;
@@ -319,18 +342,35 @@
   padding: 0.25rem 0.65rem;
   border-radius: 999px;
 }
-.sdm-status--active  { background: rgba(34,197,94,0.1);  color: #4ade80; border: 1px solid rgba(34,197,94,0.2); }
-.sdm-status--inactive{ background: rgba(239,68,68,0.1);  color: #f87171; border: 1px solid rgba(239,68,68,0.2); }
-.sdm-status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 
-.sdm-info-grid {
+.adm-status--active {
+  background: rgba(34, 197, 94, 0.1);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.adm-status--inactive {
+  background: rgba(239, 68, 68, 0.1);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.adm-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* ── Info grid ────────────────────────────── */
+.adm-info-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0;
   padding: 0.5rem 0;
 }
 
-.sdm-info-item {
+.adm-info-item {
   display: flex;
   align-items: flex-start;
   gap: 0.75rem;
@@ -338,11 +378,18 @@
   border-bottom: 1px solid rgba(255,255,255,0.04);
   transition: background 0.15s;
 }
-.sdm-info-item:hover { background: rgba(255,255,255,0.02); }
-.sdm-info-item--full { grid-column: 1 / -1; }
 
-.sdm-info-icon {
-  width: 32px; height: 32px;
+.adm-info-item:hover {
+  background: rgba(255,255,255,0.02);
+}
+
+.adm-info-item--full {
+  grid-column: 1 / -1;
+}
+
+.adm-info-icon {
+  width: 32px;
+  height: 32px;
   border-radius: 8px;
   display: grid;
   place-items: center;
@@ -353,11 +400,29 @@
   margin-top: 0.1rem;
 }
 
-.sdm-info-content { display: flex; flex-direction: column; gap: 0.2rem; min-width: 0; }
-.sdm-info-label { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #64748b; }
-.sdm-info-value { font-size: 0.88rem; color: #cbd5e1; word-break: break-word; }
+.adm-info-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
 
-.sdm-footer {
+.adm-info-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.adm-info-value {
+  font-size: 0.88rem;
+  color: #cbd5e1;
+  word-break: break-word;
+}
+
+/* ── Footer ───────────────────────────────── */
+.adm-footer {
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -367,13 +432,25 @@
   border-top: 1px solid rgba(255,255,255,0.06);
 }
 
-:host ::ng-deep .sdm-btn-edit.p-button {
+:host ::ng-deep .adm-btn-edit.p-button {
   background: #f59e0b !important;
   border-color: #f59e0b !important;
   color: #111827 !important;
   font-weight: 700;
   border-radius: 8px;
 }
-:host ::ng-deep .sdm-btn-edit.p-button:hover { background: #d97706 !important; }
-:host ::ng-deep .sdm-btn-close.p-button { border-radius: 8px; border-color: rgba(255,255,255,0.12) !important; color: #94a3b8 !important; }
-:host ::ng-deep .sdm-btn-close.p-button:hover { background: rgba(255,255,255,0.06) !important; }
+
+:host ::ng-deep .adm-btn-edit.p-button:hover {
+  background: #d97706 !important;
+}
+
+:host ::ng-deep .adm-btn-close.p-button {
+  border-radius: 8px;
+  border-color: rgba(255,255,255,0.12) !important;
+  color: #94a3b8 !important;
+}
+
+:host ::ng-deep .adm-btn-close.p-button:hover {
+  background: rgba(255,255,255,0.06) !important;
+}
+

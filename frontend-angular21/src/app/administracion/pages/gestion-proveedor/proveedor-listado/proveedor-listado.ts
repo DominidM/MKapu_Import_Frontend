@@ -80,13 +80,13 @@ export class ProveedorListado implements OnInit, OnDestroy, AfterViewInit {
     const url = this.currentUrl();
 
     if (url.includes('crear')) {
-      return 'ADMINISTRADOR - ADMINISTRACIÓN - PROVEEDORES CREACIÓN';
+      return 'ADMINISTRACIÓN - PROVEEDORES CREACIÓN';
     } else if (url.includes('editar')) {
-      return 'ADMINISTRADOR - ADMINISTRACIÓN - PROVEEDORES EDICIÓN';
+      return 'ADMINISTRACIÓN - PROVEEDORES EDICIÓN';
     } else if (url.includes('ver-detalle')) {
-      return 'ADMINISTRADOR - ADMINISTRACIÓN - PROVEEDORES DETALLE';
+      return 'ADMINISTRACIÓN - PROVEEDORES DETALLE';
     } else {
-      return 'ADMINISTRADOR - ADMINISTRACIÓN - PROVEEDORES ACTIVOS';
+      return 'ADMINISTRACIÓN - PROVEEDORES ACTIVOS';
     }
   });
 

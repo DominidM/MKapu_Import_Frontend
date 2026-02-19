@@ -13,6 +13,17 @@
         import('./pages/dashboard-admin/dashboard-admin').then((m) => m.DashboardAdmin),
     },
 
+    {
+    path: 'dashboard-almacen',
+    loadComponent: () => 
+      import('../almacen/pages/dashboard-almacen/dashboard-almacen').then((m) => m.DashboardAlmacen),
+    },
+    {
+    path: 'dashboard-ventas',
+    loadComponent: () => 
+      import('../ventas/pages/dashboard-ventas/dashboard-ventas').then((m) => m.DashboardVentas),
+    },
+
     /* =======================
       USUARIOS
     ======================= */
@@ -42,6 +53,40 @@
         },
       ],
     },
+
+
+    /* =======================
+      Almacen 
+    ======================= */
+    {
+      path: 'almacen',
+      children: [
+        {
+          path: '',
+          loadComponent: () =>
+            import('./pages/almacen/pages/listar-almacen/almacen').then(
+              (m) => m.AlmacenListado,
+            ),
+        },
+        {
+          path: 'crear-almacen',
+          loadComponent: () =>
+            import('./pages/almacen/pages/agregar-almacen/agregar-almacen').then(
+              (m) => m.AlmacenCrear,
+            ),
+        },
+        {
+          path: 'editar-almacen/:id',
+          loadComponent: () =>
+            import('./pages/almacen/pages/editar-almacen/editar-almacen').then(
+              (m) => m.AlmacenEditar,
+            ),
+        },
+      ],
+    },
+
+
+
 
     /* =======================
       TRANSFERENCIAS

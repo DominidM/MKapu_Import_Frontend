@@ -57,7 +57,7 @@
         isSection: true,
       },
       {
-        path: '/ventas/dashboard-ventas',
+        path: '/admin/dashboard-ventas',
         allowedRoles: [UserRole.ADMIN],
         label: 'Dashboard Ventas',
         icon: 'pi pi-chart-line',
@@ -74,7 +74,6 @@
         label: 'Historial Ventas Administración',
         icon: 'pi pi-list',
       },
-      //no funciona no se por que
       {
         path: '/admin/clientes',
         allowedRoles: [UserRole.ADMIN],
@@ -88,9 +87,15 @@
         isSection: true,
       },
       {
-        path: '/almacen/dashboard',
+        path: '/admin/dashboard-almacen',
         allowedRoles: [UserRole.ADMIN],
         label: 'Dashboard Almacén',
+        icon: 'pi pi-chart-bar',
+      },
+      {
+        path: '/admin/almacen',
+        allowedRoles: [UserRole.ADMIN],
+        label: 'Almacen',
         icon: 'pi pi-box',
       },
       {
@@ -230,7 +235,6 @@
         this.username = user.username;
 
         this.roleName = ROLE_NAMES[user.roleId as keyof typeof ROLE_NAMES] || 'Invitado';
-        console.log('👤 Usuario actual:', { username: this.username, role: this.roleName });
       }
     }
     /**
@@ -249,7 +253,6 @@
         route.allowedRoles.includes(currentRole),
       );
 
-      console.log('📋 Menú cargado:', this.menuItems);
     }
 
     /**

@@ -285,12 +285,6 @@ export class EditarCliente implements OnInit {
       phone:          this.cliente.telefono ? String(this.cliente.telefono) : undefined
     };
 
-    // ── AGREGAR AQUÍ ──────────────────────────────────────
-    console.log('documentTypeSunatCode:', this.cliente.documentTypeSunatCode);
-    console.log('esRUC:', this.esRUC);
-    console.log('payload:', JSON.stringify(payload, null, 2));
-    // ─────────────────────────────────────────────────────
-
     this.clienteService.updateCustomer(this.cliente.customerId, payload).subscribe({
       next: () => {
         this.allowNavigate.set(true);

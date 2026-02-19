@@ -6,16 +6,16 @@
           <i class="pi pi-list"></i>
         </span>
         <div>
-          <p class="sedes-kicker">ADMINISTRADOR - ADMINISTRACION - SEDES</p>
-          <h2 class="sedes-title">GESTION DE SEDES</h2>
+          <p class="sedes-kicker"> ALMACÉN - ALMACÉN</p>
+          <h2 class="sedes-title">GESTIÓN DE ALMACÉN</h2>
         </div>
       </div>
       <div class="flex justify-items-end gap-2">
         <p-button
-          label="Agregar Sede"
+          label="Agregar Almacén"
           icon="pi pi-plus"
           styleClass="sedes-pill"
-          [routerLink]="['/admin/sedes/agregar-sede']"
+          [routerLink]="['/admin/almacen/crear-almacen']"
         ></p-button>
       </div>
     </div>
@@ -24,16 +24,16 @@
   <p-card>
     <div class="flex flex-column lg:flex-row lg:align-items-center lg:justify-content-between gap-3">
       <div class="sedes-search-container flex-1">
-        <span class="sedes-search-label">Buscar Sede</span>
+        <span class="sedes-search-label">Buscar Almacén</span>
         <p-autoComplete
           class="sedes-search-input"
           [ngModel]="searchTerm()"
           (ngModelChange)="onSearchChange($event)"
-          [suggestions]="sedeSuggestions()"
+          [suggestions]="almacenSuggestions()"
           field="nombre"
           (completeMethod)="onSearch($event)"
-          (onSelect)="onSelectSede($event)"
-          placeholder="Escribe codigo, nombre o ciudad..."
+          (onSelect)="onSelectAlmacen($event)"
+          placeholder="Escribe código, nombre, departamento o ciudad..."
           style="background: transparent; color: var(--text-color);"
           [inputStyle]="{ width: '100%', background: 'transparent', color: 'var(--text-color)' }"
         >
@@ -71,7 +71,7 @@
   <p-toast position="top-right" />
 
   <div class="mb-3">
-    <p-message *ngIf="loading()" severity="info" text="Cargando sedes..."></p-message>
+    <p-message *ngIf="loading()" severity="info" text="Cargando almacenes..."></p-message>
     <p-message *ngIf="!loading() && error() as e" severity="error" [text]="e"></p-message>
   </div>
 
@@ -79,31 +79,31 @@
     <div class="flex align-items-center justify-content-between mb-3">
       <div class="flex align-items-center gap-2">
         <span class="sedes-section-icon">
-          <i class="pi pi-user"></i>
+          <i class="pi pi-warehouse"></i>
         </span>
         <span class="text-sm font-semibold text-700">
           {{
             viewMode() === 'activas'
-              ? 'SEDES ACTIVAS'
+              ? 'ALMACENES ACTIVOS'
               : viewMode() === 'inactivas'
-                ? 'SEDES INACTIVAS'
-                : 'SEDES (TODAS)'
+                ? 'ALMACENES INACTIVOS'
+                : 'ALMACENES (TODAS)'
           }}
         </span>
         <p-tag
           class="sedes-count-tag"
-          [value]="'[' + filteredSedes().length + '] Sedes'"
+          [value]="'[' + filteredAlmacenes().length + '] Almacenes'"
           [severity]="viewMode() === 'activas' ? 'success' : viewMode() === 'inactivas' ? 'danger' : 'info'"
         ></p-tag>
       </div>
       <p-button icon="pi pi-id-card" text severity="secondary" styleClass="sedes-icon-btn"></p-button>
     </div>
 
-    <div *ngIf="filteredSedes().length === 0" class="sedes-empty-state">
+    <div *ngIf="filteredAlmacenes().length === 0" class="sedes-empty-state">
       <div class="sedes-empty-icon"><i class="pi pi-search"></i></div>
-      <div class="sedes-empty-title">No hay sedes con ese filtro</div>
+      <div class="sedes-empty-title">No hay almacenes con ese filtro</div>
       <div class="sedes-empty-subtitle">
-        Prueba con otro termino o limpia los filtros para ver todas las sedes.
+        Prueba con otro término o limpia los filtros para ver todos los almacenes.
       </div>
       <p-button
         label="Limpiar filtros"
@@ -116,8 +116,8 @@
     </div>
 
     <p-table
-      *ngIf="filteredSedes().length > 0"
-      [value]="filteredSedes()"
+      *ngIf="filteredAlmacenes().length > 0"
+      [value]="filteredAlmacenes()"
       styleClass="sedes-table"
       [paginator]="true"
       [rows]="5"
@@ -128,57 +128,66 @@
         <tr>
           <th>CODIGO</th>
           <th>NOMBRE</th>
-          <th>CIUDAD</th>
-          <th>TELEFONO</th>
+          <th>UBICACIÓN</th>
+          <th>TELÉFONO</th>
+          <th>ESTADO</th>
           <th>ACCIONES</th>
         </tr>
       </ng-template>
 
-      <ng-template pTemplate="body" let-sede>
+      <ng-template pTemplate="body" let-almacen>
         <tr>
-          <td>{{ sede.codigo }}</td>
-          <td>{{ sede.nombre }}</td>
+          <td>{{ almacen.codigo }}</td>
+          <td>{{ almacen.nombre }}</td>
           <td>
             <span class="inline-flex align-items-center gap-2">
               <i class="pi pi-map-marker text-500"></i>
-              {{ sede.ciudad }}
+              {{ (almacen.departamento ? almacen.departamento : '') 
+                  + (almacen.provincia ? ' · ' + almacen.provincia : '') 
+                  + (almacen.ciudad ? ' · ' + almacen.ciudad : '') }}
             </span>
           </td>
           <td>
             <span class="inline-flex align-items-center gap-2">
               <i class="pi pi-phone text-500"></i>
-              {{ sede.telefono }}
+              {{ almacen.telefono }}
             </span>
+          </td>
+          <td>
+            <p-tag
+              [value]="almacen.activo ? 'Activo' : 'Inactivo'"
+              [severity]="almacen.activo ? 'success' : 'danger'"
+            ></p-tag>
           </td>
           <td>
             <div class="flex align-items-center gap-2">
 
-              <!-- OJO -->
-              <p-button
-                icon="pi pi-eye"
-                text
-                severity="secondary"
-                styleClass="sedes-icon-btn"
-                (click)="verDetalle(sede)"
-                title="Ver detalle"
-              ></p-button>
+            <p-button
+              icon="pi pi-eye"
+              text
+              severity="secondary"
+              styleClass="sedes-icon-btn"
+              (click)="verDetalle(almacen)"
+              title="Ver detalle"
+            ></p-button>
 
               <p-button
                 icon="pi pi-pencil"
                 text
                 severity="secondary"
                 styleClass="sedes-icon-btn sedes-action-edit"
-                [routerLink]="['/admin/sedes/editar-sede']"
-                [queryParams]="{ id: sede.id_sede }"
+                [routerLink]="['/admin/almacen/editar-almacen', (almacen.id_almacen ?? almacen.id)]"
+                [disabled]="!(almacen.id_almacen ?? almacen.id)"
+                [title]="(almacen.id_almacen ?? almacen.id) ? 'Editar' : 'ID no disponible'"
               ></p-button>
 
               <p-button
-                [icon]="sede.activo ? 'pi pi-times' : 'pi pi-check'"
+                [icon]="almacen.activo ? 'pi pi-times' : 'pi pi-check'"
                 text
-                [severity]="sede.activo ? 'danger' : 'success'"
+                [severity]="almacen.activo ? 'danger' : 'success'"
                 styleClass="sedes-icon-btn sedes-action-status"
-                (click)="confirmToggleStatus(sede)"
-                [title]="sede.activo ? 'Desactivar sede' : 'Activar sede'"
+                (click)="confirmToggleStatus(almacen)"
+                [title]="almacen.activo ? 'Desactivar almacén' : 'Activar almacén'"
               ></p-button>
             </div>
           </td>
@@ -189,7 +198,6 @@
     <p-confirmdialog />
   </p-card>
 
-  <!-- MODAL DETALLE SEDE -->
   <p-dialog
     [(visible)]="dialogVisible"
     [modal]="true"
@@ -200,89 +208,95 @@
   >
     <ng-template pTemplate="header"><span></span></ng-template>
 
-    <ng-container *ngIf="sedeSeleccionada() as s">
-      <div class="sede-detail-modal">
+    <ng-container *ngIf="almacenSeleccionado() as a">
+      <div class="almacen-detail-modal">
 
         <!-- BANNER -->
-        <div class="sdm-banner">
-          <div class="sdm-banner-icon">
-            <i class="pi pi-building"></i>
+        <div class="adm-banner">
+          <div class="adm-banner-icon">
+            <i class="pi pi-warehouse"></i>
           </div>
-          <div class="sdm-banner-info">
-            <span class="sdm-kicker">SEDE</span>
-            <h3 class="sdm-nombre">{{ s.nombre }}</h3>
+          <div class="adm-banner-info">
+            <span class="adm-kicker">ALMACÉN</span>
+            <h3 class="adm-nombre">{{ a.nombre }}</h3>
           </div>
-          <button class="sdm-close-btn" (click)="dialogVisible = false">
+          <button class="adm-close-btn" (click)="dialogVisible = false">
             <i class="pi pi-times"></i>
           </button>
         </div>
 
         <!-- CÓDIGO + ESTADO -->
-        <div class="sdm-code-row">
-          <span class="sdm-code-badge">
-            <i class="pi pi-tag"></i>{{ s.codigo }}
+        <div class="adm-code-row">
+          <span class="adm-code-badge">
+            <i class="pi pi-tag"></i>{{ a.codigo }}
           </span>
-          <span class="sdm-status-badge"
-            [class.sdm-status--active]="s.activo"
-            [class.sdm-status--inactive]="!s.activo">
-            <span class="sdm-status-dot"></span>
-            {{ s.activo ? 'Activo' : 'Inactivo' }}
+          <span class="adm-code-value">{{ a.codigo }}</span>
+          <span class="adm-status-badge" [class.adm-status--active]="a.activo" [class.adm-status--inactive]="!a.activo">
+            <span class="adm-status-dot"></span>
+            {{ a.activo ? 'Activo' : 'Inactivo' }}
           </span>
         </div>
 
         <!-- INFO GRID -->
-        <div class="sdm-info-grid">
+        <div class="adm-info-grid">
 
-          <div class="sdm-info-item">
-            <span class="sdm-info-icon"><i class="pi pi-map"></i></span>
-            <div class="sdm-info-content">
-              <span class="sdm-info-label">Departamento</span>
-              <span class="sdm-info-value">{{ s.departamento ?? '—' }}</span>
+          <div class="adm-info-item">
+            <span class="adm-info-icon"><i class="pi pi-map"></i></span>
+            <div class="adm-info-content">
+              <span class="adm-info-label">Departamento</span>
+              <span class="adm-info-value">{{ a.departamento ?? '—' }}</span>
             </div>
           </div>
 
-          <div class="sdm-info-item">
-            <span class="sdm-info-icon"><i class="pi pi-map-marker"></i></span>
-            <div class="sdm-info-content">
-              <span class="sdm-info-label">Ciudad</span>
-              <span class="sdm-info-value">{{ s.ciudad ?? '—' }}</span>
+          <div class="adm-info-item">
+            <span class="adm-info-icon"><i class="pi pi-map"></i></span>
+            <div class="adm-info-content">
+              <span class="adm-info-label">Provincia</span>
+              <span class="adm-info-value">{{ a.provincia ?? '—' }}</span>
             </div>
           </div>
 
-          <div class="sdm-info-item">
-            <span class="sdm-info-icon"><i class="pi pi-phone"></i></span>
-            <div class="sdm-info-content">
-              <span class="sdm-info-label">Teléfono</span>
-              <span class="sdm-info-value">{{ s.telefono ?? '—' }}</span>
+          <div class="adm-info-item">
+            <span class="adm-info-icon"><i class="pi pi-map-marker"></i></span>
+            <div class="adm-info-content">
+              <span class="adm-info-label">Ciudad</span>
+              <span class="adm-info-value">{{ a.ciudad ?? '—' }}</span>
             </div>
           </div>
 
-          <div class="sdm-info-item sdm-info-item--full">
-            <span class="sdm-info-icon"><i class="pi pi-home"></i></span>
-            <div class="sdm-info-content">
-              <span class="sdm-info-label">Dirección</span>
-              <span class="sdm-info-value">{{ s.direccion ?? '—' }}</span>
+          <div class="adm-info-item">
+            <span class="adm-info-icon"><i class="pi pi-phone"></i></span>
+            <div class="adm-info-content">
+              <span class="adm-info-label">Teléfono</span>
+              <span class="adm-info-value">{{ a.telefono ?? '—' }}</span>
+            </div>
+          </div>
+
+          <div class="adm-info-item adm-info-item--full">
+            <span class="adm-info-icon"><i class="pi pi-home"></i></span>
+            <div class="adm-info-content">
+              <span class="adm-info-label">Dirección</span>
+              <span class="adm-info-value">{{ a.direccion ?? '—' }}</span>
             </div>
           </div>
 
         </div>
 
         <!-- FOOTER -->
-        <div class="sdm-footer">
+        <div class="adm-footer">
           <p-button
             label="Cerrar"
             icon="pi pi-times"
             severity="secondary"
             [outlined]="true"
-            styleClass="sdm-btn-close"
+            styleClass="adm-btn-close"
             (onClick)="dialogVisible = false">
           </p-button>
           <p-button
-            label="Editar Sede"
+            label="Editar Almacén"
             icon="pi pi-pencil"
-            styleClass="sdm-btn-edit"
-            [routerLink]="['/admin/sedes/editar-sede']"
-            [queryParams]="{ id: s.id_sede }"
+            styleClass="adm-btn-edit"
+            [routerLink]="['/admin/almacen/editar-almacen', (a.id_almacen ?? a.id)]"
             (onClick)="dialogVisible = false">
           </p-button>
         </div>
