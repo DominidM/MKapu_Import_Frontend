@@ -1247,7 +1247,7 @@ export class EditarSede implements OnInit, CanComponentDeactivate {
           summary: 'Sede actualizada',
           detail: 'La sede se actualizó correctamente.',
         });
-        this.router.navigate(['/admin/sedes']);
+        setTimeout(() => this.router.navigate(['/admin/sedes']), 1500); // <- agrega delay
       },
       error: () => {
         this.messageService.add({
@@ -1304,14 +1304,14 @@ export class EditarSede implements OnInit, CanComponentDeactivate {
   }
 
   private navigateWithToast(): void {
-    sessionStorage.setItem(
-      'sedesToast',
-      JSON.stringify({
-        severity: 'info',
-        summary: 'Cancelado',
-        detail: 'Se canceló la edición de la sede.',
-      })
-    );
-    this.router.navigate(['/admin/sedes']);
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Cancelado',
+      detail: 'Se canceló la edición de la sede.',
+    });
+
+    setTimeout(() => {
+      this.router.navigate(['/admin/sedes']);
+    }, 1500);
   }
 }

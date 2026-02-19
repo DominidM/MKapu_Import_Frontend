@@ -154,28 +154,24 @@
     ======================= */
     {
       path: 'clientes',
-      loadComponent: () =>
-        import('./pages/clientes/pages/clientes/clientes').then(
-          (m) => m.Clientes,
-        ),
       children: [
+        {
+          path: '',                        // ← listado en path vacío
+          loadComponent: () =>
+            import('./pages/clientes/pages/clientes/clientes').then(m => m.Clientes),
+        },
         {
           path: 'agregar-cliente',
           loadComponent: () =>
-            import('./pages/clientes/pages/agregar-cliente/agregar-cliente').then(
-              (m) => m.AgregarCliente,
-            ),
+            import('./pages/clientes/pages/agregar-cliente/agregar-cliente').then(m => m.AgregarCliente),
         },
         {
-          path: 'editar-cliente',
+          path: 'editar-cliente/:id',
           loadComponent: () =>
-            import('./pages/clientes/pages/editar-cliente/editar-cliente').then(
-              (m) => m.EditarCliente,
-            ),
+            import('./pages/clientes/pages/editar-cliente/editar-cliente').then(m => m.EditarCliente),
         },
       ],
     },
-
     /* =======================
       INGRESOS ALMACÉN
     ======================= */

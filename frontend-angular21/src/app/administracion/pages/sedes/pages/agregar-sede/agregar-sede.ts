@@ -1248,14 +1248,14 @@ export class AgregarSede implements CanComponentDeactivate {
   }
 
   private navigateWithToast(): void {
-    sessionStorage.setItem(
-      'sedesToast',
-      JSON.stringify({
-        severity: 'info',
-        summary: 'Cancelado',
-        detail: 'Se canceló el registro de la sede.',
-      })
-    );
-    this.router.navigate(['/admin/sedes']);
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Cancelado',
+      detail: 'Se canceló el registro de la sede.',
+    });
+
+    setTimeout(() => {
+      this.router.navigate(['/admin/sedes']);
+    }, 1500);
   }
 }
