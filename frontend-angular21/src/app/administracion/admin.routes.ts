@@ -14,7 +14,7 @@ export const ADMIN_ROUTES: Routes = [
   },
 
   /* =======================
-     USUARIOS
+    USUARIOS
   ======================= */
   {
     path: 'usuarios',
@@ -44,7 +44,7 @@ export const ADMIN_ROUTES: Routes = [
   },
 
   /* =======================
-     TRANSFERENCIAS
+    TRANSFERENCIAS
   ======================= */
   {
     path: 'transferencia',
@@ -81,46 +81,31 @@ export const ADMIN_ROUTES: Routes = [
   },
 
   /* =======================
-     GESTIÓN DE PRODUCTOS
+    GESTIÓN DE PRODUCTOS
   ======================= */
   {
     path: 'gestion-productos',
-    loadComponent: () =>
-      import('./pages/gestion-productos/productos-listado/gestion-listado').then(
-        (m) => m.GestionListado,
-      ),
-    children: [
-      {
-        path: '',
-        redirectTo: '',
-        pathMatch: 'full',
-      },
-      {
-        path: 'ver-detalle-producto/:id',
-        loadComponent: () =>
-          import('./pages/gestion-productos/productos-detalles/productos-detalles').then(
-            (m) => m.ProductosDetalles,
-          ),
-      },
-      {
-        path: 'crear-producto',
-        loadComponent: () =>
-          import('./pages/gestion-productos/productos-formulario/productos-formulario').then(
-            (m) => m.ProductosFormulario,
-          ),
-      },
-      {
-        path: 'editar-producto/:id',
-        loadComponent: () =>
-          import('./pages/gestion-productos/productos-formulario/productos-formulario').then(
-            (m) => m.ProductosFormulario,
-          ),
-      },
-    ],
+    loadComponent: () => import('./pages/gestion-productos/productos-listado/gestion-listado')
+      .then((m) => m.GestionListado),
+  },
+  {
+    path: 'gestion-productos/crear-producto',
+    loadComponent: () => import('./pages/gestion-productos/productos-formulario/productos-formulario')
+      .then((m) => m.ProductosFormulario),
+  },
+  {
+    path: 'gestion-productos/editar-producto/:id',
+    loadComponent: () => import('./pages/gestion-productos/productos-formulario/productos-formulario')
+      .then((m) => m.ProductosFormulario),
+  },
+  {
+    path: 'gestion-productos/ver-detalle-producto/:id',
+    loadComponent: () => import('./pages/gestion-productos/productos-detalles/productos-detalles')
+      .then((m) => m.ProductosDetalles),
   },
 
   /* =======================
-     SEDES
+    SEDES
   ======================= */
   {
     path: 'sedes',
@@ -150,18 +135,15 @@ export const ADMIN_ROUTES: Routes = [
   },
 
   /* =======================
-     CLIENTES
+    CLIENTES
   ======================= */
   {
     path: 'clientes',
+    loadComponent: () =>
+      import('./pages/clientes/pages/clientes/clientes').then(
+        (m) => m.Clientes,
+      ),
     children: [
-      {
-        path: '',
-        loadComponent: () =>
-          import('./pages/clientes/pages/clientes/clientes').then(
-            (m) => m.Clientes,
-          ),
-      },
       {
         path: 'agregar-cliente',
         loadComponent: () =>
@@ -180,7 +162,7 @@ export const ADMIN_ROUTES: Routes = [
   },
 
   /* =======================
-     INGRESOS ALMACÉN
+    INGRESOS ALMACÉN
   ======================= */
   {
     path: 'ingresos-almacen',
@@ -203,7 +185,7 @@ export const ADMIN_ROUTES: Routes = [
   },
 
   /* =======================
-     VENTAS ADMINISTRACIÓN
+    VENTAS ADMINISTRACIÓN
   ======================= */
   {
     path: 'generar-ventas-administracion',
@@ -246,8 +228,8 @@ export const ADMIN_ROUTES: Routes = [
     path: 'comision',
     loadComponent: () =>
       import('./pages/comision/comision')
-    .then( (m) => m.Comision
-  ),
+        .then((m) => m.Comision
+        ),
 
   },
 
@@ -257,7 +239,7 @@ export const ADMIN_ROUTES: Routes = [
     path: 'comision-regla',
     loadComponent: () =>
       import('./pages/comision-regla/comisionregla')
-        .then( (m) => m.ComisionRegla),
+        .then((m) => m.ComisionRegla),
   },
 
 
@@ -265,37 +247,37 @@ export const ADMIN_ROUTES: Routes = [
     path: 'comision-reportes',
     loadComponent: () =>
       import('./pages/comision-reportes/comisionreportes')
-        .then( (m) => m.ComisionReportes),
+        .then((m) => m.ComisionReportes),
   },
 
-    /* =======================
-     GESTIÓN DE Conteos
-  ======================= */
+  /* =======================
+  GESTIÓN DE Conteos
+======================= */
   {
     path: 'conteo-inventario',
     loadComponent: () =>
       import('./pages/conteo-inventario/conteoinventario')
-        .then( (m) => m.ConteoInventarios),
+        .then((m) => m.ConteoInventarios),
   },
 
   {
     path: 'conteo-crear',
     loadComponent: () =>
       import('./pages/conteo-crear/conteocrear')
-        .then( (m) => m.ConteoCrear),
+        .then((m) => m.ConteoCrear),
   },
   {
     path: 'conteo-detalle',
     loadComponent: () =>
       import('./pages/conteo-detalle/conteodetalle')
-        .then( (m) => m.ConteoDetalle),
+        .then((m) => m.ConteoDetalle),
   },
 
 
 
 
   /* =======================
-     MERMAS 
+    MERMAS 
   ======================= */
   {
     path: 'mermas',
@@ -319,7 +301,7 @@ export const ADMIN_ROUTES: Routes = [
 
 
   /* =======================
-     REMATES 
+    REMATES 
   ======================= */
   {
     path: 'remates',
@@ -331,18 +313,18 @@ export const ADMIN_ROUTES: Routes = [
             (m) => m.RematesPr,
           ),
       },
-    {
-       path: 'registro-remate',
-      loadComponent: () =>
-        import('./pages/remates/pages/remates-registro/remates-registro').then(
-          (m) => m.RematesRegistro,
-        ),
-    },
+      {
+        path: 'registro-remate',
+        loadComponent: () =>
+          import('./pages/remates/pages/remates-registro/remates-registro').then(
+            (m) => m.RematesRegistro,
+          ),
+      },
     ],
   },
 
   /* =======================
-     DESPACHO PRODUCTOS
+    DESPACHO PRODUCTOS
   ======================= */
   {
     path: 'despacho-productos',

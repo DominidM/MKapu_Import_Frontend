@@ -2,8 +2,10 @@ import { Injectable } from '@angular/core';
 import { environment } from '../../../enviroments/enviroment';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import {
+  CreateProductoDto,
   ProductoAutocompleteResponse,
   ProductoDetalleStockResponse,
+  ProductoInterface,
   ProductoResponse,
   ProductoStockResponse,
 } from '../interfaces/producto.interface';
@@ -35,14 +37,27 @@ export class ProductoService {
     return this.http.get<ProductoResponse>(`${this.api}/logistics/products`, { params });
   }
 
-  getProductosConStock(idSede: number, page?: number, size?: number): Observable<ProductoStockResponse> {
-    let params = new HttpParams().set('id_sede', idSede);
+  getProductosConStock(
+  idSede: number,
+  page: number,
+  size: number,
+  categoria?: string
+): Observable<ProductoStockResponse> {
 
-    if (page) params = params.set('page', page);
-    if (size) params = params.set('size', size);
+  let params = new HttpParams()
+    .set('id_sede', idSede)
+    .set('page', page)
+    .set('size', size);
 
-    return this.http.get<ProductoStockResponse>(`${this.api}/logistics/products/productos_stock`, { params });
+  if (categoria) {
+    params = params.set('categoria', categoria);
   }
+
+  return this.http.get<ProductoStockResponse>(
+    `${this.api}/logistics/products/productos_stock`,
+    { params }
+  );
+}
 
   getProductosAutocomplete(search: string, idSede: number): Observable<ProductoAutocompleteResponse> {
     const params = new HttpParams().set('search', search).set('id_sede', idSede);
@@ -67,4 +82,12 @@ export class ProductoService {
       { params }
     );
   }
+  
+  // Crear producto
+
+  crearProducto(producto: CreateProductoDto): Observable<ProductoInterface> {
+    return this.http.post<ProductoInterface>(`${this.api}/logistics/products`, producto);
+  }
+  
+
 }
