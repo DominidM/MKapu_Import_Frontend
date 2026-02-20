@@ -1,8 +1,10 @@
 import { Injectable } from '@angular/core';
 import { environment } from '../../../enviroments/enviroment';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import {
   CreateProductoDto,
+  MovimientoInventarioDto,
+  MovimientoInventarioResponse,
   ProductoAutocompleteResponse,
   ProductoDetalleStockResponse,
   ProductoInterface,
@@ -17,7 +19,7 @@ import { Observable } from 'rxjs';
 export class ProductoService {
   private api = environment.apiUrl;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   getProductos(
     page?: number,
@@ -38,26 +40,26 @@ export class ProductoService {
   }
 
   getProductosConStock(
-  idSede: number,
-  page: number,
-  size: number,
-  categoria?: string
-): Observable<ProductoStockResponse> {
+    idSede: number,
+    page: number,
+    size: number,
+    categoria?: string
+  ): Observable<ProductoStockResponse> {
 
-  let params = new HttpParams()
-    .set('id_sede', idSede)
-    .set('page', page)
-    .set('size', size);
+    let params = new HttpParams()
+      .set('id_sede', idSede)
+      .set('page', page)
+      .set('size', size);
 
-  if (categoria) {
-    params = params.set('categoria', categoria);
+    if (categoria) {
+      params = params.set('categoria', categoria);
+    }
+
+    return this.http.get<ProductoStockResponse>(
+      `${this.api}/logistics/products/productos_stock`,
+      { params }
+    );
   }
-
-  return this.http.get<ProductoStockResponse>(
-    `${this.api}/logistics/products/productos_stock`,
-    { params }
-  );
-}
 
   getProductosAutocomplete(search: string, idSede: number): Observable<ProductoAutocompleteResponse> {
     const params = new HttpParams().set('search', search).set('id_sede', idSede);
@@ -82,12 +84,26 @@ export class ProductoService {
       { params }
     );
   }
-  
+
   // Crear producto
 
   crearProducto(producto: CreateProductoDto): Observable<ProductoInterface> {
     return this.http.post<ProductoInterface>(`${this.api}/logistics/products`, producto);
   }
-  
+
+  registrarIngresoInventario(
+    movimiento: MovimientoInventarioDto
+  ): Observable<MovimientoInventarioResponse> {
+
+    const headers = new HttpHeaders({
+      'x-role': 'Administrador'
+    });
+
+    return this.http.post<MovimientoInventarioResponse>(
+      `${this.api}/logistics/movimiento_inventario/income`,
+      movimiento,
+      { headers }
+    );
+  }
 
 }

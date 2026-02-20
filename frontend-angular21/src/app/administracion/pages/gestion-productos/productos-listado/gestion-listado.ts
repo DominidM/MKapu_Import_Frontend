@@ -273,8 +273,12 @@ seleccionarProductoBusqueda(event: any) {
   }
   
   irEditar(id: number) { 
+    // Obtenemos la sede que el usuario seleccionó en el dropdown de la tabla
+    const sedeActual = this.idSedeActual(); 
+
     this.router.navigate(['/admin/gestion-productos/editar-producto', id], {
-      queryParams: { returnUrl: '/admin/gestion-productos' }
+      // Mandamos la sede como parámetro en la URL (?idSede=X)
+      queryParams: { idSede: sedeActual } 
     });
   }
 

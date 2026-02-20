@@ -107,3 +107,27 @@ export interface CreateProductoDto {
   pre_caja: number;
   uni_med: string;
 }
+
+// ===== INVENTARIO =====
+
+export interface MovimientoInventarioItem {
+  productId: number;
+  warehouseId: number;
+  quantity: number;
+  type: 'INGRESO' | 'SALIDA';
+}
+
+export interface MovimientoInventarioDto {
+  originType: string;
+  refId: number;
+  refTable: string;
+  observation?: string;
+  items: MovimientoInventarioItem[];
+}
+
+export interface MovimientoInventarioResponse {
+  message: string;
+  data: {
+    reference: string;
+  };
+}
