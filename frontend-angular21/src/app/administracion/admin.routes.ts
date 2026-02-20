@@ -72,7 +72,7 @@
           path: 'crear-almacen',
           loadComponent: () =>
             import('./pages/almacen/pages/agregar-almacen/agregar-almacen').then(
-              (m) => m.AlmacenCrear,
+              (m) => m.AgregarCategoria,
             ),
         },
         {
@@ -194,6 +194,42 @@
       ],
     },
 
+
+
+
+   /* =======================
+        categorias
+    ======================= */
+    {
+      path: 'categoria',
+      children: [
+        {
+          path: '',
+          loadComponent: () =>
+            import('./pages/categoria/pages/categoria/categoria').then(
+              (m) => m.CategoriaListado
+            ),
+        },
+        {
+          path: 'agregar-categoria',
+          loadComponent: () =>
+            import('./pages/categoria/pages/agregar-categoria/agregar-categoria').then(
+              (m) => m.AgregarCategoria,
+            ),
+          canDeactivate: [pendingChangesGuard],
+        },
+        {
+          path: 'editar-categoria/:id', 
+          loadComponent: () =>
+            import('./pages/categoria/pages/editar-categoria/editar-categoria').then(
+              (m) => m.EditarCategoria,
+            ),
+          canDeactivate: [pendingChangesGuard],
+        },
+      ],
+    },
+
+
     /* =======================
       CLIENTES
     ======================= */
@@ -201,7 +237,7 @@
       path: 'clientes',
       children: [
         {
-          path: '',                        // ← listado en path vacío
+          path: '',                        
           loadComponent: () =>
             import('./pages/clientes/pages/clientes/clientes').then(m => m.Clientes),
         },

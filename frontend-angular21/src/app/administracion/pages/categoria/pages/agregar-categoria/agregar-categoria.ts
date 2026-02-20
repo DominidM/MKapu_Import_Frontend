@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, ViewChild, inject } from '@angular/core';
-import { FormsModule, NgForm, AbstractControl } from '@angular/forms';
+import { FormsModule, NgForm } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
@@ -9,9 +9,8 @@ import { InputTextModule } from 'primeng/inputtext';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
-import { MessageModule } from 'primeng/message';
+import { Message } from 'primeng/message';
 import { Observable, Subject } from 'rxjs';
-import { HttpErrorResponse } from '@angular/common/http';
 import { CanComponentDeactivate } from '../../../../../core/guards/pending-changes.guard';
 import { CategoriaService } from '../../../../services/categoria.service';
 
@@ -28,11 +27,11 @@ import { CategoriaService } from '../../../../services/categoria.service';
     InputTextModule,
     ConfirmDialogModule,
     ToastModule,
-    MessageModule,
+    Message,
   ],
   providers: [ConfirmationService, MessageService],
-  templateUrl: './agregar-almacen.html',
-  styleUrl: './agregar-almacen.css',
+  templateUrl: './agregar-categoria.html',
+  styleUrl: './agregar-categoria.css',
 })
 export class AgregarCategoria implements CanComponentDeactivate {
   @ViewChild('categoriaForm') categoriaForm?: NgForm;
@@ -64,37 +63,8 @@ export class AgregarCategoria implements CanComponentDeactivate {
     return regex.test(event.key) || event.key === 'Backspace' || event.key === 'Tab';
   }
 
-  getNombreErrorText(): string {
-    const ctrl = this.categoriaForm?.controls?.['nombre'] as AbstractControl | undefined;
-    const serverErr = ctrl?.errors?.['server'];
-    if (serverErr) return String(serverErr);
-    return 'El nombre es obligatorio.';
-  }
-
-  private extractServerMessage(err: any): string {
-    try {
-      if (!err) return 'Error desconocido';
-      if (err.friendlyMessage) return String(err.friendlyMessage);
-      if (err.error) {
-        if (typeof err.error === 'string') return err.error;
-        if (err.error.message) {
-          return Array.isArray(err.error.message)
-            ? err.error.message.join(', ')
-            : String(err.error.message);
-        }
-        if (err.error.error) return String(err.error.error);
-        return JSON.stringify(err.error);
-      }
-      return err.message ?? 'Error del servidor';
-    } catch {
-      return 'Error procesando la respuesta del servidor';
-    }
-  }
-
   saveCategoria(form: NgForm): void {
     this.submitted = true;
-
-    if (this.loading()) return;
 
     if (form.invalid) {
       this.messageService.add({
@@ -116,45 +86,18 @@ export class AgregarCategoria implements CanComponentDeactivate {
         this.messageService.add({
           severity: 'success',
           summary: 'Categoría registrada',
-          detail: `Se registró la categoría "${created.nombre}".`,
-          life: 3000,
+          detail: `Se registró la categoría ${created.nombre}.`,
         });
-        setTimeout(() => this.router.navigate(['/admin/categoria']), 1200);
+        setTimeout(() => this.router.navigate(['/admin/categoria']), 1500);
       },
-      error: (err: HttpErrorResponse) => {
-        console.error('[AgregarCategoria] error', err);
-        const serverMsg = this.extractServerMessage(err);
-
-        const lower = serverMsg.toLowerCase();
-        const nombreCtrl = this.categoriaForm?.controls['nombre'] as AbstractControl | undefined;
-        if (lower.includes('nombre') || lower.includes('name')) {
-          nombreCtrl?.setErrors({ server: serverMsg });
-          nombreCtrl?.markAsTouched();
-          try { (document.getElementById('nombre') as HTMLInputElement)?.focus(); } catch {}
-        }
-
+      error: () => {
         this.messageService.add({
-          severity: err.status === 400 ? 'warn' : 'error',
-          summary: err.status === 400 ? 'Validación' : 'Error',
-          detail: serverMsg,
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudo registrar la categoría.',
         });
       },
     });
-  }
-
-  onNombreChange(value: string): void {
-    this.messageService.clear();
-    const ctrl = this.categoriaForm?.controls['nombre'] as AbstractControl | undefined;
-    if (!ctrl) return;
-    const errors = ctrl.errors;
-    if (!errors) return;
-    const newErrors: Record<string, any> = {};
-    for (const key of Object.keys(errors)) {
-      if (key === 'server') continue;
-      if (key === 'required' && value.trim()) continue;
-      newErrors[key] = (errors as any)[key];
-    }
-    ctrl.setErrors(Object.keys(newErrors).length === 0 ? null : newErrors);
   }
 
   confirmCancel(): void {
@@ -197,6 +140,6 @@ export class AgregarCategoria implements CanComponentDeactivate {
       summary: 'Cancelado',
       detail: 'Se canceló el registro de la categoría.',
     });
-    setTimeout(() => this.router.navigate(['/admin/categoria']), 1200);
+    setTimeout(() => this.router.navigate(['/admin/categoria']), 1500);
   }
 }

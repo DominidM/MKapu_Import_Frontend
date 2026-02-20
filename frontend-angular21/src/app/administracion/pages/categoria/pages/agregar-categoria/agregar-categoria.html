@@ -1,14 +1,14 @@
 <div class="agregar-categoria-page">
   <p-toast position="top-right"></p-toast>
-  <p-confirmDialog appendTo="body"></p-confirmDialog>
+  <p-confirmDialog></p-confirmDialog>
 
-  <p-card styleClass="sedes-header-card">
+  <p-card styleClass="categoria-header-card">
     <div class="flex align-items-center justify-content-between flex-wrap gap-3">
       <div class="flex align-items-center gap-3">
-        <span class="sedes-title-icon"><i class="pi pi-tag"></i></span>
+        <span class="categoria-title-icon"><i class="pi pi-tag"></i></span>
         <div>
-          <p class="sedes-kicker">ADMINISTRADOR - ADMINISTRACIÓN - CREAR CATEGORÍA</p>
-          <h2 class="sedes-title">CREAR CATEGORÍA</h2>
+          <p class="categoria-kicker">ADMINISTRADOR - ADMINISTRACIÓN - CREAR CATEGORÍA</p>
+          <h2 class="categoria-title">CREAR CATEGORÍA</h2>
         </div>
       </div>
     </div>
@@ -19,11 +19,11 @@
     <p-message *ngIf="!loading() && error() as e" severity="error" [text]="e"></p-message>
   </div>
 
-  <p-card styleClass="sede-card border-none">
+  <p-card styleClass="categoria-card">
     <form #categoriaForm="ngForm" novalidate (ngSubmit)="saveCategoria(categoriaForm)">
 
-      <div class="sede-section">
-        <div class="sede-section-title">INFORMACIÓN DE LA CATEGORÍA:</div>
+      <div class="categoria-section">
+        <div class="categoria-section-title">INFORMACIÓN DE LA CATEGORÍA:</div>
         <p-divider></p-divider>
       </div>
 
@@ -31,7 +31,7 @@
 
         <!-- NOMBRE -->
         <div class="col-12 md:col-6">
-          <label for="nombre">NOMBRE <span style="color:#f87171">*</span></label>
+          <label class="field-label" for="nombre">NOMBRE: <span class="required">*</span></label>
           <input
             id="nombre"
             pInputText
@@ -41,20 +41,20 @@
             name="nombre"
             required
             #nombre="ngModel"
-            (input)="toUpperCase('nombre'); onNombreChange(categoria.nombre)"
+            (input)="toUpperCase('nombre')"
             (keypress)="onlyLetters($event)"
             [ngClass]="{ 'p-invalid': (categoriaForm.submitted || nombre.touched) && nombre.invalid }"
           />
           <p-message
             *ngIf="(categoriaForm.submitted || nombre.touched) && nombre.invalid"
             severity="error"
-            [text]="getNombreErrorText()"
+            text="El nombre es obligatorio."
           />
         </div>
 
         <!-- DESCRIPCIÓN -->
         <div class="col-12 md:col-6">
-          <label for="descripcion">DESCRIPCIÓN</label>
+          <label class="field-label" for="descripcion">DESCRIPCIÓN:</label>
           <input
             id="descripcion"
             pInputText
@@ -76,20 +76,24 @@
           label="Cancelar"
           outlined
           severity="secondary"
-          styleClass="sede-btn-cancel"
+          styleClass="categoria-btn-cancel"
           type="button"
-          (click)="confirmCancel()">
-        </p-button>
+          (click)="confirmCancel()"
+        ></p-button>
 
         <p-button
           label="Registrar Categoría"
           icon="pi pi-check"
-          styleClass="sede-btn-primary"
+          styleClass="categoria-btn-primary"
           type="submit"
-          [disabled]="categoriaForm.invalid || loading()">
-        </p-button>
+          [loading]="loading()"
+        ></p-button>
       </div>
 
     </form>
   </p-card>
+
+  <p-confirmdialog />
 </div>
+
+

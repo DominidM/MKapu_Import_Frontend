@@ -621,6 +621,10 @@ export const DEPARTAMENTOS_PROVINCIAS: Record<string, Provincia[]> = {
       distritos: ['Barranca','Paramonga', 'Pativilca','Supe', 'Supe Puerto'],
     },
     {
+      nombre: 'Canta',
+      distritos: ['Canta', 'Arahuay', 'Huamantanga', 'Huaros', 'La Pampa', 'Mangas', 'Pisac', 'Santa Ana', 'Tuburí'],
+    },
+    {
       nombre: 'Cajatambo',
       distritos: ['Cajatambo', 'Copa', 'Gorgor', 'Huancapon', 'Manas'],
     },
@@ -672,6 +676,7 @@ export const DEPARTAMENTOS_PROVINCIAS: Record<string, Provincia[]> = {
         'Tupe', 'Viñac', 'Vitis'
       ],
     },
+
   ],
   'Loreto': [
     {

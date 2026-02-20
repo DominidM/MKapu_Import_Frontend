@@ -19,9 +19,6 @@ import { ConfirmDialog } from 'primeng/confirmdialog';
 import { DialogModule } from 'primeng/dialog';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmationService, MessageService } from 'primeng/api';
-
-import { ProductosService, Producto } from '../../../../core/services/productos.service';
-import { DialogStockSedes } from '../../../shared/dialog-stock-sedes/dialog-stock-sedes';
 import { ProductoService } from '../../../services/producto.service';
 import { ProductoAutocomplete, ProductoInterface, ProductoStock } from '../../../interfaces/producto.interface';
 import { SedeService } from '../../../services/sede.service';

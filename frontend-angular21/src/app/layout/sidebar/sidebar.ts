@@ -135,6 +135,12 @@
         icon: 'pi pi-tags',
       },
       {
+        path: '/admin/categoria',
+        allowedRoles: [UserRole.ADMIN],
+        label: 'Categorías',
+        icon: 'pi pi-list',
+      },
+      {
         path: '/admin/sedes',
         allowedRoles: [UserRole.ADMIN],
         label: 'Sedes',
