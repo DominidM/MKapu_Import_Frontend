@@ -1,47 +1,92 @@
 import { Routes } from '@angular/router';
 import { pendingChangesGuard } from '../core/guards/pending-changes.guard';
 
-export const ADMIN_ROUTES: Routes = [
-  {
-    path: 'notificaciones',
-    loadComponent: () =>
-      import('./pages/reportes/pages/notificacion-transferencia/notificacion-transferencia').then((m) => m.NotificacionTransferencia),
-  },
-  {
-    path: 'dashboard-admin',
-    loadComponent: () =>
-      import('./pages/dashboard-admin/dashboard-admin').then((m) => m.DashboardAdmin),
-  },
+  export const ADMIN_ROUTES: Routes = [
+    {
+      path: 'notificaciones',
+      loadComponent: () =>
+        import('./pages/reportes/pages/notificacion-transferencia/notificacion-transferencia').then((m) => m.NotificacionTransferencia),
+    },
+    {
+      path: 'dashboard-admin',
+      loadComponent: () =>
+        import('./pages/dashboard-admin/dashboard-admin').then((m) => m.DashboardAdmin),
+    },
 
-  /* =======================
-    USUARIOS
-  ======================= */
-  {
-    path: 'usuarios',
-    children: [
-      {
-        path: '',
-        loadComponent: () =>
-          import('./pages/usuarios/pages/administracion-crear-usuario/administracion-crear-usuario').then(
-            (m) => m.AdministracionCrearUsuario,
-          ),
-      },
-      {
-        path: 'crear-usuario',
-        loadComponent: () =>
-          import('./pages/usuarios/pages/administracion/administracion').then(
-            (m) => m.Administracion,
-          ),
-      },
-      {
-        path: 'editar-usuario/:id',
-        loadComponent: () =>
-          import('./pages/usuarios/pages/administracion-editar-usuario/administracion-editar-usuario').then(
-            (m) => m.AdministracionEditarUsuario,
-          ),
-      },
-    ],
-  },
+    {
+    path: 'dashboard-almacen',
+    loadComponent: () => 
+      import('../almacen/pages/dashboard-almacen/dashboard-almacen').then((m) => m.DashboardAlmacen),
+    },
+    {
+    path: 'dashboard-ventas',
+    loadComponent: () => 
+      import('../ventas/pages/dashboard-ventas/dashboard-ventas').then((m) => m.DashboardVentas),
+    },
+
+    /* =======================
+      USUARIOS
+    ======================= */
+    {
+      path: 'usuarios',
+      children: [
+        {
+          path: '',
+          loadComponent: () =>
+            import('./pages/usuarios/pages/administracion-crear-usuario/administracion-crear-usuario').then(
+              (m) => m.AdministracionCrearUsuario,
+            ),
+        },
+        {
+          path: 'crear-usuario',
+          loadComponent: () =>
+            import('./pages/usuarios/pages/administracion/administracion').then(
+              (m) => m.Administracion,
+            ),
+        },
+        {
+          path: 'editar-usuario/:id',
+          loadComponent: () =>
+            import('./pages/usuarios/pages/administracion-editar-usuario/administracion-editar-usuario').then(
+              (m) => m.AdministracionEditarUsuario,
+            ),
+        },
+      ],
+    },
+
+
+    /* =======================
+      Almacen 
+    ======================= */
+    {
+      path: 'almacen',
+      children: [
+        {
+          path: '',
+          loadComponent: () =>
+            import('./pages/almacen/pages/listar-almacen/almacen').then(
+              (m) => m.AlmacenListado,
+            ),
+        },
+        {
+          path: 'crear-almacen',
+          loadComponent: () =>
+            import('./pages/almacen/pages/agregar-almacen/agregar-almacen').then(
+              (m) => m.AgregarCategoria,
+            ),
+        },
+        {
+          path: 'editar-almacen/:id',
+          loadComponent: () =>
+            import('./pages/almacen/pages/editar-almacen/editar-almacen').then(
+              (m) => m.AlmacenEditar,
+            ),
+        },
+      ],
+    },
+
+
+
 
   /* =======================
     TRANSFERENCIAS
@@ -104,85 +149,117 @@ export const ADMIN_ROUTES: Routes = [
       .then((m) => m.ProductosDetalles),
   },
 
-  /* =======================
-    SEDES
-  ======================= */
-  {
-    path: 'sedes',
-    children: [
-      {
-        path: '',
-        loadComponent: () =>
-          import('./pages/sedes/pages/sedes/sedes').then((m) => m.Sedes),
-      },
-      {
-        path: 'agregar-sede',
-        loadComponent: () =>
-          import('./pages/sedes/pages/agregar-sede/agregar-sede').then(
-            (m) => m.AgregarSede,
-          ),
-        canDeactivate: [pendingChangesGuard],
-      },
-      {
-        path: 'editar-sede',
-        loadComponent: () =>
-          import('./pages/sedes/pages/editar-sede/editar-sede').then(
-            (m) => m.EditarSede,
-          ),
-        canDeactivate: [pendingChangesGuard],
-      },
-    ],
-  },
+    /* =======================
+      SEDES
+    ======================= */
+    {
+      path: 'sedes',
+      children: [
+        {
+          path: '',
+          loadComponent: () =>
+            import('./pages/sedes/pages/sedes/sedes').then((m) => m.Sedes),
+        },
+        {
+          path: 'agregar-sede',
+          loadComponent: () =>
+            import('./pages/sedes/pages/agregar-sede/agregar-sede').then(
+              (m) => m.AgregarSede,
+            ),
+          canDeactivate: [pendingChangesGuard],
+        },
+        {
+          path: 'editar-sede',
+          loadComponent: () =>
+            import('./pages/sedes/pages/editar-sede/editar-sede').then(
+              (m) => m.EditarSede,
+            ),
+          canDeactivate: [pendingChangesGuard],
+        },
+      ],
+    },
 
-  /* =======================
-    CLIENTES
-  ======================= */
-  {
-    path: 'clientes',
-    loadComponent: () =>
-      import('./pages/clientes/pages/clientes/clientes').then(
-        (m) => m.Clientes,
-      ),
-    children: [
-      {
-        path: 'agregar-cliente',
-        loadComponent: () =>
-          import('./pages/clientes/pages/agregar-cliente/agregar-cliente').then(
-            (m) => m.AgregarCliente,
-          ),
-      },
-      {
-        path: 'editar-cliente',
-        loadComponent: () =>
-          import('./pages/clientes/pages/editar-cliente/editar-cliente').then(
-            (m) => m.EditarCliente,
-          ),
-      },
-    ],
-  },
 
-  /* =======================
-    INGRESOS ALMACÉN
-  ======================= */
-  {
-    path: 'ingresos-almacen',
-    children: [
-      {
-        path: '',
-        loadComponent: () =>
-          import('./pages/ingresos-almacen/pages/ingresos-almacen/ingresos-almacen').then(
-            (m) => m.IngresosAlmacen,
-          ),
-      },
-      {
-        path: 'ingresos-agregar',
-        loadComponent: () =>
-          import('./pages/ingresos-almacen/pages/ingresos-agregar/ingresos-agregar').then(
-            (m) => m.IngresosAgregar,
-          ),
-      },
-    ],
-  },
+
+
+   /* =======================
+        categorias
+    ======================= */
+    {
+      path: 'categoria',
+      children: [
+        {
+          path: '',
+          loadComponent: () =>
+            import('./pages/categoria/pages/categoria/categoria').then(
+              (m) => m.CategoriaListado
+            ),
+        },
+        {
+          path: 'agregar-categoria',
+          loadComponent: () =>
+            import('./pages/categoria/pages/agregar-categoria/agregar-categoria').then(
+              (m) => m.AgregarCategoria,
+            ),
+          canDeactivate: [pendingChangesGuard],
+        },
+        {
+          path: 'editar-categoria/:id', 
+          loadComponent: () =>
+            import('./pages/categoria/pages/editar-categoria/editar-categoria').then(
+              (m) => m.EditarCategoria,
+            ),
+          canDeactivate: [pendingChangesGuard],
+        },
+      ],
+    },
+
+
+    /* =======================
+      CLIENTES
+    ======================= */
+    {
+      path: 'clientes',
+      children: [
+        {
+          path: '',                        
+          loadComponent: () =>
+            import('./pages/clientes/pages/clientes/clientes').then(m => m.Clientes),
+        },
+        {
+          path: 'agregar-cliente',
+          loadComponent: () =>
+            import('./pages/clientes/pages/agregar-cliente/agregar-cliente').then(m => m.AgregarCliente),
+        },
+        {
+          path: 'editar-cliente/:id',
+          loadComponent: () =>
+            import('./pages/clientes/pages/editar-cliente/editar-cliente').then(m => m.EditarCliente),
+        },
+      ],
+    },
+    /* =======================
+      INGRESOS ALMACÉN
+    ======================= */
+    {
+      path: 'ingresos-almacen',
+      children: [
+        {
+          path: '',
+          loadComponent: () =>
+            import('./pages/ingresos-almacen/pages/ingresos-almacen/ingresos-almacen').then(
+              (m) => m.IngresosAlmacen,
+            ),
+        },
+        {
+          path: 'ingresos-agregar',
+          loadComponent: () =>
+            import('./pages/ingresos-almacen/pages/ingresos-agregar/ingresos-agregar').then(
+              (m) => m.IngresosAgregar,
+            ),
+        },
+      ],
+    },
 
   /* =======================
     VENTAS ADMINISTRACIÓN

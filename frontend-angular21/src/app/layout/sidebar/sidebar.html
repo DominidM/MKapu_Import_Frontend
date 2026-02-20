@@ -2,17 +2,17 @@
   <div class="sidebar-root flex flex-column h-full w-64">
 
     <!-- HEADER -->
-    <div class="flex align-items-center justify-content-between px-4 py-3 border-bottom-1 surface-border">
+    <div class="flex align-items-center justify-content-between px-4 py-3">
       <div class="flex align-items-center gap-2">
         <div class="flex justify-content-center mb-3">
           <img src="/images/logo.jpg" alt="Logo MKapu" class="img-custom" />
         </div>
-        <span class="font-bold text-sm">Mkapu Import</span>
+        <span class="font-bold text-sm" style="user-select: none;">Mkapu Import</span>
       </div>
     </div>
 
     <!-- MENÚ DINÁMICO -->
-    <div class="flex-1 overflow-auto p-2">
+    <div class="flex-1 overflow-auto p-2 menu-scroll">
       <ng-container *ngFor="let item of menuItems">
         
         <!-- SECCIÓN (título) -->

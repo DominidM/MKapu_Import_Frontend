@@ -13,17 +13,6 @@
     </div>
   </p-card>
 
-  <div class="flex align-items-center justify-content-between mb-4">
-    <h2 class="sede-card-title">Modificar Sede</h2>
-    <p-button
-      icon="pi pi-arrow-left"
-      text
-      severity="secondary"
-      aria-label="Volver a sedes"
-      [routerLink]="['/admin/sedes']"
-    ></p-button>
-  </div>
-
   <div class="mb-3">
     <p-message *ngIf="loading()" severity="info" text="Cargando..."></p-message>
     <p-message *ngIf="!loading() && error() as e" severity="error" [text]="e"></p-message>
@@ -221,4 +210,5 @@
 
   <p-toast position="top-right" />
   <p-confirmdialog />
+   <p-toast></p-toast>
 </div>
