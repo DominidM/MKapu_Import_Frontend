@@ -64,7 +64,7 @@ export const ADMIN_ROUTES: Routes = [
           ),
       },
       {
-        path: 'detalle-transferencia/:id',
+        path: 'solicitud-transferencia/:id',
         loadComponent: () =>
           import('./pages/reportes/pages/detalle-transferencia/detalle-transferencia').then(
             (m) => m.DetalleTransferencia,

@@ -45,5 +45,4 @@ export class UsuarioService {
   updateUsuario(id: number, body: UsuarioUpdateRequest): Observable<UsuarioInterfaceResponse> {
     return this.http.put<UsuarioInterfaceResponse>(`${this.api}/admin/users/${id}`, body);
   }
-
 }

@@ -1,5 +1,5 @@
 <div class="transferencia-page flex flex-column gap-3 w-full px-3 md:px-0 pt-5 md:pt-0">
-  <p-card styleClass="transferencia-header-card">
+  <p-card class="transferencia-header-card">
     <div class="transferencia-header-row flex flex-column md:flex-row md:align-items-center md:justify-content-between gap-3">
       <div class="transferencia-header-title flex align-items-center gap-3 w-full md:w-auto">
         <span class="transferencia-title-icon">
@@ -23,7 +23,7 @@
 
   <div class="transferencia-metrics grid">
     <div class="col-12 md:col-6 xl:col-3">
-      <p-card styleClass="metric-card metric-pendiente">
+      <p-card class="metric-card metric-pendiente">
       <div class="metric-header">
         <span class="metric-title">Solicitudes Pendientes</span>
         <span class="metric-icon metric-icon-warning"><i class="pi pi-clock"></i></span>
@@ -34,7 +34,7 @@
     </div>
 
     <div class="col-12 md:col-6 xl:col-3">
-      <p-card styleClass="metric-card metric-transito">
+      <p-card class="metric-card metric-transito">
       <div class="metric-header">
         <span class="metric-title">En Transito</span>
         <span class="metric-icon metric-icon-info"><i class="pi pi-truck"></i></span>
@@ -45,7 +45,7 @@
     </div>
 
     <div class="col-12 md:col-6 xl:col-3">
-      <p-card styleClass="metric-card metric-recibidos">
+      <p-card class="metric-card metric-recibidos">
       <div class="metric-header">
         <span class="metric-title">Recibidos Hoy</span>
         <span class="metric-icon metric-icon-success"><i class="pi pi-check-circle"></i></span>
@@ -56,7 +56,7 @@
     </div>
 
     <div class="col-12 md:col-6 xl:col-3">
-      <p-card styleClass="metric-card metric-incidencia">
+      <p-card class="metric-card metric-incidencia">
       <div class="metric-header">
         <span class="metric-title">Incidencias</span>
         <span class="metric-icon metric-icon-danger"><i class="pi pi-exclamation-triangle"></i></span>
@@ -67,7 +67,7 @@
     </div>
   </div>
 
-  <p-card styleClass="transferencia-filter-card">
+  <p-card class="transferencia-filter-card">
     <div class="transferencia-filter-row flex flex-column md:flex-row md:align-items-end gap-3">
       <div class="transferencia-search-container flex flex-column gap-2 flex-1 w-full">
         <span class="transferencia-search-label">Buscar Transferencia</span>
@@ -170,8 +170,7 @@
         <tr>
           <td>
             <div class="transferencia-code">
-              <div class="transferencia-code-main">{{ transferencia.codigo }}</div>
-              <div class="transferencia-code-meta">{{ transferencia.fechaEnvio }} · {{ transferencia.fechaLlegada }}</div>
+              <div class="transferencia-code-main ">{{ transferencia.codigo }}</div>
             </div>
           </td>
           <td>
@@ -203,11 +202,11 @@
           <td class="col-acciones">
             <div class="transferencia-actions">
               <p-button
-                icon="pi pi-eye"
+                icon="pi pi-file-edit"
                 text
                 severity="secondary"
                 styleClass="transferencia-icon-btn transferencia-icon-warn"
-                [routerLink]="['/admin/transferencia/detalle-transferencia', transferencia.codigo]"
+                [routerLink]="['/admin/transferencia/solicitud-transferencia', transferencia.codigo]"
               ></p-button>
             </div>
           </td>
@@ -223,19 +222,21 @@
               <div class="transferencia-empty-title">
                 {{ hasActiveFilters ? 'No se encontraron transferencias' : 'Aun no hay transferencias' }}
               </div>
-              <div class="transferencia-empty-text" *ngIf="hasActiveFilters">
-                Ajusta los filtros o prueba con otro termino de busqueda.
-              </div>
-              <div class="transferencia-empty-actions" *ngIf="hasActiveFilters">
-                <p-button
-                  label="Limpiar filtros"
-                  icon="pi pi-filter-slash"
-                  severity="secondary"
-                  [outlined]="true"
-                  styleClass="transferencia-empty-btn w-full md:w-auto"
-                  (click)="clearSearch()"
-                ></p-button>
-              </div>
+              @if (hasActiveFilters) {
+                <div class="transferencia-empty-text">
+                  Ajusta los filtros o prueba con otro termino de busqueda.
+                </div>
+                <div class="transferencia-empty-actions">
+                  <p-button
+                    label="Limpiar filtros"
+                    icon="pi pi-filter-slash"
+                    severity="secondary"
+                    [outlined]="true"
+                    styleClass="transferencia-empty-btn w-full md:w-auto"
+                    (click)="clearSearch()"
+                  ></p-button>
+                </div>
+              }
             </div>
           </td>
         </tr>

@@ -21,16 +21,16 @@ export interface TransferenciaProductoCategoriaResponse {
 
 export interface TransferenciaProductoResponse {
   id_producto: number;
-  categoria: TransferenciaProductoCategoriaResponse[];
+  categoria: TransferenciaProductoCategoriaResponse | TransferenciaProductoCategoriaResponse[];
   codigo: string;
-  anexo: string;
+  nomProducto?: string;
   descripcion: string;
 }
 
 export interface TransferenciaItemResponse {
   series: string[];
   quantity: number;
-  producto: TransferenciaProductoResponse[];
+  producto: TransferenciaProductoResponse | TransferenciaProductoResponse[];
 }
 
 export interface TransferenciaCreatorUserResponse {
@@ -42,18 +42,33 @@ export interface TransferenciaCreatorUserResponse {
   apellidos?: string;
 }
 
+export interface TransferenciaSedeResumenResponse {
+  id_sede: string;
+  nomSede: string;
+}
+
+export interface TransferenciaWarehouseResumenResponse {
+  id_almacen: number;
+  nomAlm: string;
+}
+
 export interface TransferenciaInterfaceResponse {
   id: number;
-  originHeadquartersId: string;
-  originWarehouseId: number;
-  destinationHeadquartersId: string;
-  destinationWarehouseId: number;
-  items: TransferenciaItemResponse[];
-  observation: string;
-  status: string;
-  requestDate: string;
-  totalQuantity: number;
-  creatorUser: TransferenciaCreatorUserResponse[];
+  originHeadquartersId?: string;
+  originWarehouseId?: number;
+  destinationHeadquartersId?: string;
+  destinationWarehouseId?: number;
+  origin?: TransferenciaSedeResumenResponse;
+  originWarehouse?: TransferenciaWarehouseResumenResponse;
+  destination?: TransferenciaSedeResumenResponse;
+  destinationWarehouse?: TransferenciaWarehouseResumenResponse;
+  items?: TransferenciaItemResponse[];
+  observation?: string;
+  status?: string;
+  requestDate?: string;
+  totalQuantity?: number;
+  nomProducto?: string;
+  creatorUser?: TransferenciaCreatorUserResponse | TransferenciaCreatorUserResponse[];
 }
 
 export interface TransferenciaRequest {
@@ -64,4 +79,23 @@ export interface TransferenciaRequest {
   userId: number;
   observation: string;
   items: TransferenciaItemRequest[];
+}
+
+export type TransferTargetStatus =
+  | 'DISPONIBLE'
+  | 'TRANSFERIDO'
+  | 'VENDIDO'
+  | 'MERMA'
+  | 'BAJA';
+
+export type TransferStatus =
+  | 'SOLICITADA'
+  | 'APROBADA'
+  | 'RECHAZADA'
+  | 'COMPLETADA';
+
+export interface TransferenciaBulkStatusRequest {
+  series: string[];
+  targetStatus: TransferTargetStatus;
+  transferStatus: TransferStatus;
 }

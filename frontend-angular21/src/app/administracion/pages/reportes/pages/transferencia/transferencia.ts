@@ -1,4 +1,11 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -12,13 +19,14 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { TransferenciaService } from '../../../../services/transferencia.service';
-import { SedeService } from '../../../../services/sede.service';
 import {
   TransferenciaCreatorUserResponse,
   TransferenciaInterfaceResponse,
+  TransferenciaProductoResponse,
+  TransferenciaSedeResumenResponse,
 } from '../../../../interfaces/transferencia.interface';
-import { Headquarter } from '../../../../interfaces/sedes.interface';
-import { finalize, forkJoin, map } from 'rxjs';
+import { catchError, finalize, map, of } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 interface TransferenciaRow {
   codigo: string;
@@ -36,6 +44,7 @@ interface TransferenciaRow {
 @Component({
   selector: 'app-transferencia',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
     FormsModule,
@@ -53,98 +62,149 @@ interface TransferenciaRow {
   styleUrl: './transferencia.css',
   providers: [ConfirmationService, MessageService],
 })
-export class Transferencia implements OnInit {
-  transferencias: TransferenciaRow[] = [];
-  filteredTransferencias: TransferenciaRow[] = [];
-  transferenciaSuggestions: TransferenciaRow[] = [];
-  searchTerm = '';
-  estadoFilter: string | null = null;
-  solicitudFilter: string | null = null;
-  loading = false;
-  private sedeNombrePorId = new Map<string, string>();
-  estadoOptions = [
+export class Transferencia {
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly confirmationService = inject(ConfirmationService);
+  private readonly messageService = inject(MessageService);
+  private readonly transferenciaService = inject(TransferenciaService);
+
+  private readonly transferenciasSig = signal<TransferenciaRow[]>([]);
+  private readonly searchTermSig = signal('');
+  private readonly estadoFilterSig = signal<string | null>(null);
+  private readonly solicitudFilterSig = signal<string | null>(null);
+  private readonly loadingSig = signal(false);
+
+  private readonly filteredTransferenciasSig = computed(() => {
+    const v = this.searchTermSig().toLowerCase();
+    const estado = this.estadoFilterSig();
+    const solicitud = this.solicitudFilterSig();
+
+    return this.transferenciasSig().filter((t) => {
+      const matchesText = [t.codigo, t.producto, t.origen, t.destino, t.responsable, t.solicitud].some(
+        (campo) => campo.toLowerCase().includes(v),
+      );
+      const matchesEstado = estado ? t.estado === estado : true;
+      const matchesSolicitud = solicitud
+        ? t.solicitud.toLowerCase().startsWith(solicitud.toLowerCase())
+        : true;
+      return matchesText && matchesEstado && matchesSolicitud;
+    });
+  });
+
+  readonly estadoOptions = [
     { label: 'Todos', value: null },
-    { label: 'Pendiente', value: 'Pendiente' },
-    { label: 'En transito', value: 'En transito' },
-    { label: 'Completada', value: 'Completada' },
-    { label: 'Incidencia', value: 'Incidencia' },
+    { label: 'SOLICITADA', value: 'SOLICITADA' },
+    { label: 'APROBADA', value: 'APROBADA' },
+    { label: 'RECHAZADA', value: 'RECHAZADA' },
+    { label: 'COMPLETADA', value: 'COMPLETADA' },
   ];
-  solicitudOptions = [
+
+  readonly solicitudOptions = [
     { label: 'Todas', value: null },
     { label: 'Con observacion', value: 'Con observacion' },
     { label: 'Sin observacion', value: 'Sin observacion' },
   ];
 
-  constructor(
-    private confirmationService: ConfirmationService,
-    private messageService: MessageService,
-    private transferenciaService: TransferenciaService,
-    private sedeService: SedeService,
-    private cdr: ChangeDetectorRef,
-  ) {}
+  get transferencias(): TransferenciaRow[] {
+    return this.transferenciasSig();
+  }
 
-  // 🔥 SIEMPRE SE EJECUTA AL ENTRAR A LA RUTA
+  set transferencias(value: TransferenciaRow[]) {
+    this.transferenciasSig.set(value ?? []);
+  }
+
+  get filteredTransferencias(): TransferenciaRow[] {
+    return this.filteredTransferenciasSig();
+  }
+
+  get transferenciaSuggestions(): TransferenciaRow[] {
+    return this.filteredTransferenciasSig();
+  }
+
+  get searchTerm(): string {
+    return this.searchTermSig();
+  }
+
+  set searchTerm(value: string) {
+    this.searchTermSig.set(value ?? '');
+  }
+
+  get estadoFilter(): string | null {
+    return this.estadoFilterSig();
+  }
+
+  set estadoFilter(value: string | null) {
+    this.estadoFilterSig.set(value ?? null);
+  }
+
+  get solicitudFilter(): string | null {
+    return this.solicitudFilterSig();
+  }
+
+  set solicitudFilter(value: string | null) {
+    this.solicitudFilterSig.set(value ?? null);
+  }
+
+  get loading(): boolean {
+    return this.loadingSig();
+  }
+
+  set loading(value: boolean) {
+    this.loadingSig.set(value);
+  }
+
+  get hasActiveFilters(): boolean {
+    return !!(this.searchTermSig() || this.estadoFilterSig() || this.solicitudFilterSig());
+  }
+
   ngOnInit(): void {
     this.cargarTransferencias();
   }
 
-  // 🔁 TAMBIÉN CUANDO REGRESAS DESDE OTRA PÁGINA
   ionViewWillEnter(): void {
     this.cargarTransferencias();
   }
 
   cargarTransferencias(): void {
     this.loading = true;
-    const sedes$ = this.sedeService.getSedes().pipe(
-      map((response) => (Array.isArray(response) ? response : response?.headquarters ?? [])),
-    );
 
-    forkJoin({
-      transferencias: this.transferenciaService.getTransferencias(),
-      sedes: sedes$,
-    })
+    this.transferenciaService
+      .getTransferencias()
       .pipe(
-        finalize(() => {
-          this.loading = false;
-          this.cdr.detectChanges();
-        }),
-      )
-      .subscribe({
-        next: ({ transferencias, sedes }) => {
-          const lista = Array.isArray(transferencias) ? transferencias : [];
-          this.indexarSedes(sedes);
-          this.transferencias = lista.map((t) => this.mapTransferencia(t));
-          this.filteredTransferencias = [...this.transferencias];
-          this.transferenciaSuggestions = [...this.transferencias];
-          this.cdr.detectChanges();
-        },
-        error: (error) => {
+        map((response) => (Array.isArray(response) ? response : [])),
+        map((lista) => lista.map((transferencia) => this.mapTransferencia(transferencia))),
+        catchError((error) => {
           console.error('Error al cargar transferencias:', error);
           this.transferencias = [];
-          this.filteredTransferencias = [];
-          this.transferenciaSuggestions = [];
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
             detail: 'No se pudieron cargar las transferencias',
           });
-          this.cdr.detectChanges();
-        },
+          return of([] as TransferenciaRow[]);
+        }),
+        finalize(() => {
+          this.loading = false;
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((rows) => {
+        this.transferencias = rows;
       });
   }
 
   private mapTransferencia(transferencia: TransferenciaInterfaceResponse): TransferenciaRow {
     const fechaEnvio = this.formatearFecha(transferencia.requestDate);
-    const producto = transferencia.items?.[0]?.producto?.[0];
-    const responsable = this.getResponsableNombre(transferencia.creatorUser?.[0]);
+    const producto = this.getProductoNombre(transferencia);
+    const responsable = this.getResponsableNombre(this.getCreatorUser(transferencia.creatorUser));
     const observacion = transferencia.observation?.trim() || '-';
     const solicitud = transferencia.observation?.trim() ? 'Con observacion' : 'Sin observacion';
 
     return {
       codigo: String(transferencia.id),
-      producto: producto?.anexo || producto?.descripcion || producto?.codigo || '-',
-      origen: this.getSedeNombre(transferencia.originHeadquartersId),
-      destino: this.getSedeNombre(transferencia.destinationHeadquartersId),
+      producto,
+      origen: this.getSedeNombre(transferencia.origin, transferencia.originHeadquartersId),
+      destino: this.getSedeNombre(transferencia.destination, transferencia.destinationHeadquartersId),
       cantidad: transferencia.totalQuantity ?? 0,
       solicitud: `${solicitud}: ${observacion}`,
       responsable,
@@ -152,6 +212,28 @@ export class Transferencia implements OnInit {
       fechaEnvio,
       fechaLlegada: '-',
     };
+  }
+
+  private getCreatorUser(
+    creator: TransferenciaCreatorUserResponse | TransferenciaCreatorUserResponse[] | undefined,
+  ): TransferenciaCreatorUserResponse | undefined {
+    if (!creator) return undefined;
+    return Array.isArray(creator) ? creator[0] : creator;
+  }
+
+  private getProductoNombre(transferencia: TransferenciaInterfaceResponse): string {
+    const nombrePlano = transferencia.nomProducto?.trim();
+    if (nombrePlano) return nombrePlano;
+    const producto = this.getProductoFromItems(transferencia);
+    return producto?.nomProducto || producto?.descripcion || producto?.codigo || '-';
+  }
+
+  private getProductoFromItems(
+    transferencia: TransferenciaInterfaceResponse,
+  ): TransferenciaProductoResponse | undefined {
+    const producto = transferencia.items?.[0]?.producto;
+    if (!producto) return undefined;
+    return Array.isArray(producto) ? producto[0] : producto;
   }
 
   private getResponsableNombre(creator: TransferenciaCreatorUserResponse | undefined): string {
@@ -170,26 +252,24 @@ export class Transferencia implements OnInit {
     return '-';
   }
 
-  private indexarSedes(sedes: Headquarter[]): void {
-    this.sedeNombrePorId.clear();
-    sedes.forEach((sede) => {
-      this.sedeNombrePorId.set(String(sede.id_sede), sede.nombre);
-    });
-  }
-
-  private getSedeNombre(id: string | null | undefined): string {
-    if (!id) return '-';
-    return this.sedeNombrePorId.get(String(id)) ?? String(id);
+  private getSedeNombre(
+    sede: TransferenciaSedeResumenResponse | undefined,
+    legacyId: string | null | undefined,
+  ): string {
+    const nombre = sede?.nomSede?.trim();
+    if (nombre) return nombre;
+    if (legacyId) return String(legacyId);
+    return '-';
   }
 
   private mapEstado(estado: string | null | undefined): string {
-    if (!estado) return 'Pendiente';
+    if (!estado) return 'SOLICITADA';
     const normalizado = estado.toLowerCase();
-    if (normalizado.includes('aprob')) return 'En transito';
-    if (normalizado.includes('complet')) return 'Completada';
-    if (normalizado.includes('inci')) return 'Incidencia';
-    if (normalizado.includes('pende')) return 'Pendiente';
-    return estado;
+    if (normalizado.includes('solicit')) return 'SOLICITADA';
+    if (normalizado.includes('aprob')) return 'APROBADA';
+    if (normalizado.includes('rech')) return 'RECHAZADA';
+    if (normalizado.includes('complet')) return 'COMPLETADA';
+    return String(estado).toUpperCase();
   }
 
   private formatearFecha(iso: string | null | undefined): string {
@@ -210,33 +290,24 @@ export class Transferencia implements OnInit {
     this.filtrar(this.obtenerValor(term));
   }
 
-  onSelectTransferencia(event: any): void {
+  onSelectTransferencia(event: { value?: string | { producto?: string } } | null): void {
     const value = this.obtenerValor(event?.value ?? this.searchTerm);
     this.searchTerm = value;
-    this.filtrar(value);
   }
 
   clearSearch(): void {
     this.searchTerm = '';
     this.estadoFilter = null;
     this.solicitudFilter = null;
-    this.filtrar('');
   }
 
-  get hasActiveFilters(): boolean {
-    return !!(this.searchTerm || this.estadoFilter || this.solicitudFilter);
-  }
-
-  confirmDelete(transferencia: any): void {
+  confirmDelete(transferencia: TransferenciaRow): void {
     this.confirmationService.confirm({
       message: `¿Eliminar la transferencia ${transferencia.codigo}?`,
       header: 'Confirmación',
       icon: 'pi pi-exclamation-triangle',
       accept: () => {
         this.transferencias = this.transferencias.filter((t) => t.codigo !== transferencia.codigo);
-        this.filteredTransferencias = [...this.transferencias];
-        this.transferenciaSuggestions = [...this.transferencias];
-
         this.messageService.add({
           severity: 'success',
           summary: 'Eliminada',
@@ -246,36 +317,26 @@ export class Transferencia implements OnInit {
     });
   }
 
-  getEstadoSeverity(estado: string) {
+  getEstadoSeverity(estado: string): 'success' | 'warn' | 'info' | 'danger' | 'secondary' {
     switch (estado.toLowerCase()) {
       case 'completada':
         return 'success';
-      case 'pendiente':
+      case 'solicitada':
         return 'warn';
-      case 'en transito':
-        return 'secondary';
+      case 'aprobada':
+        return 'info';
+      case 'rechazada':
+        return 'danger';
       default:
         return 'secondary';
     }
   }
 
   filtrar(valor: string): void {
-    const v = valor.toLowerCase();
-
-    this.filteredTransferencias = this.transferencias.filter((t) => {
-      const matchesText = [t.codigo, t.producto, t.origen, t.destino, t.responsable, t.solicitud]
-        .some((campo) => campo.toLowerCase().includes(v));
-      const matchesEstado = this.estadoFilter ? t.estado === this.estadoFilter : true;
-      const matchesSolicitud = this.solicitudFilter
-        ? t.solicitud.toLowerCase().startsWith(this.solicitudFilter.toLowerCase())
-        : true;
-      return matchesText && matchesEstado && matchesSolicitud;
-    });
-
-    this.transferenciaSuggestions = [...this.filteredTransferencias];
+    this.searchTerm = valor || '';
   }
 
-  obtenerValor(term: any): string {
+  obtenerValor(term: string | { producto?: string } | null | undefined): string {
     if (!term) return '';
     if (typeof term === 'string') return term;
     return term.producto ?? '';
