@@ -55,17 +55,35 @@ export class ConteoDetalle implements OnInit {
   ngOnInit(): void {
 
     const id = Number(this.route.snapshot.paramMap.get('id'));
-
     const conteoEncontrado = this.conteoService.getConteoById(id);
 
     if (!conteoEncontrado) {
-      this.router.navigate(['/conteo-inventario']);
+      this.router.navigate(['/admin/conteo-inventario']);
       return;
     }
 
     this.conteo = conteoEncontrado;
 
-    this.cargarProductosPorFamilia(this.conteo.familia);
+    /*  LÓGICA INTELIGENTE */
+    if (this.conteo.productos && this.conteo.productos.length > 0) {
+
+      // Usa los productos reales guardados
+      this.productos = this.conteo.productos.map(p => ({
+        codigo: p.codigo,
+        producto: p.producto,
+        categoria: p.categoria,
+        stockSistema: p.stockSistema,
+        conteoReal: p.conteoReal
+      }));
+
+    } else {
+
+      // Usa tu mock si no hay productos guardados
+      this.cargarProductosPorFamilia(this.conteo.familia);
+
+    }
+
+    this.calcularTotales();
   }
 
   cargarProductosPorFamilia(familia: string) {
@@ -94,8 +112,6 @@ export class ConteoDetalle implements OnInit {
     };
 
     this.productos = dataMock[familia] || [];
-
-    this.calcularTotales();
   }
 
   calcularDiferencia(row: ProductoDetalle) {
