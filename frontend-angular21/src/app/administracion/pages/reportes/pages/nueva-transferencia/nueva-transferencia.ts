@@ -1,4 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  OnInit,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -18,6 +26,9 @@ import { ProductoAutocomplete, ProductoInterface } from '../../../../interfaces/
 import { SedeService } from '../../../../services/sede.service';
 import { map } from 'rxjs';
 import { Headquarter } from '../../../../interfaces/sedes.interface';
+import { TransferenciaService } from '../../../../services/transferencia.service';
+import { TransferenciaRequest } from '../../../../interfaces/transferencia.interface';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 interface TransferProducto {
   id: string;
@@ -28,9 +39,12 @@ interface TransferProducto {
   stockPorSede: Record<string, number>;
 }
 
+const DEFAULT_TRANSFER_SERIES = ['SERIE-D-001', 'SERIE-D-002'];
+
 @Component({
   selector: 'app-nueva-transferencia',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
     FormsModule,
@@ -51,66 +65,208 @@ interface TransferProducto {
   providers: [MessageService, ConfirmationService],
 })
 export class NuevaTransferencia implements OnInit {
-  constructor(
-    private messageService: MessageService,
-    private confirmationService: ConfirmationService,
-    private router: Router,
-    private productoService: ProductoService,
-    private sedeService: SedeService,
-  ) {}
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly messageService = inject(MessageService);
+  private readonly confirmationService = inject(ConfirmationService);
+  private readonly router = inject(Router);
+  private readonly productoService = inject(ProductoService);
+  private readonly sedeService = inject(SedeService);
+  private readonly transferenciaService = inject(TransferenciaService);
 
-  idSede: number = 1;
-  productosAutocomplete: TransferProducto[] = [];
+  private readonly idSedeSig = signal(1);
+  private readonly productosAutocompleteSig = signal<TransferProducto[]>([]);
+  private readonly activeStepSig = signal(0);
+  private readonly sedesSig = signal<{ label: string; value: string }[]>([]);
+  private readonly sedesRawSig = signal<Headquarter[]>([]);
+  private readonly productoIdSig = signal<string | null>(null);
+  private readonly productoQuerySig = signal<string | null>(null);
+  private readonly productosSig = signal<TransferProducto[]>([]);
+  private readonly sedeOrigenSig = signal<string | null>(null);
+  private readonly sedeDestinoSig = signal<string | null>(null);
+  private readonly cantidadSig = signal(1);
+  private readonly motivoSig = signal<string | null>(null);
+  private readonly observacionSig = signal('');
+  private readonly fechaEnvioSig = signal<Date | null>(null);
+  private readonly fechaLlegadaSig = signal<Date | null>(null);
+  private readonly responsableSig = signal<string | null>(null);
+  private readonly submittingSig = signal(false);
 
-  tituloKicker = 'ADMINISTRACION - REPORTES';
-  subtituloKicker = 'NUEVA TRANSFERENCIA';
-  iconoCabecera = 'pi pi-sync';
+  private readonly productoSeleccionadoSig = computed<TransferProducto | null>(() => {
+    const id = this.productoIdSig();
+    if (!id) return null;
+    return this.productosSig().find((producto) => producto.id === id) || null;
+  });
 
-  activeStep = 0;
-  steps = ['Producto y Sedes', 'Cantidad y Motivo', 'Fechas', 'Confirmacion'];
+  private readonly stockDisponibleSig = computed(() => {
+    const producto = this.productoSeleccionadoSig();
+    const sede = this.sedeOrigenSig();
+    if (!producto || !sede) return 0;
+    return producto.stockPorSede[sede] || 0;
+  });
 
-  sedes: { label: string; value: string }[] = [];
-  sedesRaw: Headquarter[] = [];
-
-  motivos = [
+  readonly tituloKicker = 'ADMINISTRACION - REPORTES';
+  readonly subtituloKicker = 'NUEVA TRANSFERENCIA';
+  readonly iconoCabecera = 'pi pi-sync';
+  readonly steps = ['Producto y Sedes', 'Cantidad y Motivo', 'Fechas', 'Confirmacion'];
+  readonly motivos = [
     { label: 'Reposicion', value: 'reposicion' },
     { label: 'Ajuste de stock', value: 'ajuste' },
     { label: 'Solicitud interna', value: 'solicitud' },
     { label: 'Transferencia programada', value: 'programada' },
   ];
-
-  responsables = [
+  readonly responsables = [
     { label: 'Jefatura de almacen', value: 'jefatura' },
     { label: 'Supervisor de sede', value: 'supervisor' },
     { label: 'Encargado de despacho', value: 'despacho' },
   ];
-
-  productoId: string | null = null;
-  productoQuery: string | null = null;
-  productos: TransferProducto[] = [];
-  sedeOrigen: string | null = null;
-  sedeDestino: string | null = null;
-  cantidad = 1;
-  motivo: string | null = null;
-  observacion = '';
-  fechaEnvio: Date | null = null;
-  fechaLlegada: Date | null = null;
-  responsable: string | null = null;
   readonly today = this.getToday();
 
-  ngOnInit(): void {
-    this.cargarSedes();
+  get idSede(): number {
+    return this.idSedeSig();
+  }
+
+  set idSede(value: number) {
+    this.idSedeSig.set(value);
+  }
+
+  get productosAutocomplete(): TransferProducto[] {
+    return this.productosAutocompleteSig();
+  }
+
+  set productosAutocomplete(value: TransferProducto[]) {
+    this.productosAutocompleteSig.set(value ?? []);
+  }
+
+  get activeStep(): number {
+    return this.activeStepSig();
+  }
+
+  set activeStep(value: number) {
+    this.activeStepSig.set(value);
+  }
+
+  get sedes(): { label: string; value: string }[] {
+    return this.sedesSig();
+  }
+
+  set sedes(value: { label: string; value: string }[]) {
+    this.sedesSig.set(value ?? []);
+  }
+
+  get sedesRaw(): Headquarter[] {
+    return this.sedesRawSig();
+  }
+
+  set sedesRaw(value: Headquarter[]) {
+    this.sedesRawSig.set(value ?? []);
+  }
+
+  get productoId(): string | null {
+    return this.productoIdSig();
+  }
+
+  set productoId(value: string | null) {
+    this.productoIdSig.set(value ?? null);
+  }
+
+  get productoQuery(): string | null {
+    return this.productoQuerySig();
+  }
+
+  set productoQuery(value: string | null) {
+    this.productoQuerySig.set(value ?? null);
+  }
+
+  get productos(): TransferProducto[] {
+    return this.productosSig();
+  }
+
+  set productos(value: TransferProducto[]) {
+    this.productosSig.set(value ?? []);
+  }
+
+  get sedeOrigen(): string | null {
+    return this.sedeOrigenSig();
+  }
+
+  set sedeOrigen(value: string | null) {
+    this.sedeOrigenSig.set(value ?? null);
+  }
+
+  get sedeDestino(): string | null {
+    return this.sedeDestinoSig();
+  }
+
+  set sedeDestino(value: string | null) {
+    this.sedeDestinoSig.set(value ?? null);
+  }
+
+  get cantidad(): number {
+    return this.cantidadSig();
+  }
+
+  set cantidad(value: number) {
+    this.cantidadSig.set(value);
+  }
+
+  get motivo(): string | null {
+    return this.motivoSig();
+  }
+
+  set motivo(value: string | null) {
+    this.motivoSig.set(value ?? null);
+  }
+
+  get observacion(): string {
+    return this.observacionSig();
+  }
+
+  set observacion(value: string) {
+    this.observacionSig.set(value ?? '');
+  }
+
+  get fechaEnvio(): Date | null {
+    return this.fechaEnvioSig();
+  }
+
+  set fechaEnvio(value: Date | null) {
+    this.fechaEnvioSig.set(value ?? null);
+  }
+
+  get fechaLlegada(): Date | null {
+    return this.fechaLlegadaSig();
+  }
+
+  set fechaLlegada(value: Date | null) {
+    this.fechaLlegadaSig.set(value ?? null);
+  }
+
+  get responsable(): string | null {
+    return this.responsableSig();
+  }
+
+  set responsable(value: string | null) {
+    this.responsableSig.set(value ?? null);
+  }
+
+  get submitting(): boolean {
+    return this.submittingSig();
+  }
+
+  set submitting(value: boolean) {
+    this.submittingSig.set(value);
   }
 
   get productoSeleccionado(): TransferProducto | null {
-    return this.productos.find((producto) => producto.id === this.productoId) || null;
+    return this.productoSeleccionadoSig();
   }
 
   get stockDisponible(): number {
-    if (!this.productoSeleccionado || !this.sedeOrigen) {
-      return 0;
-    }
-    return this.productoSeleccionado.stockPorSede[this.sedeOrigen] || 0;
+    return this.stockDisponibleSig();
+  }
+
+  ngOnInit(): void {
+    this.cargarSedes();
   }
 
   getSedeLabel(sede: string | null): string {
@@ -153,30 +309,33 @@ export class NuevaTransferencia implements OnInit {
   }
 
   private cargarSedes(): void {
-    this.sedeService.getSedes().subscribe({
-      next: (response) => {
-        this.sedesRaw = response.headquarters ?? [];
-        this.sedes = (response.headquarters ?? []).map((sede) => ({
-          label: sede.nombre,
-          value: sede.nombre,
-        }));
-        if (!this.sedeOrigen && this.sedes.length > 0) {
-          this.sedeOrigen = this.sedes[0].value;
-          this.idSede = this.sedesRaw[0]?.id_sede ?? this.idSede;
-        }
-        this.cargarProductos(this.sedeOrigen);
-      },
-      error: (error) => {
-        console.error('Error al cargar sedes:', error);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudieron cargar las sedes',
-        });
-        this.cargarProductos();
-        this.sedes = [];
-      },
-    });
+    this.sedeService
+      .getSedes()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (response) => {
+          this.sedesRaw = response.headquarters ?? [];
+          this.sedes = (response.headquarters ?? []).map((sede) => ({
+            label: sede.nombre,
+            value: sede.nombre,
+          }));
+          if (!this.sedeOrigen && this.sedes.length > 0) {
+            this.sedeOrigen = this.sedes[0].value;
+            this.idSede = this.sedesRaw[0]?.id_sede ?? this.idSede;
+          }
+          this.cargarProductos(this.sedeOrigen);
+        },
+        error: (error) => {
+          console.error('Error al cargar sedes:', error);
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'No se pudieron cargar las sedes',
+          });
+          this.cargarProductos();
+          this.sedes = [];
+        },
+      });
   }
 
   onSedeOrigenChange(): void {
@@ -190,19 +349,26 @@ export class NuevaTransferencia implements OnInit {
     this.cargarProductos(this.sedeOrigen);
   }
 
+  onSedeDestinoChange(): void {
+    this.cargarStockProductoSeleccionadoEnSedes();
+  }
+
   private cargarProductos(sede?: string | null): void {
     void sede;
-    this.productoService.getProductos(1, 10, true).subscribe({
-      next: (response) => {
-        this.productos = this.mapProductos(response.products);
-        this.productosAutocomplete = this.productos.slice(0, 8);
-      },
-      error: (error) => {
-        console.error('Error al cargar productos:', error);
-        this.productos = [];
-        this.productosAutocomplete = [];
-      },
-    });
+    this.productoService
+      .getProductos(1, 10, true)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (response) => {
+          this.productos = this.mapProductos(response.products);
+          this.productosAutocomplete = this.productos.slice(0, 8);
+        },
+        error: (error) => {
+          console.error('Error al cargar productos:', error);
+          this.productos = [];
+          this.productosAutocomplete = [];
+        },
+      });
   }
 
   private mapProductos(productosBase: ProductoInterface[]): TransferProducto[] {
@@ -216,14 +382,17 @@ export class NuevaTransferencia implements OnInit {
     }));
   }
 
-  buscarProductos(event: any) {
+  buscarProductos(event: { query?: string }): void {
     const query = event.query;
 
     if (!query || !this.idSede) return;
 
     this.productoService
       .getProductosAutocomplete(query, this.idSede)
-      .pipe(map((resp) => resp.data))
+      .pipe(
+        map((resp) => resp.data),
+        takeUntilDestroyed(this.destroyRef),
+      )
       .subscribe((data) => {
         this.productosAutocomplete = this.mapAutocompleteProductos(data, this.sedeOrigen);
       });
@@ -243,18 +412,77 @@ export class NuevaTransferencia implements OnInit {
     }));
   }
 
-
   onSelectProducto(event: { value: TransferProducto }): void {
     const producto = event.value;
     this.productoId = producto.id;
     this.productoQuery = producto.nombre;
     const restantes = this.productos.filter((p) => p.id !== producto.id);
     this.productos = [...restantes, producto];
+    this.cargarStockProductoSeleccionadoEnSedes();
   }
 
   onClearProducto(): void {
     this.productoId = null;
     this.productoQuery = null;
+  }
+
+  private cargarStockProductoSeleccionadoEnSedes(): void {
+    if (!this.productoId) return;
+    this.cargarStockProductoEnSede(this.productoId, this.sedeOrigen);
+    this.cargarStockProductoEnSede(this.productoId, this.sedeDestino);
+  }
+
+  private cargarStockProductoEnSede(productoId: string, sedeNombre: string | null): void {
+    if (!sedeNombre) return;
+    const sedeId = this.getSedeIdByNombre(sedeNombre);
+    if (!sedeId) return;
+
+    this.productoService
+      .getProductoDetalleStock(Number(productoId), sedeId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (resp) => {
+          const stock = resp?.stock?.cantidad ?? 0;
+          this.actualizarStockProductoEnMemoria(productoId, sedeNombre, stock);
+        },
+        error: (error) => {
+          console.error('Error al cargar stock por sede:', error);
+          this.actualizarStockProductoEnMemoria(productoId, sedeNombre, 0);
+        },
+      });
+  }
+
+  private getSedeIdByNombre(sedeNombre: string): number | null {
+    const sede = this.sedesRaw.find((item) => item.nombre === sedeNombre);
+    return sede?.id_sede ?? null;
+  }
+
+  private actualizarStockProductoEnMemoria(
+    productoId: string,
+    sedeNombre: string,
+    stock: number,
+  ): void {
+    this.productos = this.productos.map((producto) => {
+      if (producto.id !== productoId) return producto;
+      return {
+        ...producto,
+        stockPorSede: {
+          ...producto.stockPorSede,
+          [sedeNombre]: stock,
+        },
+      };
+    });
+
+    this.productosAutocomplete = this.productosAutocomplete.map((producto) => {
+      if (producto.id !== productoId) return producto;
+      return {
+        ...producto,
+        stockPorSede: {
+          ...producto.stockPorSede,
+          [sedeNombre]: stock,
+        },
+      };
+    });
   }
 
   ajustarCantidad(delta: number): void {
@@ -278,7 +506,6 @@ export class NuevaTransferencia implements OnInit {
 
   nextStep(): void {
     const valido = this.validarStepActual();
-    console.log('[Transferencia] Validación step', this.activeStep, '=>', valido);
     if (valido) {
       this.activeStep++;
     }
@@ -376,17 +603,6 @@ export class NuevaTransferencia implements OnInit {
   }
 
   confirmarTransferencia(): void {
-    console.log('[Transferencia] Confirmar transferencia click', {
-      productoId: this.productoId,
-      sedeOrigen: this.sedeOrigen,
-      sedeDestino: this.sedeDestino,
-      cantidad: this.cantidad,
-      motivo: this.motivo,
-      observacion: this.observacion,
-      fechaEnvio: this.fechaEnvio,
-      fechaLlegada: this.fechaLlegada,
-      responsable: this.responsable,
-    });
     this.confirmationService.confirm({
       message: 'Desea confirmar esta transferencia?',
       header: 'Confirmar Transferencia',
@@ -396,18 +612,107 @@ export class NuevaTransferencia implements OnInit {
       acceptButtonProps: { severity: 'warning' },
       rejectButtonProps: { severity: 'secondary', outlined: true },
       accept: () => {
-        console.log('[Transferencia] Confirmación aceptada. Registrando transferencia...');
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Registro exitoso',
-          detail: 'La transferencia fue registrada correctamente',
-          life: 3000,
-        });
-        console.log('[Transferencia] Navegando a /admin/transferencia');
-        this.router.navigate(['/admin/transferencia']);
-        this.resetForm();
+        this.registrarTransferencia();
       },
     });
+  }
+
+  private registrarTransferencia(): void {
+    if (this.submitting) return;
+
+    const payload = this.buildTransferenciaPayload();
+    if (!payload) return;
+
+    this.submitting = true;
+    this.transferenciaService
+      .postTransferencia(payload)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Registro exitoso',
+            detail: 'La transferencia fue registrada correctamente',
+            life: 3000,
+          });
+          this.router.navigate(['/admin/transferencia']);
+          this.resetForm();
+        },
+        error: (error) => {
+          console.error('Error al registrar transferencia:', error);
+          this.submitting = false;
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'No se pudo registrar la transferencia',
+            life: 3500,
+          });
+        },
+        complete: () => {
+          this.submitting = false;
+        },
+      });
+  }
+
+  private buildTransferenciaPayload(): TransferenciaRequest | null {
+    if (!this.productoId || !this.sedeOrigen || !this.sedeDestino) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Datos incompletos',
+        detail: 'Faltan datos para registrar la transferencia',
+      });
+      return null;
+    }
+
+    const user = this.getCurrentUserFromStorage();
+    const userId = user?.userId;
+    if (!userId) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Sesion invalida',
+        detail: 'No se encontro el usuario actual para registrar la transferencia',
+      });
+      return null;
+    }
+
+    const originSedeId = this.getSedeIdByNombre(this.sedeOrigen);
+    const destinationSedeId = this.getSedeIdByNombre(this.sedeDestino);
+
+    if (!originSedeId || !destinationSedeId) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Sedes invalidas',
+        detail: 'No se pudieron resolver las sedes seleccionadas',
+      });
+      return null;
+    }
+
+    return {
+      originHeadquartersId: String(originSedeId),
+      originWarehouseId: originSedeId,
+      destinationHeadquartersId: String(destinationSedeId),
+      destinationWarehouseId: destinationSedeId,
+      userId,
+      observation: this.observacion?.trim() || this.getMotivoLabel(this.motivo),
+      items: [
+        {
+          productId: Number(this.productoId),
+          series: DEFAULT_TRANSFER_SERIES,
+        },
+      ],
+    };
+  }
+
+  private getCurrentUserFromStorage():
+    | { userId?: number; nombres?: string; apellidos?: string }
+    | null {
+    try {
+      const raw = localStorage.getItem('user');
+      return raw ? JSON.parse(raw) : null;
+    } catch (error) {
+      console.error('Error leyendo usuario desde localStorage:', error);
+      return null;
+    }
   }
 
   resetForm(): void {

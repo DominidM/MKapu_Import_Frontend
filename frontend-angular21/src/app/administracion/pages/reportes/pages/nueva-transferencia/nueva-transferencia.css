@@ -305,16 +305,16 @@
   overflow: visible;
 }
 
-.transfer-panel-grid {
+/* .transfer-panel-grid {
   row-gap: 1.5rem;
   margin-left: -1rem;
   margin-right: -1rem;
-}
+} */
 
-.transfer-panel-grid > [class*='col-'] {
+/* .transfer-panel-grid > [class*='col-'] {
   padding-left: 1rem;
   padding-right: 1rem;
-}
+} */
 
 .transfer-panel-title {
   display: flex;
