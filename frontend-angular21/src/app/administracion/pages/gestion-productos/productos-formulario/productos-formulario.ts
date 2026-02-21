@@ -21,6 +21,7 @@ import { ProductoService } from '../../../services/producto.service';
 import { CategoriaService } from '../../../services/categoria.service';
 import { SedeService } from '../../../services/sede.service';
 import { CreateProductoDto, MovimientoInventarioDto } from '../../../interfaces/producto.interface';
+import { AlmacenService } from '../../../services/almacen.service';
 
 @Component({
   selector: 'app-productos-form',
@@ -44,6 +45,7 @@ export class ProductosFormulario implements OnInit {
   private fb = inject(FormBuilder);
   private router = inject(Router);
   private route = inject(ActivatedRoute); // <-- Inyectado para leer la URL
+  private almacenService = inject(AlmacenService);
   private productoService = inject(ProductoService);
   private categoriaService = inject(CategoriaService);
   private sedeService = inject(SedeService);
@@ -52,7 +54,7 @@ export class ProductosFormulario implements OnInit {
   categorias = signal<Categoria[]>([]);
   isSubmitting = signal<boolean>(false);
   sedes = this.sedeService.sedes;
-
+  almacenes = this.almacenService.sedes;
   // SIGNALS MODO EDICIÓN
   esModoEdicion = signal<boolean>(false);
   idProductoActual = signal<number | null>(null);
@@ -74,6 +76,7 @@ export class ProductosFormulario implements OnInit {
     precioCaja: [0, [Validators.required, Validators.min(0)]],
     precioMayorista: [0, [Validators.required, Validators.min(0)]],
     unidadMedida: ['UNIDAD', Validators.required],
+    almacen: [null, Validators.required],
     sede: [null, Validators.required],
     stockInicial: [0, [Validators.required, Validators.min(0)]]
   });
@@ -95,6 +98,11 @@ export class ProductosFormulario implements OnInit {
     this.sedeService.loadSedes().subscribe({
       error: (err) => console.error('Error cargando sedes', err)
     });
+
+    this.almacenService.loadAlmacen().subscribe({
+      error: (err) => console.error('Error cargando almacenes', err)
+    })
+
   }
 
   private setSedePorDefecto() {
@@ -112,17 +120,17 @@ export class ProductosFormulario implements OnInit {
   }
 
 
-private verificarModoEdicion() {
+  private verificarModoEdicion() {
     // Leemos el ID del producto
     const idParam = this.route.snapshot.paramMap.get('id');
     // NUEVO: Leemos la sede que mandamos desde la tabla
-    const sedeParam = this.route.snapshot.queryParamMap.get('idSede'); 
-    
+    const sedeParam = this.route.snapshot.queryParamMap.get('idSede');
+
     if (idParam) {
       this.esModoEdicion.set(true);
       const id = Number(idParam);
       this.idProductoActual.set(id);
-      
+
       this.tituloKicker.set('ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS EDICIÓN');
       this.tituloPrincipal.set('EDITAR PRODUCTO');
       this.iconoCabecera.set('pi pi-pencil');
@@ -131,7 +139,7 @@ private verificarModoEdicion() {
       const idSedeBackend = sedeParam ? Number(sedeParam) : (this.productoForm.get('sede')?.value || 1);
 
       // Le pasamos la sede al método
-      this.cargarDatosDelProducto(id, idSedeBackend); 
+      this.cargarDatosDelProducto(id, idSedeBackend);
     }
   }
 
@@ -139,10 +147,10 @@ private verificarModoEdicion() {
     this.productoService.getProductoDetalleStock(id, idSede).subscribe({
       next: (res) => {
         const prod = res.producto;
-        
+
         this.productoForm.patchValue({
           codigo: prod.codigo,
-          anexo: prod.nombre, 
+          anexo: prod.nombre,
           descripcion: prod.descripcion || '',
           familia: prod.categoria.id_categoria,
           precioCompra: prod.precio_compra,
@@ -161,7 +169,7 @@ private verificarModoEdicion() {
       },
       error: (err) => {
         // Imprimimos el error exacto en consola para que lo veas
-        console.error('Error trayendo datos del backend:', err); 
+        console.error('Error trayendo datos del backend:', err);
         this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se encontraron los datos del producto en esta sede.' });
       }
     });
@@ -221,7 +229,8 @@ private verificarModoEdicion() {
             observation: "Ingreso por orden de compra #101",
             items: [{
               productId: productoCreado.id_producto,
-              warehouseId: formValue.sede,
+              warehouseId: formValue.almacen, // <--- ID del desplegable Almacén
+              sedeId: formValue.sede,         // <--- ID del desplegable Sede
               quantity: formValue.stockInicial,
               type: 'INGRESO'
             }]
