@@ -65,4 +65,5 @@ export const VENTAS_ROUTES: Routes = [
     path: 'cotizaciones',
     loadComponent: () => import('./pages/cotizaciones/cotizaciones').then((m) => m.Cotizaciones),
   },
+
 ];

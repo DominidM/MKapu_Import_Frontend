@@ -7,6 +7,7 @@ import { UserRole } from './core/constants/roles.constants';
 import { ADMIN_ROUTES } from './administracion/admin.routes';
 import { VENTAS_ROUTES } from './ventas/ventas.routes';
 import { ALMACEN_ROUTES } from './almacen/almacen.routes';
+import { LOGISTICA_ROUTES } from './logistica/logistica.routes';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -36,5 +37,12 @@ export const routes: Routes = [
     data: { allowedRoles: [UserRole.VENTAS] },
     children: VENTAS_ROUTES,
   },
-
+  
+  {
+    path: 'logistica',
+    component: Main,
+    //canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: [UserRole.LOGISTICA] },
+    children: LOGISTICA_ROUTES,
+  },
 ];

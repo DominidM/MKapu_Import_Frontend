@@ -77,7 +77,12 @@ export class AuthService {
     const routes: Record<UserRole, string> = {
       [UserRole.ADMIN]: '/admin/dashboard-admin',
       [UserRole.VENTAS]: '/ventas/dashboard-ventas',
+<<<<<<< HEAD
       [UserRole.ALMACEN]: '/almacen/dashboard-almacen',
+=======
+      [UserRole.ALMACEN]: '/almacen/dashboard',
+      [UserRole.LOGISTICA]: 'logistica/dashboard'
+>>>>>>> 564e7cebd320ff0161a37fff651c084ae178173d
     };
 
     const route = routes[roleId];
@@ -123,6 +128,7 @@ export class AuthService {
       [UserRole.ADMIN]: 'admin',
       [UserRole.VENTAS]: 'ventas',
       [UserRole.ALMACEN]: 'almacen',
+      [UserRole.LOGISTICA]: 'logistica'
     };
 
     return roleNames[this.currentUser.roleId as UserRole] || null; // ✅ Cast

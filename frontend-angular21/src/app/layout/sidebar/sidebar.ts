@@ -216,20 +216,48 @@
         label: 'Dashboard',
         icon: 'pi pi-chart-line',
       },
+      {
+      path: '',
+      allowedRoles: [UserRole.ADMIN],
+      label: 'LOGISTICA',
+      isSection: true,
+    },
+    {
+      path: '/logistica/conteo-inventario',
+      allowedRoles: [UserRole.ADMIN],
+      label: 'Conteo inventario',
+      icon: 'pi pi-bookmark',
+    },
+    {
+      path: '/logistica/remision',
+      allowedRoles: [UserRole.ADMIN],
+      label: 'Remision',
+      icon: 'pi pi-truck',
+    }
     ];
 
-    constructor(
-      private confirmationService: ConfirmationService,
-      private messageService: MessageService,
-      private router: Router,
-      private authService: AuthService,
-      private roleService: RoleService,
-    ) {}
+    // ==================== VENTAS ====================
 
-    ngOnInit(): void {
-      this.loadUserInfo();
-      this.loadMenu();
-    }
+  constructor(
+    private confirmationService: ConfirmationService,
+    private messageService: MessageService,
+    private router: Router,
+    private authService: AuthService,
+    private roleService: RoleService,
+  ) {}
+
+  ngOnInit(): void {
+    this.loadUserInfo();
+    this.loadMenu();
+  }
+
+  /**
+   * Carga la información del usuario actual
+   */
+
+  /**
+   * Carga el menú filtrado según el rol del usuario
+   */
 
     /**
      * Carga la información del usuario actual

@@ -12,7 +12,7 @@ export interface Empleado {
   dni: string;
   email: string;
   telefono?: string;
-  cargo: 'ADMIN' | 'VENTAS' | 'ALMACENERO';
+  cargo: 'ADMIN' | 'VENTAS' | 'ALMACENERO' | 'LOGISTICA';
   id_sede: string;
   nombre_sede?: string;
   usuario: string;
@@ -165,7 +165,8 @@ export class EmpleadosService {
     const map = {
       'ADMIN': UserRole.ADMIN,
       'VENTAS': UserRole.VENTAS,
-      'ALMACENERO': UserRole.ALMACEN
+      'ALMACENERO': UserRole.ALMACEN,
+      'LOGISTICA': UserRole.LOGISTICA
     };
     return map[cargo];
   }
@@ -174,7 +175,8 @@ export class EmpleadosService {
     const map = {
       [UserRole.ADMIN]: 'ADMIN' as const,
       [UserRole.VENTAS]: 'VENTAS' as const,
-      [UserRole.ALMACEN]: 'ALMACENERO' as const
+      [UserRole.ALMACEN]: 'ALMACENERO' as const,
+      [UserRole.LOGISTICA]: 'LOGISTICA' as const
     };
     return map[roleId];
   }
@@ -293,6 +295,7 @@ export class EmpleadosService {
       ADMIN: 'Administrador',
       VENTAS: 'Vendedor',
       ALMACENERO: 'Almacenero',
+      LOGISTICA: 'Logistica'
     };
     return etiquetas[cargo];
   }
