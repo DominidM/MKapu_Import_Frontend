@@ -70,6 +70,7 @@
               [(ngModel)]="sedeOrigen"
               (onChange)="onSedeOrigenChange()"
             ></p-select>
+            <small class="helper-text sede-note" aria-hidden="true">&nbsp;</small>
             <label class="field-label mt-2">Almacen origen</label>
             <p-select
               class="w-full"
@@ -104,9 +105,13 @@
               [disabled]="destinationSedeLocked"
               (onChange)="onSedeDestinoChange()"
             ></p-select>
-            @if (destinationSedeLocked) {
-              <small class="helper-text">Sede destino bloqueada según sede del usuario logeado.</small>
-            }
+            <small class="helper-text sede-note">
+              @if (destinationSedeLocked) {
+                Sede destino bloqueada según sede del usuario logeado.
+              } @else {
+                &nbsp;
+              }
+            </small>
             <label class="field-label mt-2">Almacen destino</label>
             <p-select
               class="w-full"
