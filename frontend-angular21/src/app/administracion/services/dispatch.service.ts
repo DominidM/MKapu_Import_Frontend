@@ -50,7 +50,7 @@ export class DispatchService {
     this._error.set(null);
 
     return this.http
-      .get<Dispatch[]>(`${this.api}/dispatch`, {
+      .get<Dispatch[]>(`${this.api}/logistics/dispatch`, {
         headers: this.buildHeaders(role),
       })
       .pipe(
@@ -76,7 +76,7 @@ export class DispatchService {
     this._error.set(null);
 
     return this.http
-      .post<Dispatch>(`${this.api}/dispatch`, payload, {
+      .post<Dispatch>(`${this.api}/logistics/dispatch`, payload, {
         headers: this.buildHeaders(role),
       })
       .pipe(
@@ -107,7 +107,7 @@ export class DispatchService {
     this._error.set(null);
 
     return this.http
-      .get<Dispatch>(`${this.api}/dispatch/${id}`, {
+      .get<Dispatch>(`${this.api}/logistics/dispatch/${id}`, {
         headers: this.buildHeaders(role),
       })
       .pipe(
@@ -131,7 +131,7 @@ export class DispatchService {
     this._error.set(null);
 
     return this.http
-      .patch<Dispatch>(`${this.api}/dispatch/${id}`, payload, {
+      .patch<Dispatch>(`${this.api}/logistics/dispatch/${id}`, payload, {
         headers: this.buildHeaders(role),
       })
       .pipe(
@@ -155,7 +155,7 @@ export class DispatchService {
     this._error.set(null);
 
     return this.http
-      .delete<void>(`${this.api}/dispatch/${id}`, {
+      .delete<void>(`${this.api}/logistics/dispatch/${id}`, {
         headers: this.buildHeaders(role),
       })
       .pipe(

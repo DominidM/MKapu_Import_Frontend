@@ -347,6 +347,20 @@ export const ADMIN_ROUTES: Routes = [
         (m) => m.DetallesDespacho,
       ),
   },
+   {
+    path: 'despacho-productos/agregar-despacho/:id',
+    loadComponent: () =>
+      import('./pages/despacho-productos/pages/agregar-despacho/agregar-despacho').then(
+        (m) => m.AgregarDespacho,
+      ),
+  },
+   {
+    path: 'despacho-productos/editar-despacho/:id',
+    loadComponent: () =>
+      import('./pages/despacho-productos/pages/editar-despacho/editar-despacho').then(
+        (m) => m.EditarDespacho,
+      ),
+  },
 
 
   {
