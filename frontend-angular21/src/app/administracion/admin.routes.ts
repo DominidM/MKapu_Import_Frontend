@@ -373,6 +373,13 @@ import { pendingChangesGuard } from '../core/guards/pending-changes.guard';
             (m) => m.MermasRegistro,
           ),
       },
+      {
+        path: 'edicion-merma-remate',
+        loadComponent: () =>
+          import('./pages/mermas-remates/pages/mermas-remates-edc/mermas-remates-edc').then(
+            (m) => m.MermasRematesEdcComponent,
+          ),
+      },
     ],
   },
 
@@ -415,6 +422,20 @@ import { pendingChangesGuard } from '../core/guards/pending-changes.guard';
     loadComponent: () =>
       import('./pages/despacho-productos/pages/detalles-despacho/detalles-despacho').then(
         (m) => m.DetallesDespacho,
+      ),
+  },
+   {
+    path: 'despacho-productos/agregar-despacho/:id',
+    loadComponent: () =>
+      import('./pages/despacho-productos/pages/agregar-despacho/agregar-despacho').then(
+        (m) => m.AgregarDespacho,
+      ),
+  },
+   {
+    path: 'despacho-productos/editar-despacho/:id',
+    loadComponent: () =>
+      import('./pages/despacho-productos/pages/editar-despacho/editar-despacho').then(
+        (m) => m.EditarDespacho,
       ),
   },
 
