@@ -1,5 +1,5 @@
 <div class="p-2">
-  <p-card styleClass="productos-header-card mb-4 productos-header-bordered">
+  <p-card class="productos-header-card mb-4 productos-header-bordered">
     <div class="flex align-items-center justify-content-between flex-wrap gap-2">
       <div class="flex align-items-center gap-3">
         <span class="productos-title-icon">
@@ -135,7 +135,7 @@
 
       <div class="mb-6">
         <div class="surface-card border-round-xl shadow-1 overflow-hidden">
-          <p-table [value]="productos()" [lazy]="true" (onLazyLoad)="onPageChange($event)" [rows]="rows()"
+          <p-table [value]="productos()" [lazy]="true" (onLazyLoad)="onPageChange($event)" [rows]="5"
             [totalRecords]="totalRecords()" [loading]="loading()" [paginator]="true"
             [rowsPerPageOptions]="[5, 10, 25, 50]" styleClass="productos-table-nativa productos-table-hover">
             <ng-template pTemplate="header">

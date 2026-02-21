@@ -19,9 +19,6 @@ import { ConfirmDialog } from 'primeng/confirmdialog';
 import { DialogModule } from 'primeng/dialog';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmationService, MessageService } from 'primeng/api';
-
-import { ProductosService, Producto } from '../../../../core/services/productos.service';
-import { DialogStockSedes } from '../../../shared/dialog-stock-sedes/dialog-stock-sedes';
 import { ProductoService } from '../../../services/producto.service';
 import { ProductoAutocomplete, ProductoInterface, ProductoStock } from '../../../interfaces/producto.interface';
 import { SedeService } from '../../../services/sede.service';
@@ -94,7 +91,7 @@ constructor() {
       error: (err) => console.error('Error cargando sedes', err)
     });
 
-    this.categoriaService.getCategorias().subscribe({
+    this.categoriaService.getCategorias(true).subscribe({
       next: (resp) => {
         this.categorias.set(
           resp.categories.map(cat => ({
@@ -148,20 +145,20 @@ private actualizarCabecera() {
       const url = this.router.url;
 
       if (url.includes('crear-producto')) {
-        this.tituloKicker = 'ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS CREACIÓN';
+        this.tituloKicker = 'ADMINISTRACIÓN - PRODUCTOS CREACIÓN';
         this.subtituloKicker = 'CREAR PRODUCTO'; // Añadido
         this.iconoCabecera = 'pi pi-plus-circle';
       } else if (url.includes('editar-producto')) {
-        this.tituloKicker = 'ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS EDICIÓN';
+        this.tituloKicker = 'ADMINISTRACIÓN - PRODUCTOS EDICIÓN';
         this.subtituloKicker = 'EDITAR PRODUCTO'; // Añadido
         this.iconoCabecera = 'pi pi-pencil';
       } else if (url.includes('ver-detalle-producto')) {
-        this.tituloKicker = 'ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS DETALLE';
+        this.tituloKicker = 'ADMINISTRACIÓN - PRODUCTOS DETALLE';
         this.subtituloKicker = 'DETALLE DE PRODUCTO'; // Añadido
         this.iconoCabecera = 'pi pi-eye';
       } else {
         // RUTA PRINCIPAL
-        this.tituloKicker = 'ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS ACTIVOS';
+        this.tituloKicker = 'ADMINISTRACIÓN - PRODUCTOS ACTIVOS';
         this.subtituloKicker = 'GESTIÓN DE PRODUCTOS'; // Esto es lo que se estaba perdiendo
         this.iconoCabecera = 'pi pi-building';
       }
@@ -273,8 +270,12 @@ seleccionarProductoBusqueda(event: any) {
   }
   
   irEditar(id: number) { 
+    // Obtenemos la sede que el usuario seleccionó en el dropdown de la tabla
+    const sedeActual = this.idSedeActual(); 
+
     this.router.navigate(['/admin/gestion-productos/editar-producto', id], {
-      queryParams: { returnUrl: '/admin/gestion-productos' }
+      // Mandamos la sede como parámetro en la URL (?idSede=X)
+      queryParams: { idSede: sedeActual } 
     });
   }
 

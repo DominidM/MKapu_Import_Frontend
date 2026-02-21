@@ -17,7 +17,7 @@
   --usuarios-border: #2c3137;
   --usuarios-text: #f2f4f7;
   --usuarios-muted: #9aa2ac;
-  --usuarios-accent: #f0a63f;
+  --usuarios-accent: #F6AF33;
   --usuarios-success: #22c55e;
 }
 
@@ -32,11 +32,10 @@
   border-radius: 12px;
   display: grid;
   place-items: center;
-  background: rgba(246, 175, 51, 0.15);
-  color: var(--usuarios-accent);
+  background: #F6AF33;
+  color: #111827;
   font-size: 1.2rem;
 }
-
 .usuarios-kicker {
   margin: 0;
   font-size: 0.8rem;
@@ -365,7 +364,7 @@
   font-weight: 700;
 }
 
-:host ::ng-deep .usuarios-wizard-primary.p-button:hover {
-  background: #e69a27;
-  border-color: #e69a27;
+:host-context(.app-dark) ::ng-deep .usuarios-title-icon {
+  background: #1f2937 !important;
+  color: #F6AF33 !important;
 }

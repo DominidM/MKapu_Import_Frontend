@@ -1,5 +1,5 @@
 <div class="editar-sede-page">
-  <p-card styleClass="sedes-header-card">
+  <p-card class="sedes-header-card">
     <div class="flex align-items-center justify-content-between flex-wrap gap-3">
       <div class="flex align-items-center gap-3">
         <span class="sedes-title-icon">
@@ -12,17 +12,6 @@
       </div>
     </div>
   </p-card>
-
-  <div class="flex align-items-center justify-content-between mb-4">
-    <h2 class="sede-card-title">Modificar Sede</h2>
-    <p-button
-      icon="pi pi-arrow-left"
-      text
-      severity="secondary"
-      aria-label="Volver a sedes"
-      [routerLink]="['/admin/sedes']"
-    ></p-button>
-  </div>
 
   <div class="mb-3">
     <p-message *ngIf="loading()" severity="info" text="Cargando..."></p-message>
@@ -221,4 +210,5 @@
 
   <p-toast position="top-right" />
   <p-confirmdialog />
+   <p-toast></p-toast>
 </div>
