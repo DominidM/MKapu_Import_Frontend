@@ -282,9 +282,7 @@ import { pendingChangesGuard } from '../core/guards/pending-changes.guard';
   {
     path: 'generar-ventas-administracion',
     loadComponent: () =>
-      import('./pages/generar-ventas-administracion/generar-ventas-administracion').then(
-        (m) => m.GenerarVentasAdministracion,
-      ),
+      import('../ventas/pages/generar-venta/generar-venta').then((m) => m.GenerarVenta),
   },
   {
     path: 'historial-ventas-administracion',

@@ -60,7 +60,7 @@ import {
   styleUrls: ['./generar-venta.css'],
   providers: [MessageService, ConfirmationService],
 })
-export class GenerarVenta implements OnInit, AfterViewInit {
+export class GenerarVenta implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly clienteService = inject(ClienteService);
   private readonly ventaService = inject(VentaService);
@@ -93,7 +93,7 @@ export class GenerarVenta implements OnInit, AfterViewInit {
     { label: 'Transferencia', value: 5, icon: 'pi pi-building' },
   ];
 
-  idSedeActual = signal(1);
+  idSedeActual = signal<number>(0);
   nombreSedeActual = signal('');
   idUsuarioActual = signal(0);
   nombreUsuarioActual = signal('');
@@ -190,15 +190,12 @@ export class GenerarVenta implements OnInit, AfterViewInit {
     return `${siglas}: ${cliente.documentValue}`;
   }
 
+
   ngOnInit(): void {
     this.cargarConfiguracionInicial();
+    this.cargarProductos();
   }
 
-  ngAfterViewInit(): void {
-    setTimeout(() => {
-      this.cargarProductos();
-    }, 0);
-  }
 
   private cargarConfiguracionInicial(): void {
     const user = this.authService.getCurrentUser();
@@ -225,30 +222,21 @@ export class GenerarVenta implements OnInit, AfterViewInit {
       id_usuario: this.idUsuarioActual(),
     });
   }
+  private productosCargadosOnce = false;
+
 
   private cargarProductos(): void {
+    if (this.productosCargadosOnce) return;
+    this.productosCargadosOnce = true;
     this.productosLoading.set(true);
 
     this.productoService
       .obtenerProductosConStock(this.idSedeActual(), undefined, 1, 500)
       .subscribe({
-        next: async (response) => {
-          const productosConDetalles = await Promise.all(
-            response.data.map(async (prod: ProductoConStock) => {
-              try {
-                const detalle = await this.productoService
-                  .obtenerDetalleProducto(prod.id_producto, this.idSedeActual())
-                  .toPromise();
-
-                return this.productoService.mapearProductoConStock(prod, detalle!);
-              } catch (error) {
-                console.error(`Error al cargar detalle del producto ${prod.codigo}:`, error);
-                return null;
-              }
-            }),
+        next: (response) => {
+          const productos = response.data.map((prod: ProductoConStock) =>
+            this.productoService.mapearProductoConStock(prod, prod.detalle) // detalle ya viene
           );
-
-          const productos = productosConDetalles.filter((p): p is Producto => p !== null);
 
           this.productosCargados.set(productos);
           this.productosFiltrados.set([...productos]);
@@ -269,6 +257,10 @@ export class GenerarVenta implements OnInit, AfterViewInit {
         },
       });
   }
+
+
+
+
 
   private cargarFamilias(): void {
     const familiasUnicas = [...new Set(this.productosCargados().map((p) => p.familia))];
