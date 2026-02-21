@@ -287,9 +287,7 @@ import { pendingChangesGuard } from '../core/guards/pending-changes.guard';
   {
     path: 'historial-ventas-administracion',
     loadComponent: () =>
-      import('./pages/historial-ventas-administracion/historial-ventas-administracion').then(
-        (m) => m.HistorialVentasAdministracion,
-      ),
+      import('../ventas/pages/historial-ventas/historial-ventas').then((m) => m.HistorialVentas),
   },
   {
     path: 'detalles-ventas-administracion/:id',
