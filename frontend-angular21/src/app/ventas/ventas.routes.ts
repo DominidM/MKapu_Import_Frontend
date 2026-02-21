@@ -66,4 +66,65 @@ export const VENTAS_ROUTES: Routes = [
     loadComponent: () => import('./pages/cotizaciones/cotizaciones').then((m) => m.Cotizaciones),
   },
 
+
+  {
+    path: 'caja',
+    loadComponent: () => import('./pages/caja/caja.page').then((m) => m.CajaPage),
+  },
+
+
+
+  {
+    path: 'remates',
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('../administracion/pages/remates/pages/remates-pr/remates-pr').then(
+            (m) => m.RematesPr,
+          ),
+      },
+      {
+        path: 'registro-remate',
+        loadComponent: () =>
+          import('../administracion/pages/remates/pages/remates-registro/remates-registro').then(
+            (m) => m.RematesRegistro,
+          ),
+      },
+    ],
+  },
+
+
+  
+  /* =======================
+  GESTIÓN DE Conteos
+======================= */
+  {
+    path: 'conteo-inventario',
+    loadComponent: () =>
+      import('../administracion/pages/conteo-inventario/conteoinventario')
+        .then((m) => m.ConteoInventarios),
+  },
+
+  {
+    path: 'conteo-crear',
+    loadComponent: () =>
+      import('../administracion/pages/conteo-crear/conteocrear')
+        .then((m) => m.ConteoCrear),
+  },
+  {
+    path: 'conteo-detalle',
+    loadComponent: () =>
+      import('../administracion/pages/conteo-detalle/conteodetalle')
+        .then((m) => m.ConteoDetalle),
+  },
+
+
+
+
+
+
+
+
+
 ];

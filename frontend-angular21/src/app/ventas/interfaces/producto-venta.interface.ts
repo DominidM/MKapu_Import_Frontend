@@ -5,6 +5,7 @@ export interface ProductoConStock {
   familia: string;
   sede: string;
   stock: number;
+  detalle: ProductoDetalle;  
 }
 
 export interface ProductoStockResponse {
