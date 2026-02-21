@@ -1,15 +1,23 @@
-import { Component, EventEmitter, inject, Input, model, output, Output } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, inject, model, output, signal, computed, OnInit } from '@angular/core';
+import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { DatePickerModule } from 'primeng/datepicker';
-import { Drawer, DrawerModule } from 'primeng/drawer';
+import { DrawerModule } from 'primeng/drawer';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { TextareaModule } from 'primeng/textarea';
+import { TableModule } from 'primeng/table';
+import { CommonModule } from '@angular/common';
 
+import { VentasService } from '../../../../core/services/ventas.service';
+import { RemissionService } from '../../../services/remission.service';
+import { ToastModule } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
 @Component({
   selector: 'app-nueva-remision',
+  standalone: true,
   imports: [
+    CommonModule,
     DrawerModule,
     ButtonModule,
     ReactiveFormsModule,
@@ -17,46 +25,183 @@ import { TextareaModule } from 'primeng/textarea';
     DatePickerModule,
     SelectModule,
     TextareaModule,
+    TableModule,
+    ToastModule,
   ],
+  providers: [MessageService],
   templateUrl: './nueva-remision.html',
   styleUrl: './nueva-remision.css',
 })
-export class NuevaRemision {
+export class NuevaRemision implements OnInit {
+  private fb = inject(FormBuilder);
+  private ventasService = inject(VentasService);
+  private remissionService = inject(RemissionService);
+  private messageService = inject(MessageService);
+
   abierto = model<boolean>(false);
   onHide = output<void>();
-  remisionForm!: FormGroup;
-  private fb = inject(FormBuilder);
-  motivosTraslado = [
-    { label: 'Venta', value: '01' },
-    { label: 'Traslado provincia', value: '04' },
-    { label: 'Devolución', value: '06' }
-  ];
+
+  remissionForm!: FormGroup;
+  
+  saleFound = signal<any | null>(null);
+  isLoading = signal(false);
+  
+  itemsWeights = signal<any[]>([]);
+
+  pesoBrutoTotal = computed(() => {
+    const weights = this.itemsWeights();
+    return parseFloat(weights.reduce((acc, curr) => acc + (curr.peso_total || 0), 0).toFixed(3));
+  });
+
   ngOnInit() {
-    this.remisionForm = this.fb.group({
-      numeroGuia: ['', Validators.required],
-      fechaEmision: [new Date(), Validators.required],
-      puntoPartida: ['Av. Principal 123 - Almacén Central', Validators.required],
-      puntoLlegada: ['', Validators.required],
-      clienteDestino: ['', Validators.required],
-      motivo: [null, Validators.required],
-      transportista: this.fb.group({
-        nombre: ['', Validators.required],
-        placa: ['', Validators.required],
-        licencia: ['']
+    this.initForm();
+  }
+
+  initForm() {
+    this.remissionForm = this.fb.group({
+      id_comprobante_ref: [null, Validators.required],
+      id_almacen_origen: [null, Validators.required],
+      id_sede_origen: ['', Validators.required],
+      tipo_guia: [0, Validators.required],
+      modalidad: [1, Validators.required],
+      fecha_inicio_traslado: [new Date(), Validators.required],
+      motivo_traslado: ['VENTA', Validators.required],
+      unidad_peso: ['KGM', Validators.required],
+      
+      datos_traslado: this.fb.group({
+        ubigeo_origen: ['', Validators.required],
+        direccion_origen: ['', Validators.required],
+        ubigeo_destino: ['', Validators.required],
+        direccion_destino: ['', Validators.required],
       }),
-      observaciones: ['']
+
+      datos_transporte: this.fb.group({
+        nombre_completo: [''],
+        tipo_documento: ['DNI'],
+        numero_documento: [''],
+        licencia: [''],
+        placa: [''],
+        ruc: [''],
+        razon_social: [''],
+      }),
+      items: this.fb.array([]),
+    });
+
+    this.remissionForm.get('modalidad')?.valueChanges.subscribe(val => this.ajustarValidadoresTransporte(val));
+  }
+
+  get items() { return this.remissionForm.get('items') as FormArray; }
+
+  buscarComprobante(correlativo: string) {
+    if (!correlativo) return;
+    this.isLoading.set(true);
+    
+    this.ventasService.getVentaByCorrelativo(correlativo).subscribe({
+      next: (venta) => {
+        this.saleFound.set(venta);
+        this.cargarDatosVenta(venta);
+        this.isLoading.set(false);
+      },
+      error: () => {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Venta no encontrada' });
+        this.isLoading.set(false);
+        this.saleFound.set(null);
+        this.items.clear();
+      }
     });
   }
+
+  private cargarDatosVenta(venta: any) {
+    this.remissionForm.patchValue({
+      id_comprobante_ref: venta.id,
+      id_almacen_origen: venta.id_almacen,
+      id_sede_origen: venta.id_sede.toString(),
+      datos_traslado: {
+        direccion_origen: venta.sede_direccion || 'Dirección de Sede',
+        ubigeo_origen: venta.sede_ubigeo || '150101',
+        direccion_destino: venta.cliente_direccion || '',
+        ubigeo_destino: venta.cliente_ubigeo || ''
+      }
+    });
+
+    this.items.clear();
+    venta.detalles.forEach((det: any) => {
+      const group = this.fb.group({
+        id_producto: [det.id_producto],
+        cod_prod: [det.cod_prod],
+        cantidad: [det.cantidad, [Validators.required, Validators.max(det.cantidad), Validators.min(1)]],
+        peso_unitario: [0, [Validators.required, Validators.min(0.001)]],
+        peso_total: [{ value: 0, disabled: true }]
+      });
+
+      group.valueChanges.subscribe(() => this.calcularLinea(group));
+      this.items.push(group);
+    });
+    
+    this.sincronizarSignals();
+  }
+
+  calcularLinea(group: FormGroup) {
+    const cant = group.get('cantidad')?.value || 0;
+    const unit = group.get('peso_unitario')?.value || 0;
+    const total = Number((cant * unit).toFixed(3));
+    
+    group.get('peso_total')?.setValue(total, { emitEvent: false });
+    this.sincronizarSignals();
+  }
+
+  sincronizarSignals() {
+    this.itemsWeights.set(this.items.getRawValue());
+  }
+
+  enviar() {
+    if (this.remissionForm.invalid) {
+      this.remissionForm.markAllAsTouched();
+      return;
+    }
+
+    const formValue = this.remissionForm.getRawValue();
+    const payload = {
+      ...formValue,
+      peso_bruto_total: this.pesoBrutoTotal(),
+      id_usuario: 1,
+      fecha_inicio_traslado: formValue.fecha_inicio_traslado.toISOString()
+    };
+
+    this.remissionService.create(payload).subscribe({
+      next: (res) => {
+        this.messageService.add({ severity: 'success', summary: 'Éxito', detail: `Guía ${res.serie_numero} generada` });
+        this.cerrar();
+      },
+      error: (err) => {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: err.error?.message || 'Error al emitir guía' });
+      }
+    });
+  }
+
+  private ajustarValidadoresTransporte(modalidad: number) {
+    const transport = this.remissionForm.get('datos_transporte');
+    if (modalidad === 1) {
+      transport?.get('nombre_completo')?.setValidators(Validators.required);
+      transport?.get('placa')?.setValidators(Validators.required);
+      transport?.get('ruc')?.clearValidators();
+      transport?.get('razon_social')?.clearValidators();
+    } else {
+      transport?.get('ruc')?.setValidators(Validators.required);
+      transport?.get('razon_social')?.setValidators(Validators.required);
+      transport?.get('nombre_completo')?.clearValidators();
+      transport?.get('placa')?.clearValidators();
+    }
+    transport?.get('nombre_completo')?.updateValueAndValidity();
+    transport?.get('placa')?.updateValueAndValidity();
+    transport?.get('ruc')?.updateValueAndValidity();
+    transport?.get('razon_social')?.updateValueAndValidity();
+  }
+
   cerrar() {
     this.abierto.set(false);
     this.onHide.emit();
-  }
-
-  guardarRemision() {
-    if (this.remisionForm.valid) {
-      this.cerrar();
-    } else {
-      this.remisionForm.markAllAsTouched();
-    }
+    this.remissionForm.reset();
+    this.saleFound.set(null);
   }
 }
