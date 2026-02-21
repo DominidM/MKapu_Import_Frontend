@@ -422,18 +422,26 @@ export class NuevaTransferencia implements OnInit {
   }
 
   buscarProductos(event: { query?: string }): void {
-    const query = event.query;
+    const query = (event.query ?? '').trim();
 
-    if (!query || !this.idSede) return;
+    if (!query || !this.idSede) {
+      this.productosAutocomplete = this.productos.slice(0, 20);
+      return;
+    }
 
     this.productoService
       .getProductosAutocomplete(query, this.idSede)
-      .pipe(
-        map((resp) => resp.data),
-        takeUntilDestroyed(this.destroyRef),
-      )
-      .subscribe((data) => {
-        this.productosAutocomplete = this.mapAutocompleteProductos(data, this.sedeOrigen);
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (response) => {
+          this.productosAutocomplete = this.mapAutocompleteProductos(
+            response.data ?? [],
+            this.sedeOrigen,
+          );
+        },
+        error: () => {
+          this.productosAutocomplete = [];
+        },
       });
   }
 

@@ -58,49 +58,6 @@
           <h3>Producto y sedes</h3>
         </div>
 
-        <div class="grid mb-3 transfer-panel-grid">
-          <div class="transfer-field col-12">
-            <label class="field-label">Producto</label>
-            <p-autocomplete
-              class="w-full"
-              [(ngModel)]="productoQuery"
-              [suggestions]="productosAutocomplete"
-              (completeMethod)="buscarProductos($event)"
-              (onSelect)="onSelectProducto($event)"
-              (onClear)="onClearProducto()"
-              [forceSelection]="true"
-              [dropdown]="true"
-              optionLabel="nombre"
-              placeholder="Buscar por codigo o nombre"
-              emptyMessage="Sin resultados"
-            >
-              <ng-template let-producto pTemplate="item">
-                <div class="transfer-suggestion">
-                  <div class="transfer-suggestion-title">{{ producto.nombre }}</div>
-                  <div class="transfer-suggestion-meta">{{ producto.sku }} · {{ producto.marca }}</div>
-                </div>
-              </ng-template>
-            </p-autocomplete>
-          </div>
-        </div>
-
-        @if (productoSeleccionado) {
-          <p-card class="transfer-subcard" [class.transfer-subcard-conflict]="isSelectedProductInConflict()">
-            <div class="transfer-product-title">{{ productoSeleccionado.nombre }}</div>
-            <div class="transfer-meta flex flex-column md:flex-row">
-              <span>Código: {{ productoSeleccionado.sku }}</span>
-              <span>Categoria: {{ productoSeleccionado.categoria }}</span>
-              <span>Marca: {{ productoSeleccionado.marca }}</span>
-            </div>
-            @if (isSelectedProductInConflict()) {
-              <div class="transfer-conflict-note mt-2">
-                <i class="pi pi-exclamation-triangle"></i>
-                <span>Stock insuficiente para este producto. Ajusta la cantidad solicitada.</span>
-              </div>
-            }
-          </p-card>
-        }
-
         <div class="grid mb-3">
           <div class="transfer-field col-12 md:col-6">
             <label class="field-label">Sede origen</label>
@@ -175,6 +132,49 @@
             }
           </div>
         </div>
+
+        <div class="grid mb-3 transfer-panel-grid">
+          <div class="transfer-field col-12">
+            <label class="field-label">Producto</label>
+            <p-autocomplete
+              class="w-full"
+              [(ngModel)]="productoQuery"
+              [suggestions]="productosAutocomplete"
+              (completeMethod)="buscarProductos($event)"
+              (onSelect)="onSelectProducto($event)"
+              (onClear)="onClearProducto()"
+              [forceSelection]="true"
+              [dropdown]="true"
+              optionLabel="nombre"
+              placeholder="Buscar por codigo o nombre"
+              emptyMessage="Sin resultados"
+            >
+              <ng-template let-producto pTemplate="item">
+                <div class="transfer-suggestion">
+                  <div class="transfer-suggestion-title">{{ producto.nombre }}</div>
+                  <div class="transfer-suggestion-meta">{{ producto.sku }} · {{ producto.marca }}</div>
+                </div>
+              </ng-template>
+            </p-autocomplete>
+          </div>
+        </div>
+
+        @if (productoSeleccionado) {
+          <p-card class="transfer-subcard" [class.transfer-subcard-conflict]="isSelectedProductInConflict()">
+            <div class="transfer-product-title">{{ productoSeleccionado.nombre }}</div>
+            <div class="transfer-meta flex flex-column md:flex-row">
+              <span>Código: {{ productoSeleccionado.sku }}</span>
+              <span>Categoria: {{ productoSeleccionado.categoria }}</span>
+              <span>Marca: {{ productoSeleccionado.marca }}</span>
+            </div>
+            @if (isSelectedProductInConflict()) {
+              <div class="transfer-conflict-note mt-2">
+                <i class="pi pi-exclamation-triangle"></i>
+                <span>Stock insuficiente para este producto. Ajusta la cantidad solicitada.</span>
+              </div>
+            }
+          </p-card>
+        }
 
         </div>
       }

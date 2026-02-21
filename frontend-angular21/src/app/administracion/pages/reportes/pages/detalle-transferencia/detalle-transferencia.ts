@@ -14,7 +14,8 @@ import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
 import { DividerModule } from 'primeng/divider';
 import { ToastModule } from 'primeng/toast';
-import { MessageService } from 'primeng/api';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   ApproveTransferDto,
@@ -69,16 +70,18 @@ interface TransferenciaDetalleItem {
     TagModule,
     DividerModule,
     ToastModule,
+    ConfirmDialogModule,
   ],
   templateUrl: './detalle-transferencia.html',
   styleUrl: './detalle-transferencia.css',
-  providers: [MessageService],
+  providers: [MessageService, ConfirmationService],
 })
 export class DetalleTransferencia {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly transferStore = inject(TransferStore);
   private readonly messageService = inject(MessageService);
+  private readonly confirmationService = inject(ConfirmationService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly transferUserContext = inject(TransferUserContextService);
 
@@ -108,18 +111,20 @@ export class DetalleTransferencia {
     return (
       transferencia.estado === 'SOLICITADA' &&
       this.isAdminUser() &&
-      !this.isUserFromTransferOrigin() &&
-      this.isUserFromTransferDestination()
+      this.isUserFromTransferOrigin() &&
+      !this.isUserFromTransferDestination()
     );
   });
 
   private readonly canCompletarSolicitudSig = computed(() => {
     const transferencia = this.transferenciaSig();
+    const currentUserId = this.transferUserContext.getCurrentUserId();
     if (!transferencia) return false;
     return (
       transferencia.estado === 'APROBADA' &&
       this.isAdminUser() &&
-      this.isUserFromTransferDestination()
+      this.isUserFromTransferDestination() &&
+      currentUserId !== this.getApproverUserId()
     );
   });
 
@@ -208,13 +213,13 @@ export class DetalleTransferencia {
     const transferId = this.transferenciaActualSig()?.id;
 
     if (
-      this.isUserFromTransferOrigin() ||
-      !this.isUserFromTransferDestination() ||
-      !this.isAdminUser()
+      !this.isAdminUser() ||
+      !this.isUserFromTransferOrigin() ||
+      this.isUserFromTransferDestination()
     ) {
       this.showWarn(
         'Acción no permitida',
-        'Solo un administrador de la sede destino puede aprobar esta solicitud.',
+        'Solo un administrador de la sede origen (y no de destino) puede aprobar esta solicitud.',
       );
       return;
     }
@@ -246,43 +251,64 @@ export class DetalleTransferencia {
     const userId = this.transferUserContext.getCurrentUserId();
     const transferId = this.transferenciaActualSig()?.id;
 
+    if (
+      !this.isAdminUser() ||
+      !this.isUserFromTransferOrigin() ||
+      this.isUserFromTransferDestination()
+    ) {
+      this.showWarn(
+        'Acción no permitida',
+        'Solo un administrador de la sede origen (y no de destino) puede rechazar esta solicitud.',
+      );
+      return;
+    }
+
     if (!transferId || !userId) {
       this.showWarn('Acción no permitida', 'No se pudo identificar usuario o transferencia');
       return;
     }
 
-    const reason = window.prompt('Ingrese el motivo de rechazo', 'Motivo de rechazo');
-    if (!reason || !reason.trim()) {
-      this.showWarn('Motivo requerido', 'Debes ingresar un motivo de rechazo');
-      return;
-    }
+    this.confirmationService.confirm({
+      header: 'Rechazar transferencia',
+      message: '¿Estás seguro de rechazar esta transferencia?',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Sí, rechazar',
+      rejectLabel: 'Cancelar',
+      acceptButtonProps: { severity: 'danger' },
+      rejectButtonProps: { severity: 'secondary', outlined: true },
+      accept: () => {
+        const dto: RejectTransferDto = { userId, reason: 'Rechazada por administrador' };
+        this.submittingDecisionSig.set(true);
+        this.transferStore
+          .reject(transferId, dto)
+          .pipe(takeUntilDestroyed(this.destroyRef))
+          .subscribe((response) => {
+            this.submittingDecisionSig.set(false);
 
-    const dto: RejectTransferDto = { userId, reason: reason.trim() };
-    this.submittingDecisionSig.set(true);
-    this.transferStore
-      .reject(transferId, dto)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((response) => {
-        this.submittingDecisionSig.set(false);
+            if (!response) return;
 
-        if (!response) return;
-
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Solicitud actualizada',
-          detail: 'La solicitud fue rechazada correctamente',
-        });
-      });
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Solicitud actualizada',
+              detail: 'La solicitud fue rechazada correctamente',
+            });
+          });
+      },
+    });
   }
 
   completarSolicitud(): void {
     const userId = this.transferUserContext.getCurrentUserId();
     const transferId = this.transferenciaActualSig()?.id;
 
-    if (!this.isUserFromTransferDestination() || !this.isAdminUser()) {
+    if (
+      !this.isAdminUser() ||
+      !this.isUserFromTransferDestination() ||
+      userId === this.getApproverUserId()
+    ) {
       this.showWarn(
         'Acción no permitida',
-        'Solo un administrador de la sede destino puede completar esta transferencia.',
+        'Solo un administrador de la sede destino, distinto al que aprobó, puede completar esta transferencia.',
       );
       return;
     }
@@ -475,7 +501,9 @@ export class DetalleTransferencia {
 
   private isUserFromTransferOrigin(): boolean {
     const userHqId = this.transferUserContext.getCurrentHeadquarterId();
-    const transferOriginHqId = this.transferenciaActualSig()?.originHeadquartersId;
+    const transfer = this.transferenciaActualSig();
+    const transferOriginHqId =
+      transfer?.originHeadquartersId ?? transfer?.origin?.id_sede ?? transfer?.origin?.id;
 
     if (!userHqId || transferOriginHqId === undefined || transferOriginHqId === null) {
       return false;
@@ -497,5 +525,32 @@ export class DetalleTransferencia {
     }
 
     return String(userHqId).trim() === String(transferDestinationHqId).trim();
+  }
+
+  private getApproverUserId(): number {
+    const transfer = this.transferenciaActualSig();
+    if (!transfer) {
+      return -1;
+    }
+
+    if (typeof transfer.approveUserId === 'number' && transfer.approveUserId > 0) {
+      return transfer.approveUserId;
+    }
+
+    const approveUser = transfer.approveUser;
+    const user = Array.isArray(approveUser) ? approveUser[0] : approveUser;
+    if (!user) {
+      return -1;
+    }
+
+    const candidates = [user.idUsuario, user.userId, user.id];
+    for (const candidate of candidates) {
+      const id = Number(candidate);
+      if (Number.isFinite(id) && id > 0) {
+        return id;
+      }
+    }
+
+    return -1;
   }
 }
