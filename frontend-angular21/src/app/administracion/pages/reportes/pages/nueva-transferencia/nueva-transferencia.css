@@ -382,6 +382,11 @@
   color: var(--transfer-muted);
 }
 
+.sede-note {
+  display: block;
+  min-height: 1.2rem;
+}
+
 .transfer-textarea {
   resize: none;
 }

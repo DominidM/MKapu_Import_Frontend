@@ -58,6 +58,86 @@
           <h3>Producto y sedes</h3>
         </div>
 
+        <div class="grid mb-3">
+          <div class="transfer-field col-12 md:col-6">
+            <label class="field-label">Sede origen</label>
+            <p-select
+              class="w-full"
+              [options]="sedes"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Seleccione sede origen"
+              [(ngModel)]="sedeOrigen"
+              (onChange)="onSedeOrigenChange()"
+            ></p-select>
+            <small class="helper-text sede-note" aria-hidden="true">&nbsp;</small>
+            <label class="field-label mt-2">Almacen origen</label>
+            <p-select
+              class="w-full"
+              [options]="almacenes"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Seleccione almacen origen"
+              [(ngModel)]="almacenOrigenId"
+              (onChange)="onAlmacenOrigenChange()"
+            ></p-select>
+            @if (sedeOrigen && productoSeleccionado) {
+              <p-card class="stock-mini-card">
+                <div class="stock-mini-row">
+                  <span class="stock-mini-label">Stock disponible</span>
+                  <span class="stock-badge" [ngClass]="getStockClassForSede(productoSeleccionado, sedeOrigen)">
+                    {{ stockDisponible }} un.
+                  </span>
+                </div>
+              </p-card>
+            }
+          </div>
+
+          <div class="transfer-field col-12 md:col-6">
+            <label class="field-label">Sede destino</label>
+            <p-select
+              class="w-full"
+              [options]="sedes"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Seleccione sede destino"
+              [(ngModel)]="sedeDestino"
+              [disabled]="destinationSedeLocked"
+              (onChange)="onSedeDestinoChange()"
+            ></p-select>
+            <small class="helper-text sede-note">
+              @if (destinationSedeLocked) {
+                Sede destino bloqueada según sede del usuario logeado.
+              } @else {
+                &nbsp;
+              }
+            </small>
+            <label class="field-label mt-2">Almacen destino</label>
+            <p-select
+              class="w-full"
+              [options]="almacenes"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Seleccione almacen destino"
+              [(ngModel)]="almacenDestinoId"
+              (onChange)="onAlmacenDestinoChange()"
+            ></p-select>
+            @if (sedeDestino && productoSeleccionado) {
+              <p-card class="stock-mini-card">
+                <div class="stock-mini-row">
+                  <span class="stock-mini-label">Stock actual</span>
+                  <span
+                    class="stock-badge"
+                    [ngClass]="getStockClassForSede(productoSeleccionado, sedeDestino)"
+                  >
+                    {{ productoSeleccionado.stockPorSede[sedeDestino] || 0 }} un.
+                  </span>
+                </div>
+              </p-card>
+            }
+          </div>
+        </div>
+
         <div class="grid mb-3 transfer-panel-grid">
           <div class="transfer-field col-12">
             <label class="field-label">Producto</label>
@@ -100,77 +180,6 @@
             }
           </p-card>
         }
-
-        <div class="grid mb-3">
-          <div class="transfer-field col-12 md:col-6">
-            <label class="field-label">Sede origen</label>
-            <p-select
-              class="w-full"
-              [options]="sedes"
-              optionLabel="label"
-              optionValue="value"
-              placeholder="Seleccione sede origen"
-              [(ngModel)]="sedeOrigen"
-              (onChange)="onSedeOrigenChange()"
-            ></p-select>
-            <label class="field-label mt-2">Almacen origen</label>
-            <p-select
-              class="w-full"
-              [options]="almacenes"
-              optionLabel="label"
-              optionValue="value"
-              placeholder="Seleccione almacen origen"
-              [(ngModel)]="almacenOrigenId"
-              (onChange)="onAlmacenOrigenChange()"
-            ></p-select>
-            @if (sedeOrigen && productoSeleccionado) {
-              <p-card class="stock-mini-card">
-                <div class="stock-mini-row">
-                  <span class="stock-mini-label">Stock disponible</span>
-                  <span class="stock-badge" [ngClass]="getStockClassForSede(productoSeleccionado, sedeOrigen)">
-                    {{ stockDisponible }} un.
-                  </span>
-                </div>
-              </p-card>
-            }
-          </div>
-
-          <div class="transfer-field col-12 md:col-6">
-            <label class="field-label">Sede destino</label>
-            <p-select
-              class="w-full"
-              [options]="sedes"
-              optionLabel="label"
-              optionValue="value"
-              placeholder="Seleccione sede destino"
-              [(ngModel)]="sedeDestino"
-              (onChange)="onSedeDestinoChange()"
-            ></p-select>
-            <label class="field-label mt-2">Almacen destino</label>
-            <p-select
-              class="w-full"
-              [options]="almacenes"
-              optionLabel="label"
-              optionValue="value"
-              placeholder="Seleccione almacen destino"
-              [(ngModel)]="almacenDestinoId"
-              (onChange)="onAlmacenDestinoChange()"
-            ></p-select>
-            @if (sedeDestino && productoSeleccionado) {
-              <p-card class="stock-mini-card">
-                <div class="stock-mini-row">
-                  <span class="stock-mini-label">Stock actual</span>
-                  <span
-                    class="stock-badge"
-                    [ngClass]="getStockClassForSede(productoSeleccionado, sedeDestino)"
-                  >
-                    {{ productoSeleccionado.stockPorSede[sedeDestino] || 0 }} un.
-                  </span>
-                </div>
-              </p-card>
-            }
-          </div>
-        </div>
 
         </div>
       }

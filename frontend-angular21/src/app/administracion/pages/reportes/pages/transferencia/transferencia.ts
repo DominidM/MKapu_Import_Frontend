@@ -35,6 +35,7 @@ interface TransferenciaRow {
   codigo: string;
   originHeadquartersId: string;
   destinationHeadquartersId: string;
+  approveUserId: number | null;
   producto: string;
   origen: string;
   destino: string;
@@ -261,30 +262,32 @@ export class Transferencia {
     return (
       transferencia.estado === 'SOLICITADA' &&
       this.transferUserContext.isAdmin() &&
-      !this.isUserFromTransferOrigin(transferencia.originHeadquartersId) &&
-      this.isUserFromTransferDestination(transferencia.destinationHeadquartersId)
+      this.isUserFromTransferOrigin(transferencia.originHeadquartersId) &&
+      !this.isUserFromTransferDestination(transferencia.destinationHeadquartersId)
     );
   }
 
   canConfirm(transferencia: TransferenciaRow): boolean {
+    const currentUserId = this.transferUserContext.getCurrentUserId();
     return (
       transferencia.estado === 'APROBADA' &&
       this.transferUserContext.isAdmin() &&
-      this.isUserFromTransferDestination(transferencia.destinationHeadquartersId)
+      this.isUserFromTransferDestination(transferencia.destinationHeadquartersId) &&
+      currentUserId !== (transferencia.approveUserId ?? -1)
     );
   }
 
   aprobarTransferencia(row: TransferenciaRow): void {
     if (
-      this.isUserFromTransferOrigin(row.originHeadquartersId) ||
-      !this.isUserFromTransferDestination(row.destinationHeadquartersId) ||
-      !this.transferUserContext.isAdmin()
+      !this.transferUserContext.isAdmin() ||
+      !this.isUserFromTransferOrigin(row.originHeadquartersId) ||
+      this.isUserFromTransferDestination(row.destinationHeadquartersId)
     ) {
       this.messageService.add({
         severity: 'warn',
         summary: 'Acción no permitida',
         detail:
-          'Solo un administrador de la sede destino puede aprobar esta solicitud.',
+          'Solo un administrador de la sede origen (y no de destino) puede aprobar esta solicitud.',
       });
       return;
     }
@@ -308,15 +311,17 @@ export class Transferencia {
   }
 
   confirmarRecepcion(row: TransferenciaRow): void {
+    const currentUserId = this.transferUserContext.getCurrentUserId();
     if (
+      !this.transferUserContext.isAdmin() ||
       !this.isUserFromTransferDestination(row.destinationHeadquartersId) ||
-      !this.transferUserContext.isAdmin()
+      currentUserId === (row.approveUserId ?? -1)
     ) {
       this.messageService.add({
         severity: 'warn',
         summary: 'Acción no permitida',
         detail:
-          'Solo un administrador de la sede destino puede completar esta transferencia.',
+          'Solo un administrador de la sede destino, distinto al que aprobó, puede completar esta transferencia.',
       });
       return;
     }
@@ -348,13 +353,19 @@ export class Transferencia {
     return {
       id: transferencia.id,
       codigo: String(transferencia.id),
-      originHeadquartersId: String(transferencia.originHeadquartersId ?? ''),
+      originHeadquartersId: String(
+        transferencia.originHeadquartersId ??
+          transferencia.origin?.id_sede ??
+          transferencia.origin?.id ??
+          '',
+      ),
       destinationHeadquartersId: String(
         transferencia.destinationHeadquartersId ??
           transferencia.destination?.id_sede ??
           transferencia.destination?.id ??
           '',
       ),
+      approveUserId: this.getApproveUserId(transferencia),
       producto: this.getProductName(transferencia),
       origen:
         transferencia.origin?.nomSede ||
@@ -484,6 +495,28 @@ export class Transferencia {
 
     const parsed = String(value).trim();
     return parsed || null;
+  }
+
+  private getApproveUserId(transferencia: TransferListResponseDto): number | null {
+    if (typeof transferencia.approveUserId === 'number' && transferencia.approveUserId > 0) {
+      return transferencia.approveUserId;
+    }
+
+    const approveUser = transferencia.approveUser;
+    const user = Array.isArray(approveUser) ? approveUser[0] : approveUser;
+    if (!user) {
+      return null;
+    }
+
+    const candidates = [user.idUsuario, user.userId, user.id];
+    for (const candidate of candidates) {
+      const id = Number(candidate);
+      if (Number.isFinite(id) && id > 0) {
+        return id;
+      }
+    }
+
+    return null;
   }
 
   private isUserFromTransferOrigin(originHeadquartersId: string | number | null | undefined): boolean {
