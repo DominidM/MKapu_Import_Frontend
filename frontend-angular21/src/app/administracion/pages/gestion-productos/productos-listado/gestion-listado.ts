@@ -91,7 +91,7 @@ constructor() {
       error: (err) => console.error('Error cargando sedes', err)
     });
 
-    this.categoriaService.getCategorias().subscribe({
+    this.categoriaService.getCategorias(true).subscribe({
       next: (resp) => {
         this.categorias.set(
           resp.categories.map(cat => ({

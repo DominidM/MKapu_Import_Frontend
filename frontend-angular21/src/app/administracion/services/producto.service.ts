@@ -48,12 +48,21 @@ export class ProductoService {
 
     let params = new HttpParams()
       .set('id_sede', idSede)
-      .set('page', page)
-      .set('size', size);
+      //.set('page', page)
+      //.set('size', size);
 
-    if (categoria) {
+    if (page) {
+      params = params.set('page', page);
+    }
+
+        if (size) {
+      params = params.set('size', size);
+    }
+
+        if (categoria) {
       params = params.set('categoria', categoria);
     }
+
 
     return this.http.get<ProductoStockResponse>(
       `${this.api}/logistics/products/productos_stock`,
