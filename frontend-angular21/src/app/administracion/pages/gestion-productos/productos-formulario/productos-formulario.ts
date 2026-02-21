@@ -1,8 +1,8 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, ActivatedRoute } from '@angular/router'; // <-- Añadido ActivatedRoute
+import { Router, ActivatedRoute } from '@angular/router'; 
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { of } from 'rxjs';
+import { of, forkJoin } from 'rxjs'; // <-- IMPORTANTE: Añadido forkJoin
 import { concatMap, catchError, finalize } from 'rxjs/operators';
 
 // PrimeNG
@@ -20,7 +20,7 @@ import { Categoria } from '../../../interfaces/categoria.interface';
 import { ProductoService } from '../../../services/producto.service';
 import { CategoriaService } from '../../../services/categoria.service';
 import { SedeService } from '../../../services/sede.service';
-import { CreateProductoDto, MovimientoInventarioDto } from '../../../interfaces/producto.interface';
+import { CreateProductoDto, MovimientoInventarioDto, UpdateProductoDto, UpdateProductoPreciosDto } from '../../../interfaces/producto.interface';
 import { AlmacenService } from '../../../services/almacen.service';
 
 @Component({
@@ -44,7 +44,7 @@ import { AlmacenService } from '../../../services/almacen.service';
 export class ProductosFormulario implements OnInit {
   private fb = inject(FormBuilder);
   private router = inject(Router);
-  private route = inject(ActivatedRoute); // <-- Inyectado para leer la URL
+  private route = inject(ActivatedRoute); 
   private almacenService = inject(AlmacenService);
   private productoService = inject(ProductoService);
   private categoriaService = inject(CategoriaService);
@@ -55,19 +55,25 @@ export class ProductosFormulario implements OnInit {
   isSubmitting = signal<boolean>(false);
   sedes = this.sedeService.sedes;
   almacenes = this.almacenService.sedes;
+  
   // SIGNALS MODO EDICIÓN
   esModoEdicion = signal<boolean>(false);
   idProductoActual = signal<number | null>(null);
+
+  // NUEVOS SIGNALS PARA EL CÁLCULO DE STOCK EN VIVO
+  stockActual = signal<number>(0);
+  stockAgregado = signal<number>(0);
+  // El stock total se calcula solo sumando el actual + lo que escriba el usuario
+  stockTotal = computed(() => this.stockActual() + this.stockAgregado());
 
   // SIGNALS CABECERA
   tituloKicker = signal<string>('ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS CREACIÓN');
   tituloPrincipal = signal<string>('CREAR PRODUCTO');
   iconoCabecera = signal<string>('pi pi-plus-circle');
 
-  // FORMULARIO (Se mantiene 'anexo' que funcionará visualmente como 'Nombre')
   productoForm: FormGroup = this.fb.group({
     codigo: ['', Validators.required],
-    anexo: ['', Validators.required], // <-- Funciona como Nombre en UI
+    anexo: ['', Validators.required],
     descripcion: ['', Validators.required],
     familia: [null, Validators.required],
     precioCompra: [0, [Validators.required, Validators.min(0)]],
@@ -78,20 +84,23 @@ export class ProductosFormulario implements OnInit {
     unidadMedida: ['UNIDAD', Validators.required],
     almacen: [null, Validators.required],
     sede: [null, Validators.required],
-    stockInicial: [0, [Validators.required, Validators.min(0)]]
+    stockInicial: [0, [Validators.required, Validators.min(0)]] // Funciona como "Agregar Stock" en edición
   });
 
   ngOnInit() {
     this.cargarDatosIniciales();
     this.setSedePorDefecto();
     this.verificarModoEdicion();
+
+    // Escuchamos lo que el usuario teclea en "stockInicial" para actualizar el Stock Total visualmente
+    this.productoForm.get('stockInicial')?.valueChanges.subscribe(valor => {
+      this.stockAgregado.set(valor || 0);
+    });
   }
 
   private cargarDatosIniciales() {
     this.categoriaService.getCategorias().subscribe({
-      next: (res) => {
-        this.categorias.set(res.categories);
-      },
+      next: (res) => this.categorias.set(res.categories),
       error: (err) => console.error('Error cargando categorías', err)
     });
 
@@ -101,8 +110,7 @@ export class ProductosFormulario implements OnInit {
 
     this.almacenService.loadAlmacen().subscribe({
       error: (err) => console.error('Error cargando almacenes', err)
-    })
-
+    });
   }
 
   private setSedePorDefecto() {
@@ -114,16 +122,13 @@ export class ProductosFormulario implements OnInit {
           this.productoForm.patchValue({ sede: user.idSede });
         }
       } catch (error) {
-        console.error('Error parseando usuario del local storage', error);
+        console.error('Error parseando usuario', error);
       }
     }
   }
 
-
   private verificarModoEdicion() {
-    // Leemos el ID del producto
     const idParam = this.route.snapshot.paramMap.get('id');
-    // NUEVO: Leemos la sede que mandamos desde la tabla
     const sedeParam = this.route.snapshot.queryParamMap.get('idSede');
 
     if (idParam) {
@@ -135,10 +140,7 @@ export class ProductosFormulario implements OnInit {
       this.tituloPrincipal.set('EDITAR PRODUCTO');
       this.iconoCabecera.set('pi pi-pencil');
 
-      // Si viene la sede en la URL la usamos, si no, usamos la del formulario o 1
       const idSedeBackend = sedeParam ? Number(sedeParam) : (this.productoForm.get('sede')?.value || 1);
-
-      // Le pasamos la sede al método
       this.cargarDatosDelProducto(id, idSedeBackend);
     }
   }
@@ -147,6 +149,9 @@ export class ProductosFormulario implements OnInit {
     this.productoService.getProductoDetalleStock(id, idSede).subscribe({
       next: (res) => {
         const prod = res.producto;
+        
+        // Guardamos el stock que viene de la BD
+        this.stockActual.set(res.stock?.cantidad || 0);
 
         this.productoForm.patchValue({
           codigo: prod.codigo,
@@ -160,17 +165,17 @@ export class ProductosFormulario implements OnInit {
           precioMayorista: prod.precio_mayor,
           unidadMedida: prod.unidad_medida?.nombre || 'UNIDAD',
           sede: res.stock?.id_sede,
-          stockInicial: res.stock?.cantidad || 0
+          almacen: res.stock?.id_almacen,
+          stockInicial: 0 // Lo ponemos en 0 porque ahora es "Stock a agregar"
         });
 
-        // Deshabilitamos en edición
-        this.productoForm.get('stockInicial')?.disable();
+        // NOTA: NO deshabilitamos stockInicial para que puedan añadir stock
         this.productoForm.get('sede')?.disable();
+        this.productoForm.get('almacen')?.disable();
       },
       error: (err) => {
-        // Imprimimos el error exacto en consola para que lo veas
         console.error('Error trayendo datos del backend:', err);
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se encontraron los datos del producto en esta sede.' });
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se encontraron los datos.' });
       }
     });
   }
@@ -187,35 +192,87 @@ export class ProductosFormulario implements OnInit {
     }
 
     this.isSubmitting.set(true);
-    const formValue = this.productoForm.getRawValue();
+    // getRawValue obtiene también los campos disabled (como sede y almacen en edición)
+    const formValue = this.productoForm.getRawValue(); 
 
-    // Limpieza
     const codigoLimpio = formValue.codigo?.trim().toUpperCase() || '';
-    const anexoLimpio = formValue.anexo?.trim().toUpperCase() || ''; // Funciona como nombre
+    const anexoLimpio = formValue.anexo?.trim().toUpperCase() || ''; 
     const descripcionLimpia = formValue.descripcion?.trim().toUpperCase() || '';
 
-    // DTO de Creación (Nota: anexo lleva el nombre, descripcion lleva la descripcion)
-    const productoDto: CreateProductoDto = {
-      id_categoria: formValue.familia,
-      codigo: codigoLimpio,
-      anexo: anexoLimpio, // Enviamos el valor del "Nombre" aquí
-      descripcion: descripcionLimpia,
-      pre_compra: formValue.precioCompra,
-      pre_venta: formValue.precioVenta,
-      pre_unit: formValue.precioUnidad,
-      pre_may: formValue.precioMayorista,
-      pre_caja: formValue.precioCaja,
-      uni_med: formValue.unidadMedida
-    };
+    if (this.esModoEdicion() && this.idProductoActual()) {
+      // ===== LÓGICA DE ACTUALIZAR (PUTs) =====
+      const idProd = this.idProductoActual()!;
 
-    if (this.esModoEdicion()) {
-      // ===== LÓGICA DE ACTUALIZAR (PUT) =====
-      console.log('DTO a enviar en PUT:', productoDto);
-      // Aquí deberás llamar a tu this.productoService.actualizarProducto(id, dto)
-      this.messageService.add({ severity: 'info', summary: 'Info', detail: 'Falta implementar endpoint PUT en el servicio.' });
-      this.isSubmitting.set(false);
+      const updateInfo: UpdateProductoDto = {
+        id_producto: idProd,
+        id_categoria: formValue.familia,
+        codigo: codigoLimpio,
+        anexo: anexoLimpio,
+        descripcion: descripcionLimpia,
+        uni_med: formValue.unidadMedida
+      };
+
+      const updatePrecios: UpdateProductoPreciosDto = {
+        id_producto: idProd,
+        pre_compra: formValue.precioCompra,
+        pre_venta: formValue.precioVenta,
+        pre_unit: formValue.precioUnidad,
+        pre_may: formValue.precioMayorista,
+        pre_caja: formValue.precioCaja
+      };
+
+      // Lanzamos ambas peticiones al mismo tiempo
+      forkJoin([
+        this.productoService.actualizarProductoInfo(updateInfo),
+        this.productoService.actualizarProductoPrecios(updatePrecios)
+      ]).pipe(
+        concatMap(() => {
+          // Si el usuario puso un número mayor a 0, agregamos el inventario
+          if (formValue.stockInicial > 0) {
+            const movDto: MovimientoInventarioDto = {
+              originType: 'COMPRA', // o 'COMPRA', 'AJUSTE', según requiera tu BD
+              refId: 101,
+              refTable: 'ordenes_compra',
+              observation: "Ingreso por orden de compra #101",
+              items: [{
+                productId: idProd,
+                warehouseId: formValue.almacen, 
+                sedeId: formValue.sede,         
+                quantity: formValue.stockInicial, // Cantidad a sumar
+                type: 'INGRESO'
+              }]
+            };
+            return this.productoService.registrarIngresoInventario(movDto);
+          }
+          return of(null); // Si es 0, no hace petición de stock
+        }),
+        catchError(error => {
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Hubo un problema al actualizar.' });
+          throw error;
+        }),
+        finalize(() => this.isSubmitting.set(false))
+      ).subscribe({
+        next: () => {
+          this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Producto actualizado correctamente.' });
+          setTimeout(() => this.router.navigate(['/admin/gestion-productos']), 1500);
+        }
+      });
+
     } else {
       // ===== LÓGICA DE CREAR (POST) =====
+      const productoDto: CreateProductoDto = {
+        id_categoria: formValue.familia,
+        codigo: codigoLimpio,
+        anexo: anexoLimpio,
+        descripcion: descripcionLimpia,
+        pre_compra: formValue.precioCompra,
+        pre_venta: formValue.precioVenta,
+        pre_unit: formValue.precioUnidad,
+        pre_may: formValue.precioMayorista,
+        pre_caja: formValue.precioCaja,
+        uni_med: formValue.unidadMedida
+      };
+
       this.productoService.crearProducto(productoDto).pipe(
         concatMap(productoCreado => {
           if (formValue.stockInicial <= 0) {
@@ -226,11 +283,11 @@ export class ProductosFormulario implements OnInit {
             originType: 'COMPRA',
             refId: 101,
             refTable: 'ordenes_compra',
-            observation: "Ingreso por orden de compra #101",
+            observation: "Ingreso inicial de producto",
             items: [{
               productId: productoCreado.id_producto,
-              warehouseId: formValue.almacen, // <--- ID del desplegable Almacén
-              sedeId: formValue.sede,         // <--- ID del desplegable Sede
+              warehouseId: formValue.almacen,
+              sedeId: formValue.sede,
               quantity: formValue.stockInicial,
               type: 'INGRESO'
             }]
@@ -239,17 +296,14 @@ export class ProductosFormulario implements OnInit {
           return this.productoService.registrarIngresoInventario(movDto);
         }),
         catchError(error => {
-          const backendMessage = error?.error?.message || 'Hubo un problema al guardar los datos.';
-          this.messageService.add({ severity: 'error', summary: 'Error', detail: backendMessage });
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Hubo un error al crear.' });
           throw error;
         }),
         finalize(() => this.isSubmitting.set(false))
       ).subscribe({
         next: () => {
-          this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Producto registrado correctamente.' });
-          setTimeout(() => {
-            this.router.navigate(['/admin/gestion-productos']);
-          }, 1500);
+          this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Producto creado correctamente.' });
+          setTimeout(() => this.router.navigate(['/admin/gestion-productos']), 1500);
         }
       });
     }

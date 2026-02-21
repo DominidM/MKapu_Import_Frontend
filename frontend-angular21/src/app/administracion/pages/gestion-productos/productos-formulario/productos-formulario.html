@@ -21,7 +21,7 @@
 
 <div class="p-2 surface-card border-1 border-300 border-round-xl shadow-2">
   <form [formGroup]="productoForm" (ngSubmit)="guardarProducto()" class="formgrid grid p-4">
-    
+
     <div class="col-12 mb-3">
       <h3 class="text-xl font-bold text-900 m-0 flex align-items-center gap-2">
         <i class="pi pi-info-circle text-warning"></i>
@@ -31,26 +31,32 @@
 
     <div class="field col-12 md:col-6 mb-4">
       <label for="codigo" class="font-semibold text-900 mb-2 block">Código *</label>
-      <input pInputText id="codigo" formControlName="codigo" class="w-full border-1 border-300 uppercase" placeholder="Ej: RAF-TV55, RAF-LG32" />
+      <input pInputText id="codigo" formControlName="codigo" class="w-full border-1 border-300 uppercase"
+        placeholder="Ej: RAF-TV55, RAF-LG32" />
       @if (productoForm.get('codigo')?.invalid && productoForm.get('codigo')?.touched) {
-        <small class="text-red-500 block mt-2">El código es requerido</small>
+      <small class="text-red-500 block mt-2">El código es requerido</small>
       }
     </div>
 
     <div class="field col-12 md:col-6 mb-4">
       <label for="anexo" class="font-semibold text-900 mb-2 block">Nombre *</label>
-      <input pInputText id="anexo" formControlName="anexo" class="w-full border-1 border-300 uppercase" placeholder="Ej: Smart TV LED 55 pulgadas 4K RAF..." />
+      <input pInputText id="anexo" formControlName="anexo" class="w-full border-1 border-300 uppercase"
+        placeholder="Ej: Smart TV LED 55 pulgadas 4K RAF..." />
       @if (productoForm.get('anexo')?.invalid && productoForm.get('anexo')?.touched) {
-        <small class="text-red-500 block mt-2">El nombre es requerido</small>
+      <small class="text-red-500 block mt-2">El nombre es requerido</small>
       }
     </div>
 
     <div class="field col-12 mb-4">
       <label for="descripcion" class="font-semibold text-900 mb-2 block">Descripción</label>
-      <textarea id="descripcion" formControlName="descripcion" rows="3" class="w-full border-1 border-300 p-3 border-round uppercase" style="resize: vertical; font-family: inherit" placeholder="Descripción detallada del producto (opcional)"></textarea>
+      <textarea id="descripcion" formControlName="descripcion" rows="3"
+        class="w-full border-1 border-300 p-3 border-round uppercase" style="resize: vertical; font-family: inherit"
+        placeholder="Descripción detallada del producto (opcional)"></textarea>
     </div>
 
-    <div class="col-12 mb-3"><div class="border-top-1 border-300"></div></div>
+    <div class="col-12 mb-3">
+      <div class="border-top-1 border-300"></div>
+    </div>
 
     <div class="col-12 mb-3">
       <h3 class="text-xl font-bold text-900 m-0 flex align-items-center gap-2">
@@ -61,21 +67,25 @@
 
     <div class="field col-12 md:col-6 mb-4">
       <label for="familia" class="font-semibold text-900 mb-2 block">Familia *</label>
-      <p-select id="familia" formControlName="familia" [options]="categorias()" optionLabel="nombre" optionValue="id_categoria" placeholder="Seleccionar familia" styleClass="w-full border-1 border-300"></p-select>
+      <p-select id="familia" formControlName="familia" [options]="categorias()" optionLabel="nombre"
+        optionValue="id_categoria" placeholder="Seleccionar familia" styleClass="w-full border-1 border-300"></p-select>
       @if (productoForm.get('familia')?.invalid && productoForm.get('familia')?.touched) {
-        <small class="text-red-500 block mt-2">La familia es requerida</small>
+      <small class="text-red-500 block mt-2">La familia es requerida</small>
       }
     </div>
 
     <div class="field col-12 md:col-6 mb-4">
       <label for="unidadMedida" class="font-semibold text-900 mb-2 block">Unidad de Medida *</label>
-      <input pInputText formControlName="unidadMedida" class="w-full border-1 border-300 uppercase" placeholder="Ej: UND" />
+      <input pInputText formControlName="unidadMedida" class="w-full border-1 border-300 uppercase"
+        placeholder="Ej: UND" />
       @if (productoForm.get('unidadMedida')?.invalid && productoForm.get('unidadMedida')?.touched) {
-        <small class="text-red-500 block mt-2">La unidad de medida es requerida</small>
+      <small class="text-red-500 block mt-2">La unidad de medida es requerida</small>
       }
     </div>
 
-    <div class="col-12 mb-3"><div class="border-top-1 border-300"></div></div>
+    <div class="col-12 mb-3">
+      <div class="border-top-1 border-300"></div>
+    </div>
 
     <div class="col-12 mb-3">
       <h3 class="text-xl font-bold text-900 m-0 flex align-items-center gap-2">
@@ -86,30 +96,37 @@
 
     <div class="field col-12 md:col-6 lg:col-4 mb-4">
       <label class="font-semibold text-900 mb-2 block">Precio Compra (S/) *</label>
-      <p-inputNumber formControlName="precioCompra" mode="currency" currency="PEN" locale="es-PE" styleClass="w-full" [min]="0" placeholder="S/ 0.00"></p-inputNumber>
+      <p-inputNumber formControlName="precioCompra" mode="currency" currency="PEN" locale="es-PE" styleClass="w-full"
+        [min]="0" placeholder="S/ 0.00"></p-inputNumber>
     </div>
 
     <div class="field col-12 md:col-6 lg:col-4 mb-4">
       <label class="font-semibold text-900 mb-2 block">Precio Venta (S/) *</label>
-      <p-inputNumber formControlName="precioVenta" mode="currency" currency="PEN" locale="es-PE" styleClass="w-full" [min]="0" placeholder="S/ 0.00"></p-inputNumber>
+      <p-inputNumber formControlName="precioVenta" mode="currency" currency="PEN" locale="es-PE" styleClass="w-full"
+        [min]="0" placeholder="S/ 0.00"></p-inputNumber>
     </div>
 
     <div class="field col-12 md:col-6 lg:col-4 mb-4">
       <label class="font-semibold text-900 mb-2 block">Precio Unidad (S/) *</label>
-      <p-inputNumber formControlName="precioUnidad" mode="currency" currency="PEN" locale="es-PE" styleClass="w-full" [min]="0" placeholder="S/ 0.00"></p-inputNumber>
+      <p-inputNumber formControlName="precioUnidad" mode="currency" currency="PEN" locale="es-PE" styleClass="w-full"
+        [min]="0" placeholder="S/ 0.00"></p-inputNumber>
     </div>
 
     <div class="field col-12 md:col-6 mb-4">
       <label class="font-semibold text-900 mb-2 block">Precio Caja (S/) *</label>
-      <p-inputNumber formControlName="precioCaja" mode="currency" currency="PEN" locale="es-PE" styleClass="w-full" [min]="0" placeholder="S/ 0.00"></p-inputNumber>
+      <p-inputNumber formControlName="precioCaja" mode="currency" currency="PEN" locale="es-PE" styleClass="w-full"
+        [min]="0" placeholder="S/ 0.00"></p-inputNumber>
     </div>
 
     <div class="field col-12 md:col-6 mb-4">
       <label class="font-semibold text-900 mb-2 block">Precio Mayorista (S/) *</label>
-      <p-inputNumber formControlName="precioMayorista" mode="currency" currency="PEN" locale="es-PE" styleClass="w-full" [min]="0" placeholder="S/ 0.00"></p-inputNumber>
+      <p-inputNumber formControlName="precioMayorista" mode="currency" currency="PEN" locale="es-PE" styleClass="w-full"
+        [min]="0" placeholder="S/ 0.00"></p-inputNumber>
     </div>
 
-    <div class="col-12 mb-3"><div class="border-top-1 border-300"></div></div>
+    <div class="col-12 mb-3">
+      <div class="border-top-1 border-300"></div>
+    </div>
 
 
     <div class="col-12 mb-3">
@@ -121,18 +138,12 @@
 
     <div class="field col-12 mb-4">
       <label for="familia" class="font-semibold text-900 mb-2 block">Almacen *</label>
-      <p-select 
-        id="almacen" 
-        formControlName="almacen" 
-        [options]="almacenes()" 
-        optionLabel="nombre" 
-        optionValue="id_almacen" 
-        placeholder="Seleccionar almacén" 
-        styleClass="w-full border-1 border-300">
+      <p-select id="almacen" formControlName="almacen" [options]="almacenes()" optionLabel="nombre"
+        optionValue="id_almacen" placeholder="Seleccionar almacén" styleClass="w-full border-1 border-300">
       </p-select>
-      
+
       @if (productoForm.get('almacen')?.invalid && productoForm.get('almacen')?.touched) {
-        <small class="text-red-500 block mt-2">El almacén es requerido</small>
+      <small class="text-red-500 block mt-2">El almacén es requerido</small>
       }
     </div>
 
@@ -140,43 +151,48 @@
     <div class="col-12 mb-3">
       <h3 class="text-xl font-bold text-900 m-0 flex align-items-center gap-2">
         <i class="pi pi-warehouse text-warning"></i>
-        Stock Inicial
+        {{ esModoEdicion() ? 'Gestión de Stock' : 'Stock Inicial' }}
       </h3>
-      <p class="text-500 mt-2 text-sm">El producto ingresará con esta cantidad a la sede indicada.</p>
+      <p class="text-500 mt-2 text-sm">
+        {{ esModoEdicion() ? 'Añade unidades al stock actual (deja en 0 si no deseas agregar).' : 'El producto ingresará
+        con esta cantidad a la sede indicada.' }}
+      </p>
     </div>
 
-    <div class="field col-12 md:col-6 mb-4">
+    <div class="field col-12 md:col-4 mb-4">
       <label class="font-semibold text-900 mb-2 block">Sede *</label>
-      <p-select 
-        formControlName="sede" 
-        [options]="sedes()" 
-        optionLabel="nombre" 
-        optionValue="id_sede" 
-        placeholder="Seleccionar sede" 
-        styleClass="w-full border-1 border-300">
+      <p-select formControlName="sede" [options]="sedes()" optionLabel="nombre" optionValue="id_sede"
+        placeholder="Seleccionar sede" styleClass="w-full border-1 border-300">
       </p-select>
-      @if (productoForm.get('sede')?.invalid && productoForm.get('sede')?.touched) {
-        <small class="text-red-500 block mt-2">Debe seleccionar una sede.</small>
-      }
     </div>
 
-    <div class="field col-12 md:col-6 mb-4">
-      <label class="font-semibold text-900 mb-2 block">Cantidad Inicial *</label>
-      <p-inputNumber 
-        formControlName="stockInicial" 
-        [showButtons]="true" 
-        buttonLayout="horizontal" 
-        incrementButtonIcon="pi pi-plus" 
-        decrementButtonIcon="pi pi-minus" 
-        [min]="0" 
-        styleClass="w-full">
+    <div class="field col-12 md:col-4 mb-4">
+      <label class="font-semibold text-900 mb-2 block">
+        {{ esModoEdicion() ? 'Cantidad a Agregar' : 'Cantidad Inicial' }} *
+      </label>
+      <p-inputNumber formControlName="stockInicial" [showButtons]="true" buttonLayout="horizontal"
+        incrementButtonIcon="pi pi-plus" decrementButtonIcon="pi pi-minus" [min]="0" styleClass="w-full">
       </p-inputNumber>
     </div>
 
+    @if (esModoEdicion()) {
+    <div class="field col-12 md:col-4 mb-4">
+      <label class="font-semibold text-900 mb-2 block">Stock Total Resultante</label>
+      <div
+        class="flex align-items-center h-3rem bg-yellow-50 border-round px-3 font-bold text-xl border-1 border-yellow-200 text-800">
+        <i class="pi pi-box mr-2 text-warning"></i>
+         <span class="text-warning ml-2">{{ stockActual() }} + {{ stockAgregado() }} = </span><span class="text-warning ml-2">{{ stockTotal() }}</span>
+      </div>
+    </div>
+    }
+
     <div class="field col-12 flex gap-3 justify-content-end pt-3">
-     <p-button type="button" label="Cancelar" severity="secondary" [outlined]="true" icon="pi pi-times" styleClass="w-10rem" (onClick)="cancelar()"></p-button>
-     
-     <p-button type="submit" [disabled]="productoForm.invalid" [label]="esModoEdicion() ? 'Actualizar' : 'Guardar'" [icon]="isSubmitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'" [disabled]="isSubmitting()" styleClass="productos-pill productos-pill-warning w-10rem"></p-button>
+      <p-button type="button" label="Cancelar" severity="secondary" [outlined]="true" icon="pi pi-times"
+        styleClass="w-10rem" (onClick)="cancelar()"></p-button>
+
+      <p-button type="submit" [disabled]="productoForm.invalid" [label]="esModoEdicion() ? 'Actualizar' : 'Guardar'"
+        [icon]="isSubmitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'" [disabled]="isSubmitting()"
+        styleClass="productos-pill productos-pill-warning w-10rem"></p-button>
     </div>
 
   </form>

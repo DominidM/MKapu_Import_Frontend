@@ -132,3 +132,25 @@ export interface MovimientoInventarioResponse {
     reference: string;
   };
 }
+
+// ===== ACTUALIZACIÓN DE PRODUCTOS =====
+
+// 1. DTO para actualizar info básica
+export interface UpdateProductoDto {
+  id_producto: number;
+  id_categoria: number;
+  codigo: string;
+  anexo: string;
+  descripcion: string;
+  uni_med: string;
+}
+
+// 2. DTO para actualizar solo precios
+export interface UpdateProductoPreciosDto {
+  id_producto: number;
+  pre_compra: number;
+  pre_venta: number;
+  pre_unit: number;
+  pre_may: number;
+  pre_caja: number;
+}

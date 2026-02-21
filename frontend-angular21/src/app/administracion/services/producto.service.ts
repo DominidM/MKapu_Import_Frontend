@@ -10,6 +10,8 @@ import {
   ProductoInterface,
   ProductoResponse,
   ProductoStockResponse,
+  UpdateProductoDto,
+  UpdateProductoPreciosDto,
 } from '../interfaces/producto.interface';
 import { Observable } from 'rxjs';
 
@@ -48,18 +50,18 @@ export class ProductoService {
 
     let params = new HttpParams()
       .set('id_sede', idSede)
-      //.set('page', page)
-      //.set('size', size);
+    //.set('page', page)
+    //.set('size', size);
 
     if (page) {
       params = params.set('page', page);
     }
 
-        if (size) {
+    if (size) {
       params = params.set('size', size);
     }
 
-        if (categoria) {
+    if (categoria) {
       params = params.set('categoria', categoria);
     }
 
@@ -114,5 +116,29 @@ export class ProductoService {
       { headers }
     );
   }
+
+  // ==========================================
+  //          ACTUALIZAR PRODUCTO (PUT)
+  // ==========================================
+
+  // 1. Actualizar información básica (descripción, categoría, código, etc.)
+  actualizarProductoInfo(producto: UpdateProductoDto): Observable<any> {
+    return this.http.put<any>(`${this.api}/logistics/products`, producto);
+  }
+
+  // 2. Actualizar exclusivamente los precios
+  actualizarProductoPrecios(precios: UpdateProductoPreciosDto): Observable<any> {
+    return this.http.put<any>(`${this.api}/logistics/products/prices`, precios);
+  }
+
+  // 3. Cambiar estado del producto (Activar/Desactivar)
+  actualizarProductoEstado(idProducto: number, estado: boolean): Observable<any> {
+    const payload = {
+      id_producto: idProducto,
+      estado: estado
+    };
+    return this.http.put<any>(`${this.api}/logistics/products/status`, payload);
+  }
+
 
 }
