@@ -13,7 +13,8 @@ export const VENTAS_ROUTES: Routes = [
   },
   {
     path: 'generar-ventas',
-    loadComponent: () => import('./pages/generar-venta/generar-venta').then((m) => m.GenerarVenta),
+    loadComponent: () =>
+      import('./pages/generar-venta/generar-venta').then((m) => m.GenerarVenta),
   },
   {
     path: 'historial-ventas',
@@ -61,9 +62,30 @@ export const VENTAS_ROUTES: Routes = [
       ),
   },
 
+  // ─── COTIZACIONES ───────────────────────────────────────────
   {
     path: 'cotizaciones',
-    loadComponent: () => import('./pages/cotizaciones/cotizaciones').then((m) => m.Cotizaciones),
+    loadComponent: () =>
+      import('./pages/cotizaciones/listado-cotizacion/listado-cotizacion')
+        .then((m) => m.ListadoCotizacion),
+  },
+  {
+    path: 'cotizaciones/crear',
+    loadComponent: () =>
+      import('./pages/cotizaciones/formulario-cotizacion/formulario-cotizacion')
+        .then((m) => m.FormularioCotizacion),
+  },
+  {
+    path: 'cotizaciones/editar/:id',
+    loadComponent: () =>
+      import('./pages/cotizaciones/formulario-cotizacion/formulario-cotizacion')
+        .then((m) => m.FormularioCotizacion),
+  },
+  {
+    path: 'cotizaciones/detalle/:id',
+    loadComponent: () =>
+      import('./pages/cotizaciones/detalle-cotizacion/detalle-cotizacion')
+        .then((m) => m.DetalleCotizacion),
   },
 
 
