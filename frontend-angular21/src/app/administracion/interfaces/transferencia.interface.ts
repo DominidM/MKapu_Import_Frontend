@@ -1,101 +1,168 @@
+export type TransferStatus = 'SOLICITADA' | 'APROBADA' | 'RECHAZADA' | 'COMPLETADA';
+export type UnitStatus = 'DISPONIBLE' | 'RESERVADA' | 'TRANSFERIDA' | 'INACTIVA';
+export type TransferRole = 'ADMINISTRADOR' | 'JEFE DE ALMACEN';
 
-export interface TransferenciaItem {
+export interface RequestTransferAggregatedItemDto {
   productId: number;
-  series: string[];
   quantity: number;
 }
 
-export interface TransferenciaItemRequest {
-  productId: number;
-  series: string[];
+export interface RequestTransferAggregatedDto {
+  originHeadquartersId: string;
+  originWarehouseId: number;
+  destinationHeadquartersId: string;
+  destinationWarehouseId: number;
+  observation?: string | null;
+  userId: number;
+  items: RequestTransferAggregatedItemDto[];
 }
 
-export interface TransferenciaItems {
-  items: TransferenciaItem[];
+export interface ApproveTransferDto {
+  userId: number;
 }
 
-export interface TransferenciaProductoCategoriaResponse {
-  id_categoria: number;
-  nombre: string;
+export interface RejectTransferDto {
+  userId: number;
+  reason: string;
 }
 
-export interface TransferenciaProductoResponse {
-  id_producto: number;
-  categoria: TransferenciaProductoCategoriaResponse | TransferenciaProductoCategoriaResponse[];
-  codigo: string;
+export interface ConfirmReceiptTransferDto {
+  userId: number;
+}
+
+export interface TransferCategoryDto {
+  id?: number;
+  id_categoria?: number;
+  nombre?: string;
+  name?: string;
+}
+
+export interface TransferProductDto {
+  id?: number;
+  id_producto?: number;
+  codigo?: string;
+  sku?: string;
+  descripcion?: string;
   nomProducto?: string;
-  descripcion: string;
+  nombre?: string;
+  categoria?: TransferCategoryDto | TransferCategoryDto[];
 }
 
-export interface TransferenciaItemResponse {
-  series: string[];
-  quantity: number;
-  producto: TransferenciaProductoResponse | TransferenciaProductoResponse[];
-}
-
-export interface TransferenciaCreatorUserResponse {
-  idUsuario: number;
+export interface TransferUserDto {
+  id?: number;
+  idUsuario?: number;
+  userId?: number;
   usuNom?: string;
   nombres?: string;
   apePat?: string;
   apeMat?: string;
   apellidos?: string;
+  fullName?: string;
 }
 
-export interface TransferenciaSedeResumenResponse {
-  id_sede: string;
-  nomSede: string;
+export interface TransferHeadquarterDto {
+  id?: string | number;
+  id_sede?: string | number;
+  nomSede?: string;
+  nombre?: string;
+  codigo?: string;
 }
 
-export interface TransferenciaWarehouseResumenResponse {
-  id_almacen: number;
-  nomAlm: string;
+export interface TransferWarehouseDto {
+  id?: number;
+  id_almacen?: number;
+  nomAlm?: string;
+  nombre?: string;
+  codigo?: string;
 }
 
-export interface TransferenciaInterfaceResponse {
+export interface TransferItemResponse {
+  productId?: number;
+  series: string[];
+  quantity: number;
+  producto?:
+    | TransferProductDto
+    | TransferProductDto[]
+    | Record<string, unknown>
+    | Array<Record<string, unknown>>;
+}
+
+export interface TransferResponseDto {
   id: number;
-  originHeadquartersId?: string;
-  originWarehouseId?: number;
-  destinationHeadquartersId?: string;
-  destinationWarehouseId?: number;
-  origin?: TransferenciaSedeResumenResponse;
-  originWarehouse?: TransferenciaWarehouseResumenResponse;
-  destination?: TransferenciaSedeResumenResponse;
-  destinationWarehouse?: TransferenciaWarehouseResumenResponse;
-  items?: TransferenciaItemResponse[];
-  observation?: string;
-  status?: string;
-  requestDate?: string;
-  totalQuantity?: number;
-  nomProducto?: string;
-  creatorUser?: TransferenciaCreatorUserResponse | TransferenciaCreatorUserResponse[];
-}
-
-export interface TransferenciaRequest {
+  creatorUserId?: number;
+  approveUserId?: number | null;
   originHeadquartersId: string;
   originWarehouseId: number;
   destinationHeadquartersId: string;
   destinationWarehouseId: number;
-  userId: number;
-  observation: string;
-  items: TransferenciaItemRequest[];
+  items: TransferItemResponse[];
+  totalQuantity: number;
+  status: TransferStatus;
+  observation?: string | null;
+  requestDate: string;
+  responseDate?: string | null;
+  completionDate?: string | null;
+  rejectionReason?: string | null;
+  creatorUser?: TransferUserDto | TransferUserDto[];
+  approveUser?: TransferUserDto | TransferUserDto[];
+  origin?: TransferHeadquarterDto;
+  destination?: TransferHeadquarterDto;
+  originWarehouse?: TransferWarehouseDto;
+  destinationWarehouse?: TransferWarehouseDto;
 }
 
-export type TransferTargetStatus =
-  | 'DISPONIBLE'
-  | 'TRANSFERIDO'
-  | 'VENDIDO'
-  | 'MERMA'
-  | 'BAJA';
-
-export type TransferStatus =
-  | 'SOLICITADA'
-  | 'APROBADA'
-  | 'RECHAZADA'
-  | 'COMPLETADA';
-
-export interface TransferenciaBulkStatusRequest {
-  series: string[];
-  targetStatus: TransferTargetStatus;
-  transferStatus: TransferStatus;
+export interface TransferListResponseDto {
+  id: number;
+  creatorUserId?: number;
+  approveUserId?: number | null;
+  originHeadquartersId: string;
+  originWarehouseId: number;
+  destinationHeadquartersId: string;
+  destinationWarehouseId: number;
+  totalQuantity: number;
+  status: TransferStatus;
+  observation?: string | null;
+  nomProducto?: string | null;
+  requestDate: string;
+  responseDate?: string | null;
+  completionDate?: string | null;
+  creatorUser?: TransferUserDto | TransferUserDto[];
+  approveUser?: TransferUserDto | TransferUserDto[];
+  origin?: TransferHeadquarterDto;
+  destination?: TransferHeadquarterDto;
+  items?: TransferItemResponse[];
 }
+
+export interface TransferByIdResponseDto extends TransferResponseDto {}
+
+export interface TransferConflictInfo {
+  requested?: number;
+  available?: number;
+  productId?: number;
+  warehouseId?: number;
+}
+
+export interface TransferApiError {
+  status: number;
+  message: string;
+  backendMessage?: string;
+  conflict?: TransferConflictInfo;
+}
+
+// Alias para compatibilidad con código existente
+export type TransferRequestItemDto = RequestTransferAggregatedItemDto;
+export type TransferRequestDto = RequestTransferAggregatedDto;
+export type TransferenciaItemRequest = RequestTransferAggregatedItemDto;
+export type ApproveTransferRequestDto = ApproveTransferDto;
+export type RejectTransferRequestDto = RejectTransferDto;
+export type ConfirmReceiptRequestDto = ConfirmReceiptTransferDto;
+export type TransferenciaProductoCategoriaResponse = TransferCategoryDto;
+export type TransferenciaProductoResponse = TransferProductDto;
+export type TransferResponseItemDto = TransferItemResponse;
+export type TransferenciaItemResponse = TransferItemResponse;
+export type TransferenciaUserResponse = TransferUserDto;
+export type TransferenciaSedeResumenResponse = TransferHeadquarterDto;
+export type TransferenciaWarehouseResumenResponse = TransferWarehouseDto;
+export type TransferenciaRequest = RequestTransferAggregatedDto;
+export type TransferenciaInterfaceResponse = TransferResponseDto;
+export type TransferenciaCreatorUserResponse = TransferUserDto;

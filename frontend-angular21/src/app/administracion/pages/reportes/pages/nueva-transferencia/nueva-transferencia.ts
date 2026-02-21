@@ -4,6 +4,7 @@ import {
   DestroyRef,
   OnInit,
   computed,
+  effect,
   inject,
   signal,
 } from '@angular/core';
@@ -22,16 +23,21 @@ import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { AutoCompleteModule } from 'primeng/autocomplete';
 import { ProductoService } from '../../../../services/producto.service';
-import { ProductoAutocomplete, ProductoInterface } from '../../../../interfaces/producto.interface';
+import {
+  ProductoAutocomplete,
+  ProductoInterface,
+} from '../../../../interfaces/producto.interface';
 import { SedeService } from '../../../../services/sede.service';
 import { map } from 'rxjs';
 import { Headquarter } from '../../../../interfaces/sedes.interface';
-import { TransferenciaService } from '../../../../services/transferencia.service';
-import { TransferenciaRequest } from '../../../../interfaces/transferencia.interface';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { TransferStore } from '../../../../services/transfer.store';
+import { AlmacenService } from '../../../../services/almacen.service';
+import { TransferUserContextService } from '../../../../services/transfer-user-context.service';
+import { RequestTransferAggregatedDto } from '../../../../interfaces/transferencia.interface';
 
 interface TransferProducto {
-  id: string;
+  id: number;
   nombre: string;
   sku: string;
   categoria: string;
@@ -39,7 +45,10 @@ interface TransferProducto {
   stockPorSede: Record<string, number>;
 }
 
-const DEFAULT_TRANSFER_SERIES = ['SERIE-D-001', 'SERIE-D-002'];
+interface SelectOption<T = string> {
+  label: string;
+  value: T;
+}
 
 @Component({
   selector: 'app-nueva-transferencia',
@@ -71,18 +80,23 @@ export class NuevaTransferencia implements OnInit {
   private readonly router = inject(Router);
   private readonly productoService = inject(ProductoService);
   private readonly sedeService = inject(SedeService);
-  private readonly transferenciaService = inject(TransferenciaService);
+  private readonly almacenService = inject(AlmacenService);
+  private readonly transferStore = inject(TransferStore);
+  private readonly transferUserContext = inject(TransferUserContextService);
 
   private readonly idSedeSig = signal(1);
   private readonly productosAutocompleteSig = signal<TransferProducto[]>([]);
   private readonly activeStepSig = signal(0);
-  private readonly sedesSig = signal<{ label: string; value: string }[]>([]);
+  private readonly sedesSig = signal<SelectOption<string>[]>([]);
   private readonly sedesRawSig = signal<Headquarter[]>([]);
-  private readonly productoIdSig = signal<string | null>(null);
-  private readonly productoQuerySig = signal<string | null>(null);
+  private readonly almacenesSig = signal<SelectOption<number>[]>([]);
+  private readonly productoIdSig = signal<number | null>(null);
+  private readonly productoQuerySig = signal<TransferProducto | null>(null);
   private readonly productosSig = signal<TransferProducto[]>([]);
   private readonly sedeOrigenSig = signal<string | null>(null);
   private readonly sedeDestinoSig = signal<string | null>(null);
+  private readonly almacenOrigenIdSig = signal<number | null>(null);
+  private readonly almacenDestinoIdSig = signal<number | null>(null);
   private readonly cantidadSig = signal(1);
   private readonly motivoSig = signal<string | null>(null);
   private readonly observacionSig = signal('');
@@ -90,6 +104,7 @@ export class NuevaTransferencia implements OnInit {
   private readonly fechaLlegadaSig = signal<Date | null>(null);
   private readonly responsableSig = signal<string | null>(null);
   private readonly submittingSig = signal(false);
+  private readonly lastErrorShownSig = signal<string | null>(null);
 
   private readonly productoSeleccionadoSig = computed<TransferProducto | null>(() => {
     const id = this.productoIdSig();
@@ -103,6 +118,9 @@ export class NuevaTransferencia implements OnInit {
     if (!producto || !sede) return 0;
     return producto.stockPorSede[sede] || 0;
   });
+
+  readonly totalQuantitySig = computed(() => this.transferStore.totalQuantity());
+  readonly canSubmitSig = computed(() => this.transferStore.canSubmit() && this.validarResumen());
 
   readonly tituloKicker = 'ADMINISTRACION - REPORTES';
   readonly subtituloKicker = 'NUEVA TRANSFERENCIA';
@@ -120,6 +138,22 @@ export class NuevaTransferencia implements OnInit {
     { label: 'Encargado de despacho', value: 'despacho' },
   ];
   readonly today = this.getToday();
+
+  constructor() {
+    effect(() => {
+      const error = this.transferStore.error();
+      if (!error || this.lastErrorShownSig() === error) {
+        return;
+      }
+
+      this.lastErrorShownSig.set(error);
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: error,
+      });
+    });
+  }
 
   get idSede(): number {
     return this.idSedeSig();
@@ -145,11 +179,11 @@ export class NuevaTransferencia implements OnInit {
     this.activeStepSig.set(value);
   }
 
-  get sedes(): { label: string; value: string }[] {
+  get sedes(): SelectOption<string>[] {
     return this.sedesSig();
   }
 
-  set sedes(value: { label: string; value: string }[]) {
+  set sedes(value: SelectOption<string>[]) {
     this.sedesSig.set(value ?? []);
   }
 
@@ -161,19 +195,27 @@ export class NuevaTransferencia implements OnInit {
     this.sedesRawSig.set(value ?? []);
   }
 
-  get productoId(): string | null {
+  get almacenes(): SelectOption<number>[] {
+    return this.almacenesSig();
+  }
+
+  set almacenes(value: SelectOption<number>[]) {
+    this.almacenesSig.set(value ?? []);
+  }
+
+  get productoId(): number | null {
     return this.productoIdSig();
   }
 
-  set productoId(value: string | null) {
+  set productoId(value: number | null) {
     this.productoIdSig.set(value ?? null);
   }
 
-  get productoQuery(): string | null {
+  get productoQuery(): TransferProducto | null {
     return this.productoQuerySig();
   }
 
-  set productoQuery(value: string | null) {
+  set productoQuery(value: TransferProducto | null) {
     this.productoQuerySig.set(value ?? null);
   }
 
@@ -201,12 +243,32 @@ export class NuevaTransferencia implements OnInit {
     this.sedeDestinoSig.set(value ?? null);
   }
 
+  get almacenOrigenId(): number | null {
+    return this.almacenOrigenIdSig();
+  }
+
+  set almacenOrigenId(value: number | null) {
+    this.almacenOrigenIdSig.set(value ?? null);
+  }
+
+  get almacenDestinoId(): number | null {
+    return this.almacenDestinoIdSig();
+  }
+
+  set almacenDestinoId(value: number | null) {
+    this.almacenDestinoIdSig.set(value ?? null);
+  }
+
   get cantidad(): number {
     return this.cantidadSig();
   }
 
   set cantidad(value: number) {
     this.cantidadSig.set(value);
+    const productId = this.productoId;
+    if (productId) {
+      this.transferStore.setItemQuantity(productId, value);
+    }
   }
 
   get motivo(): string | null {
@@ -223,6 +285,7 @@ export class NuevaTransferencia implements OnInit {
 
   set observacion(value: string) {
     this.observacionSig.set(value ?? '');
+    this.transferStore.setDraftObservation(value ?? '');
   }
 
   get fechaEnvio(): Date | null {
@@ -265,12 +328,23 @@ export class NuevaTransferencia implements OnInit {
     return this.stockDisponibleSig();
   }
 
-  ngOnInit(): void {
-    this.cargarSedes();
+  get totalQuantity(): number {
+    return this.totalQuantitySig();
   }
 
-  getSedeLabel(sede: string | null): string {
-    return this.sedes.find((item) => item.value === sede)?.label || '-';
+  get conflictProductId(): number | null {
+    return this.transferStore.conflictProductId();
+  }
+
+  ngOnInit(): void {
+    this.transferStore.setDraftUserId(this.transferUserContext.getCurrentUserId());
+
+    this.cargarSedes();
+    this.cargarAlmacenes();
+  }
+
+  getSedeLabel(sedeId: string | null): string {
+    return this.sedes.find((item) => item.value === sedeId)?.label || '-';
   }
 
   getMotivoLabel(motivo: string | null): string {
@@ -281,19 +355,318 @@ export class NuevaTransferencia implements OnInit {
     return this.responsables.find((item) => item.value === responsable)?.label || '-';
   }
 
-  getStockClassForSede(producto: TransferProducto | null, sede: string | null): string {
-    if (!producto || !sede) {
+  getAlmacenLabel(almacenId: number | null): string {
+    return this.almacenes.find((item) => item.value === almacenId)?.label || '-';
+  }
+
+  getStockClassForSede(producto: TransferProducto | null, sedeId: string | null): string {
+    if (!producto || !sedeId) {
       return '';
     }
-    const stock = producto.stockPorSede[sede] ?? 0;
+    const stock = producto.stockPorSede[sedeId] ?? 0;
     return this.getStockClass(stock);
   }
 
-  getStockForSede(producto: TransferProducto | null, sede: string | null): number {
-    if (!producto || !sede) {
+  getStockForSede(producto: TransferProducto | null, sedeId: string | null): number {
+    if (!producto || !sedeId) {
       return 0;
     }
-    return producto.stockPorSede[sede] ?? 0;
+    return producto.stockPorSede[sedeId] ?? 0;
+  }
+
+  onSedeOrigenChange(): void {
+    this.productoId = null;
+    this.productoQuery = null;
+    this.cantidad = 1;
+    this.almacenOrigenId = null;
+
+    const selectedSede = this.sedeOrigen;
+    if (selectedSede) {
+      this.idSede = Number(selectedSede);
+      this.transferStore.setDraftOrigin(selectedSede);
+    }
+
+    this.cargarProductos(selectedSede);
+  }
+
+  onSedeDestinoChange(): void {
+    this.almacenDestinoId = null;
+    if (this.sedeDestino) {
+      this.transferStore.setDraftDestination(this.sedeDestino);
+    }
+    this.cargarStockProductoSeleccionadoEnSedes();
+  }
+
+  onAlmacenOrigenChange(): void {
+    if (this.almacenOrigenId) {
+      this.transferStore.setDraftOriginWarehouse(this.almacenOrigenId);
+    }
+  }
+
+  onAlmacenDestinoChange(): void {
+    if (this.almacenDestinoId) {
+      this.transferStore.setDraftDestinationWarehouse(this.almacenDestinoId);
+    }
+  }
+
+  buscarProductos(event: { query?: string }): void {
+    const query = event.query;
+
+    if (!query || !this.idSede) return;
+
+    this.productoService
+      .getProductosAutocomplete(query, this.idSede)
+      .pipe(
+        map((resp) => resp.data),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((data) => {
+        this.productosAutocomplete = this.mapAutocompleteProductos(data, this.sedeOrigen);
+      });
+  }
+
+  onSelectProducto(event: { value: TransferProducto }): void {
+    const producto = event.value;
+    this.productoId = producto.id;
+    this.productoQuery = producto;
+
+    const restantes = this.productos.filter((p) => p.id !== producto.id);
+    this.productos = [...restantes, producto];
+
+    this.transferStore.setItemQuantity(producto.id, this.cantidad);
+    this.transferStore.conflictProductId.set(null);
+    this.cargarStockProductoSeleccionadoEnSedes();
+  }
+
+  onClearProducto(): void {
+    const currentId = this.productoId;
+    if (currentId) {
+      this.transferStore.removeItem(currentId);
+    }
+
+    this.productoId = null;
+    this.productoQuery = null;
+  }
+
+  ajustarCantidad(delta: number): void {
+    const nuevaCantidad = this.cantidad + delta;
+    if (nuevaCantidad < 1) {
+      return;
+    }
+
+    const normalizada = Math.min(nuevaCantidad, Math.max(this.stockDisponible, 1));
+    this.cantidad = normalizada;
+
+    const productId = this.productoId;
+    if (productId) {
+      this.transferStore.addOrUpdateItem(productId, delta);
+      this.transferStore.setItemQuantity(productId, normalizada);
+    }
+  }
+
+  onCantidadChange(valor: number | null): void {
+    if (valor === null) {
+      this.cantidad = 1;
+      return;
+    }
+
+    const normalizado = Math.max(1, Math.min(valor, Math.max(this.stockDisponible, 1)));
+    this.cantidad = normalizado;
+
+    if (this.productoId) {
+      this.transferStore.setItemQuantity(this.productoId, normalizado);
+    }
+  }
+
+  nextStep(): void {
+    if (this.validarStepActual()) {
+      this.activeStep++;
+    }
+  }
+
+  prevStep(): void {
+    if (this.activeStep > 0) {
+      this.activeStep--;
+    }
+  }
+
+  validarStepActual(): boolean {
+    switch (this.activeStep) {
+      case 0:
+        if (!this.productoId) {
+          this.showWarn('Producto requerido', 'Seleccione un producto para transferir');
+          return false;
+        }
+
+        if (!this.sedeOrigen || !this.sedeDestino) {
+          this.showWarn('Sedes requeridas', 'Seleccione sede de origen y destino');
+          return false;
+        }
+
+        if (!this.almacenOrigenId || !this.almacenDestinoId) {
+          this.showWarn('Almacenes requeridos', 'Seleccione almacén de origen y destino');
+          return false;
+        }
+
+        if (this.sedeOrigen === this.sedeDestino && this.almacenOrigenId === this.almacenDestinoId) {
+          this.showWarn('Ruta invalida', 'El origen y destino deben ser diferentes');
+          return false;
+        }
+
+        return true;
+      case 1:
+        if (!this.motivo) {
+          this.showWarn('Motivo requerido', 'Seleccione un motivo de transferencia');
+          return false;
+        }
+
+        if (this.cantidad < 1 || this.cantidad > this.stockDisponible) {
+          this.showWarn(
+            'Cantidad invalida',
+            'La cantidad debe ser menor o igual al stock disponible',
+          );
+          return false;
+        }
+
+        return true;
+      case 2:
+        if (!this.fechaEnvio || !this.fechaLlegada) {
+          this.showWarn('Fechas requeridas', 'Ingrese fecha de envio y llegada');
+          return false;
+        }
+
+        if (this.fechaEnvio < this.today || this.fechaLlegada < this.today) {
+          this.showWarn('Fechas invalidas', 'Las fechas no pueden ser menores a hoy');
+          return false;
+        }
+
+        if (this.fechaEnvio > this.fechaLlegada) {
+          this.showWarn(
+            'Fechas invalidas',
+            'La fecha de llegada no puede ser menor a la de envio',
+          );
+          return false;
+        }
+
+        if (!this.responsable) {
+          this.showWarn('Responsable requerido', 'Seleccione un responsable');
+          return false;
+        }
+
+        return true;
+      default:
+        return true;
+    }
+  }
+
+  confirmarTransferencia(): void {
+    if (!this.canSubmitSig()) {
+      this.showWarn('Datos incompletos', 'Completa los datos obligatorios antes de confirmar.');
+      return;
+    }
+
+    this.confirmationService.confirm({
+      message: 'Desea confirmar esta transferencia?',
+      header: 'Confirmar Transferencia',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Confirmar',
+      rejectLabel: 'Cancelar',
+      acceptButtonProps: { severity: 'warning' },
+      rejectButtonProps: { severity: 'secondary', outlined: true },
+      accept: () => this.registrarTransferencia(),
+    });
+  }
+
+  isSelectedProductInConflict(): boolean {
+    return (
+      !!this.productoId &&
+      !!this.conflictProductId &&
+      Number(this.productoId) === Number(this.conflictProductId)
+    );
+  }
+
+  resetForm(): void {
+    this.activeStep = 0;
+    this.productoId = null;
+    this.productoQuery = null;
+    this.sedeOrigen = null;
+    this.sedeDestino = null;
+    this.almacenOrigenId = null;
+    this.almacenDestinoId = null;
+    this.cantidad = 1;
+    this.motivo = null;
+    this.observacion = '';
+    this.fechaEnvio = null;
+    this.fechaLlegada = null;
+    this.responsable = null;
+    this.transferStore.resetDraft();
+  }
+
+  private registrarTransferencia(): void {
+    if (this.submitting) return;
+
+    const payload = this.buildAggregatedPayload();
+    if (!payload) {
+      return;
+    }
+
+    this.submitting = true;
+
+    this.transferStore
+      .createAggregated(payload)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((response) => {
+        this.submitting = false;
+
+        if (!response) {
+          return;
+        }
+
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Registro exitoso',
+          detail: 'La transferencia fue registrada correctamente',
+          life: 3000,
+        });
+
+        this.transferStore.loadByHq(response.originHeadquartersId);
+        this.router.navigate(['/admin/transferencia']);
+        this.resetForm();
+      });
+  }
+
+  private validarResumen(): boolean {
+    return !!this.productoId && this.cantidad >= 1 && !!this.motivo;
+  }
+
+  private buildAggregatedPayload(): RequestTransferAggregatedDto | null {
+    if (!this.sedeOrigen || !this.sedeDestino || !this.almacenOrigenId || !this.almacenDestinoId || !this.productoId) {
+      this.showWarn('Datos incompletos', 'Selecciona origen, destino, almacenes y producto.');
+      return null;
+    }
+
+    const userId = this.transferUserContext.getCurrentUserId();
+    const quantity = Math.max(1, Math.floor(this.cantidad));
+
+    if (quantity > this.stockDisponible) {
+      this.showWarn('Cantidad inválida', 'La cantidad solicitada supera el stock disponible.');
+      return null;
+    }
+
+    return {
+      originHeadquartersId: this.sedeOrigen,
+      originWarehouseId: this.almacenOrigenId,
+      destinationHeadquartersId: this.sedeDestino,
+      destinationWarehouseId: this.almacenDestinoId,
+      observation: this.observacion?.trim() || this.getMotivoLabel(this.motivo) || null,
+      userId,
+      items: [
+        {
+          productId: this.productoId,
+          quantity,
+        },
+      ],
+    };
   }
 
   private getToday(): Date {
@@ -317,16 +690,27 @@ export class NuevaTransferencia implements OnInit {
           this.sedesRaw = response.headquarters ?? [];
           this.sedes = (response.headquarters ?? []).map((sede) => ({
             label: sede.nombre,
-            value: sede.nombre,
+            value: String(sede.id_sede),
           }));
-          if (!this.sedeOrigen && this.sedes.length > 0) {
+
+          const currentUserSedeId = this.transferUserContext.getCurrentHeadquarterId();
+          const currentUserSede = this.sedesRaw.find(
+            (sede) => String(sede.id_sede) === String(currentUserSedeId ?? ''),
+          );
+
+          if (currentUserSede) {
+            this.sedeOrigen = String(currentUserSede.id_sede);
+            this.idSede = currentUserSede.id_sede;
+            this.transferStore.setDraftOrigin(String(currentUserSede.id_sede));
+          } else if (!this.sedeOrigen && this.sedes.length > 0) {
             this.sedeOrigen = this.sedes[0].value;
-            this.idSede = this.sedesRaw[0]?.id_sede ?? this.idSede;
+            this.idSede = Number(this.sedes[0].value);
+            this.transferStore.setDraftOrigin(this.sedeOrigen);
           }
+
           this.cargarProductos(this.sedeOrigen);
         },
-        error: (error) => {
-          console.error('Error al cargar sedes:', error);
+        error: () => {
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
@@ -338,33 +722,44 @@ export class NuevaTransferencia implements OnInit {
       });
   }
 
-  onSedeOrigenChange(): void {
-    this.productoId = null;
-    this.productoQuery = null;
-    this.cantidad = 1;
-    const sedeId = this.sedesRaw.find((sede) => sede.nombre === this.sedeOrigen)?.id_sede;
-    if (sedeId) {
-      this.idSede = sedeId;
-    }
-    this.cargarProductos(this.sedeOrigen);
+  private cargarAlmacenes(): void {
+    this.almacenService
+      .getSedes()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (response) => {
+          const warehouses = response?.warehouses ?? [];
+          this.almacenes = warehouses
+            .map((warehouse) => {
+              const id = Number(warehouse.id_almacen ?? warehouse.id ?? 0);
+              if (!id) return null;
+              return {
+                label: warehouse.nombre || warehouse.codigo || `Almacén ${id}`,
+                value: id,
+              };
+            })
+            .filter((item): item is SelectOption<number> => item !== null);
+
+          this.almacenOrigenId = null;
+          this.almacenDestinoId = null;
+        },
+        error: () => {
+          this.almacenes = [];
+        },
+      });
   }
 
-  onSedeDestinoChange(): void {
-    this.cargarStockProductoSeleccionadoEnSedes();
-  }
-
-  private cargarProductos(sede?: string | null): void {
-    void sede;
+  private cargarProductos(sedeId?: string | null): void {
+    void sedeId;
     this.productoService
-      .getProductos(1, 10, true)
+      .getProductos(1, 20, true)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (response) => {
           this.productos = this.mapProductos(response.products);
           this.productosAutocomplete = this.productos.slice(0, 8);
         },
-        error: (error) => {
-          console.error('Error al cargar productos:', error);
+        error: () => {
           this.productos = [];
           this.productosAutocomplete = [];
         },
@@ -373,7 +768,7 @@ export class NuevaTransferencia implements OnInit {
 
   private mapProductos(productosBase: ProductoInterface[]): TransferProducto[] {
     return productosBase.map((producto) => ({
-      id: String(producto.id_producto),
+      id: Number(producto.id_producto),
       nombre: producto.anexo,
       sku: producto.codigo,
       categoria: producto.categoriaNombre,
@@ -382,84 +777,50 @@ export class NuevaTransferencia implements OnInit {
     }));
   }
 
-  buscarProductos(event: { query?: string }): void {
-    const query = event.query;
-
-    if (!query || !this.idSede) return;
-
-    this.productoService
-      .getProductosAutocomplete(query, this.idSede)
-      .pipe(
-        map((resp) => resp.data),
-        takeUntilDestroyed(this.destroyRef),
-      )
-      .subscribe((data) => {
-        this.productosAutocomplete = this.mapAutocompleteProductos(data, this.sedeOrigen);
-      });
-  }
-
   private mapAutocompleteProductos(
     productos: ProductoAutocomplete[],
-    sedeNombre?: string | null,
+    sedeId?: string | null,
   ): TransferProducto[] {
     return productos.map((producto) => ({
-      id: String(producto.id_producto),
+      id: Number(producto.id_producto),
       nombre: producto.nombre,
       sku: producto.codigo,
       categoria: '',
       marca: 'N/A',
-      stockPorSede: sedeNombre ? { [sedeNombre]: producto.stock } : {},
+      stockPorSede: sedeId ? { [sedeId]: producto.stock } : {},
     }));
-  }
-
-  onSelectProducto(event: { value: TransferProducto }): void {
-    const producto = event.value;
-    this.productoId = producto.id;
-    this.productoQuery = producto.nombre;
-    const restantes = this.productos.filter((p) => p.id !== producto.id);
-    this.productos = [...restantes, producto];
-    this.cargarStockProductoSeleccionadoEnSedes();
-  }
-
-  onClearProducto(): void {
-    this.productoId = null;
-    this.productoQuery = null;
   }
 
   private cargarStockProductoSeleccionadoEnSedes(): void {
     if (!this.productoId) return;
+
     this.cargarStockProductoEnSede(this.productoId, this.sedeOrigen);
     this.cargarStockProductoEnSede(this.productoId, this.sedeDestino);
   }
 
-  private cargarStockProductoEnSede(productoId: string, sedeNombre: string | null): void {
-    if (!sedeNombre) return;
-    const sedeId = this.getSedeIdByNombre(sedeNombre);
+  private cargarStockProductoEnSede(productoId: number, sedeId: string | null): void {
     if (!sedeId) return;
 
+    const sedeNumberId = Number(sedeId);
+    if (!sedeNumberId) return;
+
     this.productoService
-      .getProductoDetalleStock(Number(productoId), sedeId)
+      .getProductoDetalleStock(productoId, sedeNumberId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (resp) => {
           const stock = resp?.stock?.cantidad ?? 0;
-          this.actualizarStockProductoEnMemoria(productoId, sedeNombre, stock);
+          this.actualizarStockProductoEnMemoria(productoId, sedeId, stock);
         },
-        error: (error) => {
-          console.error('Error al cargar stock por sede:', error);
-          this.actualizarStockProductoEnMemoria(productoId, sedeNombre, 0);
+        error: () => {
+          this.actualizarStockProductoEnMemoria(productoId, sedeId, 0);
         },
       });
   }
 
-  private getSedeIdByNombre(sedeNombre: string): number | null {
-    const sede = this.sedesRaw.find((item) => item.nombre === sedeNombre);
-    return sede?.id_sede ?? null;
-  }
-
   private actualizarStockProductoEnMemoria(
-    productoId: string,
-    sedeNombre: string,
+    productoId: number,
+    sedeId: string,
     stock: number,
   ): void {
     this.productos = this.productos.map((producto) => {
@@ -468,7 +829,7 @@ export class NuevaTransferencia implements OnInit {
         ...producto,
         stockPorSede: {
           ...producto.stockPorSede,
-          [sedeNombre]: stock,
+          [sedeId]: stock,
         },
       };
     });
@@ -479,252 +840,17 @@ export class NuevaTransferencia implements OnInit {
         ...producto,
         stockPorSede: {
           ...producto.stockPorSede,
-          [sedeNombre]: stock,
+          [sedeId]: stock,
         },
       };
     });
   }
 
-  ajustarCantidad(delta: number): void {
-    const nuevaCantidad = this.cantidad + delta;
-    if (nuevaCantidad < 1) {
-      return;
-    }
-    this.cantidad = Math.min(nuevaCantidad, Math.max(this.stockDisponible, 1));
-  }
-
-  onCantidadChange(valor: number | null): void {
-    if (valor === null) {
-      this.cantidad = 1;
-      return;
-    }
-    const normalizado = Math.max(1, Math.min(valor, Math.max(this.stockDisponible, 1)));
-    if (normalizado !== valor) {
-      this.cantidad = normalizado;
-    }
-  }
-
-  nextStep(): void {
-    const valido = this.validarStepActual();
-    if (valido) {
-      this.activeStep++;
-    }
-  }
-
-  prevStep(): void {
-    if (this.activeStep > 0) {
-      this.activeStep--;
-    }
-  }
-
-  validarStepActual(): boolean {
-    switch (this.activeStep) {
-      case 0:
-        if (!this.productoId) {
-          this.messageService.add({
-            severity: 'warn',
-            summary: 'Producto requerido',
-            detail: 'Seleccione un producto para transferir',
-          });
-          return false;
-        }
-        if (!this.sedeOrigen || !this.sedeDestino) {
-          this.messageService.add({
-            severity: 'warn',
-            summary: 'Sedes requeridas',
-            detail: 'Seleccione sede de origen y destino',
-          });
-          return false;
-        }
-        if (this.sedeOrigen === this.sedeDestino) {
-          this.messageService.add({
-            severity: 'warn',
-            summary: 'Sedes invalidas',
-            detail: 'La sede origen y destino deben ser diferentes',
-          });
-          return false;
-        }
-        return true;
-      case 1:
-        if (!this.motivo) {
-          this.messageService.add({
-            severity: 'warn',
-            summary: 'Motivo requerido',
-            detail: 'Seleccione un motivo de transferencia',
-          });
-          return false;
-        }
-        if (this.cantidad < 1 || this.cantidad > this.stockDisponible) {
-          this.messageService.add({
-            severity: 'warn',
-            summary: 'Cantidad invalida',
-            detail: 'La cantidad debe ser menor o igual al stock disponible',
-          });
-          return false;
-        }
-        return true;
-      case 2:
-        if (!this.fechaEnvio || !this.fechaLlegada) {
-          this.messageService.add({
-            severity: 'warn',
-            summary: 'Fechas requeridas',
-            detail: 'Ingrese fecha de envio y llegada',
-          });
-          return false;
-        }
-        if (this.fechaEnvio < this.today || this.fechaLlegada < this.today) {
-          this.messageService.add({
-            severity: 'warn',
-            summary: 'Fechas invalidas',
-            detail: 'Las fechas no pueden ser menores a hoy',
-          });
-          return false;
-        }
-        if (this.fechaEnvio > this.fechaLlegada) {
-          this.messageService.add({
-            severity: 'warn',
-            summary: 'Fechas invalidas',
-            detail: 'La fecha de llegada no puede ser menor a la de envio',
-          });
-          return false;
-        }
-        if (!this.responsable) {
-          this.messageService.add({
-            severity: 'warn',
-            summary: 'Responsable requerido',
-            detail: 'Seleccione un responsable',
-          });
-          return false;
-        }
-        return true;
-      default:
-        return true;
-    }
-  }
-
-  confirmarTransferencia(): void {
-    this.confirmationService.confirm({
-      message: 'Desea confirmar esta transferencia?',
-      header: 'Confirmar Transferencia',
-      icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'Confirmar',
-      rejectLabel: 'Cancelar',
-      acceptButtonProps: { severity: 'warning' },
-      rejectButtonProps: { severity: 'secondary', outlined: true },
-      accept: () => {
-        this.registrarTransferencia();
-      },
+  private showWarn(summary: string, detail: string): void {
+    this.messageService.add({
+      severity: 'warn',
+      summary,
+      detail,
     });
-  }
-
-  private registrarTransferencia(): void {
-    if (this.submitting) return;
-
-    const payload = this.buildTransferenciaPayload();
-    if (!payload) return;
-
-    this.submitting = true;
-    this.transferenciaService
-      .postTransferencia(payload)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: () => {
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Registro exitoso',
-            detail: 'La transferencia fue registrada correctamente',
-            life: 3000,
-          });
-          this.router.navigate(['/admin/transferencia']);
-          this.resetForm();
-        },
-        error: (error) => {
-          console.error('Error al registrar transferencia:', error);
-          this.submitting = false;
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'No se pudo registrar la transferencia',
-            life: 3500,
-          });
-        },
-        complete: () => {
-          this.submitting = false;
-        },
-      });
-  }
-
-  private buildTransferenciaPayload(): TransferenciaRequest | null {
-    if (!this.productoId || !this.sedeOrigen || !this.sedeDestino) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Datos incompletos',
-        detail: 'Faltan datos para registrar la transferencia',
-      });
-      return null;
-    }
-
-    const user = this.getCurrentUserFromStorage();
-    const userId = user?.userId;
-    if (!userId) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Sesion invalida',
-        detail: 'No se encontro el usuario actual para registrar la transferencia',
-      });
-      return null;
-    }
-
-    const originSedeId = this.getSedeIdByNombre(this.sedeOrigen);
-    const destinationSedeId = this.getSedeIdByNombre(this.sedeDestino);
-
-    if (!originSedeId || !destinationSedeId) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Sedes invalidas',
-        detail: 'No se pudieron resolver las sedes seleccionadas',
-      });
-      return null;
-    }
-
-    return {
-      originHeadquartersId: String(originSedeId),
-      originWarehouseId: originSedeId,
-      destinationHeadquartersId: String(destinationSedeId),
-      destinationWarehouseId: destinationSedeId,
-      userId,
-      observation: this.observacion?.trim() || this.getMotivoLabel(this.motivo),
-      items: [
-        {
-          productId: Number(this.productoId),
-          series: DEFAULT_TRANSFER_SERIES,
-        },
-      ],
-    };
-  }
-
-  private getCurrentUserFromStorage():
-    | { userId?: number; nombres?: string; apellidos?: string }
-    | null {
-    try {
-      const raw = localStorage.getItem('user');
-      return raw ? JSON.parse(raw) : null;
-    } catch (error) {
-      console.error('Error leyendo usuario desde localStorage:', error);
-      return null;
-    }
-  }
-
-  resetForm(): void {
-    this.activeStep = 0;
-    this.productoId = null;
-    this.sedeOrigen = null;
-    this.sedeDestino = null;
-    this.cantidad = 1;
-    this.motivo = null;
-    this.observacion = '';
-    this.fechaEnvio = null;
-    this.fechaLlegada = null;
-    this.responsable = null;
   }
 }

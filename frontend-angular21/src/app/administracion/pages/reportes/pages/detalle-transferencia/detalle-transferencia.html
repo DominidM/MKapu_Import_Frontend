@@ -236,10 +236,20 @@
                   <label><i class="pi pi-ticket"></i> Series</label>
                   @if (item.seriesList.length > 0) {
                     <div class="series-chips">
-                      @for (serie of item.seriesList; track serie) {
+                      @for (serie of getVisibleSeries(item, idx); track serie) {
                         <span class="serie-chip">{{ serie }}</span>
                       }
                     </div>
+                    @if (hasMoreSeries(item)) {
+                      <p-button
+                        [label]="isSeriesExpanded(item, idx) ? 'Ver menos' : 'Ver más'"
+                        [icon]="isSeriesExpanded(item, idx) ? 'pi pi-angle-up' : 'pi pi-angle-down'"
+                        text
+                        size="small"
+                        severity="secondary"
+                        (onClick)="toggleSeriesVisibility(item, idx)"
+                      />
+                    }
                   } @else {
                     <p class="series-cell">-</p>
                   }

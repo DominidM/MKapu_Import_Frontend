@@ -85,13 +85,19 @@
         </div>
 
         @if (productoSeleccionado) {
-          <p-card class="transfer-subcard">
+          <p-card class="transfer-subcard" [class.transfer-subcard-conflict]="isSelectedProductInConflict()">
             <div class="transfer-product-title">{{ productoSeleccionado.nombre }}</div>
             <div class="transfer-meta flex flex-column md:flex-row">
               <span>Código: {{ productoSeleccionado.sku }}</span>
               <span>Categoria: {{ productoSeleccionado.categoria }}</span>
               <span>Marca: {{ productoSeleccionado.marca }}</span>
             </div>
+            @if (isSelectedProductInConflict()) {
+              <div class="transfer-conflict-note mt-2">
+                <i class="pi pi-exclamation-triangle"></i>
+                <span>Stock insuficiente para este producto. Ajusta la cantidad solicitada.</span>
+              </div>
+            }
           </p-card>
         }
 
@@ -106,6 +112,16 @@
               placeholder="Seleccione sede origen"
               [(ngModel)]="sedeOrigen"
               (onChange)="onSedeOrigenChange()"
+            ></p-select>
+            <label class="field-label mt-2">Almacen origen</label>
+            <p-select
+              class="w-full"
+              [options]="almacenes"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Seleccione almacen origen"
+              [(ngModel)]="almacenOrigenId"
+              (onChange)="onAlmacenOrigenChange()"
             ></p-select>
             @if (sedeOrigen && productoSeleccionado) {
               <p-card class="stock-mini-card">
@@ -129,6 +145,16 @@
               placeholder="Seleccione sede destino"
               [(ngModel)]="sedeDestino"
               (onChange)="onSedeDestinoChange()"
+            ></p-select>
+            <label class="field-label mt-2">Almacen destino</label>
+            <p-select
+              class="w-full"
+              [options]="almacenes"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Seleccione almacen destino"
+              [(ngModel)]="almacenDestinoId"
+              (onChange)="onAlmacenDestinoChange()"
             ></p-select>
             @if (sedeDestino && productoSeleccionado) {
               <p-card class="stock-mini-card">
@@ -198,6 +224,7 @@
               </div>
             </div>
             <div class="helper-text">Ajusta la cantidad con controles rapidos.</div>
+            <div class="helper-text">Cantidad total del borrador: {{ totalQuantity }} uds.</div>
           </div>
 
           <div class="transfer-panel w-full xl:flex-1">
@@ -324,7 +351,7 @@
             <p-card class="recap-card">
               <div class="recap-label"><i class="pi pi-map-marker"></i> Origen</div>
               <div class="recap-value">{{ getSedeLabel(sedeOrigen) }}</div>
-              <div class="recap-meta">Stock: {{ stockDisponible }} uds</div>
+              <div class="recap-meta">Almacen: {{ getAlmacenLabel(almacenOrigenId) }}</div>
             </p-card>
           </div>
 
@@ -340,15 +367,15 @@
             <p-card class="recap-card">
               <div class="recap-label"><i class="pi pi-map-marker"></i> Destino</div>
               <div class="recap-value">{{ getSedeLabel(sedeDestino) }}</div>
-              <div class="recap-meta">Stock: {{ getStockForSede(productoSeleccionado, sedeDestino) }} uds</div>
+              <div class="recap-meta">Almacen: {{ getAlmacenLabel(almacenDestinoId) }}</div>
             </p-card>
           </div>
 
           <div class="col-12 md:col-6">
             <p-card class="recap-card">
               <div class="recap-label"><i class="pi pi-sort-amount-up-alt"></i> Cantidad</div>
-              <div class="recap-value">{{ cantidad }} uds</div>
-              <div class="recap-meta">Disponible: {{ stockDisponible }} uds</div>
+              <div class="recap-value">{{ totalQuantity }} uds</div>
+              <div class="recap-meta">Disponible: {{ stockDisponible }} uds / Destino: {{ getStockForSede(productoSeleccionado, sedeDestino) }} uds</div>
             </p-card>
           </div>
 
@@ -397,6 +424,8 @@
           label="Confirmar transferencia"
           icon="pi pi-check"
           styleClass="wizard-primary w-full md:w-auto"
+          [loading]="submitting"
+          [disabled]="submitting || !canSubmitSig()"
           (onClick)="confirmarTransferencia()"
         ></p-button>
       }

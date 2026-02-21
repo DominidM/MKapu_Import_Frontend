@@ -15,12 +15,12 @@ import { pendingChangesGuard } from '../core/guards/pending-changes.guard';
 
     {
     path: 'dashboard-almacen',
-    loadComponent: () => 
+    loadComponent: () =>
       import('../almacen/pages/dashboard-almacen/dashboard-almacen').then((m) => m.DashboardAlmacen),
     },
     {
     path: 'dashboard-ventas',
-    loadComponent: () => 
+    loadComponent: () =>
       import('../ventas/pages/dashboard-ventas/dashboard-ventas').then((m) => m.DashboardVentas),
     },
 
@@ -56,7 +56,7 @@ import { pendingChangesGuard } from '../core/guards/pending-changes.guard';
 
 
     /* =======================
-      Almacen 
+      Almacen
     ======================= */
     {
       path: 'almacen',
@@ -93,36 +93,51 @@ import { pendingChangesGuard } from '../core/guards/pending-changes.guard';
   ======================= */
   {
     path: 'transferencia',
-    children: [
-      {
-        path: '',
-        loadComponent: () =>
-          import('./pages/reportes/pages/transferencia/transferencia').then(
-            (m) => m.Transferencia,
-          ),
-      },
-      {
-        path: 'nueva-transferencia',
-        loadComponent: () =>
-          import('./pages/reportes/pages/nueva-transferencia/nueva-transferencia').then(
-            (m) => m.NuevaTransferencia,
-          ),
-      },
-      {
-        path: 'solicitud-transferencia/:id',
-        loadComponent: () =>
-          import('./pages/reportes/pages/detalle-transferencia/detalle-transferencia').then(
-            (m) => m.DetalleTransferencia,
-          ),
-      },
-      {
-        path: 'notificacion',
-        loadComponent: () =>
-          import('./pages/reportes/pages/notificacion-transferencia/notificacion-transferencia').then(
-            (m) => m.NotificacionTransferencia,
-          ),
-      },
-    ],
+    loadComponent: () =>
+      import('./pages/reportes/pages/transferencia/transferencia').then(
+        (m) => m.Transferencia,
+      ),
+  },
+  {
+    path: 'transferencia/nueva-transferencia',
+    loadComponent: () =>
+      import('./pages/reportes/pages/nueva-transferencia/nueva-transferencia').then(
+        (m) => m.NuevaTransferencia,
+      ),
+  },
+  {
+    path: 'transferencia/solicitud-transferencia/:id',
+    loadComponent: () =>
+      import('./pages/reportes/pages/detalle-transferencia/detalle-transferencia').then(
+        (m) => m.DetalleTransferencia,
+      ),
+  },
+  {
+    path: 'transferencia/notificacion',
+    loadComponent: () =>
+      import('./pages/reportes/pages/notificacion-transferencia/notificacion-transferencia').then(
+        (m) => m.NotificacionTransferencia,
+      ),
+  },
+  {
+    path: 'transferencias',
+    redirectTo: 'transferencia',
+    pathMatch: 'full',
+  },
+  {
+    path: 'transferencias/nueva-transferencia',
+    redirectTo: 'transferencia/nueva-transferencia',
+    pathMatch: 'full',
+  },
+  {
+    path: 'transferencias/solicitud-transferencia/:id',
+    redirectTo: 'transferencia/solicitud-transferencia/:id',
+    pathMatch: 'full',
+  },
+  {
+    path: 'transferencias/notificacion',
+    redirectTo: 'transferencia/notificacion',
+    pathMatch: 'full',
   },
 
   /* =======================
@@ -204,7 +219,7 @@ import { pendingChangesGuard } from '../core/guards/pending-changes.guard';
           canDeactivate: [pendingChangesGuard],
         },
         {
-          path: 'editar-categoria/:id', 
+          path: 'editar-categoria/:id',
           loadComponent: () =>
             import('./pages/categoria/pages/editar-categoria/editar-categoria').then(
               (m) => m.EditarCategoria,
@@ -222,7 +237,7 @@ import { pendingChangesGuard } from '../core/guards/pending-changes.guard';
       path: 'clientes',
       children: [
         {
-          path: '',                        
+          path: '',
           loadComponent: () =>
             import('./pages/clientes/pages/clientes/clientes').then(m => m.Clientes),
         },
@@ -354,7 +369,7 @@ import { pendingChangesGuard } from '../core/guards/pending-changes.guard';
 
 
   /* =======================
-    MERMAS 
+    MERMAS
   ======================= */
   {
     path: 'mermas',
@@ -385,7 +400,7 @@ import { pendingChangesGuard } from '../core/guards/pending-changes.guard';
 
 
   /* =======================
-    REMATES 
+    REMATES
   ======================= */
   {
     path: 'remates',
