@@ -95,6 +95,8 @@ export class NuevaTransferencia implements OnInit {
   private readonly productosSig = signal<TransferProducto[]>([]);
   private readonly sedeOrigenSig = signal<string | null>(null);
   private readonly sedeDestinoSig = signal<string | null>(null);
+  private readonly userDestinationHeadquarterIdSig = signal<string | null>(null);
+  private readonly destinationSedeLockedSig = signal(false);
   private readonly almacenOrigenIdSig = signal<number | null>(null);
   private readonly almacenDestinoIdSig = signal<number | null>(null);
   private readonly cantidadSig = signal(1);
@@ -235,6 +237,10 @@ export class NuevaTransferencia implements OnInit {
     this.sedeOrigenSig.set(value ?? null);
   }
 
+  get destinationSedeLocked(): boolean {
+    return this.destinationSedeLockedSig();
+  }
+
   get sedeDestino(): string | null {
     return this.sedeDestinoSig();
   }
@@ -338,6 +344,7 @@ export class NuevaTransferencia implements OnInit {
 
   ngOnInit(): void {
     this.transferStore.setDraftUserId(this.transferUserContext.getCurrentUserId());
+    this.userDestinationHeadquarterIdSig.set(this.transferUserContext.getCurrentHeadquarterId());
 
     this.cargarSedes();
     this.cargarAlmacenes();
@@ -390,6 +397,11 @@ export class NuevaTransferencia implements OnInit {
   }
 
   onSedeDestinoChange(): void {
+    if (this.destinationSedeLocked) {
+      this.sedeDestino = this.userDestinationHeadquarterIdSig();
+      return;
+    }
+
     this.almacenDestinoId = null;
     if (this.sedeDestino) {
       this.transferStore.setDraftDestination(this.sedeDestino);
@@ -645,6 +657,17 @@ export class NuevaTransferencia implements OnInit {
       return null;
     }
 
+    const enforcedDestinationHeadquarterId = this.userDestinationHeadquarterIdSig();
+    if (!enforcedDestinationHeadquarterId) {
+      this.showWarn('Sede no disponible', 'No se pudo identificar la sede del usuario logeado.');
+      return null;
+    }
+
+    if (String(this.sedeDestino) !== String(enforcedDestinationHeadquarterId)) {
+      this.sedeDestino = enforcedDestinationHeadquarterId;
+      this.transferStore.setDraftDestination(enforcedDestinationHeadquarterId);
+    }
+
     const userId = this.transferUserContext.getCurrentUserId();
     const quantity = Math.max(1, Math.floor(this.cantidad));
 
@@ -656,7 +679,7 @@ export class NuevaTransferencia implements OnInit {
     return {
       originHeadquartersId: this.sedeOrigen,
       originWarehouseId: this.almacenOrigenId,
-      destinationHeadquartersId: this.sedeDestino,
+      destinationHeadquartersId: enforcedDestinationHeadquarterId,
       destinationWarehouseId: this.almacenDestinoId,
       observation: this.observacion?.trim() || this.getMotivoLabel(this.motivo) || null,
       userId,
@@ -699,13 +722,26 @@ export class NuevaTransferencia implements OnInit {
           );
 
           if (currentUserSede) {
-            this.sedeOrigen = String(currentUserSede.id_sede);
-            this.idSede = currentUserSede.id_sede;
-            this.transferStore.setDraftOrigin(String(currentUserSede.id_sede));
-          } else if (!this.sedeOrigen && this.sedes.length > 0) {
-            this.sedeOrigen = this.sedes[0].value;
-            this.idSede = Number(this.sedes[0].value);
-            this.transferStore.setDraftOrigin(this.sedeOrigen);
+            const userSedeId = String(currentUserSede.id_sede);
+            this.sedeDestino = userSedeId;
+            this.userDestinationHeadquarterIdSig.set(userSedeId);
+            this.destinationSedeLockedSig.set(true);
+            this.transferStore.setDraftDestination(userSedeId);
+            this.sedeOrigen = null;
+            this.idSede = 0;
+            this.transferStore.setDraftOrigin('');
+          } else if (!this.sedeDestino && this.sedes.length > 0) {
+            this.sedeDestino = this.sedes[0].value;
+            this.destinationSedeLockedSig.set(false);
+            this.transferStore.setDraftDestination(this.sedeDestino);
+            this.showWarn(
+              'Sede destino no bloqueada',
+              'No se encontró la sede del usuario en el catálogo; verifica tu sesión.',
+            );
+
+            this.sedeOrigen = null;
+            this.idSede = 0;
+            this.transferStore.setDraftOrigin('');
           }
 
           this.cargarProductos(this.sedeOrigen);

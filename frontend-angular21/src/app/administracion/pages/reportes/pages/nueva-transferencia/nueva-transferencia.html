@@ -144,8 +144,12 @@
               optionValue="value"
               placeholder="Seleccione sede destino"
               [(ngModel)]="sedeDestino"
+              [disabled]="destinationSedeLocked"
               (onChange)="onSedeDestinoChange()"
             ></p-select>
+            @if (destinationSedeLocked) {
+              <small class="helper-text">Sede destino bloqueada según sede del usuario logeado.</small>
+            }
             <label class="field-label mt-2">Almacen destino</label>
             <p-select
               class="w-full"
