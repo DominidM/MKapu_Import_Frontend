@@ -72,7 +72,7 @@ import { pendingChangesGuard } from '../core/guards/pending-changes.guard';
           path: 'crear-almacen',
           loadComponent: () =>
             import('./pages/almacen/pages/agregar-almacen/agregar-almacen').then(
-              (m) => m.AgregarCategoria,
+              (m) => m.AlmacenCrear,
             ),
         },
         {
