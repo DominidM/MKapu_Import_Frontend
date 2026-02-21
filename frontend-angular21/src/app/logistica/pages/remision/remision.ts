@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { Button } from 'primeng/button';
 import { Tag } from 'primeng/tag';
 import { TableModule } from 'primeng/table';
