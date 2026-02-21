@@ -18,8 +18,6 @@ import { ConfirmDialog } from 'primeng/confirmdialog';
 import { DatePicker } from 'primeng/datepicker';
 import { Tooltip } from 'primeng/tooltip';
 import { AutoComplete } from 'primeng/autocomplete';
-import { Paginator } from 'primeng/paginator';
-import { Skeleton } from 'primeng/skeleton';
 import { MessageService, ConfirmationService } from 'primeng/api';
 
 import { VentasApiService } from '../../services/ventas-api.service';
@@ -84,8 +82,6 @@ interface FiltroVentas {
     DatePicker,
     Tooltip,
     AutoComplete,
-    Paginator,
-    Skeleton,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './historial-ventas.html',
