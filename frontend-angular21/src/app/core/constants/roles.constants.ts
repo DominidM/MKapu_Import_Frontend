@@ -1,7 +1,7 @@
 export enum UserRole {
   ADMIN = 1,
-  VENTAS = 2,
-  ALMACEN = 3,
+  ALMACEN = 2,
+  VENTAS = 3,
   LOGISTICA = 4
 }
 

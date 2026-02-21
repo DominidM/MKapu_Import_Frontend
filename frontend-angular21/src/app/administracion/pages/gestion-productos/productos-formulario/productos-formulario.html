@@ -111,6 +111,32 @@
 
     <div class="col-12 mb-3"><div class="border-top-1 border-300"></div></div>
 
+
+    <div class="col-12 mb-3">
+      <h3 class="text-xl font-bold text-900 m-0 flex align-items-center gap-2">
+        <i class="pi pi-tag text-warning"></i>
+        Almacen
+      </h3>
+    </div>
+
+    <div class="field col-12 mb-4">
+      <label for="familia" class="font-semibold text-900 mb-2 block">Almacen *</label>
+      <p-select 
+        id="almacen" 
+        formControlName="almacen" 
+        [options]="almacenes()" 
+        optionLabel="nombre" 
+        optionValue="id_almacen" 
+        placeholder="Seleccionar almacén" 
+        styleClass="w-full border-1 border-300">
+      </p-select>
+      
+      @if (productoForm.get('almacen')?.invalid && productoForm.get('almacen')?.touched) {
+        <small class="text-red-500 block mt-2">El almacén es requerido</small>
+      }
+    </div>
+
+
     <div class="col-12 mb-3">
       <h3 class="text-xl font-bold text-900 m-0 flex align-items-center gap-2">
         <i class="pi pi-warehouse text-warning"></i>
