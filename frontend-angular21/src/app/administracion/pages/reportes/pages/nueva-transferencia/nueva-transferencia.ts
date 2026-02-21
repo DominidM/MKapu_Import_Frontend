@@ -22,19 +22,18 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { AutoCompleteModule } from 'primeng/autocomplete';
-import { ProductoService } from '../../../../services/producto.service';
-import {
-  ProductoAutocomplete,
-  ProductoInterface,
-} from '../../../../interfaces/producto.interface';
 import { SedeService } from '../../../../services/sede.service';
-import { map } from 'rxjs';
 import { Headquarter } from '../../../../interfaces/sedes.interface';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TransferStore } from '../../../../services/transfer.store';
 import { AlmacenService } from '../../../../services/almacen.service';
 import { TransferUserContextService } from '../../../../services/transfer-user-context.service';
-import { RequestTransferAggregatedDto } from '../../../../interfaces/transferencia.interface';
+import { TransferenciaService } from '../../../../services/transferencia.service';
+import {
+  RequestTransferAggregatedDto,
+  TransferProductStockBase,
+  TransferProductStockListItem,
+} from '../../../../interfaces/transferencia.interface';
 
 interface TransferProducto {
   id: number;
@@ -78,7 +77,7 @@ export class NuevaTransferencia implements OnInit {
   private readonly messageService = inject(MessageService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly router = inject(Router);
-  private readonly productoService = inject(ProductoService);
+  private readonly transferenciaService = inject(TransferenciaService);
   private readonly sedeService = inject(SedeService);
   private readonly almacenService = inject(AlmacenService);
   private readonly transferStore = inject(TransferStore);
@@ -117,7 +116,8 @@ export class NuevaTransferencia implements OnInit {
   private readonly stockDisponibleSig = computed(() => {
     const producto = this.productoSeleccionadoSig();
     const sede = this.sedeOrigenSig();
-    if (!producto || !sede) return 0;
+    const almacenOrigenId = this.almacenOrigenIdSig();
+    if (!producto || !sede || !almacenOrigenId) return 0;
     return producto.stockPorSede[sede] || 0;
   });
 
@@ -382,18 +382,20 @@ export class NuevaTransferencia implements OnInit {
   }
 
   onSedeOrigenChange(): void {
-    this.productoId = null;
-    this.productoQuery = null;
-    this.cantidad = 1;
+    this.resetProductoSeleccionado();
     this.almacenOrigenId = null;
+    this.transferStore.setDraftOriginWarehouse(0);
+    this.productos = [];
+    this.productosAutocomplete = [];
 
     const selectedSede = this.sedeOrigen;
     if (selectedSede) {
       this.idSede = Number(selectedSede);
       this.transferStore.setDraftOrigin(selectedSede);
+    } else {
+      this.idSede = 0;
+      this.transferStore.setDraftOrigin('');
     }
-
-    this.cargarProductos(selectedSede);
   }
 
   onSedeDestinoChange(): void {
@@ -403,6 +405,7 @@ export class NuevaTransferencia implements OnInit {
     }
 
     this.almacenDestinoId = null;
+    this.transferStore.setDraftDestinationWarehouse(0);
     if (this.sedeDestino) {
       this.transferStore.setDraftDestination(this.sedeDestino);
     }
@@ -410,37 +413,57 @@ export class NuevaTransferencia implements OnInit {
   }
 
   onAlmacenOrigenChange(): void {
+    this.resetProductoSeleccionado();
+
     if (this.almacenOrigenId) {
       this.transferStore.setDraftOriginWarehouse(this.almacenOrigenId);
+      this.cargarProductos(this.sedeOrigen, this.almacenOrigenId);
+      return;
     }
+
+    this.transferStore.setDraftOriginWarehouse(0);
+    this.productos = [];
+    this.productosAutocomplete = [];
   }
 
   onAlmacenDestinoChange(): void {
     if (this.almacenDestinoId) {
       this.transferStore.setDraftDestinationWarehouse(this.almacenDestinoId);
+      return;
     }
+
+    this.transferStore.setDraftDestinationWarehouse(0);
   }
 
   buscarProductos(event: { query?: string }): void {
     const query = (event.query ?? '').trim();
+    const sedeOrigen = this.sedeOrigen;
+    const almacenOrigenId = this.almacenOrigenId;
 
-    if (!query || !this.idSede) {
+    if (!sedeOrigen || !almacenOrigenId) {
+      this.productosAutocomplete = [];
+      return;
+    }
+
+    if (query.length < 3) {
       this.productosAutocomplete = this.productos.slice(0, 20);
       return;
     }
 
-    this.productoService
-      .getProductosAutocomplete(query, this.idSede)
+    this.transferenciaService
+      .getProductsAutocomplete({
+        search: query,
+        id_sede: Number(sedeOrigen),
+        id_almacen: almacenOrigenId,
+      })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (response) => {
-          this.productosAutocomplete = this.mapAutocompleteProductos(
-            response.data ?? [],
-            this.sedeOrigen,
-          );
+          this.productosAutocomplete = this.mapAutocompleteProductos(response.data ?? [], sedeOrigen);
         },
         error: () => {
           this.productosAutocomplete = [];
+          this.showError('No se pudo cargar el autocomplete de productos.');
         },
       });
   }
@@ -449,12 +472,12 @@ export class NuevaTransferencia implements OnInit {
     const producto = event.value;
     this.productoId = producto.id;
     this.productoQuery = producto;
-
-    const restantes = this.productos.filter((p) => p.id !== producto.id);
-    this.productos = [...restantes, producto];
-
-    this.transferStore.setItemQuantity(producto.id, this.cantidad);
     this.transferStore.conflictProductId.set(null);
+
+    const normalizedCantidad = this.normalizeCantidad(this.cantidad, this.stockDisponible);
+    this.cantidad = normalizedCantidad;
+    this.transferStore.setItemQuantity(producto.id, normalizedCantidad);
+
     this.cargarStockProductoSeleccionadoEnSedes();
   }
 
@@ -466,6 +489,7 @@ export class NuevaTransferencia implements OnInit {
 
     this.productoId = null;
     this.productoQuery = null;
+    this.cantidad = 1;
   }
 
   ajustarCantidad(delta: number): void {
@@ -474,7 +498,7 @@ export class NuevaTransferencia implements OnInit {
       return;
     }
 
-    const normalizada = Math.min(nuevaCantidad, Math.max(this.stockDisponible, 1));
+    const normalizada = this.normalizeCantidad(nuevaCantidad, this.stockDisponible);
     this.cantidad = normalizada;
 
     const productId = this.productoId;
@@ -486,11 +510,11 @@ export class NuevaTransferencia implements OnInit {
 
   onCantidadChange(valor: number | null): void {
     if (valor === null) {
-      this.cantidad = 1;
+      this.cantidad = this.stockDisponible > 0 ? 1 : 0;
       return;
     }
 
-    const normalizado = Math.max(1, Math.min(valor, Math.max(this.stockDisponible, 1)));
+    const normalizado = this.normalizeCantidad(valor, this.stockDisponible);
     this.cantidad = normalizado;
 
     if (this.productoId) {
@@ -530,6 +554,14 @@ export class NuevaTransferencia implements OnInit {
 
         if (this.sedeOrigen === this.sedeDestino && this.almacenOrigenId === this.almacenDestinoId) {
           this.showWarn('Ruta invalida', 'El origen y destino deben ser diferentes');
+          return false;
+        }
+
+        if (this.stockDisponible <= 0) {
+          this.showWarn(
+            'Stock insuficiente',
+            'El producto seleccionado no tiene stock en el almacén origen.',
+          );
           return false;
         }
 
@@ -656,7 +688,12 @@ export class NuevaTransferencia implements OnInit {
   }
 
   private validarResumen(): boolean {
-    return !!this.productoId && this.cantidad >= 1 && !!this.motivo;
+    return (
+      !!this.productoId &&
+      this.cantidad >= 1 &&
+      this.cantidad <= this.stockDisponible &&
+      !!this.motivo
+    );
   }
 
   private buildAggregatedPayload(): RequestTransferAggregatedDto | null {
@@ -752,7 +789,7 @@ export class NuevaTransferencia implements OnInit {
             this.transferStore.setDraftOrigin('');
           }
 
-          this.cargarProductos(this.sedeOrigen);
+          this.cargarProductos(this.sedeOrigen, this.almacenOrigenId);
         },
         error: () => {
           this.messageService.add({
@@ -793,37 +830,50 @@ export class NuevaTransferencia implements OnInit {
       });
   }
 
-  private cargarProductos(sedeId?: string | null): void {
-    void sedeId;
-    this.productoService
-      .getProductos(1, 20, true)
+  private cargarProductos(sedeId?: string | null, almacenId?: number | null): void {
+    if (!sedeId || !almacenId) {
+      this.productos = [];
+      this.productosAutocomplete = [];
+      return;
+    }
+
+    this.transferenciaService
+      .getProductsStock({
+        id_sede: Number(sedeId),
+        id_almacen: almacenId,
+        page: 1,
+        size: 50,
+      })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (response) => {
-          this.productos = this.mapProductos(response.products);
+          this.productos = this.mapProductos(response.data ?? [], sedeId);
           this.productosAutocomplete = this.productos.slice(0, 8);
         },
         error: () => {
           this.productos = [];
           this.productosAutocomplete = [];
+          this.showError('No se pudo cargar productos por sede y almacén.');
         },
       });
   }
 
-  private mapProductos(productosBase: ProductoInterface[]): TransferProducto[] {
+  private mapProductos(productosBase: TransferProductStockListItem[], sedeId: string): TransferProducto[] {
     return productosBase.map((producto) => ({
       id: Number(producto.id_producto),
-      nombre: producto.anexo,
+      nombre: producto.nombre,
       sku: producto.codigo,
-      categoria: producto.categoriaNombre,
+      categoria: producto.familia || '',
       marca: 'N/A',
-      stockPorSede: {},
+      stockPorSede: {
+        [sedeId]: Number(producto.stock ?? 0),
+      },
     }));
   }
 
   private mapAutocompleteProductos(
-    productos: ProductoAutocomplete[],
-    sedeId?: string | null,
+    productos: TransferProductStockBase[],
+    sedeId: string,
   ): TransferProducto[] {
     return productos.map((producto) => ({
       id: Number(producto.id_producto),
@@ -831,25 +881,32 @@ export class NuevaTransferencia implements OnInit {
       sku: producto.codigo,
       categoria: '',
       marca: 'N/A',
-      stockPorSede: sedeId ? { [sedeId]: producto.stock } : {},
+      stockPorSede: { [sedeId]: Number(producto.stock ?? 0) },
     }));
   }
 
   private cargarStockProductoSeleccionadoEnSedes(): void {
     if (!this.productoId) return;
 
-    this.cargarStockProductoEnSede(this.productoId, this.sedeOrigen);
-    this.cargarStockProductoEnSede(this.productoId, this.sedeDestino);
+    this.cargarStockProductoEnSede(this.productoId, this.sedeOrigen, this.almacenOrigenId);
+    this.cargarStockProductoEnSede(this.productoId, this.sedeDestino, this.almacenDestinoId);
   }
 
-  private cargarStockProductoEnSede(productoId: number, sedeId: string | null): void {
-    if (!sedeId) return;
+  private cargarStockProductoEnSede(
+    productoId: number,
+    sedeId: string | null,
+    almacenId?: number | null,
+  ): void {
+    if (!sedeId || !almacenId) return;
 
     const sedeNumberId = Number(sedeId);
     if (!sedeNumberId) return;
 
-    this.productoService
-      .getProductoDetalleStock(productoId, sedeNumberId)
+    this.transferenciaService
+      .getProductStockById(productoId, {
+        id_sede: sedeNumberId,
+        id_almacen: almacenId,
+      })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (resp) => {
@@ -860,6 +917,35 @@ export class NuevaTransferencia implements OnInit {
           this.actualizarStockProductoEnMemoria(productoId, sedeId, 0);
         },
       });
+  }
+
+  private resetProductoSeleccionado(): void {
+    const currentId = this.productoId;
+    if (currentId) {
+      this.transferStore.removeItem(currentId);
+    }
+
+    this.productoId = null;
+    this.productoQuery = null;
+    this.cantidad = 1;
+    this.transferStore.conflictProductId.set(null);
+  }
+
+  private normalizeCantidad(value: number, stockDisponible: number): number {
+    const stockMax = Math.max(0, Math.floor(stockDisponible));
+    const normalizedValue = Math.max(0, Math.floor(value));
+    if (stockMax === 0) {
+      return 0;
+    }
+    return Math.max(1, Math.min(normalizedValue, stockMax));
+  }
+
+  private showError(detail: string): void {
+    this.messageService.add({
+      severity: 'error',
+      summary: 'Error',
+      detail,
+    });
   }
 
   private actualizarStockProductoEnMemoria(
