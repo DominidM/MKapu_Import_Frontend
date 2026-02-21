@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, signal, computed, inject, effect } from '@angular/core';
+import { Component, OnInit, AfterViewInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -25,11 +25,15 @@ import { ProductoService } from '../../services/producto.service';
 
 import {
   ClienteBusquedaResponse,
+  CrearClienteRequest,
+  CrearClienteResponse,
+  ActualizarClienteRequest,
+  TipoDocumento,
   ItemVenta,
+  Producto,
+  ProductoStockVentas,
   RegistroVentaRequest,
   RegistroVentaResponse,
-  Producto,
-  ProductoConStock,
   METODOS_PAGO,
   OPERATION_TYPE_VENTA_INTERNA,
   CURRENCY_PEN,
@@ -69,11 +73,13 @@ export class GenerarVenta implements OnInit, AfterViewInit {
   private readonly confirmationService = inject(ConfirmationService);
   private readonly router = inject(Router);
 
+  // ─── Cabecera ─────────────────────────────────────────────────────────────
   readonly iconoCabecera = 'pi pi-shopping-cart';
   readonly tituloKicker = 'VENTAS - GENERAR VENTA';
   readonly subtituloKicker = 'GENERAR NUEVA VENTA';
   readonly steps = ['Comprobante y Cliente', 'Productos', 'Forma de Pago', 'Confirmar Venta'];
 
+  // ─── Opciones estáticas ───────────────────────────────────────────────────
   readonly tipoComprobanteOptions = [
     { label: 'Boleta', value: 2, icon: 'pi pi-file' },
     { label: 'Factura', value: 1, icon: 'pi pi-file-edit' },
@@ -93,27 +99,72 @@ export class GenerarVenta implements OnInit, AfterViewInit {
     { label: 'Transferencia', value: 5, icon: 'pi pi-building' },
   ];
 
+  // ─── Sesión ───────────────────────────────────────────────────────────────
   idSedeActual = signal(1);
   nombreSedeActual = signal('');
   idUsuarioActual = signal(0);
   nombreUsuarioActual = signal('');
 
+  // ─── Wizard ───────────────────────────────────────────────────────────────
   activeStep = signal(0);
 
+  // ─── Paso 1: Comprobante / Cliente ────────────────────────────────────────
   tipoComprobante = signal(2);
   clienteAutoComplete = signal('');
   clienteEncontrado = signal<ClienteBusquedaResponse | null>(null);
   loading = signal(false);
   busquedaRealizada = signal(false);
 
+  // Tipos doc y alta/edición de cliente
+  tiposDocumento = signal<TipoDocumento[]>([]);
+  creandoCliente = signal(false);
+  editandoCliente = signal(false);
+  actualizandoCliente = signal(false);
+
+  nuevoClienteForm: {
+    documentTypeId: number | null;
+    documentValue: string;
+    name: string;
+    address: string;
+    email: string;
+    phone: string;
+  } = {
+    documentTypeId: null,
+    documentValue: '',
+    name: '',
+    address: '',
+    email: '',
+    phone: '',
+  };
+
+  editarClienteForm: {
+    name: string;
+    address: string;
+    email: string;
+    phone: string;
+  } = {
+    name: '',
+    address: '',
+    email: '',
+    phone: '',
+  };
+
+  // ─── Paso 2: Productos ────────────────────────────────────────────────────
+  private readonly SIZE_PAGE = 10;
+
   productosLoading = signal(true);
+  familiasLoading = signal(true);
   productosCargados = signal<Producto[]>([]);
   productosFiltrados = signal<Producto[]>([]);
   productosSugeridos = signal<Producto[]>([]);
   productoSeleccionadoBusqueda = signal<any>(null);
 
-  familiaSeleccionada = signal<string | null>(null);
-  familiasDisponibles = signal<Array<{ label: string; value: string }>>([]);
+  paginaActual = signal(1);
+  totalRegistros = signal(0);
+  cargandoMas = signal(false);
+
+  familiaSeleccionada = signal<number | null>(null);
+  familiasDisponibles = signal<Array<{ label: string; value: number }>>([]);
 
   productoTemp = signal<Producto | null>(null);
   cantidadTemp = signal(1);
@@ -121,23 +172,24 @@ export class GenerarVenta implements OnInit, AfterViewInit {
 
   productosSeleccionados = signal<ItemVenta[]>([]);
 
+  // ─── Paso 3: Pago ─────────────────────────────────────────────────────────
   metodoPagoSeleccionado = signal(1);
   montoRecibido = signal(0);
   numeroOperacion = signal('');
 
+  // ─── Paso 4: Resultado ────────────────────────────────────────────────────
   comprobanteGenerado = signal<RegistroVentaResponse['data'] | null>(null);
 
-  textoBotonCliente = computed(() => {
-    return this.clienteEncontrado() ? 'Cliente Seleccionado' : 'Buscar Cliente';
-  });
+  // ─── Computed ─────────────────────────────────────────────────────────────
+  textoBotonCliente = computed(() =>
+    this.clienteEncontrado() ? 'Cliente Seleccionado' : 'Buscar Cliente',
+  );
 
-  iconoBotonCliente = computed(() => {
-    return this.clienteEncontrado() ? 'pi pi-check' : 'pi pi-search';
-  });
+  iconoBotonCliente = computed(() => (this.clienteEncontrado() ? 'pi pi-check' : 'pi pi-search'));
 
   botonClienteHabilitado = computed(() => {
-    const longitudEsperada = this.tipoComprobante() === 2 ? 8 : 11;
-    return (this.clienteAutoComplete()?.length || 0) === longitudEsperada;
+    const longitud = this.tipoComprobante() === 2 ? 8 : 11;
+    return (this.clienteAutoComplete()?.length || 0) === longitud;
   });
 
   subtotal = computed(() => {
@@ -145,23 +197,18 @@ export class GenerarVenta implements OnInit, AfterViewInit {
     return total / (1 + IGV_RATE);
   });
 
-  igv = computed(() => {
-    return this.subtotal() * IGV_RATE;
-  });
+  igv = computed(() => this.subtotal() * IGV_RATE);
 
-  total = computed(() => {
-    return this.productosSeleccionados().reduce((sum, item) => sum + item.total, 0);
-  });
+  total = computed(() => this.productosSeleccionados().reduce((sum, item) => sum + item.total, 0));
 
   vuelto = computed(() => {
-    const vuelto = this.montoRecibido() - this.total();
-    return vuelto >= 0 ? vuelto : 0;
+    const v = this.montoRecibido() - this.total();
+    return v >= 0 ? v : 0;
   });
 
   precioSegunTipo = computed(() => {
     const producto = this.productoTemp();
     if (!producto) return 0;
-
     switch (this.tipoPrecioTemp()) {
       case 'caja':
         return producto.precioCaja;
@@ -172,37 +219,24 @@ export class GenerarVenta implements OnInit, AfterViewInit {
     }
   });
 
-  obtenerSiglasDocumento(documentTypeDescription: string): string {
-    if (!documentTypeDescription) return '';
+  hayMasPaginas = computed(() => this.productosCargados().length < this.totalRegistros());
 
-    if (documentTypeDescription.includes('DNI')) return 'DNI';
-    if (documentTypeDescription.includes('RUC')) return 'RUC';
-
-    const match = documentTypeDescription.match(/\(([^)]+)\)/);
-    return match ? match[1] : documentTypeDescription;
-  }
-
-  formatearDocumentoCompleto(): string {
-    const cliente = this.clienteEncontrado();
-    if (!cliente || !cliente.documentTypeDescription) return '';
-
-    const siglas = this.obtenerSiglasDocumento(cliente.documentTypeDescription);
-    return `${siglas}: ${cliente.documentValue}`;
-  }
-
+  // ─── Lifecycle ────────────────────────────────────────────────────────────
   ngOnInit(): void {
     this.cargarConfiguracionInicial();
+    this.cargarTiposDocumento();
   }
 
   ngAfterViewInit(): void {
     setTimeout(() => {
-      this.cargarProductos();
+      this.cargarProductos(true);
+      this.cargarFamilias();
     }, 0);
   }
 
+  // ─── Configuración inicial ────────────────────────────────────────────────
   private cargarConfiguracionInicial(): void {
     const user = this.authService.getCurrentUser();
-
     if (!user) {
       this.messageService.add({
         severity: 'error',
@@ -217,50 +251,201 @@ export class GenerarVenta implements OnInit, AfterViewInit {
     this.nombreSedeActual.set(user.sedeNombre);
     this.idUsuarioActual.set(user.userId);
     this.nombreUsuarioActual.set(`${user.nombres} ${user.apellidos}`.trim());
+  }
 
-    console.log('Configuración cargada:', {
-      sede: this.nombreSedeActual(),
-      id_sede: this.idSedeActual(),
-      usuario: this.nombreUsuarioActual(),
-      id_usuario: this.idUsuarioActual(),
+  // ─── Tipos de documento ───────────────────────────────────────────────────
+  private cargarTiposDocumento(): void {
+    this.clienteService.obtenerTiposDocumento().subscribe({
+      next: (tipos) => this.tiposDocumento.set(tipos),
+      error: () => console.warn('No se pudieron cargar los tipos de documento'),
     });
   }
 
-  private cargarProductos(): void {
-    this.productosLoading.set(true);
+  // ─── Alta de cliente (cuando NO se encuentra) ─────────────────────────────
+  private resetNuevoClienteForm(): void {
+    this.nuevoClienteForm = {
+      documentTypeId: null,
+      documentValue: '',
+      name: '',
+      address: '',
+      email: '',
+      phone: '',
+    };
+  }
+
+  crearNuevoCliente(): void {
+    const { documentTypeId, documentValue, name } = this.nuevoClienteForm;
+
+    if (!documentTypeId || !documentValue.trim() || !name.trim()) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Campos requeridos',
+        detail: 'Tipo de documento, número y nombre son obligatorios',
+      });
+      return;
+    }
+
+    this.creandoCliente.set(true);
+
+    const request: CrearClienteRequest = {
+      documentTypeId,
+      documentValue: documentValue.trim(),
+      name: name.trim(),
+      address: this.nuevoClienteForm.address.trim() || undefined,
+      email: this.nuevoClienteForm.email.trim() || undefined,
+      phone: this.nuevoClienteForm.phone.trim() || undefined,
+    };
+
+    this.clienteService.crearCliente(request).subscribe({
+      next: (response: CrearClienteResponse) => {
+        this.creandoCliente.set(false);
+
+        const clienteCreado: ClienteBusquedaResponse = {
+          customerId: response.customerId,
+          name: response.name,
+          documentValue: response.documentValue,
+          documentTypeDescription: response.documentTypeDescription,
+          documentTypeSunatCode: response.documentTypeSunatCode,
+          invoiceType: response.invoiceType as 'BOLETA' | 'FACTURA',
+          status: response.status,
+          address: response.address,
+          email: response.email,
+          phone: response.phone,
+          displayName: response.displayName,
+        };
+
+        this.clienteEncontrado.set(clienteCreado);
+        this.clienteAutoComplete.set(request.documentValue);
+        this.busquedaRealizada.set(true);
+        this.resetNuevoClienteForm();
+
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Cliente Creado',
+          detail: `${clienteCreado.name} fue registrado y seleccionado`,
+        });
+      },
+      error: (error: any) => {
+        this.creandoCliente.set(false);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error al crear cliente',
+          detail: error?.error?.message ?? 'Ocurrió un error al registrar el cliente',
+        });
+      },
+    });
+  }
+
+  // ─── Edición de cliente existente (añadir más datos) ──────────────────────
+  iniciarEdicionCliente(): void {
+    const cliente = this.clienteEncontrado();
+    if (!cliente) return;
+
+    this.editarClienteForm = {
+      name: cliente.name ?? '',
+      address: cliente.address ?? '',
+      email: cliente.email ?? '',
+      phone: cliente.phone ?? '',
+    };
+    this.editandoCliente.set(true);
+  }
+
+  cancelarEdicionCliente(): void {
+    this.editandoCliente.set(false);
+  }
+
+  guardarCambiosCliente(): void {
+    const cliente = this.clienteEncontrado();
+    if (!cliente) return;
+
+    const payload: ActualizarClienteRequest = {
+      name: this.editarClienteForm.name.trim() || undefined,
+      address: this.editarClienteForm.address.trim() || undefined,
+      email: this.editarClienteForm.email.trim() || undefined,
+      phone: this.editarClienteForm.phone.trim() || undefined,
+    };
+
+    this.actualizandoCliente.set(true);
+
+    this.clienteService.actualizarCliente(cliente.customerId, payload).subscribe({
+      next: (response: CrearClienteResponse) => {
+        this.actualizandoCliente.set(false);
+        this.editandoCliente.set(false);
+
+        const actualizado: ClienteBusquedaResponse = {
+          customerId: response.customerId,
+          name: response.name,
+          documentValue: response.documentValue,
+          documentTypeDescription: response.documentTypeDescription,
+          documentTypeSunatCode: response.documentTypeSunatCode,
+          invoiceType: response.invoiceType as 'BOLETA' | 'FACTURA',
+          status: response.status,
+          address: response.address,
+          email: response.email,
+          phone: response.phone,
+          displayName: response.displayName,
+        };
+
+        this.clienteEncontrado.set(actualizado);
+
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Cliente Actualizado',
+          detail: 'Los datos del cliente se actualizaron correctamente',
+        });
+      },
+      error: (error: any) => {
+        this.actualizandoCliente.set(false);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error al actualizar cliente',
+          detail: error?.error?.message ?? 'Ocurrió un error al actualizar el cliente',
+        });
+      },
+    });
+  }
+
+  // ─── Carga de productos paginada ─────────────────────────────────────────
+  private cargarProductos(resetear = true): void {
+    if (resetear) {
+      this.paginaActual.set(1);
+      this.productosCargados.set([]);
+      this.productosFiltrados.set([]);
+      this.productosLoading.set(true);
+    } else {
+      this.cargandoMas.set(true);
+    }
+
+    const idCategoria = this.familiaSeleccionada() ?? undefined;
 
     this.productoService
-      .obtenerProductosConStock(this.idSedeActual(), undefined, 1, 500)
+      .obtenerProductosConStock(
+        this.idSedeActual(),
+        idCategoria,
+        this.paginaActual(),
+        this.SIZE_PAGE,
+      )
       .subscribe({
-        next: async (response) => {
-          const productosConDetalles = await Promise.all(
-            response.data.map(async (prod: ProductoConStock) => {
-              try {
-                const detalle = await this.productoService
-                  .obtenerDetalleProducto(prod.id_producto, this.idSedeActual())
-                  .toPromise();
+        next: (response) => {
+          this.totalRegistros.set(response.pagination.total_records);
 
-                return this.productoService.mapearProductoConStock(prod, detalle!);
-              } catch (error) {
-                console.error(`Error al cargar detalle del producto ${prod.codigo}:`, error);
-                return null;
-              }
-            }),
+          const nuevos: Producto[] = response.data.map((prod: ProductoStockVentas) =>
+            this.productoService.mapearProductoConStock(prod),
           );
 
-          const productos = productosConDetalles.filter((p): p is Producto => p !== null);
+          if (resetear) {
+            this.productosCargados.set(nuevos);
+          } else {
+            this.productosCargados.update((prev) => [...prev, ...nuevos]);
+          }
 
-          this.productosCargados.set(productos);
-          this.productosFiltrados.set([...productos]);
-          this.cargarFamilias();
+          this.productosFiltrados.set([...this.productosCargados()]);
           this.productosLoading.set(false);
-
-          console.log(`${productos.length} productos cargados de ${this.nombreSedeActual()}`);
+          this.cargandoMas.set(false);
         },
-        error: (error: any) => {
-          console.error('Error al cargar productos:', error);
+        error: () => {
           this.productosLoading.set(false);
-
+          this.cargandoMas.set(false);
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
@@ -270,19 +455,31 @@ export class GenerarVenta implements OnInit, AfterViewInit {
       });
   }
 
-  private cargarFamilias(): void {
-    const familiasUnicas = [...new Set(this.productosCargados().map((p) => p.familia))];
-    const familias = familiasUnicas
-      .filter((familia) => familia)
-      .sort()
-      .map((familia) => ({
-        label: familia,
-        value: familia,
-      }));
-
-    this.familiasDisponibles.set(familias);
+  cargarMasProductos(): void {
+    if (!this.hayMasPaginas() || this.cargandoMas()) return;
+    this.paginaActual.update((p) => p + 1);
+    this.cargarProductos(false);
   }
 
+  // ─── Familias desde endpoint dedicado ────────────────────────────────────
+  private cargarFamilias(): void {
+    this.familiasLoading.set(true);
+
+    this.productoService.obtenerCategoriasConStock(this.idSedeActual()).subscribe({
+      next: (categorias) => {
+        this.familiasDisponibles.set(
+          categorias.map((c) => ({ label: c.nombre, value: c.id_categoria })),
+        );
+        this.familiasLoading.set(false);
+      },
+      error: () => {
+        this.familiasLoading.set(false);
+        console.warn('No se pudieron cargar las familias');
+      },
+    });
+  }
+
+  // ─── Paso 1: Cliente ──────────────────────────────────────────────────────
   onTipoComprobanteChange(nuevoTipo: number): void {
     this.tipoComprobante.set(nuevoTipo);
     this.limpiarCliente();
@@ -295,16 +492,12 @@ export class GenerarVenta implements OnInit, AfterViewInit {
   }
 
   onInputCambioDocumento(): void {
-    if (this.clienteEncontrado()) {
-      this.limpiarCliente();
-    }
+    if (this.clienteEncontrado()) this.limpiarCliente();
     this.busquedaRealizada.set(false);
   }
 
   manejarAccionCliente(): void {
-    if (!this.botonClienteHabilitado() || this.clienteEncontrado()) {
-      return;
-    }
+    if (!this.botonClienteHabilitado() || this.clienteEncontrado()) return;
     this.buscarCliente();
   }
 
@@ -319,24 +512,20 @@ export class GenerarVenta implements OnInit, AfterViewInit {
           this.clienteEncontrado.set(response);
           this.busquedaRealizada.set(true);
           this.loading.set(false);
-
+          this.editandoCliente.set(false); // reset edición
           this.messageService.add({
             severity: 'success',
             summary: 'Cliente Encontrado',
             detail: `Cliente: ${response.name}`,
           });
         },
-        error: (error: any) => {
-          console.error('Error al buscar cliente:', error);
+        error: () => {
           this.clienteEncontrado.set(null);
           this.busquedaRealizada.set(true);
           this.loading.set(false);
-
-          this.messageService.add({
-            severity: 'warn',
-            summary: 'Cliente No Encontrado',
-            detail: 'El documento ingresado no está registrado',
-          });
+          this.editandoCliente.set(false);
+          // el formulario de creación se muestra en la vista cuando:
+          // busquedaRealizada && !clienteEncontrado && !loading
         },
       });
   }
@@ -345,51 +534,43 @@ export class GenerarVenta implements OnInit, AfterViewInit {
     this.clienteEncontrado.set(null);
     this.clienteAutoComplete.set('');
     this.busquedaRealizada.set(false);
+    this.editandoCliente.set(false);
   }
 
-  buscarProductos(event: AutoCompleteCompleteEvent): void {
-    const query = event.query.toLowerCase().trim();
+  obtenerSiglasDocumento(documentTypeDescription: string): string {
+    if (!documentTypeDescription) return '';
+    if (documentTypeDescription.includes('DNI')) return 'DNI';
+    if (documentTypeDescription.includes('RUC')) return 'RUC';
+    const match = documentTypeDescription.match(/\(([^)]+)\)/);
+    return match ? match[1] : documentTypeDescription;
+  }
 
-    if (query.length < 2) {
+  formatearDocumentoCompleto(): string {
+    const cliente = this.clienteEncontrado();
+    if (!cliente?.documentTypeDescription) return '';
+    const siglas = this.obtenerSiglasDocumento(cliente.documentTypeDescription);
+    return `${siglas}: ${cliente.documentValue}`;
+  }
+
+  // ─── Paso 2: Productos ────────────────────────────────────────────────────
+  buscarProductos(event: AutoCompleteCompleteEvent): void {
+    const query = event.query.trim();
+    if (query.length < 3) {
       this.productosSugeridos.set([]);
       return;
     }
 
-    this.productoService.buscarProductos(query, this.idSedeActual()).subscribe({
-      next: async (response) => {
-        const productosConDetalles = await Promise.all(
-          response.data.map(async (prod: any) => {
-            try {
-              const detalle = await this.productoService
-                .obtenerDetalleProducto(prod.id_producto, this.idSedeActual())
-                .toPromise();
-
-              return {
-                id: prod.id_producto,
-                codigo: prod.codigo,
-                nombre: prod.nombre,
-                familia: detalle!.producto.categoria.nombre,
-                stock: prod.stock,
-                precioUnidad: detalle!.producto.precio_unitario,
-                precioCaja: detalle!.producto.precio_caja,
-                precioMayorista: detalle!.producto.precio_mayor,
-                sede: this.nombreSedeActual(),
-              };
-            } catch (error) {
-              console.error(`Error al cargar detalle del producto ${prod.codigo}:`, error);
-              return null;
-            }
-          }),
-        );
-
-        const productos = productosConDetalles.filter((p): p is Producto => p !== null);
-        this.productosSugeridos.set(productos);
-      },
-      error: (error: any) => {
-        console.error('Error al buscar productos:', error);
-        this.productosSugeridos.set([]);
-      },
-    });
+    this.productoService
+      .buscarProductosVentas(query, this.idSedeActual(), this.familiaSeleccionada() ?? undefined)
+      .subscribe({
+        next: (response) => {
+          const sugeridos: Producto[] = response.data.map((prod) =>
+            this.productoService.mapearAutocompleteVentas(prod, this.nombreSedeActual()),
+          );
+          this.productosSugeridos.set(sugeridos);
+        },
+        error: () => this.productosSugeridos.set([]),
+      });
   }
 
   onProductoSeleccionado(event: any): void {
@@ -403,15 +584,9 @@ export class GenerarVenta implements OnInit, AfterViewInit {
     this.productoSeleccionadoBusqueda.set(null);
   }
 
-  onFamiliaChange(nuevaFamilia: string | null): void {
+  onFamiliaChange(nuevaFamilia: number | null): void {
     this.familiaSeleccionada.set(nuevaFamilia);
-
-    if (nuevaFamilia) {
-      const filtrados = this.productosCargados().filter((p) => p.familia === nuevaFamilia);
-      this.productosFiltrados.set(filtrados);
-    } else {
-      this.productosFiltrados.set([...this.productosCargados()]);
-    }
+    this.cargarProductos(true);
   }
 
   seleccionarProducto(producto: Producto): void {
@@ -424,9 +599,7 @@ export class GenerarVenta implements OnInit, AfterViewInit {
     const producto = this.productoTemp();
     const cantidad = this.cantidadTemp();
 
-    if (!producto || cantidad <= 0) {
-      return;
-    }
+    if (!producto || cantidad <= 0) return;
 
     if (cantidad > producto.stock) {
       this.messageService.add({
@@ -438,23 +611,21 @@ export class GenerarVenta implements OnInit, AfterViewInit {
     }
 
     const precioUnitario = this.precioSegunTipo();
-    const total = precioUnitario * cantidad;
-
     const item: ItemVenta = {
       productId: producto.codigo,
       quantity: cantidad,
       unitPrice: precioUnitario,
       description: producto.nombre,
-      total: total,
+      total: precioUnitario * cantidad,
     };
 
     const productos = [...this.productosSeleccionados()];
-    const indiceExistente = productos.findIndex(
+    const idx = productos.findIndex(
       (p) => p.productId === item.productId && p.unitPrice === item.unitPrice,
     );
 
-    if (indiceExistente >= 0) {
-      const nuevoItem = { ...productos[indiceExistente] };
+    if (idx >= 0) {
+      const nuevoItem = { ...productos[idx] };
       nuevoItem.quantity += cantidad;
       nuevoItem.total = nuevoItem.quantity * nuevoItem.unitPrice;
 
@@ -467,13 +638,12 @@ export class GenerarVenta implements OnInit, AfterViewInit {
         return;
       }
 
-      productos[indiceExistente] = nuevoItem;
+      productos[idx] = nuevoItem;
     } else {
       productos.push(item);
     }
 
     this.productosSeleccionados.set(productos);
-
     this.messageService.add({
       severity: 'success',
       summary: 'Producto Agregado',
@@ -495,7 +665,6 @@ export class GenerarVenta implements OnInit, AfterViewInit {
         const productos = [...this.productosSeleccionados()];
         productos.splice(index, 1);
         this.productosSeleccionados.set(productos);
-
         this.messageService.add({
           severity: 'info',
           summary: 'Producto Eliminado',
@@ -512,49 +681,38 @@ export class GenerarVenta implements OnInit, AfterViewInit {
     return 'success';
   }
 
+  // ─── Helpers totales ──────────────────────────────────────────────────────
   calcularSubtotal(): number {
     return this.subtotal();
   }
-
   calcularIGV(): number {
     return this.igv();
   }
-
   calcularTotal(): number {
     return this.total();
   }
-
   calcularVuelto(): number {
     return this.vuelto();
   }
 
   getLabelMetodoPago(id: number): string {
-    const metodo = METODOS_PAGO.find((m) => m.id === id);
-    return metodo ? metodo.description : 'N/A';
+    return METODOS_PAGO.find((m) => m.id === id)?.description ?? 'N/A';
   }
 
+  // ─── Wizard ───────────────────────────────────────────────────────────────
   nextStep(): void {
-    if (!this.validarPasoActual()) {
-      return;
-    }
-
-    const currentStep = this.activeStep();
-    if (currentStep < this.steps.length - 1) {
-      this.activeStep.set(currentStep + 1);
-    }
+    if (!this.validarPasoActual()) return;
+    const current = this.activeStep();
+    if (current < this.steps.length - 1) this.activeStep.set(current + 1);
   }
 
   prevStep(): void {
-    const currentStep = this.activeStep();
-    if (currentStep > 0) {
-      this.activeStep.set(currentStep - 1);
-    }
+    const current = this.activeStep();
+    if (current > 0) this.activeStep.set(current - 1);
   }
 
   private validarPasoActual(): boolean {
-    const step = this.activeStep();
-
-    switch (step) {
+    switch (this.activeStep()) {
       case 0:
         if (!this.clienteEncontrado()) {
           this.messageService.add({
@@ -565,7 +723,6 @@ export class GenerarVenta implements OnInit, AfterViewInit {
           return false;
         }
         return true;
-
       case 1:
         if (this.productosSeleccionados().length === 0) {
           this.messageService.add({
@@ -576,7 +733,6 @@ export class GenerarVenta implements OnInit, AfterViewInit {
           return false;
         }
         return true;
-
       case 2:
         if (this.metodoPagoSeleccionado() === 1 && this.montoRecibido() < this.total()) {
           this.messageService.add({
@@ -586,7 +742,6 @@ export class GenerarVenta implements OnInit, AfterViewInit {
           });
           return false;
         }
-
         if (this.metodoPagoSeleccionado() !== 1 && !this.numeroOperacion().trim()) {
           this.messageService.add({
             severity: 'warn',
@@ -596,12 +751,12 @@ export class GenerarVenta implements OnInit, AfterViewInit {
           return false;
         }
         return true;
-
       default:
         return true;
     }
   }
 
+  // ─── Generar venta ────────────────────────────────────────────────────────
   generarVenta(): void {
     if (!this.clienteEncontrado()) {
       this.messageService.add({
@@ -618,9 +773,7 @@ export class GenerarVenta implements OnInit, AfterViewInit {
       icon: 'pi pi-question-circle',
       acceptLabel: 'Sí, generar',
       rejectLabel: 'Cancelar',
-      accept: () => {
-        this.procesarVenta();
-      },
+      accept: () => this.procesarVenta(),
     });
   }
 
@@ -631,6 +784,10 @@ export class GenerarVenta implements OnInit, AfterViewInit {
     const igv = Number(this.igv().toFixed(2));
     const total = Number(this.total().toFixed(2));
 
+    // ✅ Determina la serie según el tipo de comprobante
+    // tipoComprobante() == 1 → Factura (F001), == 2 → Boleta (B001)
+    const serie = this.tipoComprobante() === 1 ? 'F001' : 'B001';
+
     const fechaVencimiento = new Date();
     if (this.metodoPagoSeleccionado() !== 1) {
       fechaVencimiento.setDate(fechaVencimiento.getDate() + 30);
@@ -639,13 +796,14 @@ export class GenerarVenta implements OnInit, AfterViewInit {
     const request: RegistroVentaRequest = {
       customerId: this.clienteEncontrado()!.customerId,
       saleTypeId: 1,
+      serie, // ✅ ya definida arriba
       receiptTypeId: this.tipoComprobante(),
       dueDate: fechaVencimiento.toISOString(),
       operationType: OPERATION_TYPE_VENTA_INTERNA,
-      subtotal: subtotal,
-      igv: igv,
+      subtotal,
+      igv,
       isc: 0,
-      total: total,
+      total,
       currencyCode: CURRENCY_PEN,
       responsibleId: this.idUsuarioActual().toString(),
       branchId: this.idSedeActual(),
@@ -653,7 +811,6 @@ export class GenerarVenta implements OnInit, AfterViewInit {
       operationNumber: this.metodoPagoSeleccionado() === 1 ? null : this.numeroOperacion(),
       items: this.productosSeleccionados().map((item) => {
         const producto = this.productosCargados().find((p) => p.codigo === item.productId);
-
         return {
           productId: producto ? producto.id.toString() : item.productId,
           quantity: item.quantity,
@@ -664,25 +821,19 @@ export class GenerarVenta implements OnInit, AfterViewInit {
       }),
     };
 
-    console.log('Request de venta:', request);
-    console.log('Items detalle:', JSON.stringify(request.items, null, 2));
-
     this.ventaService.registrarVenta(request).subscribe({
       next: (response: any) => {
         this.loading.set(false);
 
-        console.log('Respuesta del backend:', response);
-
         const comprobante = {
           receiptId: response.receiptId || response.id_comprobante || 'N/A',
           receiptNumber: response.receiptNumber || response.numero || 'N/A',
-          serie: response.serie || 'N/A',
+          serie: response.serie || serie,
           total: response.total || total,
           createdAt: response.createdAt || response.fec_emision || new Date().toISOString(),
         };
 
         this.comprobanteGenerado.set(comprobante);
-
         this.messageService.add({
           severity: 'success',
           summary: '¡Venta Exitosa!',
@@ -692,9 +843,6 @@ export class GenerarVenta implements OnInit, AfterViewInit {
       },
       error: (error: any) => {
         this.loading.set(false);
-        console.error('Error al generar venta:', error);
-        console.error('Error detalle:', error.error);
-
         this.messageService.add({
           severity: 'error',
           summary: 'Error al Generar Venta',
@@ -704,6 +852,7 @@ export class GenerarVenta implements OnInit, AfterViewInit {
     });
   }
 
+  // ─── Acciones finales ─────────────────────────────────────────────────────
   nuevaVenta(): void {
     this.confirmationService.confirm({
       message: '¿Desea realizar una nueva venta?',
@@ -711,9 +860,7 @@ export class GenerarVenta implements OnInit, AfterViewInit {
       icon: 'pi pi-refresh',
       acceptLabel: 'Sí',
       rejectLabel: 'No',
-      accept: () => {
-        this.resetearFormulario();
-      },
+      accept: () => this.resetearFormulario(),
     });
   }
 
@@ -726,13 +873,13 @@ export class GenerarVenta implements OnInit, AfterViewInit {
     this.clienteAutoComplete.set('');
     this.clienteEncontrado.set(null);
     this.busquedaRealizada.set(false);
+    this.editandoCliente.set(false);
 
     this.productoTemp.set(null);
     this.cantidadTemp.set(1);
     this.tipoPrecioTemp.set('unidad');
     this.productosSeleccionados.set([]);
     this.familiaSeleccionada.set(null);
-    this.productosFiltrados.set([...this.productosCargados()]);
 
     this.metodoPagoSeleccionado.set(1);
     this.montoRecibido.set(0);
@@ -741,6 +888,7 @@ export class GenerarVenta implements OnInit, AfterViewInit {
     this.comprobanteGenerado.set(null);
     this.activeStep.set(0);
 
-    this.cargarProductos();
+    this.cargarProductos(true);
+    this.cargarFamilias();
   }
 }
