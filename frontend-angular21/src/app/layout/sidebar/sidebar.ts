@@ -273,7 +273,7 @@
      */
     navigateTo(path: string): void {
       if (path) {
-        this.router.navigate([path]);
+        this.router.navigateByUrl(path);
       }
     }
 

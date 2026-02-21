@@ -28,8 +28,8 @@
         <span class="metric-title">Solicitudes Pendientes</span>
         <span class="metric-icon metric-icon-warning"><i class="pi pi-clock"></i></span>
       </div>
-      <div class="metric-value">12</div>
-      <div class="metric-sub">+ 2 nuevas hoy</div>
+      <div class="metric-value">{{ solicitadas }}</div>
+      <div class="metric-sub">Estado: SOLICITADA</div>
     </p-card>
     </div>
 
@@ -39,8 +39,8 @@
         <span class="metric-title">En Transito</span>
         <span class="metric-icon metric-icon-info"><i class="pi pi-truck"></i></span>
       </div>
-      <div class="metric-value">5</div>
-      <div class="metric-sub">En ruta a destino</div>
+      <div class="metric-value">{{ aprobadas }}</div>
+      <div class="metric-sub">Estado: APROBADA</div>
     </p-card>
     </div>
 
@@ -50,8 +50,8 @@
         <span class="metric-title">Recibidos Hoy</span>
         <span class="metric-icon metric-icon-success"><i class="pi pi-check-circle"></i></span>
       </div>
-      <div class="metric-value">28</div>
-      <div class="metric-sub">+ 5% vs ayer</div>
+      <div class="metric-value">{{ completadas }}</div>
+      <div class="metric-sub">Estado: COMPLETADA</div>
     </p-card>
     </div>
 
@@ -61,8 +61,8 @@
         <span class="metric-title">Incidencias</span>
         <span class="metric-icon metric-icon-danger"><i class="pi pi-exclamation-triangle"></i></span>
       </div>
-      <div class="metric-value">1</div>
-      <div class="metric-sub">Atencion requerida</div>
+      <div class="metric-value">{{ rechazadas }}</div>
+      <div class="metric-sub">Estado: RECHAZADA</div>
     </p-card>
     </div>
   </div>
@@ -201,6 +201,24 @@
           </td>
           <td class="col-acciones">
             <div class="transferencia-actions">
+              @if (canApprove(transferencia)) {
+                <p-button
+                  icon="pi pi-check"
+                  text
+                  severity="success"
+                  styleClass="transferencia-icon-btn"
+                  (onClick)="aprobarTransferencia(transferencia)"
+                ></p-button>
+              }
+              @if (canConfirm(transferencia)) {
+                <p-button
+                  icon="pi pi-verified"
+                  text
+                  severity="info"
+                  styleClass="transferencia-icon-btn"
+                  (onClick)="confirmarRecepcion(transferencia)"
+                ></p-button>
+              }
               <p-button
                 icon="pi pi-file-edit"
                 text

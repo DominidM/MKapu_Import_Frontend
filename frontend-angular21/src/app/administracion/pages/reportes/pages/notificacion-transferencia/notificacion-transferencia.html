@@ -26,8 +26,8 @@
         @for (item of notificaciones; track item.id) {
           <a
             class="notificacion-card"
-            [routerLink]="['/admin/transferencia']"
-            aria-label="Ir a transferencias"
+            [routerLink]="['/admin/transferencia/solicitud-transferencia', item.transferId]"
+            aria-label="Ir al detalle de transferencia"
           >
             <span class="notificacion-accent" [class.accent-warning]="item.tipo === 'estado'"></span>
             <div class="notificacion-icon" [class.icon-warning]="item.tipo === 'estado'">

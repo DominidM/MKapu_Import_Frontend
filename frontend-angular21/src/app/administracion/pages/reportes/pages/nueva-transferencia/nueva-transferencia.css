@@ -459,3 +459,15 @@
   border-color: #e69a27;
 }
 
+.transfer-subcard-conflict {
+  border: 1px solid #ef4444;
+}
+
+.transfer-conflict-note {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #dc2626;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
