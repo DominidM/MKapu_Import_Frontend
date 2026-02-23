@@ -27,6 +27,7 @@ export class ProductoService {
   constructor(private readonly http: HttpClient) {}
 
   // ─── Lista paginada con precios (ventas) ─────────────────────────────────
+  // CORREGIDO: productos_stock_ventas → ventas/stock
   obtenerProductosConStock(
     idSede:       number,
     idCategoria?: number,
@@ -43,12 +44,13 @@ export class ProductoService {
     }
 
     return this.http.get<ProductoStockVentasResponse>(
-      `${this.apiUrl}/products/productos_stock_ventas`,
+      `${this.apiUrl}/products/ventas/stock`,  // ← CORREGIDO
       { params },
     );
   }
 
   // ─── Categorías con stock por sede ───────────────────────────────────────
+  // NOTA: este endpoint aún no existe en el backend, lo dejamos para después
   obtenerCategoriasConStock(idSede: number): Observable<CategoriaConStock[]> {
     const params = new HttpParams().set('id_sede', idSede.toString());
     return this.http.get<CategoriaConStock[]>(
@@ -87,6 +89,7 @@ export class ProductoService {
   }
 
   // ─── Autocomplete ventas (con precios) ────────────────────────────────────
+  // CORREGIDO: autocomplete-ventas → ventas/autocomplete
   buscarProductosVentas(
     query:        string,
     idSede:       number,
@@ -101,7 +104,7 @@ export class ProductoService {
     }
 
     return this.http.get<ProductoAutocompleteVentasResponse>(
-      `${this.apiUrl}/products/autocomplete-ventas`,
+      `${this.apiUrl}/products/ventas/autocomplete`,  // ← CORREGIDO
       { params },
     );
   }
