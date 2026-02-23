@@ -13,9 +13,6 @@ export const ADMIN_ROUTES: Routes = [
       import('./pages/dashboard/dashboard').then((m) => m.Dashboard),
   },
 
-  /* =======================
-     USUARIOS
-  ======================= */
   {
     path: 'usuarios',
     children: [
@@ -42,10 +39,6 @@ export const ADMIN_ROUTES: Routes = [
       },
     ],
   },
-
-  /* =======================
-     TRANSFERENCIAS
-  ======================= */
   {
     path: 'transferencia',
     children: [
@@ -80,9 +73,6 @@ export const ADMIN_ROUTES: Routes = [
     ],
   },
 
-  /* =======================
-     GESTIÓN DE PRODUCTOS
-  ======================= */
   {
     path: 'gestion-productos',
     loadComponent: () =>
@@ -118,10 +108,7 @@ export const ADMIN_ROUTES: Routes = [
       },
     ],
   },
-
-  /* =======================
-     SEDES
-  ======================= */
+  
   {
     path: 'sedes',
     children: [
