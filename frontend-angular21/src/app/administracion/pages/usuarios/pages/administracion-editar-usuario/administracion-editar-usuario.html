@@ -165,10 +165,9 @@
             optionLabel="label"
             optionValue="value"
             class="w-full"
-            [ngModel]="form().rolNombre"
-            (ngModelChange)="setFormField('rolNombre', $event)"
             name="rolNombre"
             required
+            [(ngModel)]="form().rolNombre"
             #rolNombre="ngModel"
             [ngClass]="{ 'p-invalid': (userForm.submitted || rolNombre.touched) && rolNombre.invalid }"
           ></p-select>
@@ -176,7 +175,7 @@
             *ngIf="(userForm.submitted || rolNombre.touched) && rolNombre.invalid"
             severity="error"
             text="Campo obligatorio."
-          />
+          ></p-message>
         </div>
         <!-- Dirección -->
         <div class="col-12 md:col-6">

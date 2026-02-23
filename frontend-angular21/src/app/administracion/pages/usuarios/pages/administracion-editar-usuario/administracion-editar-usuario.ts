@@ -61,7 +61,6 @@ export class AdministracionEditarUsuario implements OnInit {
     { label: 'ADMINISTRADOR', value: 'ADMINISTRADOR' },
     { label: 'ALMACEN', value: 'ALMACEN' },
     { label: 'VENTAS', value: 'VENTAS' }
-    // Agrega más si lo necesitas
   ]);
 
 
