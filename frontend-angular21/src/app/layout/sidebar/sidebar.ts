@@ -143,12 +143,6 @@ export class Sidebar implements OnInit {
       label: 'Conteo Inventario',
       icon: 'pi pi-folder',
     },
-
-
-
-
-
-
     // ==================== VENTAS ====================
     {
       path: '/ventas/dashboard-ventas',
@@ -189,12 +183,6 @@ export class Sidebar implements OnInit {
       allowedRoles: [UserRole.ADMIN],
       label: 'LOGISTICA',
       isSection: true,
-    },
-    {
-      path: '/logistica/conteo-inventario',
-      allowedRoles: [UserRole.ADMIN],
-      label: 'Conteo inventario',
-      icon: 'pi pi-bookmark',
     },
     {
       path: '/logistica/remision',
