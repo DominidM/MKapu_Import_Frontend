@@ -74,9 +74,11 @@
             <label class="field-label mt-2">Almacen origen</label>
             <p-select
               class="w-full"
-              [options]="almacenes"
+              [options]="almacenesOrigen"
               optionLabel="label"
               optionValue="value"
+              [loading]="loadingAlmacenesOrigen"
+              [disabled]="!sedeOrigen || loadingAlmacenesOrigen"
               placeholder="Seleccione almacen origen"
               [(ngModel)]="almacenOrigenId"
               (onChange)="onAlmacenOrigenChange()"
@@ -115,9 +117,11 @@
             <label class="field-label mt-2">Almacen destino</label>
             <p-select
               class="w-full"
-              [options]="almacenes"
+              [options]="almacenesDestino"
               optionLabel="label"
               optionValue="value"
+              [loading]="loadingAlmacenesDestino"
+              [disabled]="!sedeDestino || loadingAlmacenesDestino"
               placeholder="Seleccione almacen destino"
               [(ngModel)]="almacenDestinoId"
               (onChange)="onAlmacenDestinoChange()"

@@ -1,5 +1,15 @@
 import { CommonModule } from '@angular/common';
-import { Component, ViewChild, inject, Directive, HostListener, ElementRef } from '@angular/core';
+import {
+  Component,
+  ViewChild,
+  inject,
+  Directive,
+  HostListener,
+  ElementRef,
+  OnInit,
+  computed,
+  signal,
+} from '@angular/core';
 import { FormsModule, NgForm, AbstractControl } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -12,11 +22,15 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { AutoCompleteModule } from 'primeng/autocomplete';
 import { MessageModule } from 'primeng/message';
-import { Observable, Subject } from 'rxjs';
+import { SelectModule } from 'primeng/select';
+import { Observable, Subject, throwError } from 'rxjs';
+import { catchError, finalize, map, switchMap, take } from 'rxjs/operators';
 import { CanComponentDeactivate } from '../../../../../core/guards/pending-changes.guard';
 import { AlmacenService } from '../../../../services/almacen.service';
 import { DEPARTAMENTOS_PROVINCIAS } from '../../../../shared/data/departamentos-provincias';
 import { HttpErrorResponse } from '@angular/common/http';
+import { SedeService } from '../../../../services/sede.service';
+import { SedeAlmacenService } from '../../../../services/sede-almacen.service';
 
 // Directiva para bloquear números en autocomplete
 @Directive({
@@ -55,6 +69,23 @@ interface Provincia {
   distritos: string[];
 }
 
+interface SedeSelectOption {
+  value: number;
+  label: string;
+}
+
+interface AssignWarehouseError {
+  step: 'assign';
+  createdWarehouse: {
+    id?: number;
+    id_almacen?: number;
+    codigo?: string;
+    nombre?: string | null;
+  };
+  message: string;
+  originalError: unknown;
+}
+
 @Component({
   selector: 'app-agregar-almacen',
   imports: [
@@ -70,13 +101,14 @@ interface Provincia {
     ToastModule,
     AutoCompleteModule,
     MessageModule,
+    SelectModule,
     NoNumbersDirective,
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './agregar-almacen.html',
   styleUrls: ['./agregar-almacen.css'],
 })
-export class AlmacenCrear implements CanComponentDeactivate {
+export class AlmacenCrear implements CanComponentDeactivate, OnInit {
   @ViewChild('sedeForm') sedeForm?: NgForm;
 
   private allowNavigate = false;
@@ -100,18 +132,76 @@ export class AlmacenCrear implements CanComponentDeactivate {
 
   distritos: string[] = [];
   filteredDistritos: string[] = [];
+  readonly sedeOptions = signal<SedeSelectOption[]>([]);
+  readonly selectedSedeId = signal<number | null>(null);
+  readonly sedesLoading = signal(false);
+  readonly sedesError = signal<string | null>(null);
+  private readonly submitting = signal(false);
 
-  // Inyecta el servicio correcto
   private readonly almacenService = inject(AlmacenService);
+  private readonly sedeService = inject(SedeService);
+  private readonly sedeAlmacenService = inject(SedeAlmacenService);
 
   readonly loading = this.almacenService.loading;
   readonly error = this.almacenService.error;
+  readonly busy = computed(
+    () => this.loading() || this.sedesLoading() || this.submitting(),
+  );
 
   constructor(
     private confirmationService: ConfirmationService,
     private messageService: MessageService,
     private router: Router
   ) {}
+
+  ngOnInit(): void {
+    this.loadSedeOptions();
+  }
+
+  reloadSedeOptions(): void {
+    this.loadSedeOptions();
+  }
+
+  private loadSedeOptions(): void {
+    this.sedesLoading.set(true);
+    this.sedesError.set(null);
+
+    this.sedeService
+      .loadSedes('Administrador')
+      .pipe(
+        take(1),
+        map((response) =>
+          (response.headquarters ?? [])
+            .filter((headquarter) => headquarter.activo)
+            .map((headquarter) => {
+              const code = String(headquarter.codigo ?? '').trim();
+              const name = String(headquarter.nombre ?? '').trim();
+              const label = [code, name].filter(Boolean).join(' - ').trim();
+
+              return {
+                value: Number(headquarter.id_sede),
+                label: label || `Sede ${headquarter.id_sede}`,
+              };
+            })
+            .sort((a, b) =>
+              a.label.localeCompare(b.label, 'es', { sensitivity: 'base' }),
+            ),
+        ),
+        finalize(() => this.sedesLoading.set(false)),
+      )
+      .subscribe({
+        next: (options) => this.sedeOptions.set(options),
+        error: () => {
+          this.sedesError.set('No se pudieron cargar las sedes disponibles.');
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Sedes no disponibles',
+            detail:
+              'No fue posible cargar el listado de sedes. Intenta nuevamente.',
+          });
+        },
+      });
+  }
 
   toUpperCase(field: 'codigo' | 'nombre' | 'direccion'): void {
     this.sede[field] = this.sede[field].toUpperCase();
@@ -213,6 +303,15 @@ export class AlmacenCrear implements CanComponentDeactivate {
     }
   }
 
+  private isAssignWarehouseError(error: unknown): error is AssignWarehouseError {
+    if (!error || typeof error !== 'object') {
+      return false;
+    }
+
+    const candidate = error as Partial<AssignWarehouseError>;
+    return candidate.step === 'assign' && typeof candidate.message === 'string';
+  }
+
   // ----- Helpers para limpiar errores del control Código -----
   onCodigoInput(): void {
     this.messageService.clear();
@@ -269,14 +368,15 @@ export class AlmacenCrear implements CanComponentDeactivate {
   saveSede(form: NgForm): void {
     this.submitted = true;
 
-    // evita doble envío si ya está cargando
-    if (typeof this.loading === 'function' && this.loading()) return;
+    if (this.busy()) {
+      return;
+    }
 
     if (form.invalid) {
       this.messageService.add({
         severity: 'warn',
         summary: 'Campos incompletos',
-        detail: 'Completa los campos obligatorios para registrar el almacén.',
+        detail: 'Completa los campos obligatorios para registrar el almac?n.',
       });
       return;
     }
@@ -284,7 +384,7 @@ export class AlmacenCrear implements CanComponentDeactivate {
     if (!this.departamentos.includes(this.sede.departamento)) {
       this.messageService.add({
         severity: 'warn',
-        summary: 'Departamento inválido',
+        summary: 'Departamento inv?lido',
         detail: 'Seleccione un departamento de la lista.',
       });
       return;
@@ -293,7 +393,7 @@ export class AlmacenCrear implements CanComponentDeactivate {
     if (!this.provincias.includes(this.sede.provincia)) {
       this.messageService.add({
         severity: 'warn',
-        summary: 'Provincia inválida',
+        summary: 'Provincia inv?lida',
         detail: 'Seleccione una provincia de la lista.',
       });
       return;
@@ -302,8 +402,18 @@ export class AlmacenCrear implements CanComponentDeactivate {
     if (!this.distritos.includes(this.sede.ciudad)) {
       this.messageService.add({
         severity: 'warn',
-        summary: 'Distrito inválido',
+        summary: 'Distrito inv?lido',
         detail: 'Seleccione un distrito de la lista.',
+      });
+      return;
+    }
+
+    const selectedSedeId = Number(this.selectedSedeId() ?? 0);
+    if (!Number.isFinite(selectedSedeId) || selectedSedeId <= 0) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Sede requerida',
+        detail: 'Selecciona una sede para asignar el almac?n.',
       });
       return;
     }
@@ -312,8 +422,8 @@ export class AlmacenCrear implements CanComponentDeactivate {
     if (telefonoStr.length !== 9) {
       this.messageService.add({
         severity: 'warn',
-        summary: 'Teléfono inválido',
-        detail: 'El teléfono debe tener exactamente 9 dígitos.',
+        summary: 'Tel?fono inv?lido',
+        detail: 'El tel?fono debe tener exactamente 9 d?gitos.',
       });
       return;
     }
@@ -328,53 +438,114 @@ export class AlmacenCrear implements CanComponentDeactivate {
       telefono: telefonoStr,
     };
 
-    // validación rápida en frontend
     if (!payload.codigo) {
-      this.messageService.add({ severity: 'warn', summary: 'Código requerido', detail: 'El campo código es obligatorio.' });
-      const codigoCtrl = this.sedeForm?.controls['codigo'] as AbstractControl | undefined;
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'C?digo requerido',
+        detail: 'El campo c?digo es obligatorio.',
+      });
+      const codigoCtrl = this.sedeForm?.controls['codigo'] as
+        | AbstractControl
+        | undefined;
       codigoCtrl?.setErrors({ required: true });
       codigoCtrl?.markAsTouched();
       return;
     }
 
-    // una sola llamada al servicio
-    this.almacenService.createAlmacen(payload, 'Administrador').subscribe({
-      next: (created) => {
-        this.allowNavigate = true;
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Almacén registrado',
-          detail: `Se registró el almacén ${created.nombre} (${created.codigo}).`,
-          life: 3000,
-        });
-        // dar tiempo para que el toast sea visible
-        setTimeout(() => {
-          this.router.navigate(['/admin/almacen']);
-        }, 1200);
-      },
-      error: (err: HttpErrorResponse) => {
-        console.error('[AlmacenCrear] create error', err);
+    this.submitting.set(true);
 
-        // extraer mensaje del servidor
-        const serverMsg = this.extractServerMessage(err);
+    this.almacenService
+      .createAlmacen(payload, 'Administrador')
+      .pipe(
+        switchMap((created) => {
+          const warehouseId = Number(created.id_almacen ?? created.id ?? 0);
+          if (!Number.isFinite(warehouseId) || warehouseId <= 0) {
+            return throwError(
+              () =>
+                new Error(
+                  'El almac?n se cre?, pero no se recibi? un identificador v?lido.',
+                ),
+            );
+          }
 
-        // si el error de validación menciona "código", marcar el control correspondiente
-        const lower = serverMsg.toLowerCase();
-        const codigoCtrl = this.sedeForm?.controls['codigo'] as AbstractControl | undefined;
-        if (lower.includes('códig') || lower.includes('codigo') || lower.includes('code')) {
-          codigoCtrl?.setErrors({ server: serverMsg });
-          codigoCtrl?.markAsTouched();
-          try { (document.getElementById('codigo') as HTMLInputElement)?.focus(); } catch {}
-        }
+          return this.sedeAlmacenService
+            .assignWarehouseToSede(
+              {
+                id_sede: selectedSedeId,
+                id_almacen: warehouseId,
+              },
+              'Administrador',
+            )
+            .pipe(
+              map(() => created),
+              catchError((assignError) =>
+                throwError(() => ({
+                  step: 'assign',
+                  createdWarehouse: created,
+                  message: this.extractServerMessage(assignError),
+                  originalError: assignError,
+                }) satisfies AssignWarehouseError),
+              ),
+            );
+        }),
+        take(1),
+        finalize(() => this.submitting.set(false)),
+      )
+      .subscribe({
+        next: (created) => {
+          this.allowNavigate = true;
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Almac?n registrado',
+            detail: `Se registr? el almac?n ${created.nombre} (${created.codigo}) y se asign? correctamente a la sede.`,
+            life: 3000,
+          });
+          setTimeout(() => {
+            this.router.navigate(['/admin/almacen']);
+          }, 1200);
+        },
+        error: (err: unknown) => {
+          if (this.isAssignWarehouseError(err)) {
+            const fallbackWarehouseId = Number(
+              err.createdWarehouse.id_almacen ?? err.createdWarehouse.id ?? 0,
+            );
+            this.messageService.add({
+              severity: 'warn',
+              summary: 'Asignaci?n pendiente',
+              detail: `El almac?n se cre? (ID ${fallbackWarehouseId}), pero no se pudo asignar a la sede seleccionada. ${err.message}`,
+              life: 5000,
+            });
+            return;
+          }
 
-        // mostrar toast con mensaje del servidor
-        this.messageService.add({
-          severity: err.status === 400 ? 'warn' : 'error',
-          summary: err.status === 400 ? 'Validación' : 'Error',
-          detail: serverMsg,
-        });
-      },
-    });
+          const httpError = err as HttpErrorResponse;
+          const serverMsg = this.extractServerMessage(httpError);
+
+          const lower = serverMsg.toLowerCase();
+          const codigoCtrl = this.sedeForm?.controls['codigo'] as
+            | AbstractControl
+            | undefined;
+          if (
+            lower.includes('c?dig') ||
+            lower.includes('codigo') ||
+            lower.includes('code')
+          ) {
+            codigoCtrl?.setErrors({ server: serverMsg });
+            codigoCtrl?.markAsTouched();
+            try {
+              (document.getElementById('codigo') as HTMLInputElement)?.focus();
+            } catch {
+              // noop
+            }
+          }
+
+          this.messageService.add({
+            severity: httpError?.status === 400 ? 'warn' : 'error',
+            summary: httpError?.status === 400 ? 'Validaci?n' : 'Error',
+            detail: serverMsg,
+          });
+        },
+      });
   }
 
   confirmCancel(): void {

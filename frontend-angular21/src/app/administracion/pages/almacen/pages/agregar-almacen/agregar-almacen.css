@@ -102,6 +102,24 @@
   font-weight: 600;
 }
 
+.sede-field-hint {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.sede-reload-link {
+  color: #f1a92b;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.sede-reload-link:hover {
+  text-decoration: underline;
+}
+
 /* -----------------------------
    DARK MODE OVERRIDES (fixed)
    ----------------------------- */
@@ -136,6 +154,10 @@
 /* Labels and section titles */
 :host-context(.app-dark) .sede-section-title,
 :host-context(.app-dark) .field-label {
+  color: var(--muted);
+}
+
+:host-context(.app-dark) .sede-field-hint {
   color: var(--muted);
 }
 

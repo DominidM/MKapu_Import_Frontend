@@ -28,11 +28,10 @@ import {
   ProductoInterface,
 } from '../../../../interfaces/producto.interface';
 import { SedeService } from '../../../../services/sede.service';
-import { map } from 'rxjs';
 import { Headquarter } from '../../../../interfaces/sedes.interface';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TransferStore } from '../../../../services/transfer.store';
-import { AlmacenService } from '../../../../services/almacen.service';
+import { SedeAlmacenService } from '../../../../services/sede-almacen.service';
 import { TransferUserContextService } from '../../../../services/transfer-user-context.service';
 import { RequestTransferAggregatedDto } from '../../../../interfaces/transferencia.interface';
 
@@ -80,7 +79,7 @@ export class NuevaTransferencia implements OnInit {
   private readonly router = inject(Router);
   private readonly productoService = inject(ProductoService);
   private readonly sedeService = inject(SedeService);
-  private readonly almacenService = inject(AlmacenService);
+  private readonly sedeAlmacenService = inject(SedeAlmacenService);
   private readonly transferStore = inject(TransferStore);
   private readonly transferUserContext = inject(TransferUserContextService);
 
@@ -89,7 +88,10 @@ export class NuevaTransferencia implements OnInit {
   private readonly activeStepSig = signal(0);
   private readonly sedesSig = signal<SelectOption<string>[]>([]);
   private readonly sedesRawSig = signal<Headquarter[]>([]);
-  private readonly almacenesSig = signal<SelectOption<number>[]>([]);
+  private readonly almacenesOrigenSig = signal<SelectOption<number>[]>([]);
+  private readonly almacenesDestinoSig = signal<SelectOption<number>[]>([]);
+  private readonly loadingAlmacenesOrigenSig = signal(false);
+  private readonly loadingAlmacenesDestinoSig = signal(false);
   private readonly productoIdSig = signal<number | null>(null);
   private readonly productoQuerySig = signal<TransferProducto | null>(null);
   private readonly productosSig = signal<TransferProducto[]>([]);
@@ -107,6 +109,10 @@ export class NuevaTransferencia implements OnInit {
   private readonly responsableSig = signal<string | null>(null);
   private readonly submittingSig = signal(false);
   private readonly lastErrorShownSig = signal<string | null>(null);
+  private readonly warehouseFilterSedeByType: Record<'origen' | 'destino', string> = {
+    origen: '',
+    destino: '',
+  };
 
   private readonly productoSeleccionadoSig = computed<TransferProducto | null>(() => {
     const id = this.productoIdSig();
@@ -197,12 +203,36 @@ export class NuevaTransferencia implements OnInit {
     this.sedesRawSig.set(value ?? []);
   }
 
-  get almacenes(): SelectOption<number>[] {
-    return this.almacenesSig();
+  get almacenesOrigen(): SelectOption<number>[] {
+    return this.almacenesOrigenSig();
   }
 
-  set almacenes(value: SelectOption<number>[]) {
-    this.almacenesSig.set(value ?? []);
+  set almacenesOrigen(value: SelectOption<number>[]) {
+    this.almacenesOrigenSig.set(value ?? []);
+  }
+
+  get almacenesDestino(): SelectOption<number>[] {
+    return this.almacenesDestinoSig();
+  }
+
+  set almacenesDestino(value: SelectOption<number>[]) {
+    this.almacenesDestinoSig.set(value ?? []);
+  }
+
+  get loadingAlmacenesOrigen(): boolean {
+    return this.loadingAlmacenesOrigenSig();
+  }
+
+  set loadingAlmacenesOrigen(value: boolean) {
+    this.loadingAlmacenesOrigenSig.set(value);
+  }
+
+  get loadingAlmacenesDestino(): boolean {
+    return this.loadingAlmacenesDestinoSig();
+  }
+
+  set loadingAlmacenesDestino(value: boolean) {
+    this.loadingAlmacenesDestinoSig.set(value);
   }
 
   get productoId(): number | null {
@@ -347,7 +377,6 @@ export class NuevaTransferencia implements OnInit {
     this.userDestinationHeadquarterIdSig.set(this.transferUserContext.getCurrentHeadquarterId());
 
     this.cargarSedes();
-    this.cargarAlmacenes();
   }
 
   getSedeLabel(sedeId: string | null): string {
@@ -363,7 +392,15 @@ export class NuevaTransferencia implements OnInit {
   }
 
   getAlmacenLabel(almacenId: number | null): string {
-    return this.almacenes.find((item) => item.value === almacenId)?.label || '-';
+    if (!almacenId) {
+      return '-';
+    }
+
+    return (
+      this.almacenesOrigen.find((item) => item.value === almacenId)?.label ||
+      this.almacenesDestino.find((item) => item.value === almacenId)?.label ||
+      '-'
+    );
   }
 
   getStockClassForSede(producto: TransferProducto | null, sedeId: string | null): string {
@@ -386,11 +423,17 @@ export class NuevaTransferencia implements OnInit {
     this.productoQuery = null;
     this.cantidad = 1;
     this.almacenOrigenId = null;
+    this.almacenesOrigen = [];
+    this.transferStore.setDraftOriginWarehouse(0);
 
     const selectedSede = this.sedeOrigen;
     if (selectedSede) {
       this.idSede = Number(selectedSede);
       this.transferStore.setDraftOrigin(selectedSede);
+      this.cargarAlmacenesPorSede(selectedSede, 'origen');
+    } else {
+      this.idSede = 0;
+      this.transferStore.setDraftOrigin('');
     }
 
     this.cargarProductos(selectedSede);
@@ -399,26 +442,31 @@ export class NuevaTransferencia implements OnInit {
   onSedeDestinoChange(): void {
     if (this.destinationSedeLocked) {
       this.sedeDestino = this.userDestinationHeadquarterIdSig();
+      if (this.sedeDestino) {
+        this.transferStore.setDraftDestination(this.sedeDestino);
+        this.cargarAlmacenesPorSede(this.sedeDestino, 'destino');
+      }
       return;
     }
 
     this.almacenDestinoId = null;
+    this.almacenesDestino = [];
+    this.transferStore.setDraftDestinationWarehouse(0);
     if (this.sedeDestino) {
       this.transferStore.setDraftDestination(this.sedeDestino);
+      this.cargarAlmacenesPorSede(this.sedeDestino, 'destino');
+    } else {
+      this.transferStore.setDraftDestination('');
     }
     this.cargarStockProductoSeleccionadoEnSedes();
   }
 
   onAlmacenOrigenChange(): void {
-    if (this.almacenOrigenId) {
-      this.transferStore.setDraftOriginWarehouse(this.almacenOrigenId);
-    }
+    this.transferStore.setDraftOriginWarehouse(this.almacenOrigenId ?? 0);
   }
 
   onAlmacenDestinoChange(): void {
-    if (this.almacenDestinoId) {
-      this.transferStore.setDraftDestinationWarehouse(this.almacenDestinoId);
-    }
+    this.transferStore.setDraftDestinationWarehouse(this.almacenDestinoId ?? 0);
   }
 
   buscarProductos(event: { query?: string }): void {
@@ -611,8 +659,12 @@ export class NuevaTransferencia implements OnInit {
     this.productoQuery = null;
     this.sedeOrigen = null;
     this.sedeDestino = null;
+    this.almacenesOrigen = [];
+    this.almacenesDestino = [];
     this.almacenOrigenId = null;
     this.almacenDestinoId = null;
+    this.loadingAlmacenesOrigen = false;
+    this.loadingAlmacenesDestino = false;
     this.cantidad = 1;
     this.motivo = null;
     this.observacion = '';
@@ -735,21 +787,21 @@ export class NuevaTransferencia implements OnInit {
             this.userDestinationHeadquarterIdSig.set(userSedeId);
             this.destinationSedeLockedSig.set(true);
             this.transferStore.setDraftDestination(userSedeId);
+            this.cargarAlmacenesPorSede(userSedeId, 'destino');
             this.sedeOrigen = null;
             this.idSede = 0;
             this.transferStore.setDraftOrigin('');
-          } else if (!this.sedeDestino && this.sedes.length > 0) {
-            this.sedeDestino = this.sedes[0].value;
-            this.destinationSedeLockedSig.set(false);
-            this.transferStore.setDraftDestination(this.sedeDestino);
+          } else {
+            this.sedeDestino = null;
+            this.userDestinationHeadquarterIdSig.set(null);
+            this.destinationSedeLockedSig.set(true);
+            this.transferStore.setDraftDestination('');
+            this.almacenesDestino = [];
+            this.transferStore.setDraftDestinationWarehouse(0);
             this.showWarn(
-              'Sede destino no bloqueada',
-              'No se encontró la sede del usuario en el catálogo; verifica tu sesión.',
+              'Sede de usuario no detectada',
+              'No se pudo fijar la sede destino según el usuario logeado.',
             );
-
-            this.sedeOrigen = null;
-            this.idSede = 0;
-            this.transferStore.setDraftOrigin('');
           }
 
           this.cargarProductos(this.sedeOrigen);
@@ -762,35 +814,89 @@ export class NuevaTransferencia implements OnInit {
           });
           this.cargarProductos();
           this.sedes = [];
+          this.almacenesOrigen = [];
+          this.almacenesDestino = [];
         },
       });
   }
 
-  private cargarAlmacenes(): void {
-    this.almacenService
-      .getSedes()
+  private cargarAlmacenesPorSede(sedeId: string, tipo: 'origen' | 'destino'): void {
+    const normalizedSedeId = String(sedeId ?? '').trim();
+    this.warehouseFilterSedeByType[tipo] = normalizedSedeId;
+
+    if (!normalizedSedeId) {
+      this.applyWarehouseOptions(tipo, []);
+      this.resetSelectedWarehouse(tipo);
+      this.setWarehouseLoading(tipo, false);
+      return;
+    }
+
+    const cachedOptions = this.sedeAlmacenService.getWarehouseOptionsBySede(normalizedSedeId);
+    if (cachedOptions.length > 0) {
+      this.applyWarehouseOptions(tipo, cachedOptions);
+    }
+
+    this.setWarehouseLoading(tipo, true);
+    this.sedeAlmacenService
+      .loadWarehouseOptionsBySede(normalizedSedeId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (response) => {
-          const warehouses = response?.warehouses ?? [];
-          this.almacenes = warehouses
-            .map((warehouse) => {
-              const id = Number(warehouse.id_almacen ?? warehouse.id ?? 0);
-              if (!id) return null;
-              return {
-                label: warehouse.nombre || warehouse.codigo || `Almacén ${id}`,
-                value: id,
-              };
-            })
-            .filter((item): item is SelectOption<number> => item !== null);
+        next: (options) => {
+          if (this.warehouseFilterSedeByType[tipo] !== normalizedSedeId) {
+            return;
+          }
 
-          this.almacenOrigenId = null;
-          this.almacenDestinoId = null;
+          this.applyWarehouseOptions(tipo, options);
+          this.resetSelectedWarehouse(tipo);
+          this.setWarehouseLoading(tipo, false);
         },
         error: () => {
-          this.almacenes = [];
+          if (this.warehouseFilterSedeByType[tipo] !== normalizedSedeId) {
+            return;
+          }
+
+          this.applyWarehouseOptions(tipo, []);
+          this.resetSelectedWarehouse(tipo);
+          this.setWarehouseLoading(tipo, false);
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'No se pudieron cargar los almacenes de la sede seleccionada.',
+          });
         },
       });
+  }
+
+  private applyWarehouseOptions(
+    tipo: 'origen' | 'destino',
+    options: SelectOption<number>[],
+  ): void {
+    if (tipo === 'origen') {
+      this.almacenesOrigen = options;
+      return;
+    }
+
+    this.almacenesDestino = options;
+  }
+
+  private setWarehouseLoading(tipo: 'origen' | 'destino', loading: boolean): void {
+    if (tipo === 'origen') {
+      this.loadingAlmacenesOrigen = loading;
+      return;
+    }
+
+    this.loadingAlmacenesDestino = loading;
+  }
+
+  private resetSelectedWarehouse(tipo: 'origen' | 'destino'): void {
+    if (tipo === 'origen') {
+      this.almacenOrigenId = null;
+      this.transferStore.setDraftOriginWarehouse(0);
+      return;
+    }
+
+    this.almacenDestinoId = null;
+    this.transferStore.setDraftDestinationWarehouse(0);
   }
 
   private cargarProductos(sedeId?: string | null): void {
@@ -898,3 +1004,4 @@ export class NuevaTransferencia implements OnInit {
     });
   }
 }
+
