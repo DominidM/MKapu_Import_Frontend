@@ -381,12 +381,11 @@ import { pendingChangesGuard } from '../core/guards/pending-changes.guard';
         .then((m) => m.ConteoCrear),
   },
   {
-    path: 'conteo-detalle',
+    path: 'conteo-detalle/:id',
     loadComponent: () =>
       import('./pages/conteo-detalle/conteodetalle')
         .then((m) => m.ConteoDetalle),
   },
-
 
 
 
