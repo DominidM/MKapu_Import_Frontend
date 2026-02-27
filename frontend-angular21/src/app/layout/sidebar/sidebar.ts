@@ -165,6 +165,12 @@
         icon: 'pi pi-tag',
       },
       {
+        path: '/admin/promociones',
+        allowedRoles: [UserRole.ADMIN],
+        label: 'Promociones',
+        icon: 'pi pi-gift',
+      },
+      {
         path: '/admin/proveedores',
         allowedRoles: [UserRole.ADMIN],
         label: 'Proveedores',
