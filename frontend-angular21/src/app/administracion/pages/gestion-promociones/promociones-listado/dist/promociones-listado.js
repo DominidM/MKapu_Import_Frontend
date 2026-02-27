@@ -63,7 +63,6 @@ var PromocionesListado = /** @class */ (function () {
             { label: 'Inactiva', value: 'Inactiva' },
             { label: 'Expirada', value: 'Expirada' },
         ];
-        // Agregada propiedad reclamada por el error TS2339
         this.rangosDescuento = [
             { label: 'Hasta 10%', value: '0-10' },
             { label: 'De 10% a 25%', value: '10-25' },
@@ -85,7 +84,6 @@ var PromocionesListado = /** @class */ (function () {
                     new Date(p.fechaFin) > hoy;
             }).length;
         });
-        // Agregada propiedad reclamada por el error TS2339
         this.kpiExpiradas = core_1.computed(function () {
             var hoy = new Date();
             return _this.promocionesSignal().filter(function (p) { return new Date(p.fechaFin) < hoy; }).length;
@@ -132,7 +130,6 @@ var PromocionesListado = /** @class */ (function () {
         }
         this.filteredPromociones.set(filtradas);
     };
-    // Agregado método reclamado por el error TS2339
     PromocionesListado.prototype.limpiarFiltros = function () {
         this.filtros = {
             busqueda: '',
@@ -150,7 +147,6 @@ var PromocionesListado = /** @class */ (function () {
             detail: 'Se han limpiado todos los filtros'
         });
     };
-    // Agregado método reclamado por el error TS2339
     PromocionesListado.prototype.onPageChange = function (event) {
         this.paginaActual.set(event.first / event.rows);
         this.itemsPorPagina.set(event.rows);

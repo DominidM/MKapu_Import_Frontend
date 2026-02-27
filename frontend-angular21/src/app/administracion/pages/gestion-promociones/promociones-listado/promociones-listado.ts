@@ -1,7 +1,7 @@
-import { Router } from '@angular/router';
-import { Component, OnInit, OnDestroy, signal, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
@@ -80,7 +80,6 @@ export class PromocionesListado implements OnInit, OnDestroy {
     { label: 'Expirada', value: 'Expirada' },
   ];
 
-  // Agregada propiedad reclamada por el error TS2339
   rangosDescuento = [
     { label: 'Hasta 10%', value: '0-10' },
     { label: 'De 10% a 25%', value: '10-25' },
@@ -108,7 +107,6 @@ export class PromocionesListado implements OnInit, OnDestroy {
     ).length;
   });
 
-  // Agregada propiedad reclamada por el error TS2339
   kpiExpiradas = computed(() => {
     const hoy = new Date();
     return this.promocionesSignal().filter((p) => new Date(p.fechaFin) < hoy).length;
@@ -169,7 +167,6 @@ export class PromocionesListado implements OnInit, OnDestroy {
     this.filteredPromociones.set(filtradas);
   }
 
-  // Agregado método reclamado por el error TS2339
   limpiarFiltros(): void {
     this.filtros = {
       busqueda: '',
@@ -188,7 +185,6 @@ export class PromocionesListado implements OnInit, OnDestroy {
     });
   }
 
-  // Agregado método reclamado por el error TS2339
   onPageChange(event: any): void {
     this.paginaActual.set(event.first / event.rows);
     this.itemsPorPagina.set(event.rows);
