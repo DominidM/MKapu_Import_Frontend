@@ -189,6 +189,12 @@ export class Sidebar implements OnInit {
       label: 'Conteo Inventario',
       icon: 'pi pi-folder',
     },
+    {
+      path: '/logistica/movimiento-inventario',
+      allowedRoles: [UserRole.ADMIN],
+      label: 'Movimiento Inventario',
+      icon: 'pi pi-database'
+    }
   ];
 
   constructor(
@@ -204,9 +210,6 @@ export class Sidebar implements OnInit {
     this.loadMenu();
   }
 
-  /**
-   * Carga la información del usuario actual
-   */
   private loadUserInfo(): void {
     const user = this.roleService.getCurrentUser();
 
@@ -216,10 +219,6 @@ export class Sidebar implements OnInit {
       console.log('👤 Usuario actual:', { username: this.username, role: this.roleName });
     }
   }
-
-  /**
-   * Carga el menú filtrado según el rol del usuario
-   */
   private loadMenu(): void {
     const currentRole = this.roleService.getCurrentUserRole();
 
@@ -235,10 +234,6 @@ export class Sidebar implements OnInit {
 
     console.log('📋 Menú cargado:', this.menuItems);
   }
-
-  /**
-   * Verifica si un item es una sección (título)
-   */
   isSection(item: RouteConfig): boolean {
     return item.isSection === true;
   }
@@ -251,17 +246,9 @@ export class Sidebar implements OnInit {
       this.router.navigate([path]);
     }
   }
-
-  /**
-   * Toggle de submenús (si los implementas)
-   */
   toggleMenu(menu: string): void {
     this.activeMenu = this.activeMenu === menu ? null : menu;
   }
-
-  /**
-   * Confirmación de cierre de sesión
-   */
   confirm2(event: Event): void {
     this.confirmationService.confirm({
       target: event.target as EventTarget,
