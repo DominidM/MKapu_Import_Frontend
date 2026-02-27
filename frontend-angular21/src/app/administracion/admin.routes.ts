@@ -369,20 +369,20 @@ import { pendingChangesGuard } from '../core/guards/pending-changes.guard';
   {
     path: 'conteo-inventario',
     loadComponent: () =>
-      import('./pages/conteo-inventario/conteoinventario')
-        .then((m) => m.ConteoInventarios),
+     import('../logistica/pages/conteo-inventario/conteoinventario')
+       .then((m) => m.ConteoInventarios),
   },
 
   {
     path: 'conteo-crear',
     loadComponent: () =>
-      import('./pages/conteo-crear/conteocrear')
+      import('../logistica/pages/conteo-crear/conteocrear')
         .then((m) => m.ConteoCrear),
   },
   {
     path: 'conteo-detalle/:id',
     loadComponent: () =>
-      import('./pages/conteo-detalle/conteodetalle')
+     import('../logistica/pages/conteo-detalle/conteodetalle')
         .then((m) => m.ConteoDetalle),
   },
 

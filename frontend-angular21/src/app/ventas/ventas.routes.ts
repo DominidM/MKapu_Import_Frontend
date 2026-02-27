@@ -140,7 +140,7 @@ export const VENTAS_ROUTES: Routes = [
     path: 'conteo-inventario',
     canActivate: [CashboxGuard],
     loadComponent: () =>
-      import('../administracion/pages/conteo-inventario/conteoinventario')
+      import('../logistica/pages/conteo-inventario/conteoinventario')
         .then((m) => m.ConteoInventarios),
   },
 
@@ -148,14 +148,14 @@ export const VENTAS_ROUTES: Routes = [
     path: 'conteo-crear',
     canActivate: [CashboxGuard],
     loadComponent: () =>
-      import('../administracion/pages/conteo-crear/conteocrear')
+      import('../logistica/pages/conteo-crear/conteocrear')
         .then((m) => m.ConteoCrear),
   },
   {
     path: 'conteo-detalle',
     canActivate: [CashboxGuard],
     loadComponent: () =>
-      import('../administracion/pages/conteo-detalle/conteodetalle')
+      import('../logistica/pages/conteo-detalle/conteodetalle')
         .then((m) => m.ConteoDetalle),
   },
 
