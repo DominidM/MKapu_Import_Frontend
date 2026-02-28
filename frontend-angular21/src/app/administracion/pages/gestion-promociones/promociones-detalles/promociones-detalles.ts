@@ -1,5 +1,5 @@
 import { Component, OnInit, signal, computed, inject } from '@angular/core';
-import { CommonModule, DecimalPipe, DatePipe } from '@angular/common';
+import { CommonModule, DecimalPipe } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { ButtonModule }        from 'primeng/button';
@@ -18,7 +18,6 @@ import { ProgressBarModule } from 'primeng/progressbar';
   standalone: true,
   imports: [
     CommonModule,
-    DatePipe,
     DecimalPipe,
     ButtonModule,
     CardModule,
