@@ -90,6 +90,7 @@ export class AuthService {
 
     return this.http.post<AuthInterfaceResponse>(`${this.api}/auth/auth/login`, loginData).pipe(
       tap((response) => {
+        console.log('Respuesta del servidor:', response)
         const account = response.account;
         const transformedUser = this.transformUser(account);
 
