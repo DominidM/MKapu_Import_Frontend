@@ -1,323 +1,436 @@
-import { Component, OnInit, signal, inject, computed } from '@angular/core';
+import { Component, OnInit, signal, inject } from '@angular/core';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { Router, ActivatedRoute } from '@angular/router'; 
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { of, forkJoin } from 'rxjs'; // <-- IMPORTANTE: Añadido forkJoin
-import { concatMap, catchError, finalize } from 'rxjs/operators';
-
-// PrimeNG
+import { Router, ActivatedRoute } from '@angular/router';
+import { QuoteService } from '../../../services/quote.service';
+import { SedeService } from '../../../services/sede.service';
+import { ToastModule } from 'primeng/toast';
+import { ButtonModule } from 'primeng/button';
+import { CardModule } from 'primeng/card';
+import { SelectModule } from 'primeng/select';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ConfirmationService, MessageService } from 'primeng/api';
+import { ClienteService } from '../../../../ventas/services/cliente.service';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
-import { SelectModule } from 'primeng/select';
-import { CardModule } from 'primeng/card';
-import { ConfirmDialog } from 'primeng/confirmdialog';
-import { ToastModule } from 'primeng/toast';
-import { ConfirmationService, MessageService } from 'primeng/api';
-import { ButtonModule } from 'primeng/button';
-
-// Servicios e Interfaces
-import { Categoria } from '../../../interfaces/categoria.interface';
+import { TableModule } from 'primeng/table';
+import { DividerModule } from 'primeng/divider';
+import { TooltipModule } from 'primeng/tooltip';
+import { DatePickerModule } from 'primeng/datepicker';
+import {
+  ClienteBusquedaResponse,
+  ClienteResponse,
+  CrearClienteRequest,
+  TipoDocumento,
+} from '../../../../ventas/interfaces';
+import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { ProductoService } from '../../../services/producto.service';
-import { CategoriaService } from '../../../services/categoria.service';
-import { SedeService } from '../../../services/sede.service';
-import { CreateProductoDto, MovimientoInventarioDto, UpdateProductoDto, UpdateProductoPreciosDto } from '../../../interfaces/producto.interface';
-import { AlmacenService } from '../../../services/almacen.service';
+import { ProductoAutocomplete } from '../../../interfaces/producto.interface';
+
+interface DetalleItem {
+  id_prod_ref: number;
+  cod_prod:    string;
+  descripcion: string;
+  cantidad:    number;
+  precio:      number;
+  importe:     number;
+  uni_med:     string;
+  tipoPrecio:  'unitario' | 'mayor' | 'caja';
+  pre_unit:    number;
+  pre_may:     number;
+  pre_caja:    number;
+}
 
 @Component({
-  selector: 'app-cotizacion-form',
+  selector: 'app-cotizacion-formulario',
   standalone: true,
+  providers: [MessageService, ConfirmationService],
   imports: [
     CommonModule,
+    FormsModule,
     ReactiveFormsModule,
+    ToastModule,
     ButtonModule,
+    CardModule,
+    SelectModule,
+    ConfirmDialogModule,
     InputTextModule,
     InputNumberModule,
-    SelectModule,
-    CardModule,
-    ConfirmDialog,
-    ToastModule
+    TableModule,
+    DividerModule,
+    TooltipModule,
+    DatePickerModule,
   ],
   templateUrl: './cotizacion-formulario.html',
   styleUrl: './cotizacion-formulario.css',
-  providers: [ConfirmationService, MessageService],
 })
 export class CotizacionFormulario implements OnInit {
-  private fb = inject(FormBuilder);
-  private router = inject(Router);
-  private route = inject(ActivatedRoute); 
-  private almacenService = inject(AlmacenService);
+  private fb              = inject(FormBuilder);
+  private router          = inject(Router);
+  private route           = inject(ActivatedRoute);
+  private quoteService    = inject(QuoteService);
+  private sedeService     = inject(SedeService);
+  private clienteService  = inject(ClienteService);
   private productoService = inject(ProductoService);
-  private categoriaService = inject(CategoriaService);
-  private sedeService = inject(SedeService);
-  private messageService = inject(MessageService);
+  private messageService  = inject(MessageService);
 
-  categorias = signal<Categoria[]>([]);
-  isSubmitting = signal<boolean>(false);
-  sedes = this.sedeService.sedes;
-  almacenes = this.almacenService.sedes;
-  
-  // SIGNALS MODO EDICIÓN
-  esModoEdicion = signal<boolean>(false);
-  idProductoActual = signal<number | null>(null);
+  // ── Signals ───────────────────────────────────────────────────────────────
+  isSubmitting          = signal(false);
+  esModoEdicion         = signal(false);
+  sedes                 = signal<any[]>([]);
+  clienteEncontrado     = signal<ClienteBusquedaResponse | null>(null);
+  busquedaSinResultado  = signal(false);
+  tiposDocumento        = signal<TipoDocumento[]>([]);
+  cargandoCliente       = signal(false);
+  sedeSeleccionada      = signal<any | null>(null);
+  almacenes             = signal<any[]>([]);
+  productosAutoComplete = signal<ProductoAutocomplete[]>([]);
+  cargandoProducto      = signal(false);
+  detalles              = signal<DetalleItem[]>([]);
 
-  // NUEVOS SIGNALS PARA EL CÁLCULO DE STOCK EN VIVO
-  stockActual = signal<number>(0);
-  stockAgregado = signal<number>(0);
-  // El stock total se calcula solo sumando el actual + lo que escriba el usuario
-  stockTotal = computed(() => this.stockActual() + this.stockAgregado());
+  busquedaProductoVal = '';
 
-  // SIGNALS CABECERA
-  tituloKicker = signal<string>('ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS CREACIÓN');
-  tituloPrincipal = signal<string>('CREAR PRODUCTO');
-  iconoCabecera = signal<string>('pi pi-plus-circle');
+  // Fechas
+  readonly hoy: Date    = new Date();
+  readonly manana: Date = (() => { const d = new Date(); d.setDate(d.getDate() + 1); return d; })();
 
-  productoForm: FormGroup = this.fb.group({
-    codigo: ['', Validators.required],
-    anexo: ['', Validators.required],
-    descripcion: ['', Validators.required],
-    familia: [null, Validators.required],
-    precioCompra: [0, [Validators.required, Validators.min(0)]],
-    precioVenta: [0, [Validators.required, Validators.min(0)]],
-    precioUnidad: [0, [Validators.required, Validators.min(0)]],
-    precioCaja: [0, [Validators.required, Validators.min(0)]],
-    precioMayorista: [0, [Validators.required, Validators.min(0)]],
-    unidadMedida: ['UNIDAD', Validators.required],
-    almacen: [null, Validators.required],
-    sede: [null, Validators.required],
-    stockInicial: [0, [Validators.required, Validators.min(0)]] // Funciona como "Agregar Stock" en edición
+  // ── Opciones ──────────────────────────────────────────────────────────────
+  estadoOptions = [
+    { label: 'Pendiente', value: 'PENDIENTE' },
+    { label: 'Aprobada',  value: 'APROBADA'  },
+    { label: 'Rechazada', value: 'RECHAZADA' },
+  ];
+
+  tipoPrecioOpciones = (item: DetalleItem) => {
+    const opciones = [];
+    if (item.pre_unit > 0) opciones.push({ label: `Unitario  S/ ${item.pre_unit.toFixed(2)}`, value: 'unitario' });
+    if (item.pre_may  > 0) opciones.push({ label: `Mayor     S/ ${item.pre_may.toFixed(2)}`,  value: 'mayor'    });
+    if (item.pre_caja > 0) opciones.push({ label: `Caja      S/ ${item.pre_caja.toFixed(2)}`, value: 'caja'     });
+    if (opciones.length === 0) opciones.push({ label: 'Unitario  S/ 0.00', value: 'unitario' });
+    return opciones;
+  };
+
+  // ── Formularios ───────────────────────────────────────────────────────────
+  form: FormGroup = this.fb.group({
+    id_cliente: ['',                                      Validators.required],
+    documento:  ['',                                      Validators.required],
+    fec_emision:[{ value: new Date(), disabled: true },   Validators.required],
+    fec_venc:   [null,                                    Validators.required],
+    sede:       [null,                                    Validators.required],
+    id_almacen: [null],
+    estado:     [{ value: 'PENDIENTE', disabled: true },  Validators.required],
   });
 
+  nuevoClienteForm: FormGroup = this.fb.group({
+    documentTypeId: [null, Validators.required],
+    name:           ['',   Validators.required],
+    apellidos:      ['',   Validators.required],
+    email:          ['',   [Validators.required, Validators.email]],
+    phone:          [''],
+    address:        [''],
+  });
+
+  // ── Lifecycle ─────────────────────────────────────────────────────────────
   ngOnInit() {
-    this.cargarDatosIniciales();
-    this.setSedePorDefecto();
-    this.verificarModoEdicion();
-
-    // Escuchamos lo que el usuario teclea en "stockInicial" para actualizar el Stock Total visualmente
-    this.productoForm.get('stockInicial')?.valueChanges.subscribe(valor => {
-      this.stockAgregado.set(valor || 0);
-    });
-
-    this.productoForm.get('almacen')?.valueChanges.subscribe(v => {
-  console.log('ALMACEN VALUE:', v, typeof v);
-
-  console.log("almacenes", this.almacenes)
-
-});
-
-  }
-
-  private cargarDatosIniciales() {
-    this.categoriaService.getCategorias().subscribe({
-      next: (res) => this.categorias.set(res.categories),
-      error: (err) => console.error('Error cargando categorías', err)
-    });
-
     this.sedeService.loadSedes().subscribe({
-      error: (err) => console.error('Error cargando sedes', err)
+      next:  () => this.sedes.set(this.sedeService.sedes()),
+      error: () => this.sedes.set([]),
     });
 
-    this.almacenService.loadAlmacen().subscribe({
-  next: () => {
-    console.log('ALMACENES CARGADOS:', this.almacenes());
-  },
-  error: (err) => console.error(err)
-});
+    this.clienteService.obtenerTiposDocumento().subscribe({
+      next:  (tipos) => this.tiposDocumento.set(tipos),
+      error: () => this.tiposDocumento.set([]),
+    });
 
-  }
+    this.form.get('documento')?.valueChanges.pipe(
+      debounceTime(400),
+      distinctUntilChanged(),
+    ).subscribe((value: string) => {
+      if (value && value.length >= 8) this.buscarClientePorDocumento();
+      else this._limpiarClienteSinDoc();
+    });
 
-  private setSedePorDefecto() {
-    const userStorage = localStorage.getItem('user');
-    if (userStorage) {
-      try {
-        const user = JSON.parse(userStorage);
-        if (user && user.idSede) {
-          this.productoForm.patchValue({ sede: user.idSede });
-        }
-      } catch (error) {
-        console.error('Error parseando usuario', error);
-      }
-    }
-  }
+    this.form.get('sede')?.valueChanges.subscribe((id_sede: number) => {
+      this.sedeSeleccionada.set(null);
+      this.almacenes.set([]);
+      this.form.get('id_almacen')?.setValue(null, { emitEvent: false });
+      this.productosAutoComplete.set([]);
+      this.busquedaProductoVal = '';
+      if (!id_sede) return;
 
-  private verificarModoEdicion() {
-    const idParam = this.route.snapshot.paramMap.get('id');
-    const sedeParam = this.route.snapshot.queryParamMap.get('idSede');
+      this.sedeService.getSedeById(id_sede).subscribe({
+        next: (sede) => {
+          this.sedeSeleccionada.set(sede);
+          this.almacenes.set([]); // ← vacío por ahora, sin backend aún
+        },
+        error: () => this.sedeSeleccionada.set(null),
+      });
+    });
 
-    if (idParam) {
+    const id = this.route.snapshot.paramMap.get('id');
+    if (id) {
       this.esModoEdicion.set(true);
-      const id = Number(idParam);
-      this.idProductoActual.set(id);
+      this.form.get('estado')?.enable();
 
-      this.tituloKicker.set('ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS EDICIÓN');
-      this.tituloPrincipal.set('EDITAR PRODUCTO');
-      this.iconoCabecera.set('pi pi-pencil');
+      this.quoteService.getQuoteById(Number(id)).subscribe({
+        next: (cot) => {
+          this.form.patchValue({
+            id_cliente:  cot.id_cliente,
+            documento:   cot.cliente?.valor_doc ?? '',
+            sede:        cot.id_sede,
+            estado:      cot.estado,
+            fec_venc:    cot.fec_venc ? new Date(cot.fec_venc) : null,
+            fec_emision: cot.fec_emision ? new Date(cot.fec_emision) : new Date(),
+          });
 
-      const idSedeBackend = sedeParam ? Number(sedeParam) : (this.productoForm.get('sede')?.value || 1);
-      this.cargarDatosDelProducto(id, idSedeBackend);
+          if (cot.cliente) {
+            const c = cot.cliente;
+            this.clienteEncontrado.set({
+              customerId:              cot.id_cliente ?? '',
+              name:                    `${c.nombre_cliente} ${c.apellidos_cliente ?? ''}`.trim(),
+              documentValue:           c.valor_doc,
+              invoiceType:             'BOLETA',
+              status:                  true,
+              documentTypeId:          c.id_tipo_documento,
+              documentTypeDescription: undefined,
+              documentTypeSunatCode:   undefined,
+              address:                 c.direccion ?? undefined,
+              email:                   c.email     ?? undefined,
+              phone:                   c.telefono,
+              displayName:             c.razon_social
+                                         ?? `${c.nombre_cliente} ${c.apellidos_cliente ?? ''}`.trim(),
+            });
+          }
+
+          if (cot.detalles?.length) {
+            this.detalles.set(cot.detalles.map(d => ({
+              id_prod_ref: d.id_prod_ref,
+              cod_prod:    d.cod_prod,
+              descripcion: d.descripcion,
+              cantidad:    d.cantidad,
+              precio:      d.precio,
+              importe:     d.cantidad * d.precio,
+              uni_med:     '',
+              tipoPrecio:  'unitario' as const,
+              pre_unit:    d.precio,
+              pre_may:     0,
+              pre_caja:    0,
+            })));
+          }
+        },
+        error: () => {},
+      });
     }
   }
 
-  private cargarDatosDelProducto(id: number, idSede: number) {
-    this.productoService.getProductoDetalleStock(id, idSede).subscribe({
-      next: (res) => {
-        const prod = res.producto;
-        
-        // Guardamos el stock que viene de la BD
-        this.stockActual.set(res.stock?.cantidad || 0);
+  // ── Cliente ───────────────────────────────────────────────────────────────
+  buscarClientePorDocumento() {
+    const doc = this.form.get('documento')?.value?.trim();
+    if (!doc) return;
 
-        this.productoForm.patchValue({
-          codigo: prod.codigo,
-          anexo: prod.nombre,
-          descripcion: prod.descripcion || '',
-          familia: prod.categoria.id_categoria,
-          precioCompra: prod.precio_compra,
-          precioVenta: prod.precio_unitario,
-          precioUnidad: prod.precio_unitario,
-          precioCaja: prod.precio_caja,
-          precioMayorista: prod.precio_mayor,
-          unidadMedida: prod.unidad_medida?.nombre || 'UNIDAD',
-          sede: res.stock?.id_sede,
-          almacen: res.stock?.id_almacen,
-          stockInicial: 0 // Lo ponemos en 0 porque ahora es "Stock a agregar"
-        });
+    this.cargandoCliente.set(true);
+    this._limpiarClienteSinDoc();
 
-        // NOTA: NO deshabilitamos stockInicial para que puedan añadir stock
-        this.productoForm.get('sede')?.disable();
-        this.productoForm.get('almacen')?.disable();
+    this.clienteService.buscarCliente(doc).subscribe({
+      next: (resp) => {
+        this.cargandoCliente.set(false);
+        if (resp?.customerId) {
+          this.clienteEncontrado.set(resp);
+          this.busquedaSinResultado.set(false);
+          this.form.get('id_cliente')?.setValue(resp.customerId, { emitEvent: false });
+        } else {
+          this._sinResultado(doc);
+        }
       },
-      error: (err) => {
-        console.error('Error trayendo datos del backend:', err);
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se encontraron los datos.' });
-      }
+      error: () => { this.cargandoCliente.set(false); this._sinResultado(doc); },
     });
   }
 
-  cancelar() {
-    this.router.navigate(['/admin/gestion-productos']);
+  registrarNuevoCliente() {
+    if (this.nuevoClienteForm.invalid) { this.nuevoClienteForm.markAllAsTouched(); return; }
+
+    const doc = this.form.get('documento')?.value?.trim();
+    const { apellidos, name, ...rest } = this.nuevoClienteForm.value;
+
+    const payload: CrearClienteRequest = {
+      ...rest,
+      documentValue: doc,
+      name: `${name} ${apellidos}`.trim(),
+    };
+
+    this.clienteService.crearCliente(payload).subscribe({
+      next: (nuevoCliente: ClienteResponse) => {
+        this.clienteEncontrado.set({
+          customerId:              nuevoCliente.customerId,
+          name:                    nuevoCliente.name,
+          documentValue:           nuevoCliente.documentValue,
+          invoiceType:             nuevoCliente.invoiceType as 'BOLETA' | 'FACTURA',
+          status:                  nuevoCliente.status,
+          documentTypeId:          nuevoCliente.documentTypeId,
+          documentTypeDescription: nuevoCliente.documentTypeDescription,
+          documentTypeSunatCode:   nuevoCliente.documentTypeSunatCode,
+          address:                 nuevoCliente.address,
+          email:                   nuevoCliente.email,
+          phone:                   nuevoCliente.phone,
+          displayName:             nuevoCliente.displayName,
+        });
+        this.busquedaSinResultado.set(false);
+        this.nuevoClienteForm.reset();
+        this.form.get('id_cliente')?.setValue(nuevoCliente.customerId, { emitEvent: false });
+        this.messageService.add({ severity: 'success', summary: 'Cliente registrado', detail: 'El cliente fue creado exitosamente.' });
+      },
+      error: () => {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo registrar el cliente.' });
+      },
+    });
   }
 
-  guardarProducto() {
-    if (this.productoForm.invalid) {
-      this.productoForm.markAllAsTouched();
-      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Complete los campos obligatorios.' });
+  // ── Productos ─────────────────────────────────────────────────────────────
+  buscarProducto(query: string) {
+    const idSede = this.form.get('sede')?.value;
+    if (!query || query.length < 2 || !idSede) { this.productosAutoComplete.set([]); return; }
+    this.cargandoProducto.set(true);
+    this.productoService.getProductosAutocomplete(query, idSede).subscribe({
+      next:  (resp) => { this.cargandoProducto.set(false); this.productosAutoComplete.set(resp.data ?? []); },
+      error: () => { this.cargandoProducto.set(false); this.productosAutoComplete.set([]); },
+    });
+  }
+
+  agregarProducto(prod: ProductoAutocomplete) {
+    const existe = this.detalles().find(d => d.id_prod_ref === prod.id_producto);
+    if (existe) {
+      this.detalles.update(items =>
+        items.map(d => d.id_prod_ref === prod.id_producto
+          ? { ...d, cantidad: d.cantidad + 1, importe: (d.cantidad + 1) * d.precio }
+          : d
+        )
+      );
+      this.busquedaProductoVal = '';
+      this.productosAutoComplete.set([]);
+      return;
+    }
+
+    const idSede = this.form.get('sede')?.value;
+    this.cargandoProducto.set(true);
+
+    this.productoService.getProductoDetalleStock(prod.id_producto, idSede).subscribe({
+      next: (resp) => {
+        this.cargandoProducto.set(false);
+        const p = resp.producto;
+        this.detalles.update(items => [...items, {
+          id_prod_ref: prod.id_producto,
+          cod_prod:    prod.codigo,
+          descripcion: prod.nombre,
+          cantidad:    1,
+          tipoPrecio:  'unitario',
+          pre_unit:    p.precio_unitario ?? 0,
+          pre_may:     p.precio_mayor    ?? 0,
+          pre_caja:    p.precio_caja     ?? 0,
+          precio:      p.precio_unitario ?? 0,
+          importe:     p.precio_unitario ?? 0,
+          uni_med:     p.unidad_medida?.nombre ?? '',
+        }]);
+      },
+      error: () => {
+        this.cargandoProducto.set(false);
+        this.detalles.update(items => [...items, {
+          id_prod_ref: prod.id_producto,
+          cod_prod:    prod.codigo,
+          descripcion: prod.nombre,
+          cantidad:    1,
+          tipoPrecio:  'unitario',
+          pre_unit:    0, pre_may: 0, pre_caja: 0,
+          precio:      0, importe: 0, uni_med:  '',
+        }]);
+      },
+    });
+
+    this.busquedaProductoVal = '';
+    this.productosAutoComplete.set([]);
+  }
+
+  cambiarTipoPrecio(index: number, tipo: 'unitario' | 'mayor' | 'caja') {
+    this.detalles.update(items =>
+      items.map((d, i) => {
+        if (i !== index) return d;
+        const precio = tipo === 'unitario' ? d.pre_unit : tipo === 'mayor' ? d.pre_may : d.pre_caja;
+        return { ...d, tipoPrecio: tipo, precio, importe: d.cantidad * precio };
+      })
+    );
+  }
+
+  actualizarCantidad(index: number, cantidad: number) {
+    if (!cantidad || cantidad < 1) return;
+    this.detalles.update(items =>
+      items.map((d, i) => i === index ? { ...d, cantidad, importe: cantidad * d.precio } : d)
+    );
+  }
+
+  actualizarPrecio(index: number, precio: number) {
+    if (precio == null || precio < 0) return;
+    this.detalles.update(items =>
+      items.map((d, i) => i === index ? { ...d, precio, importe: d.cantidad * precio } : d)
+    );
+  }
+
+  eliminarDetalle(index: number) {
+    this.detalles.update(items => items.filter((_, i) => i !== index));
+  }
+
+  // ── Totales ───────────────────────────────────────────────────────────────
+  get subtotal() { return +this.detalles().reduce((acc, d) => acc + d.importe, 0).toFixed(2); }
+  get igv()      { return +(this.subtotal * 0.18).toFixed(2); }
+  get total()    { return +(this.subtotal + this.igv).toFixed(2); }
+
+  // ── Guardar ───────────────────────────────────────────────────────────────
+  guardar() {
+    if (this.form.invalid) { this.form.markAllAsTouched(); return; }
+    if (this.detalles().length === 0) {
+      this.messageService.add({ severity: 'warn', summary: 'Sin productos', detail: 'Agrega al menos un producto.' });
       return;
     }
 
     this.isSubmitting.set(true);
-    // getRawValue obtiene también los campos disabled (como sede y almacen en edición)
-    const formValue = this.productoForm.getRawValue(); 
+    const raw = this.form.getRawValue();
 
-    const codigoLimpio = formValue.codigo?.trim().toUpperCase() || '';
-    const anexoLimpio = formValue.anexo?.trim().toUpperCase() || ''; 
-    const descripcionLimpia = formValue.descripcion?.trim().toUpperCase() || '';
+    const fecVenc = raw.fec_venc instanceof Date
+      ? raw.fec_venc.toISOString()
+      : new Date(raw.fec_venc).toISOString();
 
-    if (this.esModoEdicion() && this.idProductoActual()) {
-      // ===== LÓGICA DE ACTUALIZAR (PUTs) =====
-      const idProd = this.idProductoActual()!;
+    const payload = {
+      documento_cliente: raw.documento,
+      id_sede:           raw.sede,
+      fec_venc:          fecVenc,
+      subtotal:          this.subtotal,
+      igv:               this.igv,
+      total:             this.total,
+      detalles:          this.detalles().map(({ importe, uni_med, tipoPrecio, pre_unit, pre_may, pre_caja, ...d }) => d),
+    };
 
-      const updateInfo: UpdateProductoDto = {
-        id_producto: idProd,
-        id_categoria: formValue.familia,
-        codigo: codigoLimpio,
-        anexo: anexoLimpio,
-        descripcion: descripcionLimpia,
-        uni_med: formValue.unidadMedida
-      };
+    const req$ = this.esModoEdicion()
+      ? this.quoteService.approveQuote(raw.id_cotizacion)
+      : this.quoteService.createQuote(payload as any);
 
-      const updatePrecios: UpdateProductoPreciosDto = {
-        id_producto: idProd,
-        pre_compra: formValue.precioCompra,
-        pre_venta: formValue.precioVenta,
-        pre_unit: formValue.precioUnidad,
-        pre_may: formValue.precioMayorista,
-        pre_caja: formValue.precioCaja
-      };
+    req$.subscribe({
+      next:  () => { this.isSubmitting.set(false); this.router.navigate(['/admin/gestion-cotizaciones']); },
+      error: () => { this.isSubmitting.set(false); },
+    });
+  }
 
-      // Lanzamos ambas peticiones al mismo tiempo
-      forkJoin([
-        this.productoService.actualizarProductoInfo(updateInfo),
-        this.productoService.actualizarProductoPrecios(updatePrecios)
-      ]).pipe(
-        concatMap(() => {
-          // Si el usuario puso un número mayor a 0, agregamos el inventario
-          if (formValue.stockInicial > 0) {
-            const movDto: MovimientoInventarioDto = {
-              originType: 'COMPRA', // o 'COMPRA', 'AJUSTE', según requiera tu BD
-              refId: 101,
-              refTable: 'ordenes_compra',
-              observation: "Ingreso por orden de compra #101",
-              items: [{
-                productId: idProd,
-                warehouseId: formValue.almacen, 
-                sedeId: formValue.sede,         
-                quantity: formValue.stockInicial, // Cantidad a sumar
-                type: 'INGRESO'
-              }]
-            };
-            return this.productoService.registrarIngresoInventario(movDto);
-          }
-          return of(null); // Si es 0, no hace petición de stock
-        }),
-        catchError(error => {
-          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Hubo un problema al actualizar.' });
-          throw error;
-        }),
-        finalize(() => this.isSubmitting.set(false))
-      ).subscribe({
-        next: () => {
-          this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Producto actualizado correctamente.' });
-          setTimeout(() => this.router.navigate(['/admin/gestion-productos']), 1500);
-        }
-      });
+  cancelar() { this.router.navigate(['/admin/cotizaciones']); }
 
-    } else {
-      // ===== LÓGICA DE CREAR (POST) =====
-      const productoDto: CreateProductoDto = {
-        id_categoria: formValue.familia,
-        codigo: codigoLimpio,
-        anexo: anexoLimpio,
-        descripcion: descripcionLimpia,
-        pre_compra: formValue.precioCompra,
-        pre_venta: formValue.precioVenta,
-        pre_unit: formValue.precioUnidad,
-        pre_may: formValue.precioMayorista,
-        pre_caja: formValue.precioCaja,
-        uni_med: formValue.unidadMedida
-      };
+  // ── Helpers ───────────────────────────────────────────────────────────────
+  private _limpiarClienteSinDoc() {
+    this.clienteEncontrado.set(null);
+    this.busquedaSinResultado.set(false);
+    this.nuevoClienteForm.reset();
+    this.form.get('id_cliente')?.setValue('', { emitEvent: false });
+  }
 
-      this.productoService.crearProducto(productoDto).pipe(
-        concatMap(productoCreado => {
-          if (formValue.stockInicial <= 0) {
-            return of(productoCreado);
-          }
-
-          const movDto: MovimientoInventarioDto = {
-            originType: 'COMPRA',
-            refId: 101,
-            refTable: 'ordenes_compra',
-            observation: "Ingreso inicial de producto",
-            items: [{
-              productId: productoCreado.id_producto,
-              warehouseId: formValue.almacen,
-              sedeId: formValue.sede,
-              quantity: formValue.stockInicial,
-              type: 'INGRESO'
-            }]
-          };
-
-          return this.productoService.registrarIngresoInventario(movDto);
-        }),
-        catchError(error => {
-          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Hubo un error al crear.' });
-          throw error;
-        }),
-        finalize(() => this.isSubmitting.set(false))
-      ).subscribe({
-        next: () => {
-          this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Producto creado correctamente.' });
-          setTimeout(() => this.router.navigate(['/admin/gestion-productos']), 1500);
-        }
-      });
-    }
+  private _sinResultado(doc: string) {
+    this.clienteEncontrado.set(null);
+    this.busquedaSinResultado.set(true);
+    this.form.get('id_cliente')?.setValue('', { emitEvent: false });
+    this.nuevoClienteForm.patchValue({ documentValue: doc });
   }
 }

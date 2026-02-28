@@ -432,8 +432,6 @@ export const ADMIN_ROUTES: Routes = [
       cotizacion
   ======================= */
 
-
-
   {
     path: 'cotizaciones',
     loadComponent: () =>
@@ -441,7 +439,20 @@ export const ADMIN_ROUTES: Routes = [
         (m) => m.GestionCotizacionesComponent,
       ),
   },
-
+  {
+    path: 'agregar-cotizaciones',
+    loadComponent: () =>
+      import('./pages/gestion-cotizacion/gestion-formulario/cotizacion-formulario').then(
+        (m) => m.CotizacionFormulario,
+      ),
+  },
+  {
+    path: 'editar-cotizacion/:id',
+    loadComponent: () =>
+      import('./pages/gestion-cotizacion/gestion-formulario/cotizacion-formulario').then(
+        (m) => m.CotizacionFormulario,
+      ),
+  },
 
 
 
