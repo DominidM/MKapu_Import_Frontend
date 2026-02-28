@@ -259,8 +259,9 @@ getAbs(value: number): number {
   cargarGraficoMetodosPago(): void {
     this.dashboardService.getPaymentMethods(this.mesMetodosPago()).subscribe({
       next: (data) => {
-        // Verificamos que data tenga contenido antes de setear
-        if (data && data.labels && data.labels.length > 0) {
+        console.log('Data Métodos Pago:', data); // 👈 Revisa esto en la consola F12
+        
+        if (data && data.labels) {
           this.metodosPagoChart.set({
             labels: data.labels,
             datasets: [
@@ -271,14 +272,8 @@ getAbs(value: number): number {
               },
             ],
           });
-        } else {
-          this.metodosPagoChart.set({
-            labels: ['Sin datos'],
-            datasets: [{ data: [0], backgroundColor: ['#E0E0E0'] }]
-          });
         }
-      },
-      error: (err) => console.error('Error en gráfico de pagos:', err)
+      }
     });
   }
 
