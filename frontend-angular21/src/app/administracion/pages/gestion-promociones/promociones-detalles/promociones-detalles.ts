@@ -1,5 +1,5 @@
 import { Component, OnInit, signal, computed, inject } from '@angular/core';
-import { CommonModule, DecimalPipe } from '@angular/common';
+import { CommonModule, DecimalPipe, DatePipe } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { ButtonModule }        from 'primeng/button';
@@ -11,14 +11,22 @@ import { TooltipModule }       from 'primeng/tooltip';
 import { MessageService, ConfirmationService } from 'primeng/api';
 
 import { PromotionsService, Promotion } from '../../../services/promotions.service';
+import { ProgressBarModule } from 'primeng/progressbar';
 
 @Component({
   selector: 'app-promociones-detalles',
   standalone: true,
   imports: [
-    CommonModule, DecimalPipe,
-    ButtonModule, CardModule, TagModule,
-    ToastModule, ConfirmDialogModule, TooltipModule,
+    CommonModule,
+    DatePipe,
+    DecimalPipe,
+    ButtonModule,
+    CardModule,
+    TagModule,
+    ProgressBarModule,
+    ToastModule,
+    ConfirmDialogModule,
+    TooltipModule,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './promociones-detalles.html',
