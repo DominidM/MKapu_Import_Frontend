@@ -824,7 +824,7 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
   }
 
   verListado(): void {
-    this.router.navigate(['/admin/historial-ventas']);
+    this.router.navigate(['/admin/historial-ventas-administracion']);
   }
 
   private resetearFormulario(): void {
