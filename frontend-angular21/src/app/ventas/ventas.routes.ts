@@ -170,4 +170,10 @@ export const VENTAS_ROUTES: Routes = [
         .then((m) => m.ConteoDetalle),
   },
 
+
+
+
+
+
+
 ];
