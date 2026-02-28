@@ -4,68 +4,112 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../enviroments/enviroment';
 
 import {
-  ProductoStockResponse,
+  // OUT — responses del backend
+  ProductoStockVentasResponse,
+  ProductoStockVentas,
+  ProductoAutocompleteVentasResponse,
+  ProductoAutocompleteVentas,
   ProductoAutocompleteResponse,
   ProductoDetalle,
-  Producto,
-  ProductoConStock,
+  CategoriaConStock,
+  ProductoUI,
 } from '../interfaces';
 
-@Injectable({
-  providedIn: 'root',
-})
+@Injectable({ providedIn: 'root' })
 export class ProductoService {
-  private apiUrl = `${environment.apiUrl}/logistics`;
+  private readonly apiUrl = `${environment.apiUrl}/logistics`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private readonly http: HttpClient) {}
 
-  buscarProductos(query: string, idSede: number): Observable<ProductoAutocompleteResponse> {
-    const params = new HttpParams().set('search', query).set('id_sede', idSede.toString());
+  obtenerProductosConStock(
+    idSede: number,
+    idCategoria?: number,
+    page: number = 1,
+    size: number = 10,
+  ): Observable<ProductoStockVentasResponse> {
+    let params = new HttpParams()
+      .set('id_sede', String(idSede))
+      .set('page', String(page))
+      .set('size', String(size));
+
+    if (idCategoria) params = params.set('id_categoria', String(idCategoria));
+
+    return this.http.get<ProductoStockVentasResponse>(`${this.apiUrl}/products/ventas/stock`, {
+      params,
+    });
+  }
+
+  obtenerCategoriasConStock(idSede: number): Observable<CategoriaConStock[]> {
+    const params = new HttpParams().set('id_sede', String(idSede));
+    return this.http.get<CategoriaConStock[]>(`${this.apiUrl}/products/categorias-con-stock`, {
+      params,
+    });
+  }
+
+  obtenerDetalleProducto(idProducto: number, idSede: number): Observable<ProductoDetalle> {
+    const params = new HttpParams().set('id_sede', String(idSede));
+    return this.http.get<ProductoDetalle>(`${this.apiUrl}/products/${idProducto}/stock`, {
+      params,
+    });
+  }
+
+  buscarProductos(
+    query: string,
+    idSede: number,
+    idCategoria?: number,
+  ): Observable<ProductoAutocompleteResponse> {
+    let params = new HttpParams().set('search', query).set('id_sede', String(idSede));
+
+    if (idCategoria) params = params.set('id_categoria', String(idCategoria));
 
     return this.http.get<ProductoAutocompleteResponse>(`${this.apiUrl}/products/autocomplete`, {
       params,
     });
   }
 
-  obtenerProductosConStock(
+  buscarProductosVentas(
+    query: string,
     idSede: number,
     idCategoria?: number,
-    page: number = 1,
-    size: number = 500,
-  ): Observable<ProductoStockResponse> {
-    let params = new HttpParams()
-      .set('id_sede', idSede.toString())
-      .set('page', page.toString())
-      .set('size', size.toString());
+  ): Observable<ProductoAutocompleteVentasResponse> {
+    let params = new HttpParams().set('search', query).set('id_sede', String(idSede));
 
-    if (idCategoria) {
-      params = params.set('id_categoria', idCategoria.toString());
-    }
+    if (idCategoria) params = params.set('id_categoria', String(idCategoria));
 
-    return this.http.get<ProductoStockResponse>(`${this.apiUrl}/products/productos_stock`, {
-      params,
-    });
+    return this.http.get<ProductoAutocompleteVentasResponse>(
+      `${this.apiUrl}/products/ventas/autocomplete`,
+      { params },
+    );
   }
 
-  obtenerDetalleProducto(idProducto: number, idSede: number): Observable<ProductoDetalle> {
-    const params = new HttpParams().set('id_sede', idSede.toString());
-
-    return this.http.get<ProductoDetalle>(`${this.apiUrl}/products/${idProducto}/stock`, {
-      params,
-    });
-  }
-
-  mapearProductoConStock(prod: ProductoConStock, detalle: ProductoDetalle): Producto {
+  // ─── Mappers: API response → modelo UI ───────────────────────────────────
+  mapearProductoConStock(prod: ProductoStockVentas): ProductoUI {
     return {
       id: prod.id_producto,
       codigo: prod.codigo,
       nombre: prod.nombre,
-      familia: detalle.producto.categoria.nombre,
+      familia: prod.familia,
+      id_categoria: prod.id_categoria,
       stock: prod.stock,
-      precioUnidad: detalle.producto.precio_unitario,
-      precioCaja: detalle.producto.precio_caja,
-      precioMayorista: detalle.producto.precio_mayor,
+      precioUnidad: prod.precio_unitario,
+      precioCaja: prod.precio_caja,
+      precioMayorista: prod.precio_mayor,
       sede: prod.sede,
+    };
+  }
+
+  mapearAutocompleteVentas(prod: ProductoAutocompleteVentas, sedeNombre: string): ProductoUI {
+    return {
+      id: prod.id_producto,
+      codigo: prod.codigo,
+      nombre: prod.nombre,
+      familia: prod.familia,
+      id_categoria: prod.id_categoria,
+      stock: prod.stock,
+      precioUnidad: prod.precio_unitario,
+      precioCaja: prod.precio_caja,
+      precioMayorista: prod.precio_mayor,
+      sede: sedeNombre,
     };
   }
 }

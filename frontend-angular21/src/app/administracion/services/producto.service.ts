@@ -1,11 +1,17 @@
 import { Injectable } from '@angular/core';
 import { environment } from '../../../enviroments/enviroment';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import {
+  CreateProductoDto,
+  MovimientoInventarioDto,
+  MovimientoInventarioResponse,
   ProductoAutocompleteResponse,
   ProductoDetalleStockResponse,
+  ProductoInterface,
   ProductoResponse,
   ProductoStockResponse,
+  UpdateProductoDto,
+  UpdateProductoPreciosDto,
 } from '../interfaces/producto.interface';
 import { Observable } from 'rxjs';
 
@@ -15,7 +21,7 @@ import { Observable } from 'rxjs';
 export class ProductoService {
   private api = environment.apiUrl;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }  
 
   getProductos(
     page?: number,
@@ -35,13 +41,35 @@ export class ProductoService {
     return this.http.get<ProductoResponse>(`${this.api}/logistics/products`, { params });
   }
 
-  getProductosConStock(idSede: number, page?: number, size?: number): Observable<ProductoStockResponse> {
-    let params = new HttpParams().set('id_sede', idSede);
+  getProductosConStock(
+    idSede: number,
+    page: number,
+    size: number,
+    categoria?: string
+  ): Observable<ProductoStockResponse> {
 
-    if (page) params = params.set('page', page);
-    if (size) params = params.set('size', size);
+    let params = new HttpParams()
+      .set('id_sede', idSede)
+    //.set('page', page)
+    //.set('size', size);
 
-    return this.http.get<ProductoStockResponse>(`${this.api}/logistics/products/productos_stock`, { params });
+    if (page) {
+      params = params.set('page', page);
+    }
+
+    if (size) {
+      params = params.set('size', size);
+    }
+
+    if (categoria) {
+      params = params.set('categoria', categoria);
+    }
+
+
+    return this.http.get<ProductoStockResponse>(
+      `${this.api}/logistics/products/productos_stock`,
+      { params }
+    );
   }
 
   getProductosAutocomplete(search: string, idSede: number): Observable<ProductoAutocompleteResponse> {
@@ -67,4 +95,50 @@ export class ProductoService {
       { params }
     );
   }
+
+  // Crear producto
+
+  crearProducto(producto: CreateProductoDto): Observable<ProductoInterface> {
+    return this.http.post<ProductoInterface>(`${this.api}/logistics/products`, producto);
+  }
+
+  registrarIngresoInventario(
+    movimiento: MovimientoInventarioDto
+  ): Observable<MovimientoInventarioResponse> {
+
+    const headers = new HttpHeaders({
+      'x-role': 'Administrador'
+    });
+
+    return this.http.post<MovimientoInventarioResponse>(
+      `${this.api}/logistics/movimiento_inventario/income`,
+      movimiento,
+      { headers }
+    );
+  }
+
+  // ==========================================
+  //          ACTUALIZAR PRODUCTO (PUT)
+  // ==========================================
+
+  // 1. Actualizar información básica (descripción, categoría, código, etc.)
+  actualizarProductoInfo(producto: UpdateProductoDto): Observable<any> {
+    return this.http.put<any>(`${this.api}/logistics/products`, producto);
+  }
+
+  // 2. Actualizar exclusivamente los precios
+  actualizarProductoPrecios(precios: UpdateProductoPreciosDto): Observable<any> {
+    return this.http.put<any>(`${this.api}/logistics/products/prices`, precios);
+  }
+
+  // 3. Cambiar estado del producto (Activar/Desactivar)
+  actualizarProductoEstado(idProducto: number, estado: boolean): Observable<any> {
+    const payload = {
+      id_producto: idProducto,
+      estado: estado
+    };
+    return this.http.put<any>(`${this.api}/logistics/products/status`, payload);
+  }
+
+
 }

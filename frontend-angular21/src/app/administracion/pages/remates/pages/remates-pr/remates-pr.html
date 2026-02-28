@@ -49,7 +49,6 @@
       <div class="col-12 md:col-8">
         <label class="filter-label">Buscar Remate</label>
         <span class="p-input-icon-left">
-          <i class="pi pi-search"></i>
           <input pInputText type="text" placeholder="Buscar por código o producto..." class="w-full"
             [ngModel]="busqueda()" (ngModelChange)="busqueda.set($event)" />
         </span>
@@ -79,7 +78,7 @@
       [tableStyle]="{ 'min-width': '100%' }"
       styleClass="mermas-table"
       [paginator]="true"
-      [rows]="productosPorPagina()"
+      [rows]="5"
       [rowsPerPageOptions]="[5,10,20,50]"
       [showCurrentPageReport]="true"
       currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} remates"

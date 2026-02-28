@@ -1,6 +1,7 @@
-import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
-
+import { environment } from '../../../enviroments/enviroment';
 export interface DetalleComprobante {
   id_det_com: number;
   id_comprobante: string;
@@ -77,11 +78,14 @@ export class VentasService {
   public comprobantes$: Observable<ComprobanteVenta[]> = this.comprobantesSubject.asObservable();
 
   private comprobanteActualSubject = new BehaviorSubject<Partial<ComprobanteVenta> | null>(null);
-  public comprobanteActual$: Observable<Partial<ComprobanteVenta> | null> = this.comprobanteActualSubject.asObservable();
+  public comprobanteActual$: Observable<Partial<ComprobanteVenta> | null> =
+    this.comprobanteActualSubject.asObservable();
 
   private ventaWizardSubject = new BehaviorSubject<Partial<VentaWizard> | null>(null);
-  public ventaWizard$: Observable<Partial<VentaWizard> | null> = this.ventaWizardSubject.asObservable();
-
+  public ventaWizard$: Observable<Partial<VentaWizard> | null> =
+    this.ventaWizardSubject.asObservable();
+  private readonly http = inject(HttpClient);
+  private urlLogistica = `${environment.apiUrl}/logistics/remission`;
   constructor() {
     this.inicializarDatos();
   }
@@ -122,11 +126,11 @@ export class VentasService {
             descripcion: 'Smart TV LED 55" 4K RAF',
             cantidad: 1,
             valor_unit: 1354.24,
-            pre_uni: 1599.00,
+            pre_uni: 1599.0,
             igv: 243.76,
-            tipo_afe_igv: '10'
-          }
-        ]
+            tipo_afe_igv: '10',
+          },
+        ],
       },
       {
         id: 2,
@@ -140,8 +144,8 @@ export class VentasService {
         moneda: 'PEN',
         tipo_pago: 'TARJETA',
         tipo_op: '0101',
-        subtotal: 2033.90,
-        igv: 366.10,
+        subtotal: 2033.9,
+        igv: 366.1,
         isc: 0,
         total: 2400.0,
         estado: true,
@@ -162,11 +166,11 @@ export class VentasService {
             descripcion: 'Refrigerador No Frost 12 pies RAF',
             cantidad: 2,
             valor_unit: 1016.95,
-            pre_uni: 1200.00,
-            igv: 366.10,
-            tipo_afe_igv: '10'
-          }
-        ]
+            pre_uni: 1200.0,
+            igv: 366.1,
+            tipo_afe_igv: '10',
+          },
+        ],
       },
       {
         id: 3,
@@ -202,11 +206,11 @@ export class VentasService {
             descripcion: 'Lavarropas Automático 10kg RAF',
             cantidad: 1,
             valor_unit: 761.86,
-            pre_uni: 899.00,
+            pre_uni: 899.0,
             igv: 137.14,
-            tipo_afe_igv: '10'
-          }
-        ]
+            tipo_afe_igv: '10',
+          },
+        ],
       },
       {
         id: 4,
@@ -242,11 +246,11 @@ export class VentasService {
             descripcion: 'Aire Acondicionado 12000 BTU RAF',
             cantidad: 1,
             valor_unit: 1525.42,
-            pre_uni: 1800.00,
+            pre_uni: 1800.0,
             igv: 274.58,
-            tipo_afe_igv: '10'
-          }
-        ]
+            tipo_afe_igv: '10',
+          },
+        ],
       },
       {
         id: 5,
@@ -282,11 +286,11 @@ export class VentasService {
             descripcion: 'Horno Eléctrico 1800W RAF',
             cantidad: 1,
             valor_unit: 423.73,
-            pre_uni: 500.00,
+            pre_uni: 500.0,
             igv: 76.27,
-            tipo_afe_igv: '10'
-          }
-        ]
+            tipo_afe_igv: '10',
+          },
+        ],
       },
       {
         id: 6,
@@ -322,11 +326,11 @@ export class VentasService {
             descripcion: 'Refrigerador No Frost 12 pies RAF',
             cantidad: 1,
             valor_unit: 1016.95,
-            pre_uni: 1200.00,
+            pre_uni: 1200.0,
             igv: 183.05,
-            tipo_afe_igv: '10'
-          }
-        ]
+            tipo_afe_igv: '10',
+          },
+        ],
       },
       {
         id: 7,
@@ -362,11 +366,11 @@ export class VentasService {
             descripcion: 'Smart TV LED 55" 4K RAF',
             cantidad: 2,
             valor_unit: 1355.93,
-            pre_uni: 1600.00,
+            pre_uni: 1600.0,
             igv: 488.14,
-            tipo_afe_igv: '10'
-          }
-        ]
+            tipo_afe_igv: '10',
+          },
+        ],
       },
       {
         id: 8,
@@ -402,9 +406,9 @@ export class VentasService {
             descripcion: 'Microondas Inverter 900W RAF',
             cantidad: 2,
             valor_unit: 253.39,
-            pre_uni: 299.00,
+            pre_uni: 299.0,
             igv: 91.22,
-            tipo_afe_igv: '10'
+            tipo_afe_igv: '10',
           },
           {
             id_det_com: 9,
@@ -414,11 +418,11 @@ export class VentasService {
             descripcion: 'Licuadora Profesional 500W RAF',
             cantidad: 1,
             valor_unit: 128.81,
-            pre_uni: 152.00,
+            pre_uni: 152.0,
             igv: 23.19,
-            tipo_afe_igv: '10'
-          }
-        ]
+            tipo_afe_igv: '10',
+          },
+        ],
       },
       {
         id: 9,
@@ -432,8 +436,8 @@ export class VentasService {
         moneda: 'PEN',
         tipo_pago: 'PLIN',
         tipo_op: '0101',
-        subtotal: 932.20,
-        igv: 167.80,
+        subtotal: 932.2,
+        igv: 167.8,
         isc: 0,
         total: 1100.0,
         estado: true,
@@ -453,12 +457,12 @@ export class VentasService {
             cod_prod: 'RAF-WM15',
             descripcion: 'Lavadora Automática 15kg RAF',
             cantidad: 1,
-            valor_unit: 932.20,
-            pre_uni: 1100.00,
-            igv: 167.80,
-            tipo_afe_igv: '10'
-          }
-        ]
+            valor_unit: 932.2,
+            pre_uni: 1100.0,
+            igv: 167.8,
+            tipo_afe_igv: '10',
+          },
+        ],
       },
       {
         id: 10,
@@ -494,11 +498,11 @@ export class VentasService {
             descripcion: 'Aire Acondicionado 12000 BTU RAF',
             cantidad: 2,
             valor_unit: 1525.42,
-            pre_uni: 1800.00,
+            pre_uni: 1800.0,
             igv: 549.15,
-            tipo_afe_igv: '10'
-          }
-        ]
+            tipo_afe_igv: '10',
+          },
+        ],
       },
       {
         id: 11,
@@ -534,11 +538,11 @@ export class VentasService {
             descripcion: 'Aspiradora Ciclónica 1500W RAF',
             cantidad: 1,
             valor_unit: 550.85,
-            pre_uni: 650.00,
+            pre_uni: 650.0,
             igv: 99.15,
-            tipo_afe_igv: '10'
-          }
-        ]
+            tipo_afe_igv: '10',
+          },
+        ],
       },
       {
         id: 12,
@@ -574,9 +578,9 @@ export class VentasService {
             descripcion: 'Smart TV LED 55" 4K RAF',
             cantidad: 1,
             valor_unit: 1354.24,
-            pre_uni: 1599.00,
+            pre_uni: 1599.0,
             igv: 243.76,
-            tipo_afe_igv: '10'
+            tipo_afe_igv: '10',
           },
           {
             id_det_com: 14,
@@ -586,12 +590,12 @@ export class VentasService {
             descripcion: 'Horno Eléctrico 1800W RAF',
             cantidad: 1,
             valor_unit: 340.68,
-            pre_uni: 401.00,
+            pre_uni: 401.0,
             igv: 61.32,
-            tipo_afe_igv: '10'
-          }
-        ]
-      }
+            tipo_afe_igv: '10',
+          },
+        ],
+      },
     ];
 
     this.comprobantesSubject.next(datosIniciales);
@@ -609,11 +613,16 @@ export class VentasService {
     return this.comprobantesSubject.value.find((c) => c.id_comprobante === id);
   }
 
-  crearComprobante(comprobante: Omit<ComprobanteVenta, 'id' | 'id_comprobante' | 'hash_cpe' | 'xml_cpe' | 'cdr_cpe' | 'numero'>): ComprobanteVenta {
+  crearComprobante(
+    comprobante: Omit<
+      ComprobanteVenta,
+      'id' | 'id_comprobante' | 'hash_cpe' | 'xml_cpe' | 'cdr_cpe' | 'numero'
+    >,
+  ): ComprobanteVenta {
     const comprobantes = this.comprobantesSubject.value;
     const ultimoNumero = this.getUltimoNumero(comprobante.serie);
     const nuevoNumero = ultimoNumero + 1;
-    const nuevoId = comprobantes.length > 0 ? Math.max(...comprobantes.map(c => c.id)) + 1 : 1;
+    const nuevoId = comprobantes.length > 0 ? Math.max(...comprobantes.map((c) => c.id)) + 1 : 1;
     const idComprobante = `CPE-${new Date().getFullYear()}-${String(nuevoId).padStart(4, '0')}`;
 
     const nuevoComprobante: ComprobanteVenta = {
@@ -656,7 +665,9 @@ export class VentasService {
   }
 
   getComprobantesPorFecha(fechaDesde: Date, fechaHasta: Date): ComprobanteVenta[] {
-    return this.comprobantesSubject.value.filter((c) => c.fec_emision >= fechaDesde && c.fec_emision <= fechaHasta);
+    return this.comprobantesSubject.value.filter(
+      (c) => c.fec_emision >= fechaDesde && c.fec_emision <= fechaHasta,
+    );
   }
 
   getComprobantesPorEstado(estado: boolean): ComprobanteVenta[] {
@@ -687,7 +698,9 @@ export class VentasService {
     let comprobantes = this.comprobantesSubject.value;
 
     if (filtros.fechaDesde && filtros.fechaHasta) {
-      comprobantes = comprobantes.filter((c) => c.fec_emision >= filtros.fechaDesde! && c.fec_emision <= filtros.fechaHasta!);
+      comprobantes = comprobantes.filter(
+        (c) => c.fec_emision >= filtros.fechaDesde! && c.fec_emision <= filtros.fechaHasta!,
+      );
     }
 
     if (filtros.tipoComprobante) {
@@ -714,22 +727,30 @@ export class VentasService {
   }
 
   getTotalVentas(filtros?: FiltrosVenta): number {
-    const comprobantes = filtros ? this.filtrarComprobantes(filtros) : this.getComprobantesPorEstado(true);
+    const comprobantes = filtros
+      ? this.filtrarComprobantes(filtros)
+      : this.getComprobantesPorEstado(true);
     return comprobantes.reduce((total, c) => total + c.total, 0);
   }
 
   getSubtotalVentas(filtros?: FiltrosVenta): number {
-    const comprobantes = filtros ? this.filtrarComprobantes(filtros) : this.getComprobantesPorEstado(true);
+    const comprobantes = filtros
+      ? this.filtrarComprobantes(filtros)
+      : this.getComprobantesPorEstado(true);
     return comprobantes.reduce((total, c) => total + c.subtotal, 0);
   }
 
   getIGVVentas(filtros?: FiltrosVenta): number {
-    const comprobantes = filtros ? this.filtrarComprobantes(filtros) : this.getComprobantesPorEstado(true);
+    const comprobantes = filtros
+      ? this.filtrarComprobantes(filtros)
+      : this.getComprobantesPorEstado(true);
     return comprobantes.reduce((total, c) => total + c.igv, 0);
   }
 
   getCountComprobantes(filtros?: FiltrosVenta): number {
-    return filtros ? this.filtrarComprobantes(filtros).length : this.comprobantesSubject.value.length;
+    return filtros
+      ? this.filtrarComprobantes(filtros).length
+      : this.comprobantesSubject.value.length;
   }
 
   getVentasHoy(): ComprobanteVenta[] {
@@ -762,7 +783,9 @@ export class VentasService {
   }
 
   generarSerie(tipo: '01' | '03', numero: number = 1): string {
-    return tipo === '01' ? `F${String(numero).padStart(3, '0')}` : `B${String(numero).padStart(3, '0')}`;
+    return tipo === '01'
+      ? `F${String(numero).padStart(3, '0')}`
+      : `B${String(numero).padStart(3, '0')}`;
   }
 
   getUltimoNumero(serie: string): number {
@@ -807,12 +830,16 @@ export class VentasService {
     this.ventaWizardSubject.next(null);
   }
 
-  validarComprobante(comprobante: Partial<ComprobanteVenta>): { valido: boolean; errores: string[] } {
+  validarComprobante(comprobante: Partial<ComprobanteVenta>): {
+    valido: boolean;
+    errores: string[];
+  } {
     const errores: string[] = [];
 
     if (!comprobante.id_cliente) errores.push('Cliente requerido');
     if (!comprobante.tipo_comprobante) errores.push('Tipo de comprobante requerido');
-    if (!comprobante.detalles || comprobante.detalles.length === 0) errores.push('Debe agregar productos');
+    if (!comprobante.detalles || comprobante.detalles.length === 0)
+      errores.push('Debe agregar productos');
     if (!comprobante.total || comprobante.total <= 0) errores.push('Total inválido');
 
     return { valido: errores.length === 0, errores };
@@ -831,26 +858,29 @@ export class VentasService {
   }
 
   getEstadisticasPorEmpleado(idEmpleado: string) {
-    const ventas = this.getComprobantesPorEmpleado(idEmpleado).filter(c => c.estado);
-    
+    const ventas = this.getComprobantesPorEmpleado(idEmpleado).filter((c) => c.estado);
+
     return {
       totalVentas: ventas.length,
       totalMonto: ventas.reduce((sum, c) => sum + c.total, 0),
       promedio: ventas.length > 0 ? ventas.reduce((sum, c) => sum + c.total, 0) / ventas.length : 0,
-      boletas: ventas.filter(c => c.tipo_comprobante === '03').length,
-      facturas: ventas.filter(c => c.tipo_comprobante === '01').length,
+      boletas: ventas.filter((c) => c.tipo_comprobante === '03').length,
+      facturas: ventas.filter((c) => c.tipo_comprobante === '01').length,
     };
   }
 
   getEstadisticasPorSede(idSede: string) {
-    const ventas = this.getComprobantesPorSede(idSede).filter(c => c.estado);
-    
+    const ventas = this.getComprobantesPorSede(idSede).filter((c) => c.estado);
+
     return {
       totalVentas: ventas.length,
       totalMonto: ventas.reduce((sum, c) => sum + c.total, 0),
       promedio: ventas.length > 0 ? ventas.reduce((sum, c) => sum + c.total, 0) / ventas.length : 0,
-      boletas: ventas.filter(c => c.tipo_comprobante === '03').length,
-      facturas: ventas.filter(c => c.tipo_comprobante === '01').length,
+      boletas: ventas.filter((c) => c.tipo_comprobante === '03').length,
+      facturas: ventas.filter((c) => c.tipo_comprobante === '01').length,
     };
+  }
+  getVentaByCorrelativo(correlativo: string): Observable<any> {
+    return this.http.get<any>(`${this.urlLogistica}/sale/${correlativo}`);
   }
 }

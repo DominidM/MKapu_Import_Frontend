@@ -1,19 +1,61 @@
+// editar-sede.ts
 import { CommonModule } from '@angular/common';
-import { Component, ViewChild, inject } from '@angular/core';
+import { Component, ViewChild, inject, OnInit, Directive, HostListener, ElementRef } from '@angular/core';
 import { FormsModule, NgForm } from '@angular/forms';
-import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { DividerModule } from 'primeng/divider';
 import { InputTextModule } from 'primeng/inputtext';
+import { InputNumberModule } from 'primeng/inputnumber';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
-import { MessageModule } from 'primeng/message'; // <-- AÑADE ESTO
+import { Message } from 'primeng/message';
+import { AutoCompleteModule } from 'primeng/autocomplete';
 import { Observable, Subject } from 'rxjs';
 import { CanComponentDeactivate } from '../../../../../core/guards/pending-changes.guard';
 import { SedeService } from '../../../../services/sede.service';
-import { Headquarter } from '../../../../interfaces/sedes.interface';
+import { DEPARTAMENTOS_PROVINCIAS } from '../../../../shared/data/departamentos-provincias';
+
+// Directiva para bloquear números
+@Directive({
+  selector: '[appNoNumbers]',
+  standalone: true
+})
+export class NoNumbersDirective {
+  constructor(private el: ElementRef) {}
+
+  @HostListener('keypress', ['$event'])
+  onKeyPress(event: KeyboardEvent): boolean {
+    const regex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]$/;
+    const allowedKeys = ['Backspace', 'Tab', 'Delete', 'ArrowLeft', 'ArrowRight'];
+    
+    if (allowedKeys.includes(event.key)) {
+      return true;
+    }
+    
+    if (!regex.test(event.key)) {
+      event.preventDefault();
+      return false;
+    }
+    
+    return true;
+  }
+
+  @HostListener('paste', ['$event'])
+  onPaste(event: ClipboardEvent): boolean {
+    const pastedText = event.clipboardData?.getData('text') || '';
+    const regex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]*$/;
+    
+    if (!regex.test(pastedText)) {
+      event.preventDefault();
+      return false;
+    }
+    
+    return true;
+  }
+}
 
 @Component({
   selector: 'app-editar-sede',
@@ -25,16 +67,42 @@ import { Headquarter } from '../../../../interfaces/sedes.interface';
     CardModule,
     DividerModule,
     InputTextModule,
+    InputNumberModule,
     ConfirmDialogModule,
     ToastModule,
-    MessageModule, 
+    Message,
+    AutoCompleteModule,
+    NoNumbersDirective,
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './editar-sede.html',
   styleUrl: './editar-sede.css',
 })
-export class EditarSede implements CanComponentDeactivate {
+export class EditarSede implements OnInit, CanComponentDeactivate {
   @ViewChild('sedeForm') sedeForm?: NgForm;
+
+  private allowNavigate = false;
+  submitted = false;
+  sedeId: number | null = null;
+
+  sede = {
+    codigo: '',
+    nombre: '',
+    departamento: '',
+    provincia: '',
+    ciudad: '',
+    telefono: '' as string | null,
+    direccion: '',
+  };
+
+  departamentos = Object.keys(DEPARTAMENTOS_PROVINCIAS);
+  filteredDepartamentos: string[] = [];
+
+  provincias: string[] = [];
+  filteredProvincias: string[] = [];
+
+  distritos: string[] = [];
+  filteredDistritos: string[] = [];
 
   private readonly sedeService = inject(SedeService);
   private readonly route = inject(ActivatedRoute);
@@ -42,79 +110,212 @@ export class EditarSede implements CanComponentDeactivate {
   readonly loading = this.sedeService.loading;
   readonly error = this.sedeService.error;
 
-  private allowNavigate = false;
-  private sedeId!: number;
-
-  sede: Partial<Headquarter> = {
-    codigo: '',
-    nombre: '',
-    ciudad: '',
-    telefono: '',
-    departamento: '',
-    direccion: '',
-    activo: false,
-  };
-
   constructor(
     private confirmationService: ConfirmationService,
     private messageService: MessageService,
     private router: Router
-  ) {
-    const idRaw = this.route.snapshot.queryParamMap.get('id');
-    const id = Number(idRaw);
+  ) {}
 
-    if (!idRaw || Number.isNaN(id)) {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Error',
-        detail: 'No se recibió el id de la sede para editar.',
-      });
-      this.router.navigate(['/admin/sedes']);
-      return;
+  ngOnInit(): void {
+    // Preferir paramMap (path param), si no existe usar queryParamMap
+    const idFromParam = this.route.snapshot.paramMap.get('id');
+    const idFromQuery = this.route.snapshot.queryParamMap.get('id');
+    const idStr = idFromParam ?? idFromQuery;
+    if (idStr) {
+      this.sedeId = parseInt(idStr, 10);
+      this.loadSede();
+    } else {
+      // manejar caso sin id (mostrar error o redirigir)
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se recibió el ID de la sede.' });
     }
+  }
 
-    this.sedeId = id;
+  private loadSede(): void {
+    if (!this.sedeId) return;
 
-    this.sedeService.getSedeById(this.sedeId, 'Administrador').subscribe({
-      next: (data) => (this.sede = { ...data }),
-      error: (err) => {
-        console.error(err);
+    this.sedeService.getSedeById(this.sedeId).subscribe({
+      next: (sedeData) => {
+        this.sede = {
+          codigo: sedeData.codigo,
+          nombre: sedeData.nombre,
+          departamento: sedeData.departamento,
+          provincia: '', // Inicialmente vacío, se cargará después
+          ciudad: sedeData.ciudad,
+          telefono: sedeData.telefono,
+          direccion: sedeData.direccion,
+        };
+
+        // Cargar provincia basándose en departamento y ciudad
+        this.initializeProvinciaFromCiudad();
+      },
+      error: () => {
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
-          detail: err?.error?.message ?? 'No se pudo cargar la sede.',
+          detail: 'No se pudo cargar la sede.',
         });
       },
     });
   }
 
-  updateSede(): void {
-    if (!this.sedeId) return;
+  private initializeProvinciaFromCiudad(): void {
+    const dept = this.sede.departamento;
+    const ciudad = this.sede.ciudad;
+    const provinciasData = DEPARTAMENTOS_PROVINCIAS[dept] || [];
+    
+    // Encontrar la provincia que contiene esta ciudad
+    const provinciaEncontrada = provinciasData.find(p => 
+      p.distritos.includes(ciudad)
+    );
 
-    const payload = {
-      nombre: this.sede.nombre?.trim(),
-      ciudad: this.sede.ciudad?.trim(),
-      departamento: this.sede.departamento?.trim(),
-      direccion: this.sede.direccion?.trim(),
-      telefono: String(this.sede.telefono ?? '').trim(),
-    };
+    if (provinciaEncontrada) {
+      this.sede.provincia = provinciaEncontrada.nombre;
+      this.provincias = provinciasData.map(p => p.nombre);
+      this.distritos = provinciaEncontrada.distritos;
+    }
+  }
+
+  toUpperCase(field: 'codigo' | 'nombre' | 'direccion'): void {
+    this.sede[field] = this.sede[field].toUpperCase();
+  }
+
+  onlyLetters(event: KeyboardEvent): boolean {
+    const regex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]$/;
+    return regex.test(event.key) || event.key === 'Backspace' || event.key === 'Tab';
+  }
+
+  onlyNumbers(event: KeyboardEvent): boolean {
+    const regex = /^[0-9]$/;
+    const allowedKeys = ['Backspace', 'Tab', 'Delete', 'ArrowLeft', 'ArrowRight'];
+    
+    if (allowedKeys.includes(event.key)) {
+      return true;
+    }
+    
+    if (!regex.test(event.key)) {
+      event.preventDefault();
+      return false;
+    }
+    
+    return true;
+  }
+
+  filterDepartamentos(event: { query: string }): void {
+    const query = event.query.toLowerCase();
+    this.filteredDepartamentos = this.departamentos.filter(dept =>
+      dept.toLowerCase().includes(query)
+    );
+  }
+
+  filterProvincias(event: { query: string }): void {
+    const query = event.query.toLowerCase();
+    this.filteredProvincias = this.provincias.filter(prov =>
+      prov.toLowerCase().includes(query)
+    );
+  }
+
+  filterDistritos(event: { query: string }): void {
+    const query = event.query.toLowerCase();
+    this.filteredDistritos = this.distritos.filter(dist =>
+      dist.toLowerCase().includes(query)
+    );
+  }
+
+  onDepartamentoSelect(): void {
+    const dept = this.sede.departamento;
+    const provinciasData = DEPARTAMENTOS_PROVINCIAS[dept] || [];
+    this.provincias = provinciasData.map(p => p.nombre);
+    this.sede.provincia = '';
+    this.sede.ciudad = '';
+    this.distritos = [];
+    this.filteredProvincias = [];
+    this.filteredDistritos = [];
+  }
+
+  onProvinciaSelect(): void {
+    const dept = this.sede.departamento;
+    const prov = this.sede.provincia;
+    const provinciasData = DEPARTAMENTOS_PROVINCIAS[dept] || [];
+    const provinciaSeleccionada = provinciasData.find(p => p.nombre === prov);
+    this.distritos = provinciaSeleccionada?.distritos || [];
+    this.sede.ciudad = '';
+    this.filteredDistritos = [];
+  }
+
+  updateSede(): void {
+    this.submitted = true;
+
+    if (!this.sedeId) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'No se encontró el ID de la sede.',
+      });
+      return;
+    }
+
+    if (!this.departamentos.includes(this.sede.departamento)) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Departamento inválido',
+        detail: 'Seleccione un departamento de la lista.',
+      });
+      return;
+    }
+
+    if (!this.provincias.includes(this.sede.provincia)) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Provincia inválida',
+        detail: 'Seleccione una provincia de la lista.',
+      });
+      return;
+    }
+
+    if (!this.distritos.includes(this.sede.ciudad)) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Distrito inválido',
+        detail: 'Seleccione un distrito de la lista.',
+      });
+      return;
+    }
+  
+    const telefonoStr = String(this.sede.telefono ?? '').trim();
+    
+    if (telefonoStr.length !== 9 || !/^\d{9}$/.test(telefonoStr)) {
+    this.messageService.add({
+      severity: 'warn',
+      summary: 'Teléfono inválido',
+      detail: 'El teléfono debe tener exactamente 9 dígitos numéricos.',
+    });
+    return;
+  }
+
+  const payload = {
+    codigo: this.sede.codigo.trim().toUpperCase(),
+    nombre: this.sede.nombre.trim().toUpperCase(),
+    ciudad: this.sede.ciudad.trim(),
+    departamento: this.sede.departamento.trim(),
+    direccion: this.sede.direccion.trim().toUpperCase(),
+    telefono: telefonoStr, 
+  };
 
     this.sedeService.updateSede(this.sedeId, payload, 'Administrador').subscribe({
-      next: (updated) => {
+      next: () => {
         this.allowNavigate = true;
         this.messageService.add({
           severity: 'success',
           summary: 'Sede actualizada',
-          detail: `Se actualizó la sede ${updated.nombre} (${updated.codigo}).`,
+          detail: 'La sede se actualizó correctamente.',
         });
-        this.router.navigate(['/admin/sedes']);
+        setTimeout(() => this.router.navigate(['/admin/sedes']), 1500); // <- agrega delay
       },
-      error: (err) => {
-        console.error(err);
+      error: () => {
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
-          detail: err?.error?.message ?? 'No se pudo actualizar la sede.',
+          detail: 'No se pudo actualizar la sede.',
         });
       },
     });
@@ -165,14 +366,14 @@ export class EditarSede implements CanComponentDeactivate {
   }
 
   private navigateWithToast(): void {
-    sessionStorage.setItem(
-      'sedesToast',
-      JSON.stringify({
-        severity: 'info',
-        summary: 'Cancelado',
-        detail: 'Se canceló la edición de la sede.',
-      })
-    );
-    this.router.navigate(['/admin/sedes']);
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Cancelado',
+      detail: 'Se canceló la edición de la sede.',
+    });
+
+    setTimeout(() => {
+      this.router.navigate(['/admin/sedes']);
+    }, 1500);
   }
 }

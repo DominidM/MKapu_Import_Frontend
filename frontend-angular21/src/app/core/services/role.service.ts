@@ -100,7 +100,8 @@ export class RoleService {
     const defaultRoutes: Record<UserRole, string> = {
       [UserRole.ADMIN]: '/administracion/dashboard',
       [UserRole.VENTAS]: '/ventas/dashboard-ventas',
-      [UserRole.ALMACEN]: '/almacen/dashboard'
+      [UserRole.ALMACEN]: '/almacen/dashboard',
+      [UserRole.LOGISTICA]: '/logistica/dashboard'
     };
     
     return currentRole ? defaultRoutes[currentRole] : '/login';

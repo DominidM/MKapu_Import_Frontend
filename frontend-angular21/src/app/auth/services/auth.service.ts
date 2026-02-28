@@ -76,8 +76,9 @@ export class AuthService {
   private redirectByRole(roleId: UserRole): void {
     const routes: Record<UserRole, string> = {
       [UserRole.ADMIN]: '/admin/dashboard-admin',
-      [UserRole.VENTAS]: '/ventas/dashboard-ventas',
-      [UserRole.ALMACEN]: '/almacen/dashboard-almacen',
+      [UserRole.VENTAS]: '/ventas/caja', 
+      [UserRole.ALMACEN]: '/almacen/dashboard',
+      [UserRole.LOGISTICA]: '/logistica/dashboard'
     };
 
     const route = routes[roleId];
@@ -123,6 +124,7 @@ export class AuthService {
       [UserRole.ADMIN]: 'admin',
       [UserRole.VENTAS]: 'ventas',
       [UserRole.ALMACEN]: 'almacen',
+      [UserRole.LOGISTICA]: 'logistica'
     };
 
     return roleNames[this.currentUser.roleId as UserRole] || null; // ✅ Cast

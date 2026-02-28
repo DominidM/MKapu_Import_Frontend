@@ -1,6 +1,4 @@
-/* frontend-angular21/src/app/ventas/pages/generar-venta/generar-venta.ts */
-
-import { Component, OnInit, AfterViewInit, signal, computed, inject, effect } from '@angular/core';
+import { Component, OnInit, AfterViewInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -27,11 +25,14 @@ import { ProductoService } from '../../services/producto.service';
 
 import {
   ClienteBusquedaResponse,
-  ItemVenta,
+  CrearClienteRequest,
+  ClienteResponse,
+  ActualizarClienteRequest,
+  TipoDocumento,
+  ItemVentaRequest,
+  ProductoUI,
   RegistroVentaRequest,
   RegistroVentaResponse,
-  Producto,
-  ProductoConStock,
   METODOS_PAGO,
   OPERATION_TYPE_VENTA_INTERNA,
   CURRENCY_PEN,
@@ -63,7 +64,6 @@ import {
   providers: [MessageService, ConfirmationService],
 })
 export class GenerarVenta implements OnInit, AfterViewInit {
-  // Inyección de dependencias
   private readonly authService = inject(AuthService);
   private readonly clienteService = inject(ClienteService);
   private readonly ventaService = inject(VentaService);
@@ -72,7 +72,6 @@ export class GenerarVenta implements OnInit, AfterViewInit {
   private readonly confirmationService = inject(ConfirmationService);
   private readonly router = inject(Router);
 
-  // Constantes
   readonly iconoCabecera = 'pi pi-shopping-cart';
   readonly tituloKicker = 'VENTAS - GENERAR VENTA';
   readonly subtituloKicker = 'GENERAR NUEVA VENTA';
@@ -91,110 +90,142 @@ export class GenerarVenta implements OnInit, AfterViewInit {
 
   readonly metodoPagoOptions = [
     { label: 'Efectivo', value: 1, icon: 'pi pi-money-bill' },
-    { label: 'Débito', value: 2, icon: 'pi pi-credit-card' },
-    { label: 'Crédito', value: 3, icon: 'pi pi-credit-card' },
-    { label: 'Yape/Plin', value: 4, icon: 'pi pi-mobile' },
-    { label: 'Transferencia', value: 5, icon: 'pi pi-building' },
+    { label: 'Tarjeta Débito', value: 2, icon: 'pi pi-credit-card' },
+    { label: 'Tarjeta Crédito', value: 3, icon: 'pi pi-credit-card' },
+    { label: 'Transferencia de Fondos', value: 4, icon: 'pi pi-arrow-right-arrow-left' },
   ];
 
-  // ✅ Signals de configuración
-  idSedeActual = signal(1);
+  idSedeActual = signal<number>(0);
   nombreSedeActual = signal('');
-  idUsuarioActual = signal(0);
+  idUsuarioActual = signal<number>(0);
   nombreUsuarioActual = signal('');
 
-  // ✅ Signals de navegación
   activeStep = signal(0);
 
-  // ✅ Signals de comprobante y cliente
   tipoComprobante = signal(2);
   clienteAutoComplete = signal('');
   clienteEncontrado = signal<ClienteBusquedaResponse | null>(null);
   loading = signal(false);
   busquedaRealizada = signal(false);
 
-  // ✅ Signals de productos
+  tiposDocumento = signal<TipoDocumento[]>([]);
+  creandoCliente = signal(false);
+  editandoCliente = signal(false);
+  actualizandoCliente = signal(false);
+
+  nuevoClienteForm: {
+    documentTypeId: number | null;
+    documentValue: string;
+    name: string;
+    address: string;
+    email: string;
+    phone: string;
+  } = {
+    documentTypeId: null,
+    documentValue: '',
+    name: '',
+    address: '',
+    email: '',
+    phone: '',
+  };
+
+  editarClienteForm: {
+    name: string;
+    address: string;
+    email: string;
+    phone: string;
+  } = { name: '', address: '', email: '', phone: '' };
+
+  private readonly SIZE_PAGE = 10;
+
   productosLoading = signal(true);
-  productosCargados = signal<Producto[]>([]);
-  productosFiltrados = signal<Producto[]>([]);
-  productosSugeridos = signal<Producto[]>([]);
+  familiasLoading = signal(true);
+  productosCargados = signal<ProductoUI[]>([]);
+  productosFiltrados = signal<ProductoUI[]>([]);
+  productosSugeridos = signal<ProductoUI[]>([]);
   productoSeleccionadoBusqueda = signal<any>(null);
 
-  familiaSeleccionada = signal<string | null>(null);
-  familiasDisponibles = signal<Array<{ label: string; value: string }>>([]);
+  paginaActual = signal(1);
+  totalRegistros = signal(0);
+  cargandoMas = signal(false);
 
-  productoTemp = signal<Producto | null>(null);
+  familiaSeleccionada = signal<number | null>(null);
+  familiasDisponibles = signal<Array<{ label: string; value: number }>>([]);
+
+  productoTemp = signal<ProductoUI | null>(null);
   cantidadTemp = signal(1);
   tipoPrecioTemp = signal('unidad');
 
-  productosSeleccionados = signal<ItemVenta[]>([]);
+  productosSeleccionados = signal<ItemVentaRequest[]>([]);
 
-  // ✅ Signals de pago
   metodoPagoSeleccionado = signal(1);
   montoRecibido = signal(0);
   numeroOperacion = signal('');
 
   comprobanteGenerado = signal<RegistroVentaResponse['data'] | null>(null);
 
-  // ✅ Computed signals
-  textoBotonCliente = computed(() => {
-    return this.clienteEncontrado() ? 'Cliente Seleccionado' : 'Buscar Cliente';
-  });
+  textoBotonCliente = computed(() =>
+    this.clienteEncontrado() ? 'Cliente Seleccionado' : 'Buscar Cliente',
+  );
 
-  iconoBotonCliente = computed(() => {
-    return this.clienteEncontrado() ? 'pi pi-check' : 'pi pi-search';
-  });
+  iconoBotonCliente = computed(() => (this.clienteEncontrado() ? 'pi pi-check' : 'pi pi-search'));
 
-  botonClienteHabilitado = computed(() => {
-    const longitudEsperada = this.tipoComprobante() === 2 ? 8 : 11;
-    return (this.clienteAutoComplete()?.length || 0) === longitudEsperada;
-  });
+  longitudDocumento = computed(() => (this.tipoComprobante() === 2 ? 8 : 11));
+
+  botonClienteHabilitado = computed(
+    () => (this.clienteAutoComplete()?.length ?? 0) === this.longitudDocumento(),
+  );
 
   subtotal = computed(() => {
-    const total = this.productosSeleccionados().reduce((sum, item) => sum + item.total, 0);
-    return total / (1 + IGV_RATE);
+    const t = this.productosSeleccionados().reduce((sum, i) => sum + i.total, 0);
+    return t / (1 + IGV_RATE);
   });
 
-  igv = computed(() => {
-    return this.subtotal() * IGV_RATE;
-  });
-
-  total = computed(() => {
-    return this.productosSeleccionados().reduce((sum, item) => sum + item.total, 0);
-  });
+  igv = computed(() => this.subtotal() * IGV_RATE);
+  total = computed(() => this.productosSeleccionados().reduce((sum, i) => sum + i.total, 0));
 
   vuelto = computed(() => {
-    const vuelto = this.montoRecibido() - this.total();
-    return vuelto >= 0 ? vuelto : 0;
+    const v = this.montoRecibido() - this.total();
+    return v >= 0 ? v : 0;
   });
 
   precioSegunTipo = computed(() => {
-    const producto = this.productoTemp();
-    if (!producto) return 0;
-
+    const p = this.productoTemp();
+    if (!p) return 0;
     switch (this.tipoPrecioTemp()) {
       case 'caja':
-        return producto.precioCaja;
+        return p.precioCaja;
       case 'mayorista':
-        return producto.precioMayorista;
+        return p.precioMayorista;
       default:
-        return producto.precioUnidad;
+        return p.precioUnidad;
     }
   });
 
+  hayMasPaginas = computed(() => this.productosCargados().length < this.totalRegistros());
+
   ngOnInit(): void {
     this.cargarConfiguracionInicial();
+    this.cargarTiposDocumento();
   }
 
   ngAfterViewInit(): void {
     setTimeout(() => {
-      this.cargarProductos();
+      if (!this.idSedeActual()) {
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Sin sede',
+          detail: 'No se pudo determinar la sede del usuario',
+        });
+        return;
+      }
+      this.cargarProductos(true);
+      this.cargarFamilias();
     }, 0);
   }
 
   private cargarConfiguracionInicial(): void {
     const user = this.authService.getCurrentUser();
-
     if (!user) {
       this.messageService.add({
         severity: 'error',
@@ -204,73 +235,240 @@ export class GenerarVenta implements OnInit, AfterViewInit {
       this.router.navigate(['/login']);
       return;
     }
-
-    this.idSedeActual.set(user.idSede);
-    this.nombreSedeActual.set(user.sedeNombre);
-    this.idUsuarioActual.set(user.userId);
+    this.idSedeActual.set(user.idSede || 1);
+    this.nombreSedeActual.set(user.sedeNombre || '');
+    this.idUsuarioActual.set(user.userId || 0);
     this.nombreUsuarioActual.set(`${user.nombres} ${user.apellidos}`.trim());
+  }
 
-    console.log('Configuración cargada:', {
-      sede: this.nombreSedeActual(),
-      id_sede: this.idSedeActual(),
-      usuario: this.nombreUsuarioActual(),
-      id_usuario: this.idUsuarioActual(),
+  private cargarTiposDocumento(): void {
+    this.clienteService.obtenerTiposDocumento().subscribe({
+      next: (tipos) => this.tiposDocumento.set(tipos),
+      error: () => console.warn('No se pudieron cargar los tipos de documento'),
     });
   }
 
-  private cargarProductos(): void {
-    this.productosLoading.set(true);
+  private resetNuevoClienteForm(): void {
+    this.nuevoClienteForm = {
+      documentTypeId: null,
+      documentValue: '',
+      name: '',
+      address: '',
+      email: '',
+      phone: '',
+    };
+  }
 
-    this.productoService.obtenerProductosConStock(this.idSedeActual(), undefined, 1, 500).subscribe({
-      next: async (response) => {
-        const productosConDetalles = await Promise.all(
-          response.data.map(async (prod: ProductoConStock) => {
-            try {
-              const detalle = await this.productoService
-                .obtenerDetalleProducto(prod.id_producto, this.idSedeActual())
-                .toPromise();
+  private sincronizarDocumentoEnForm(): void {
+    const doc = this.clienteAutoComplete().trim();
+    if (!doc) return;
+    this.nuevoClienteForm.documentValue = doc;
+    const tipos = this.tiposDocumento();
+    if (doc.length === 8) {
+      const dni = tipos.find((t) => t.description?.toUpperCase().includes('DNI'));
+      if (dni) this.nuevoClienteForm.documentTypeId = dni.documentTypeId;
+    } else if (doc.length === 11) {
+      const ruc = tipos.find((t) => t.description?.toUpperCase().includes('RUC'));
+      if (ruc) this.nuevoClienteForm.documentTypeId = ruc.documentTypeId;
+    }
+  }
 
-              return this.productoService.mapearProductoConStock(prod, detalle!);
-            } catch (error) {
-              console.error(`Error al cargar detalle del producto ${prod.codigo}:`, error);
-              return null;
-            }
-          }),
-        );
+  crearNuevoCliente(): void {
+    const { documentTypeId, documentValue, name } = this.nuevoClienteForm;
+    if (!documentTypeId || !documentValue.trim() || !name.trim()) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Campos requeridos',
+        detail: 'Tipo de documento, número y nombre son obligatorios',
+      });
+      return;
+    }
 
-        const productos = productosConDetalles.filter((p): p is Producto => p !== null);
-        
-        this.productosCargados.set(productos);
-        this.productosFiltrados.set([...productos]);
-        this.cargarFamilias();
-        this.productosLoading.set(false);
+    this.creandoCliente.set(true);
 
-        console.log(`${productos.length} productos cargados de ${this.nombreSedeActual()}`);
+    const request: CrearClienteRequest = {
+      documentTypeId,
+      documentValue: documentValue.trim(),
+      name: name.trim(),
+      address: this.nuevoClienteForm.address.trim() || undefined,
+      email: this.nuevoClienteForm.email.trim() || undefined,
+      phone: this.nuevoClienteForm.phone.trim() || undefined,
+    };
+
+    this.clienteService.crearCliente(request).subscribe({
+      next: (response: ClienteResponse) => {
+        this.creandoCliente.set(false);
+
+        const clienteCreado: ClienteBusquedaResponse = {
+          customerId: response.customerId,
+          name: response.name,
+          documentValue: response.documentValue,
+          documentTypeDescription: response.documentTypeDescription,
+          documentTypeSunatCode: response.documentTypeSunatCode,
+          invoiceType: response.invoiceType as 'BOLETA' | 'FACTURA',
+          status: response.status,
+          address: response.address,
+          email: response.email,
+          phone: response.phone,
+          displayName: response.displayName,
+        };
+
+        this.clienteAutoComplete.set(response.documentValue);
+        this.clienteEncontrado.set(clienteCreado);
+        this.busquedaRealizada.set(true);
+        this.editandoCliente.set(false);
+        this.resetNuevoClienteForm();
+
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Cliente Creado',
+          detail: `${clienteCreado.name} fue registrado y seleccionado`,
+        });
       },
       error: (error: any) => {
-        console.error('Error al cargar productos:', error);
-        this.productosLoading.set(false);
-        
+        this.creandoCliente.set(false);
         this.messageService.add({
           severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudieron cargar los productos',
+          summary: 'Error al crear cliente',
+          detail: error?.error?.message ?? 'Ocurrió un error al registrar el cliente',
         });
       },
     });
   }
 
+  iniciarEdicionCliente(): void {
+    const c = this.clienteEncontrado();
+    if (!c) return;
+    this.editarClienteForm = {
+      name: c.name ?? '',
+      address: c.address ?? '',
+      email: c.email ?? '',
+      phone: c.phone ?? '',
+    };
+    this.editandoCliente.set(true);
+  }
+
+  cancelarEdicionCliente(): void {
+    this.editandoCliente.set(false);
+  }
+
+  guardarCambiosCliente(): void {
+    const cliente = this.clienteEncontrado();
+    if (!cliente) return;
+
+    const payload: ActualizarClienteRequest = {
+      name: this.editarClienteForm.name.trim() || undefined,
+      address: this.editarClienteForm.address.trim() || undefined,
+      email: this.editarClienteForm.email.trim() || undefined,
+      phone: this.editarClienteForm.phone.trim() || undefined,
+    };
+
+    this.actualizandoCliente.set(true);
+
+    this.clienteService.actualizarCliente(cliente.customerId, payload).subscribe({
+      next: (response: ClienteResponse) => {
+        this.actualizandoCliente.set(false);
+        this.editandoCliente.set(false);
+
+        const actualizado: ClienteBusquedaResponse = {
+          customerId: response.customerId,
+          name: response.name,
+          documentValue: response.documentValue,
+          documentTypeDescription: response.documentTypeDescription,
+          documentTypeSunatCode: response.documentTypeSunatCode,
+          invoiceType: response.invoiceType as 'BOLETA' | 'FACTURA',
+          status: response.status,
+          address: response.address,
+          email: response.email,
+          phone: response.phone,
+          displayName: response.displayName,
+        };
+
+        this.clienteEncontrado.set(actualizado);
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Cliente Actualizado',
+          detail: 'Los datos del cliente se actualizaron correctamente',
+        });
+      },
+      error: (error: any) => {
+        this.actualizandoCliente.set(false);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error al actualizar cliente',
+          detail: error?.error?.message ?? 'Ocurrió un error al actualizar el cliente',
+        });
+      },
+    });
+  }
+
+  private cargarProductos(resetear = true): void {
+    if (!this.idSedeActual()) return;
+
+    if (resetear) {
+      this.paginaActual.set(1);
+      this.productosCargados.set([]);
+      this.productosFiltrados.set([]);
+      this.productosLoading.set(true);
+    } else {
+      this.cargandoMas.set(true);
+    }
+
+    this.productoService
+      .obtenerProductosConStock(
+        this.idSedeActual(),
+        this.familiaSeleccionada() ?? undefined,
+        this.paginaActual(),
+        this.SIZE_PAGE,
+      )
+      .subscribe({
+        next: (response) => {
+          this.totalRegistros.set(response.pagination.total_records);
+          const nuevos: ProductoUI[] = response.data.map((prod: any) =>
+            this.productoService.mapearProductoConStock(prod),
+          );
+          if (resetear) {
+            this.productosCargados.set(nuevos);
+          } else {
+            this.productosCargados.update((prev) => [...prev, ...nuevos]);
+          }
+          this.productosFiltrados.set([...this.productosCargados()]);
+          this.productosLoading.set(false);
+          this.cargandoMas.set(false);
+        },
+        error: () => {
+          this.productosLoading.set(false);
+          this.cargandoMas.set(false);
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'No se pudieron cargar los productos',
+          });
+        },
+      });
+  }
+
+  cargarMasProductos(): void {
+    if (!this.hayMasPaginas() || this.cargandoMas()) return;
+    this.paginaActual.update((p) => p + 1);
+    this.cargarProductos(false);
+  }
+
   private cargarFamilias(): void {
-    const familiasUnicas = [...new Set(this.productosCargados().map((p) => p.familia))];
-    const familias = familiasUnicas
-      .filter((familia) => familia)
-      .sort()
-      .map((familia) => ({
-        label: familia,
-        value: familia,
-      }));
-    
-    this.familiasDisponibles.set(familias);
+    if (!this.idSedeActual()) return;
+    this.familiasLoading.set(true);
+    this.productoService.obtenerCategoriasConStock(this.idSedeActual()).subscribe({
+      next: (categorias) => {
+        this.familiasDisponibles.set(
+          categorias.map((c) => ({ label: c.nombre, value: c.id_categoria })),
+        );
+        this.familiasLoading.set(false);
+      },
+      error: () => {
+        this.familiasLoading.set(false);
+        console.warn('No se pudieron cargar las familias');
+      },
+    });
   }
 
   onTipoComprobanteChange(nuevoTipo: number): void {
@@ -280,21 +478,18 @@ export class GenerarVenta implements OnInit, AfterViewInit {
 
   validarSoloNumeros(event: any): void {
     const input = event.target;
-    input.value = input.value.replace(/[^0-9]/g, '');
+    const maxLen = this.longitudDocumento();
+    input.value = input.value.replace(/[^0-9]/g, '').slice(0, maxLen);
     this.clienteAutoComplete.set(input.value);
   }
 
   onInputCambioDocumento(): void {
-    if (this.clienteEncontrado()) {
-      this.limpiarCliente();
-    }
+    if (this.clienteEncontrado()) this.limpiarCliente();
     this.busquedaRealizada.set(false);
   }
 
   manejarAccionCliente(): void {
-    if (!this.botonClienteHabilitado() || this.clienteEncontrado()) {
-      return;
-    }
+    if (!this.botonClienteHabilitado() || this.clienteEncontrado()) return;
     this.buscarCliente();
   }
 
@@ -302,82 +497,71 @@ export class GenerarVenta implements OnInit, AfterViewInit {
     this.loading.set(true);
     this.busquedaRealizada.set(false);
 
-    this.clienteService.buscarCliente(this.clienteAutoComplete(), this.tipoComprobante()).subscribe({
-      next: (response: ClienteBusquedaResponse) => {
-        this.clienteEncontrado.set(response);
-        this.busquedaRealizada.set(true);
-        this.loading.set(false);
-
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Cliente Encontrado',
-          detail: `Cliente: ${response.name}`,
-        });
-      },
-      error: (error: any) => {
-        console.error('Error al buscar cliente:', error);
-        this.clienteEncontrado.set(null);
-        this.busquedaRealizada.set(true);
-        this.loading.set(false);
-
-        this.messageService.add({
-          severity: 'warn',
-          summary: 'Cliente No Encontrado',
-          detail: 'El documento ingresado no está registrado',
-        });
-      },
-    });
+    this.clienteService
+      .buscarCliente(this.clienteAutoComplete(), this.tipoComprobante())
+      .subscribe({
+        next: (response: ClienteBusquedaResponse) => {
+          this.clienteEncontrado.set(response);
+          this.busquedaRealizada.set(true);
+          this.loading.set(false);
+          this.editandoCliente.set(false);
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Cliente Encontrado',
+            detail: `Cliente: ${response.name}`,
+          });
+        },
+        error: () => {
+          this.clienteEncontrado.set(null);
+          this.busquedaRealizada.set(true);
+          this.loading.set(false);
+          this.editandoCliente.set(false);
+          this.sincronizarDocumentoEnForm();
+        },
+      });
   }
 
   limpiarCliente(): void {
     this.clienteEncontrado.set(null);
     this.clienteAutoComplete.set('');
     this.busquedaRealizada.set(false);
+    this.editandoCliente.set(false);
+    this.resetNuevoClienteForm();
+  }
+
+  obtenerSiglasDocumento(documentTypeDescription: string): string {
+    if (!documentTypeDescription) return '';
+    if (documentTypeDescription.includes('DNI')) return 'DNI';
+    if (documentTypeDescription.includes('RUC')) return 'RUC';
+    const match = documentTypeDescription.match(/\(([^)]+)\)/);
+    return match ? match[1] : documentTypeDescription;
+  }
+
+  formatearDocumentoCompleto(): string {
+    const cliente = this.clienteEncontrado();
+    if (!cliente?.documentTypeDescription) return '';
+    const siglas = this.obtenerSiglasDocumento(cliente.documentTypeDescription);
+    return `${siglas}: ${cliente.documentValue}`;
   }
 
   buscarProductos(event: AutoCompleteCompleteEvent): void {
-    const query = event.query.toLowerCase().trim();
-
-    if (query.length < 2) {
+    const query = event.query.trim();
+    if (query.length < 3) {
       this.productosSugeridos.set([]);
       return;
     }
 
-    this.productoService.buscarProductos(query, this.idSedeActual()).subscribe({
-      next: async (response) => {
-        const productosConDetalles = await Promise.all(
-          response.data.map(async (prod: any) => {
-            try {
-              const detalle = await this.productoService
-                .obtenerDetalleProducto(prod.id_producto, this.idSedeActual())
-                .toPromise();
-
-              return {
-                id: prod.id_producto,
-                codigo: prod.codigo,
-                nombre: prod.nombre,
-                familia: detalle!.producto.categoria.nombre,
-                stock: prod.stock,
-                precioUnidad: detalle!.producto.precio_unitario,
-                precioCaja: detalle!.producto.precio_caja,
-                precioMayorista: detalle!.producto.precio_mayor,
-                sede: this.nombreSedeActual(),
-              };
-            } catch (error) {
-              console.error(`Error al cargar detalle del producto ${prod.codigo}:`, error);
-              return null;
-            }
-          }),
-        );
-
-        const productos = productosConDetalles.filter((p): p is Producto => p !== null);
-        this.productosSugeridos.set(productos);
-      },
-      error: (error: any) => {
-        console.error('Error al buscar productos:', error);
-        this.productosSugeridos.set([]);
-      },
-    });
+    this.productoService
+      .buscarProductosVentas(query, this.idSedeActual(), this.familiaSeleccionada() ?? undefined)
+      .subscribe({
+        next: (response) => {
+          const sugeridos: ProductoUI[] = response.data.map((prod: any) =>
+            this.productoService.mapearAutocompleteVentas(prod, this.nombreSedeActual()),
+          );
+          this.productosSugeridos.set(sugeridos);
+        },
+        error: () => this.productosSugeridos.set([]),
+      });
   }
 
   onProductoSeleccionado(event: any): void {
@@ -391,18 +575,12 @@ export class GenerarVenta implements OnInit, AfterViewInit {
     this.productoSeleccionadoBusqueda.set(null);
   }
 
-  onFamiliaChange(nuevaFamilia: string | null): void {
+  onFamiliaChange(nuevaFamilia: number | null): void {
     this.familiaSeleccionada.set(nuevaFamilia);
-    
-    if (nuevaFamilia) {
-      const filtrados = this.productosCargados().filter((p) => p.familia === nuevaFamilia);
-      this.productosFiltrados.set(filtrados);
-    } else {
-      this.productosFiltrados.set([...this.productosCargados()]);
-    }
+    this.cargarProductos(true);
   }
 
-  seleccionarProducto(producto: Producto): void {
+  seleccionarProducto(producto: ProductoUI): void {
     this.productoTemp.set(producto);
     this.cantidadTemp.set(1);
     this.tipoPrecioTemp.set('unidad');
@@ -411,10 +589,7 @@ export class GenerarVenta implements OnInit, AfterViewInit {
   agregarProducto(): void {
     const producto = this.productoTemp();
     const cantidad = this.cantidadTemp();
-    
-    if (!producto || cantidad <= 0) {
-      return;
-    }
+    if (!producto || cantidad <= 0) return;
 
     if (cantidad > producto.stock) {
       this.messageService.add({
@@ -426,23 +601,21 @@ export class GenerarVenta implements OnInit, AfterViewInit {
     }
 
     const precioUnitario = this.precioSegunTipo();
-    const total = precioUnitario * cantidad;
-
-    const item: ItemVenta = {
+    const item: ItemVentaRequest = {
       productId: producto.codigo,
       quantity: cantidad,
       unitPrice: precioUnitario,
       description: producto.nombre,
-      total: total,
+      total: precioUnitario * cantidad,
     };
 
     const productos = [...this.productosSeleccionados()];
-    const indiceExistente = productos.findIndex(
+    const idx = productos.findIndex(
       (p) => p.productId === item.productId && p.unitPrice === item.unitPrice,
     );
 
-    if (indiceExistente >= 0) {
-      const nuevoItem = { ...productos[indiceExistente] };
+    if (idx >= 0) {
+      const nuevoItem = { ...productos[idx] };
       nuevoItem.quantity += cantidad;
       nuevoItem.total = nuevoItem.quantity * nuevoItem.unitPrice;
 
@@ -454,20 +627,17 @@ export class GenerarVenta implements OnInit, AfterViewInit {
         });
         return;
       }
-
-      productos[indiceExistente] = nuevoItem;
+      productos[idx] = nuevoItem;
     } else {
       productos.push(item);
     }
 
     this.productosSeleccionados.set(productos);
-
     this.messageService.add({
       severity: 'success',
       summary: 'Producto Agregado',
       detail: `${cantidad} x ${producto.nombre}`,
     });
-
     this.productoTemp.set(null);
     this.cantidadTemp.set(1);
   }
@@ -483,7 +653,6 @@ export class GenerarVenta implements OnInit, AfterViewInit {
         const productos = [...this.productosSeleccionados()];
         productos.splice(index, 1);
         this.productosSeleccionados.set(productos);
-        
         this.messageService.add({
           severity: 'info',
           summary: 'Producto Eliminado',
@@ -500,50 +669,23 @@ export class GenerarVenta implements OnInit, AfterViewInit {
     return 'success';
   }
 
-  // Métodos helper para mantener compatibilidad
-  calcularSubtotal(): number {
-    return this.subtotal();
-  }
-
-  calcularIGV(): number {
-    return this.igv();
-  }
-
-  calcularTotal(): number {
-    return this.total();
-  }
-
-  calcularVuelto(): number {
-    return this.vuelto();
-  }
-
   getLabelMetodoPago(id: number): string {
-    const metodo = METODOS_PAGO.find((m) => m.id === id);
-    return metodo ? metodo.description : 'N/A';
+    return METODOS_PAGO.find((m) => m.id === id)?.description ?? 'N/A';
   }
 
   nextStep(): void {
-    if (!this.validarPasoActual()) {
-      return;
-    }
-
-    const currentStep = this.activeStep();
-    if (currentStep < this.steps.length - 1) {
-      this.activeStep.set(currentStep + 1);
-    }
+    if (!this.validarPasoActual()) return;
+    const current = this.activeStep();
+    if (current < this.steps.length - 1) this.activeStep.set(current + 1);
   }
 
   prevStep(): void {
-    const currentStep = this.activeStep();
-    if (currentStep > 0) {
-      this.activeStep.set(currentStep - 1);
-    }
+    const current = this.activeStep();
+    if (current > 0) this.activeStep.set(current - 1);
   }
 
   private validarPasoActual(): boolean {
-    const step = this.activeStep();
-    
-    switch (step) {
+    switch (this.activeStep()) {
       case 0:
         if (!this.clienteEncontrado()) {
           this.messageService.add({
@@ -554,7 +696,6 @@ export class GenerarVenta implements OnInit, AfterViewInit {
           return false;
         }
         return true;
-
       case 1:
         if (this.productosSeleccionados().length === 0) {
           this.messageService.add({
@@ -565,7 +706,6 @@ export class GenerarVenta implements OnInit, AfterViewInit {
           return false;
         }
         return true;
-
       case 2:
         if (this.metodoPagoSeleccionado() === 1 && this.montoRecibido() < this.total()) {
           this.messageService.add({
@@ -575,7 +715,6 @@ export class GenerarVenta implements OnInit, AfterViewInit {
           });
           return false;
         }
-
         if (this.metodoPagoSeleccionado() !== 1 && !this.numeroOperacion().trim()) {
           this.messageService.add({
             severity: 'warn',
@@ -585,7 +724,6 @@ export class GenerarVenta implements OnInit, AfterViewInit {
           return false;
         }
         return true;
-
       default:
         return true;
     }
@@ -607,9 +745,7 @@ export class GenerarVenta implements OnInit, AfterViewInit {
       icon: 'pi pi-question-circle',
       acceptLabel: 'Sí, generar',
       rejectLabel: 'Cancelar',
-      accept: () => {
-        this.procesarVenta();
-      },
+      accept: () => this.procesarVenta(),
     });
   }
 
@@ -619,6 +755,7 @@ export class GenerarVenta implements OnInit, AfterViewInit {
     const subtotal = Number(this.subtotal().toFixed(2));
     const igv = Number(this.igv().toFixed(2));
     const total = Number(this.total().toFixed(2));
+    const serie = this.tipoComprobante() === 1 ? 'F001' : 'B001';
 
     const fechaVencimiento = new Date();
     if (this.metodoPagoSeleccionado() !== 1) {
@@ -628,13 +765,14 @@ export class GenerarVenta implements OnInit, AfterViewInit {
     const request: RegistroVentaRequest = {
       customerId: this.clienteEncontrado()!.customerId,
       saleTypeId: 1,
+      serie,
       receiptTypeId: this.tipoComprobante(),
       dueDate: fechaVencimiento.toISOString(),
       operationType: OPERATION_TYPE_VENTA_INTERNA,
-      subtotal: subtotal,
-      igv: igv,
+      subtotal,
+      igv,
       isc: 0,
-      total: total,
+      total,
       currencyCode: CURRENCY_PEN,
       responsibleId: this.idUsuarioActual().toString(),
       branchId: this.idSedeActual(),
@@ -642,7 +780,6 @@ export class GenerarVenta implements OnInit, AfterViewInit {
       operationNumber: this.metodoPagoSeleccionado() === 1 ? null : this.numeroOperacion(),
       items: this.productosSeleccionados().map((item) => {
         const producto = this.productosCargados().find((p) => p.codigo === item.productId);
-
         return {
           productId: producto ? producto.id.toString() : item.productId,
           quantity: item.quantity,
@@ -653,37 +790,25 @@ export class GenerarVenta implements OnInit, AfterViewInit {
       }),
     };
 
-    console.log('Request de venta:', request);
-    console.log('Items detalle:', JSON.stringify(request.items, null, 2));
-
     this.ventaService.registrarVenta(request).subscribe({
       next: (response: any) => {
         this.loading.set(false);
-
-        console.log('Respuesta del backend:', response);
-
-        const comprobante = {
+        this.comprobanteGenerado.set({
           receiptId: response.receiptId || response.id_comprobante || 'N/A',
           receiptNumber: response.receiptNumber || response.numero || 'N/A',
-          serie: response.serie || 'N/A',
+          serie: response.serie || serie,
           total: response.total || total,
           createdAt: response.createdAt || response.fec_emision || new Date().toISOString(),
-        };
-
-        this.comprobanteGenerado.set(comprobante);
-
+        });
         this.messageService.add({
           severity: 'success',
           summary: '¡Venta Exitosa!',
-          detail: `Comprobante ${comprobante.serie}-${comprobante.receiptNumber} generado`,
+          detail: `Comprobante ${serie}-${response.receiptNumber ?? response.numero} generado`,
           life: 5000,
         });
       },
       error: (error: any) => {
         this.loading.set(false);
-        console.error('Error al generar venta:', error);
-        console.error('Error detalle:', error.error);
-
         this.messageService.add({
           severity: 'error',
           summary: 'Error al Generar Venta',
@@ -700,14 +825,12 @@ export class GenerarVenta implements OnInit, AfterViewInit {
       icon: 'pi pi-refresh',
       acceptLabel: 'Sí',
       rejectLabel: 'No',
-      accept: () => {
-        this.resetearFormulario();
-      },
+      accept: () => this.resetearFormulario(),
     });
   }
 
   verListado(): void {
-    this.router.navigate(['/ventas/listado']);
+    this.router.navigate(['/ventas/historial-ventas']);
   }
 
   private resetearFormulario(): void {
@@ -715,13 +838,14 @@ export class GenerarVenta implements OnInit, AfterViewInit {
     this.clienteAutoComplete.set('');
     this.clienteEncontrado.set(null);
     this.busquedaRealizada.set(false);
+    this.editandoCliente.set(false);
+    this.resetNuevoClienteForm();
 
     this.productoTemp.set(null);
     this.cantidadTemp.set(1);
     this.tipoPrecioTemp.set('unidad');
     this.productosSeleccionados.set([]);
     this.familiaSeleccionada.set(null);
-    this.productosFiltrados.set([...this.productosCargados()]);
 
     this.metodoPagoSeleccionado.set(1);
     this.montoRecibido.set(0);
@@ -730,6 +854,7 @@ export class GenerarVenta implements OnInit, AfterViewInit {
     this.comprobanteGenerado.set(null);
     this.activeStep.set(0);
 
-    this.cargarProductos();
+    this.cargarProductos(true);
+    this.cargarFamilias();
   }
 }

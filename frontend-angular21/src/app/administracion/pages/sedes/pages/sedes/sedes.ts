@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-
+import { DialogModule } from 'primeng/dialog';
 import { AutoCompleteModule } from 'primeng/autocomplete';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
@@ -27,7 +27,7 @@ type ViewMode = 'todas' | 'activas' | 'inactivas';
     CommonModule,
     FormsModule,
     RouterModule,
-
+    DialogModule,
     CardModule,
     ButtonModule,
     AutoCompleteModule,
@@ -49,11 +49,17 @@ export class Sedes implements OnInit {
 
   readonly loading = this.sedeService.loading;
   readonly error = this.sedeService.error;
+  dialogVisible = false;
+  readonly sedeSeleccionada = signal<any | null>(null);
 
+  verDetalle(sede: any): void {
+    this.sedeSeleccionada.set(sede);
+    this.dialogVisible = true;
+  }
   readonly searchTerm = signal<string>('');
   readonly sedes = computed(() => this.sedeService.sedes());
 
-  readonly viewMode = signal<ViewMode>('todas');
+  readonly viewMode = signal<ViewMode>('activas');
 
   readonly viewOptions: { label: string; value: ViewMode }[] = [
     { label: 'Todos', value: 'todas' },
