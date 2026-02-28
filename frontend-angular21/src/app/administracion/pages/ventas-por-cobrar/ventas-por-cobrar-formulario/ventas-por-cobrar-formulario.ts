@@ -61,10 +61,10 @@ interface DetalleItem {
     TooltipModule,
     DatePickerModule,
   ],
-  templateUrl: './cotizacion-formulario.html',
-  styleUrl: './cotizacion-formulario.css',
+  templateUrl: './ventas-por-cobrar-formulario.html',
+  styleUrl: './ventas-por-cobrar-formulario.css',
 })
-export class CotizacionFormulario implements OnInit {
+export class VentasPorCobrarFormulario implements OnInit {
   private fb              = inject(FormBuilder);
   private router          = inject(Router);
   private route           = inject(ActivatedRoute);
