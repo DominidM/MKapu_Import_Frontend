@@ -456,6 +456,32 @@ export const ADMIN_ROUTES: Routes = [
 
 
 
+
+
+
+ {
+    path: 'ventas-por-cobrar',
+    loadComponent: () =>
+      import('./pages/ventas-por-cobrar/ventas-por-cobrar-listado/ventas-por-cobrar-listado').then(
+        (m) => m.VentasPorCobrarListadoComponent,
+      ),
+  },
+  {
+    path: 'agregar-ventas-por-cobrar',
+    loadComponent: () =>
+      import('./pages/ventas-por-cobrar/ventas-por-cobrar-formulario/ventas-por-cobrar-formulario').then(
+        (m) => m.VentasPorCobrarFormulario,
+      ),
+  },
+  {
+    path: 'editar-ventas-por-cobrar/:id',
+    loadComponent: () =>
+      import('./pages/ventas-por-cobrar/ventas-por-cobrar-formulario/ventas-por-cobrar-formulario').then(
+        (m) => m.VentasPorCobrarFormulario,
+      ),
+  },
+
+
   /* =======================
     DESPACHO PRODUCTOS
   ======================= */

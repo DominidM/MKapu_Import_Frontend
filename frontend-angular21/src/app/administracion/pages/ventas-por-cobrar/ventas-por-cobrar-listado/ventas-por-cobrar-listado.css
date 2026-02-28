@@ -1,0 +1,252 @@
+:host ::ng-deep {
+  /* ---- CARD Y PALETA ---- */
+  .surface-card {
+    background: #18181b !important;
+    border-radius: 14px;
+    border: 1px solid #232324 !important;
+    color: #e6e6e6;
+  }
+  .border-round-xl {
+    border-radius: 18px !important;
+  }
+
+  /* ---- FILTROS ---- */
+  .ventas-buscador .p-autocomplete-input,
+  .p-inputtext,
+  .cotizaciones-buscador .p-inputtext,
+  .surface-card input.p-inputtext {
+    background: #18181b !important;
+    color: #f1f5f9 !important;
+    border: 1px solid #232324 !important;
+    border-radius: 6px !important;
+    font-weight: 500;
+  }
+  .ventas-buscador .p-inputtext::placeholder,
+  .cotizaciones-buscador .p-inputtext::placeholder,
+  .surface-card input.p-inputtext::placeholder {
+    color: #bfa82a !important;
+    opacity: 0.6 !important;
+  }
+  .p-select .p-inputtext {
+    background: #18181b !important;
+    color: #e6e6e6 !important;
+    border: 1px solid #232324 !important;
+  }
+
+  /* ---- TABLE HEAD ---- */
+  .p-datatable-header,
+  .p-datatable-thead > tr > th {
+    background: #18181b !important;
+    color: #f5c34d !important;
+    font-weight: 600 !important;
+    font-size: 0.92rem !important;
+    border-bottom: 1.5px solid #232324 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    padding-top: 13px !important;
+    padding-bottom: 13px !important;
+  }
+
+  /* ---- TABLE BODY ---- */
+  .p-datatable-tbody > tr > td {
+    border-bottom: 0.5px solid #232324 !important;
+    color: #f1f5f9 !important;
+    font-size: 1rem;
+    background: #18181b !important;
+    padding-top: 11px !important;
+    padding-bottom: 11px !important;
+  }
+
+  .p-datatable-tbody > tr {
+    transition: background 0.2s;
+  }
+
+  .ventas-table-hover .p-datatable-tbody > tr:hover,
+  .cotizaciones-table-hover .p-datatable-tbody > tr:hover {
+    background: #232324 !important;
+    cursor: pointer;
+  }
+
+  /* ---- ICONOS TABLA ---- */
+  .p-button .p-button-icon {
+    font-size: 1.08rem !important;
+    vertical-align: middle;
+  }
+
+  /* ---- ACCIONES TABLA ---- */
+  .ventas-btn-crear,
+  .cotizaciones-btn-accion-amarillo {
+    background: #f6af33 !important;
+    color: #212121 !important;
+    font-weight: 700;
+    border-radius: 8px !important;
+    border: none !important;
+    min-width: 125px !important;
+    height: 36px !important;
+    font-size: 0.98rem !important;
+    box-shadow: none !important;
+    margin-right: 6px;
+  }
+  .ventas-btn-crear .p-button-icon,
+  .cotizaciones-btn-accion-amarillo .p-button-icon {
+    color: #bfa82a !important;
+  }
+
+  .ventas-btn-cancelar,
+  .cotizaciones-btn-accion-grey {
+    background: #232324 !important;
+    color: #e6e6e6 !important;
+    font-weight: 700;
+    border-radius: 8px !important;
+    border: none !important;
+    min-width: 110px !important;
+    height: 36px !important;
+    font-size: 0.98rem !important;
+  }
+
+  /* ---- TAGS ESTADO ---- */
+  .ventas-tag-por-cobrar,
+  .cotizaciones-tag-pendiente,
+  .cotizaciones-tag-amarillo {
+    background: #f6af33 !important;
+    color: #18181b !important;
+    border-radius: 8px !important;
+    font-weight: 700 !important;
+    padding: 4px 16px !important;
+    font-size: 0.93rem !important;
+    border: none !important;
+    text-transform: uppercase;
+    /* para resultado uniforme */
+  }
+  /* Otros estados si se agregan en el futuro:
+  .cotizaciones-tag-aprobada { background: #4ade80 !important; color:#212121 !important; }
+  .cotizaciones-tag-rechazada { background: #ef4444 !important; color:#fff !important; }
+  */
+
+  /* ---- PAGINADOR ---- */
+  .p-paginator {
+    background: transparent !important;
+    border-radius: 0px !important;
+    color: #bfa82a !important;
+    font-weight: 600;
+  }
+  .p-paginator-page, .p-paginator-current {
+    background: #232324 !important;
+    color: #bfa82a !important;
+    border-radius: 18px !important;
+    border: none !important;
+    margin: 0 6px !important;
+  }
+  .p-dropdown-panel {
+    background: #18181b !important;
+    color: #bfa82a !important;
+    border-radius: 8px !important;
+  }
+  .p-dropdown-item {
+    background: #18181b !important;
+    color: #f1f5f9 !important;
+  }
+
+  /* ---- HEADER CARD ---- */
+  .ventas-cabecera,
+  .cotizaciones-header-card {
+    background: #18181b !important;
+    border: none !important;
+    color: #f5c34d !important;
+    border-radius: 14px !important;
+    box-shadow: none !important;
+  }
+  .ventas-titulo-icon,
+  .cotizaciones-title-icon {
+    background: #f5c34d !important;
+    color: #18181b !important;
+    border-radius: 9999px;
+    width: 42px;
+    height: 42px;
+    display: grid;
+    place-items: center;
+    font-size: 21px;
+  }
+  .ventas-kicker,
+  .cotizaciones-kicker {
+    font-size: 0.78rem;
+    color: #f5c34d !important;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-shadow: none !important;
+  }
+  .ventas-title,
+  .cotizaciones-title {
+    font-size: 1.16rem;
+    font-weight: bold;
+    color: #fff !important;
+  }
+  .ventas-pill,
+  .cotizaciones-pill {
+    background: #f5c34d !important;
+    color: #18181b !important;
+    font-weight: 700;
+    border-radius: 9999px !important;
+    border: none !important;
+    min-width: 170px !important;
+    height: 48px !important;
+    font-size: 1.04rem !important;
+    box-shadow: none !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .ventas-cabecera, .cotizaciones-header-card {
+    border-radius: 9px !important;
+  }
+  .surface-card {
+    border-radius: 8px !important;
+  }
+}
+
+/* ---- CONTADORES ---- */
+.contadores-cotizaciones, .contadores-ventas {
+  background: #18181b !important;
+  border-radius: 14px !important;
+  box-shadow: none !important;
+}
+.contador-card {
+  background: #18181b !important;
+  border-right: 1.5px solid #232324 !important;
+  color: #e6e6e6 !important;
+}
+.contador-label { color: #bfa82a !important; }
+.contador-valor { color: #fff !important; }
+.contador-detalle { color: #f5c34d !important; }
+
+.contador-card i { color: #f5c34d !important; }
+
+/* ---- BUSCADOR AUTOCOMPLETE ---- */
+.ventas-buscador-item, .cotizaciones-buscador-item {
+  background: transparent;
+  color: #fff !important;
+  font-weight: 600;
+  border-radius: 7px;
+  padding: 10px;
+}
+.ventas-buscador-item .font-bold, .cotizaciones-buscador-item .font-bold {
+  color: #f5c34d !important;
+  font-size: 1rem !important;
+}
+
+.ventas-buscador .p-autocomplete-panel, .cotizaciones-buscador .p-autocomplete-panel {
+  background: #232324 !important;
+  color: #f1f5f9 !important;
+  border-radius: 12px !important;
+}
+
+/* ---- MODAL/TIPS/DIALOGS ---- */
+.p-dialog {
+  background: #18181b !important;
+  color: #e6e6e6 !important;
+  border-radius: 14px !important;
+}
+
+.p-confirm-dialog-message {
+  color: #f5c34d !important;
+}
