@@ -160,10 +160,7 @@ export class Sidebar implements OnInit {
     return item.isSection === true;
   }
 
-  /**
-   * Navega a una ruta, bloqueando ventas si la caja está cerrada.
-   */
-  navigateTo(path: string): void {
+  navigateTo(event: Event, path: string): void {
     const currentRole = this.roleService.getCurrentUserRole();
     const esRutaVentas = path.startsWith('/ventas');
     const esCaja = path === '/ventas/caja';
@@ -171,6 +168,10 @@ export class Sidebar implements OnInit {
     if (currentRole === UserRole.VENTAS && esRutaVentas && !esCaja) {
       const caja = this.cashboxSocket.caja();
       if (!caja || caja.estado !== 'ABIERTA') {
+        
+        event.preventDefault(); 
+        event.stopPropagation();
+        
         this.messageService.add({
           severity: 'warn',
           summary: 'Caja Cerrada',
@@ -180,7 +181,6 @@ export class Sidebar implements OnInit {
         return;
       }
     }
-    this.router.navigateByUrl(path);
   }
   toggleMenu(menu: string): void {
     this.activeMenu = this.activeMenu === menu ? null : menu;
