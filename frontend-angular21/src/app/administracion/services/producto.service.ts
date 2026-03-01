@@ -111,7 +111,7 @@ export class ProductoService {
     });
 
     return this.http.post<MovimientoInventarioResponse>(
-      `${this.api}/logistics/movimiento_inventario/income`,
+      `${this.api}/logistics/inventory-movements/income`,
       movimiento,
       { headers }
     );

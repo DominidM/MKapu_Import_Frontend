@@ -107,7 +107,7 @@ export const VENTAS_ROUTES: Routes = [
         .then((m) => m.DetalleCotizacion),
   },
 
-    {
+  {
     path: 'promociones',
     loadComponent: () =>
       import('./pages/promociones/promociones').then((m) => m.Promociones),
@@ -143,7 +143,7 @@ export const VENTAS_ROUTES: Routes = [
   },
 
 
-  
+
   /* =======================
   GESTIÓN DE Conteos
 ======================= */

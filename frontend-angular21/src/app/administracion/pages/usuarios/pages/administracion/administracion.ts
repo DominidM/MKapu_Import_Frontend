@@ -216,6 +216,7 @@ export class Administracion implements AfterViewInit {
           userId:   usuarioCreado.id_usuario,
           username: this.cuentaForm.username,
           password: this.cuentaForm.password,
+          id_sede: this.usuarioRequestForm.id_sede,
           roleId,
         };
 

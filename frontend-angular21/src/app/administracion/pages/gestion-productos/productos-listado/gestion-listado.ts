@@ -180,6 +180,7 @@ private actualizarCabecera() {
         this.productos.set(response.data);
         this.totalRecords.set(response.pagination.total_records);
         this.loading.set(false);
+        console.log('productos:', this.productos())
       },
       error: (err) => {
         console.error('Error al cargar productos con stock:', err);

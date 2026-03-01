@@ -69,6 +69,7 @@ export class ProductosDetalles implements OnInit {
       .subscribe({
         next: (resp) => {
           this.productoDetalle = resp.producto;
+          console.log(this.productoDetalle)
           this.stockDetalle = resp.stock;
           this.loading = false;
         },
@@ -101,6 +102,7 @@ export class ProductosDetalles implements OnInit {
   }
 
   irEditar() {
+    console.log("producto", this.productoId)
     if (this.productoId) {
       this.router.navigate(['/admin/gestion-productos/editar-producto', this.productoId], {
         queryParams: { returnUrl: `/admin/gestion-productos/ver-detalle-producto/${this.productoId}` }

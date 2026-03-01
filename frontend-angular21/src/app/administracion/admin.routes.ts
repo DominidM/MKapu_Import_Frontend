@@ -349,6 +349,7 @@ export const ADMIN_ROUTES: Routes = [
     loadComponent: () =>
       import('../logistica/pages/conteo-crear/conteocrear')
         .then((m) => m.ConteoCrear),
+
   },
   {
     path: 'conteo-detalle/:id',
