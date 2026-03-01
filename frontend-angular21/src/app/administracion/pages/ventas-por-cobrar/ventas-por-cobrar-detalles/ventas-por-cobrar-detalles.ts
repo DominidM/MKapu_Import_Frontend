@@ -15,7 +15,7 @@ import { ProductoDetalle, ProductoStockDetalle } from '../../../interfaces/produ
 import { ProductoService } from '../../../services/producto.service';
 
 @Component({
-  selector: 'app-productos-detalles',
+  selector: 'app-ventas-por-cobrar-detalles',
   standalone: true,
   imports: [
     CommonModule,
@@ -26,11 +26,11 @@ import { ProductoService } from '../../../services/producto.service';
     ToastModule,
     ConfirmDialog
   ],
-  templateUrl: './productos-detalles.html',
-  styleUrl: './productos-detalles.css',
+  templateUrl: './ventas-por-cobrar-detalles.html',
+  styleUrl: './ventas-por-cobrar-detalles.css',
   providers: [ConfirmationService, MessageService]
 })
-export class ProductosDetalles implements OnInit {
+export class VentasPorCobrarDetalles implements OnInit {
   producto: Producto | null = null;
   productoId: number | null = null;
   loading = true;
@@ -69,7 +69,6 @@ export class ProductosDetalles implements OnInit {
       .subscribe({
         next: (resp) => {
           this.productoDetalle = resp.producto;
-          console.log(this.productoDetalle)
           this.stockDetalle = resp.stock;
           this.loading = false;
         },
@@ -102,7 +101,6 @@ export class ProductosDetalles implements OnInit {
   }
 
   irEditar() {
-    console.log("producto", this.productoId)
     if (this.productoId) {
       this.router.navigate(['/admin/gestion-productos/editar-producto', this.productoId], {
         queryParams: { returnUrl: `/admin/gestion-productos/ver-detalle-producto/${this.productoId}` }

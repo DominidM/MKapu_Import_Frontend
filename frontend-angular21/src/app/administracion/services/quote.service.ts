@@ -20,32 +20,33 @@ export class QuoteService {
   private readonly http = inject(HttpClient);
   private readonly api = `${environment.apiUrl}/sales/quote`;
 
-  private readonly _quoteList = signal<QuoteListItem[]>([]);
-  private readonly _total = signal<number>(0);
-  private readonly _page = signal<number>(1);
+  private readonly _quoteList  = signal<QuoteListItem[]>([]);
+  private readonly _total      = signal<number>(0);
+  private readonly _page       = signal<number>(1);
   private readonly _totalPages = signal<number>(1);
-  private readonly _quote = signal<Quote | null>(null);
-  private readonly _loading = signal(false);
-  private readonly _error = signal<string | null>(null);
+  private readonly _quote      = signal<Quote | null>(null);
+  private readonly _loading    = signal(false);
+  private readonly _error      = signal<string | null>(null);
 
-  readonly quotes = computed(() => this._quoteList());
-  readonly total = computed(() => this._total());
-  readonly page = computed(() => this._page());
+  readonly quotes     = computed(() => this._quoteList());
+  readonly total      = computed(() => this._total());
+  readonly page       = computed(() => this._page());
   readonly totalPages = computed(() => this._totalPages());
-  readonly quote = computed(() => this._quote());
-  readonly loading = computed(() => this._loading());
-  readonly error = computed(() => this._error());
+  readonly quote      = computed(() => this._quote());
+  readonly loading    = computed(() => this._loading());
+  readonly error      = computed(() => this._error());
 
+  // ── Listar cotizaciones paginadas ─────────────────────────────────────────
   loadQuotes(filters?: LoadQuotesFilters): Observable<QuotePagedResponse> {
     this._loading.set(true);
     this._error.set(null);
 
     let params = new HttpParams();
-    if (filters?.search)  params = params.set('search', filters.search);
-    if (filters?.estado)  params = params.set('estado', filters.estado);
+    if (filters?.search)  params = params.set('search',  filters.search);
+    if (filters?.estado)  params = params.set('estado',  filters.estado);
     if (filters?.id_sede) params = params.set('id_sede', filters.id_sede.toString());
-    if (filters?.page)    params = params.set('page', filters.page.toString());
-    if (filters?.limit)   params = params.set('limit', filters.limit.toString());
+    if (filters?.page)    params = params.set('page',    filters.page.toString());
+    if (filters?.limit)   params = params.set('limit',   filters.limit.toString());
 
     return this.http.get<QuotePagedResponse>(this.api, { params }).pipe(
       tap((res) => {
@@ -62,6 +63,7 @@ export class QuoteService {
     );
   }
 
+  // ── Obtener por ID ────────────────────────────────────────────────────────
   getQuoteById(id: number): Observable<Quote> {
     this._loading.set(true);
     this._error.set(null);
@@ -75,6 +77,7 @@ export class QuoteService {
     );
   }
 
+  // ── Crear ─────────────────────────────────────────────────────────────────
   createQuote(payload: CreateQuoteRequest): Observable<Quote> {
     this._loading.set(true);
     this._error.set(null);
@@ -88,6 +91,7 @@ export class QuoteService {
     );
   }
 
+  // ── Aprobar ───────────────────────────────────────────────────────────────
   approveQuote(id: number): Observable<Quote> {
     this._loading.set(true);
     this._error.set(null);
@@ -101,11 +105,41 @@ export class QuoteService {
     );
   }
 
+  // ── Cambiar estado (RECHAZADA | APROBADA | PENDIENTE) ────────────────────
+  // Llama a: PATCH /sales/quote/:id/status  { estado: 'RECHAZADA' }
+  updateQuoteStatus(id: number, estado: 'RECHAZADA' | 'APROBADA' | 'PENDIENTE'): Observable<Quote> {
+    this._loading.set(true);
+    this._error.set(null);
+    return this.http.patch<Quote>(`${this.api}/${id}/status`, { estado }).pipe(
+      tap((updated) => this._quote.set(updated)),
+      catchError((err) => {
+        this._error.set('No se pudo actualizar el estado.');
+        return throwError(() => err);
+      }),
+      finalize(() => this._loading.set(false))
+    );
+  }
+
+  // ── Eliminar permanentemente ──────────────────────────────────────────────
+  // Llama a: DELETE /sales/quote/:id
+  deleteQuote(id: number): Observable<void> {
+    this._loading.set(true);
+    this._error.set(null);
+    return this.http.delete<void>(`${this.api}/${id}`).pipe(
+      catchError((err) => {
+        this._error.set('No se pudo eliminar la cotización.');
+        return throwError(() => err);
+      }),
+      finalize(() => this._loading.set(false))
+    );
+  }
+
+  // ── Por documento de cliente ──────────────────────────────────────────────
   getQuotesByCustomerDocument(document: string): Observable<Quote[]> {
     this._loading.set(true);
     this._error.set(null);
     return this.http.get<Quote[]>(`${this.api}/customer/${document}`).pipe(
-      tap((resp) => this._quoteList.set([])),
+      tap(() => this._quoteList.set([])),
       catchError((err) => {
         this._error.set('No se pudo obtener cotizaciones del cliente.');
         return throwError(() => err);
@@ -114,6 +148,7 @@ export class QuoteService {
     );
   }
 
+  // ── Reset ─────────────────────────────────────────────────────────────────
   reset() {
     this._quoteList.set([]);
     this._total.set(0);

@@ -68,9 +68,12 @@ export class DashboardService {
   }
 
   // Coincide con @Get('sales-dashboard')
-  // Nota: Si usas la tabla de "Actividad Reciente" o "Ventas Recientes", debes llamar a este método
+
   getRecentSales(periodo: string = 'anio', idSede?: string): Observable<any[]> {
     const params = this.buildParams(periodo, idSede);
     return this.http.get<any[]>(`${this.apiUrl}/dashboard/recent-sales`, { params });
   }
+
+
 }
+

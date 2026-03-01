@@ -631,4 +631,139 @@
   .contador-card i {
     font-size: 2.1rem;
   }
+}/* ── Badges días restantes ─────────────────────────────────────── */
+.dias-badge {
+  display: inline-block;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  padding: 1px 6px;
+  border-radius: 20px;
+  line-height: 1.6;
+  white-space: nowrap;
+}
+
+.dias-badge--ok {
+  background: rgba(74, 222, 128, 0.12);
+  color: #4ade80;
+  border: 1px solid rgba(74, 222, 128, 0.25);
+}
+
+.dias-badge--proximo {
+  background: rgba(250, 204, 21, 0.12);
+  color: #facc15;
+  border: 1px solid rgba(250, 204, 21, 0.25);
+}
+
+.dias-badge--urgente {
+  background: rgba(251, 146, 60, 0.12);
+  color: #fb923c;
+  border: 1px solid rgba(251, 146, 60, 0.3);
+}
+
+.dias-badge--hoy {
+  background: rgba(251, 146, 60, 0.2);
+  color: #fb923c;
+  border: 1px solid #fb923c;
+  animation: pulse-badge 1.5s infinite;
+}
+
+.dias-badge--vencido {
+  background: rgba(248, 113, 113, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(248, 113, 113, 0.35);
+}
+
+@keyframes pulse-badge {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.55; }
+}
+
+/* ── Grupo de acciones ─────────────────────────────────────────── */
+.acciones-grupo {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 2px;
+  flex-wrap: nowrap;
+  height: 100%;
+}
+
+/* Separador visual entre grupos de botones */
+.accion-separador {
+  width: 1px;
+  height: 18px;
+  background: rgba(255,255,255,0.12);
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+
+/* Base para todos los botones de acción */
+.accion-btn.p-button {
+  width: 2rem !important;
+  height: 2rem !important;
+  padding: 0 !important;
+  border-radius: 6px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: background 0.15s, transform 0.1s !important;
+}
+
+.accion-btn.p-button:hover {
+  transform: scale(1.1);
+}
+
+.accion-btn.p-button .p-button-icon {
+  font-size: 0.85rem !important;
+  margin: 0 !important;
+}
+
+/* Ver → dorado */
+.accion-btn--ver.p-button .p-button-icon {
+  color: var(--gold, #d4a017) !important;
+}
+.accion-btn--ver.p-button:hover {
+  background: rgba(212, 160, 23, 0.12) !important;
+}
+
+/* Editar → dorado suave */
+.accion-btn--editar.p-button .p-button-icon {
+  color: var(--gold, #d4a017) !important;
+  opacity: 0.75;
+}
+.accion-btn--editar.p-button:hover {
+  background: rgba(212, 160, 23, 0.1) !important;
+}
+
+/* Eliminar → rojo */
+.accion-btn--eliminar.p-button .p-button-icon {
+  color: #f87171 !important;
+}
+.accion-btn--eliminar.p-button:hover {
+  background: rgba(248, 113, 113, 0.12) !important;
+}
+
+/* Venta → verde */
+.accion-btn--venta.p-button .p-button-icon {
+  color: #4ade80 !important;
+}
+.accion-btn--venta.p-button:hover {
+  background: rgba(74, 222, 128, 0.12) !important;
+}
+
+/* Cobrar → azul/cyan */
+.accion-btn--cobrar.p-button .p-button-icon {
+  color: #38bdf8 !important;
+}
+.accion-btn--cobrar.p-button:hover {
+  background: rgba(56, 189, 248, 0.12) !important;
+}
+
+/* Reactivar → verde lima */
+.accion-btn--reactivar.p-button .p-button-icon {
+  color: #a3e635 !important;
+}
+.accion-btn--reactivar.p-button:hover {
+  background: rgba(163, 230, 53, 0.12) !important;
 }
