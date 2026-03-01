@@ -129,11 +129,11 @@
           <th>CODIGO</th>
           <th>NOMBRE</th>
           <th>CIUDAD</th>
+          <th>ALMACENES</th> 
           <th>TELEFONO</th>
           <th>ACCIONES</th>
         </tr>
       </ng-template>
-
       <ng-template pTemplate="body" let-sede>
         <tr>
           <td>{{ sede.codigo }}</td>
@@ -144,6 +144,50 @@
               {{ sede.ciudad }}
             </span>
           </td>
+
+          <!-- ── COLUMNA ALMACENES ── -->
+          <td>
+            <!-- Cargando -->
+            <span *ngIf="loadingAlmacenes() && !sede.almacenes">
+              <i class="pi pi-spin pi-spinner text-400"></i>
+            </span>
+
+            <!-- Sin almacenes -->
+            <span
+              *ngIf="!loadingAlmacenes() && (!sede.almacenes || sede.almacenes.length === 0)"
+              class="text-400 text-sm"
+            >—</span>
+
+            <!-- Chips de almacenes -->
+            <div
+              *ngIf="sede.almacenes && sede.almacenes.length > 0"
+              class="flex flex-wrap gap-1"
+            >
+              <!-- Muestra hasta 2 chips -->
+              <span
+                *ngFor="let alm of sede.almacenes.slice(0, 2)"
+                class="sedes-almacen-chip"
+                [class.sedes-almacen-chip--inactive]="!alm.activo"
+                [pTooltip]="alm.nombre + ' · ' + (alm.ciudad ?? '')"
+                tooltipPosition="top"
+              >
+                <i class="pi pi-warehouse" style="font-size: 0.65rem"></i>
+                {{ alm.codigo }}
+              </span>
+
+              <!-- Badge "+N más" si hay más de 2 -->
+              <span
+                *ngIf="sede.almacenes.length > 2"
+                class="sedes-almacen-chip sedes-almacen-chip--more"
+                [pTooltip]="getAlmacenesRestantes(sede)"
+                tooltipPosition="top"
+              >
+                +{{ sede.almacenes.length - 2 }} más
+              </span>
+            </div>
+          </td>
+          <!-- ── FIN COLUMNA ALMACENES ── -->
+
           <td>
             <span class="inline-flex align-items-center gap-2">
               <i class="pi pi-phone text-500"></i>
@@ -152,34 +196,21 @@
           </td>
           <td>
             <div class="flex align-items-center gap-2">
-
-              <!-- OJO -->
-              <p-button
-                icon="pi pi-eye"
-                text
-                severity="secondary"
-                styleClass="sedes-icon-btn"
-                (click)="verDetalle(sede)"
-                title="Ver detalle"
-              ></p-button>
-
-              <p-button
-                icon="pi pi-pencil"
-                text
-                severity="secondary"
+              <p-button icon="pi pi-eye" text severity="secondary"
+                styleClass="sedes-icon-btn" (click)="verDetalle(sede)" title="Ver detalle">
+              </p-button>
+              <p-button icon="pi pi-pencil" text severity="secondary"
                 styleClass="sedes-icon-btn sedes-action-edit"
                 [routerLink]="['/admin/sedes/editar-sede']"
-                [queryParams]="{ id: sede.id_sede }"
-              ></p-button>
-
+                [queryParams]="{ id: sede.id_sede }">
+              </p-button>
               <p-button
                 [icon]="sede.activo ? 'pi pi-times' : 'pi pi-check'"
-                text
-                [severity]="sede.activo ? 'danger' : 'success'"
+                text [severity]="sede.activo ? 'danger' : 'success'"
                 styleClass="sedes-icon-btn sedes-action-status"
                 (click)="confirmToggleStatus(sede)"
-                [title]="sede.activo ? 'Desactivar sede' : 'Activar sede'"
-              ></p-button>
+                [title]="sede.activo ? 'Desactivar sede' : 'Activar sede'">
+              </p-button>
             </div>
           </td>
         </tr>
@@ -265,6 +296,52 @@
             </div>
           </div>
 
+          <!-- ALMACENES ASIGNADOS -->
+          <div class="sdm-info-item sdm-info-item--full">
+            <span class="sdm-info-icon"><i class="pi pi-warehouse"></i></span>
+            <div class="sdm-info-content" style="width:100%">
+              <span class="sdm-info-label">Almacenes asignados</span>
+
+              <!-- Cargando -->
+              <div *ngIf="loadingAlmacenes()" class="flex align-items-center gap-2 mt-1">
+                <i class="pi pi-spin pi-spinner text-400"></i>
+                <span class="text-400 text-sm">Cargando almacenes...</span>
+              </div>
+
+              <!-- Sin almacenes -->
+              <span
+                *ngIf="!loadingAlmacenes() && (!s.almacenes || s.almacenes.length === 0)"
+                class="text-400"
+              >
+                Sin almacenes asignados
+              </span>
+
+              <!-- Lista de almacenes -->
+              <div
+                *ngIf="!loadingAlmacenes() && s.almacenes && s.almacenes.length > 0"
+                class="flex flex-column gap-2 mt-1"
+              >
+                <div
+                  *ngFor="let alm of s.almacenes"
+                  class="flex align-items-center justify-content-between p-2 border-round"
+                  style="background: var(--surface-100)"
+                >
+                  <div class="flex flex-column gap-1">
+                    <span class="font-semibold text-sm">{{ alm.nombre }}</span>
+                    <span class="text-400 text-xs">
+                      {{ alm.codigo }}
+                      <span *ngIf="alm.ciudad"> · {{ alm.ciudad }}</span>
+                    </span>
+                  </div>
+                  <p-tag
+                    [value]="alm.activo ? 'Activo' : 'Inactivo'"
+                    [severity]="alm.activo ? 'success' : 'danger'"
+                  ></p-tag>
+                </div>
+              </div>
+
+            </div>
+          </div>
         </div>
 
         <!-- FOOTER -->

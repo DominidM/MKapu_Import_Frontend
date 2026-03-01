@@ -379,3 +379,30 @@
 :host ::ng-deep .sdm-btn-edit.p-button:hover { background: #d97706 !important; }
 :host ::ng-deep .sdm-btn-close.p-button { border-radius: 8px; border-color: rgba(255,255,255,0.12) !important; color: #94a3b8 !important; }
 :host ::ng-deep .sdm-btn-close.p-button:hover { background: rgba(255,255,255,0.06) !important; }
+
+.sedes-almacen-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: var(--blue-50);
+  color: var(--blue-700);
+  border: 1px solid var(--blue-200);
+  white-space: nowrap;
+}
+
+.sedes-almacen-chip--inactive {
+  background: var(--surface-100);
+  color: var(--text-color-secondary);
+  border-color: var(--surface-300);
+}
+
+.sedes-almacen-chip--more {
+  background: var(--surface-100);
+  color: var(--text-color-secondary);
+  border-color: var(--surface-300);
+  cursor: default;
+}

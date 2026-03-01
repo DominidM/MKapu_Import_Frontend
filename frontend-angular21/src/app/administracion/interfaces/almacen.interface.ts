@@ -1,6 +1,12 @@
+export interface SedeBasica {
+  id_sede: number;
+  codigo: string;
+  nombre: string;
+}
+
 export interface Headquarter {
-  id?: number;           
-  id_almacen?: number;   
+  id?: number;
+  id_almacen?: number;
   codigo: string;
   nombre?: string | null;
   departamento?: string | null;
@@ -11,9 +17,9 @@ export interface Headquarter {
   activo: boolean;
   createdAt?: string | Date;
   updatedAt?: string | Date;
+  sede?: SedeBasica | null; // ← nuevo
 }
 
-/** DTO que envías para crear */
 export interface CreateWarehouseDto {
   codigo: string;
   nombre?: string | null;
@@ -25,7 +31,6 @@ export interface CreateWarehouseDto {
   activo?: boolean;
 }
 
-/** DTO para actualizar */
 export interface UpdateWarehouseDto {
   nombre?: string | null;
   departamento?: string | null;

@@ -128,6 +128,7 @@
         <tr>
           <th>CODIGO</th>
           <th>NOMBRE</th>
+          <th>SEDE</th>
           <th>UBICACIÓN</th>
           <th>TELÉFONO</th>
           <th>ESTADO</th>
@@ -140,6 +141,17 @@
           <td>{{ almacen.codigo }}</td>
           <td>{{ almacen.nombre }}</td>
           <td>
+            <span *ngIf="almacen.sede; else sinSede" class="inline-flex align-items-center gap-2">
+              <i class="pi pi-building text-500"></i>
+              {{ almacen.sede.nombre }}
+            </span>
+            <ng-template #sinSede>
+              <span class="text-400">—</span>
+            </ng-template>
+          </td>
+          
+          
+          <td>
             <span class="inline-flex align-items-center gap-2">
               <i class="pi pi-map-marker text-500"></i>
               {{ (almacen.departamento ? almacen.departamento : '') 
@@ -147,6 +159,8 @@
                   + (almacen.ciudad ? ' · ' + almacen.ciudad : '') }}
             </span>
           </td>
+          
+          
           <td>
             <span class="inline-flex align-items-center gap-2">
               <i class="pi pi-phone text-500"></i>
@@ -248,6 +262,16 @@
             </div>
           </div>
 
+
+          <div class="adm-info-item">
+            <span class="adm-info-icon"><i class="pi pi-building"></i></span>
+            <div class="adm-info-content">
+              <span class="adm-info-label">Sede asignada</span>
+              <span class="adm-info-value">{{ a.sede?.nombre ?? '—' }}</span>
+            </div>
+          </div>
+
+          
           <div class="adm-info-item">
             <span class="adm-info-icon"><i class="pi pi-map"></i></span>
             <div class="adm-info-content">
