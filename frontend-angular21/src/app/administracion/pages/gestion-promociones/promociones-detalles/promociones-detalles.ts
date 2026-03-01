@@ -11,14 +11,21 @@ import { TooltipModule }       from 'primeng/tooltip';
 import { MessageService, ConfirmationService } from 'primeng/api';
 
 import { PromotionsService, Promotion } from '../../../services/promotions.service';
+import { ProgressBarModule } from 'primeng/progressbar';
 
 @Component({
   selector: 'app-promociones-detalles',
   standalone: true,
   imports: [
-    CommonModule, DecimalPipe,
-    ButtonModule, CardModule, TagModule,
-    ToastModule, ConfirmDialogModule, TooltipModule,
+    CommonModule,
+    DecimalPipe,
+    ButtonModule,
+    CardModule,
+    TagModule,
+    ProgressBarModule,
+    ToastModule,
+    ConfirmDialogModule,
+    TooltipModule,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './promociones-detalles.html',

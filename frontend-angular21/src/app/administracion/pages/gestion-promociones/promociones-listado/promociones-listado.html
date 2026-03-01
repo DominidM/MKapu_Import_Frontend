@@ -2,10 +2,11 @@
   <p-card styleClass="ventas-header-card mb-4 ventas-header-bordered">
     <div class="flex align-items-center justify-content-between flex-wrap gap-2">
       <div class="flex align-items-center gap-3">
-        <span class="ventas-title-icon"><i class="pi pi-tags"></i></span>
+        <span class="ventas-title-icon">
+          <i class="pi pi-tags"></i></span>
         <div>
-          <p class="ventas-kicker mb-0">GESTIÓN DEL SISTEMA</p>
-          <h2 class="ventas-title mb-0">Promociones y Ofertas</h2>
+          <p class="ventas-kicker">GESTIÓN DEL SISTEMA</p>
+          <h2 class="ventas-title">Promociones y Ofertas</h2>
         </div>
       </div>
       <p-button
@@ -49,6 +50,13 @@
         </div>
       </div>
 
+      <div class="estadistica-card">
+        <i class="pi pi-shield"></i>
+        <div>
+          <span class="estadistica-label">Con Reglas</span>
+          <span class="estadistica-valor">{{ kpiConReglas() }}</span>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -66,8 +74,8 @@
             pInputText
             type="text"
             placeholder="Concepto, tipo o valor..."
-            [(ngModel)]="filtros.busqueda"
-            (input)="aplicarFiltros()"
+            [value]="filtros().busqueda"
+            (input)="setBusqueda($any($event.target).value)"
             class="w-full"
           />
         </div>
@@ -77,12 +85,12 @@
         <div class="filtro-item filtro-compacto">
           <label>Tipo</label>
           <p-select
-            [(ngModel)]="filtros.tipo"
+            [ngModel]="filtros().tipo"
+            (ngModelChange)="setTipo($event)"
             [options]="tiposPromocion"
             placeholder="Todos"
             optionLabel="label"
             optionValue="value"
-            (onChange)="aplicarFiltros()"
             [showClear]="true"
             styleClass="w-full"
           />
@@ -91,12 +99,12 @@
         <div class="filtro-item filtro-compacto">
           <label>Estado</label>
           <p-select
-            [(ngModel)]="filtros.estado"
+            [ngModel]="filtros().estado"
+            (ngModelChange)="setEstado($event)"
             [options]="estadosPromocion"
             placeholder="Todos"
             optionLabel="label"
             optionValue="value"
-            (onChange)="aplicarFiltros()"
             [showClear]="true"
             styleClass="w-full"
           />
@@ -105,12 +113,12 @@
         <div class="filtro-item filtro-compacto">
           <label>Rango Descuento</label>
           <p-select
-            [(ngModel)]="filtros.rangoDescuento"
+            [ngModel]="filtros().rangoDescuento"
+            (ngModelChange)="setRangoDescuento($event)"
             [options]="rangosDescuento"
             placeholder="Todos"
             optionLabel="label"
             optionValue="value"
-            (onChange)="aplicarFiltros()"
             [showClear]="true"
             styleClass="w-full"
           />
@@ -153,7 +161,7 @@
       >
         <ng-template pTemplate="header">
           <tr>
-            <th>#ID</th>
+            <th>Codigo</th>
             <th>Concepto</th>
             <th>Tipo</th>
             <th>Descuento</th>
@@ -165,7 +173,7 @@
 
         <ng-template pTemplate="body" let-promo>
           <tr>
-            <td><strong>#{{ promo.idPromocion }}</strong></td>
+            <td><strong>COD{{ promo.idPromocion }}</strong></td>
 
             <td>{{ promo.concepto }}</td>
 
@@ -215,13 +223,33 @@
                   pTooltip="Editar" tooltipPosition="top"
                   styleClass="ventas-icon-btn ventas-icon-soft"
                 />
-                <p-button
-                  icon="pi pi-trash"
-                  (onClick)="eliminarPromocion(promo.idPromocion, promo.concepto)"
-                  [rounded]="true" [text]="true" severity="secondary"
-                  pTooltip="Eliminar" tooltipPosition="top"
-                  styleClass="ventas-icon-btn ventas-icon-danger"
-                />
+
+                <!-- Activa → botón desactivar (X) -->
+                @if (promo.activo) {
+                  <p-button
+                    icon="pi pi-times"
+                    (onClick)="toggleEstado(promo)"
+                    [rounded]="true" [text]="true" severity="warn"
+                    pTooltip="Desactivar" tooltipPosition="top"
+                    styleClass="ventas-icon-btn"
+                  />
+                } @else {
+                  <!-- Inactiva → botón activar (check) + botón eliminar (tacho) -->
+                  <p-button
+                    icon="pi pi-check"
+                    (onClick)="toggleEstado(promo)"
+                    [rounded]="true" [text]="true" severity="success"
+                    pTooltip="Activar" tooltipPosition="top"
+                    styleClass="ventas-icon-btn"
+                  />
+                  <p-button
+                    icon="pi pi-trash"
+                    (onClick)="eliminarPromocion(promo.idPromocion, promo.concepto)"
+                    [rounded]="true" [text]="true" severity="danger"
+                    pTooltip="Eliminar" tooltipPosition="top"
+                    styleClass="ventas-icon-btn ventas-icon-danger"
+                  />
+                }
               </div>
             </td>
           </tr>

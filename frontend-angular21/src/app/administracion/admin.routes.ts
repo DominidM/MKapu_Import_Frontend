@@ -281,28 +281,6 @@ export const ADMIN_ROUTES: Routes = [
       },
     ],
   },
-  /* =======================
-      INGRESOS ALMACÉN
-    ======================= */
-  {
-    path: 'ingresos-almacen',
-    children: [
-      {
-        path: '',
-        loadComponent: () =>
-          import('./pages/ingresos-almacen/pages/ingresos-almacen/ingresos-almacen').then(
-            (m) => m.IngresosAlmacen,
-          ),
-      },
-      {
-        path: 'ingresos-agregar',
-        loadComponent: () =>
-          import('./pages/ingresos-almacen/pages/ingresos-agregar/ingresos-agregar').then(
-            (m) => m.IngresosAgregar,
-          ),
-      },
-    ],
-  },
 
   /* =======================
     VENTAS ADMINISTRACIÓN
@@ -310,18 +288,18 @@ export const ADMIN_ROUTES: Routes = [
   {
     path: 'generar-ventas-administracion',
     loadComponent: () =>
-      import('../ventas/pages/generar-venta/generar-venta').then((m) => m.GenerarVenta),
+      import('./pages/generar-ventas-administracion/generar-ventas-administracion').then((m) => m.GenerarVentasAdministracion),
   },
   {
     path: 'historial-ventas-administracion',
     loadComponent: () =>
-      import('../ventas/pages/historial-ventas/historial-ventas').then((m) => m.HistorialVentas),
+      import('./pages/historial-ventas-administracion/historial-ventas-administracion').then((m) => m.HistorialVentasAdministracion),
   },
   {
     path: 'detalles-ventas-administracion/:id',
     loadComponent: () =>
-      import('./shared/detalles-ventas-administracion/detalles-ventas-administracion').then(
-        (m) => m.DetallesVentasAdministracion,
+      import('../ventas/shared/detalles-venta/detalle-venta').then(
+        (m) => m.DetalleVenta,
       ),
   },
   {
@@ -371,6 +349,7 @@ export const ADMIN_ROUTES: Routes = [
     loadComponent: () =>
       import('../logistica/pages/conteo-crear/conteocrear')
         .then((m) => m.ConteoCrear),
+
   },
   {
     path: 'conteo-detalle/:id',
@@ -432,8 +411,6 @@ export const ADMIN_ROUTES: Routes = [
       cotizacion
   ======================= */
 
-
-
   {
     path: 'cotizaciones',
     loadComponent: () =>
@@ -441,8 +418,47 @@ export const ADMIN_ROUTES: Routes = [
         (m) => m.GestionCotizacionesComponent,
       ),
   },
+  {
+    path: 'agregar-cotizaciones',
+    loadComponent: () =>
+      import('./pages/gestion-cotizacion/gestion-formulario/cotizacion-formulario').then(
+        (m) => m.CotizacionFormulario,
+      ),
+  },
+  {
+    path: 'editar-cotizacion/:id',
+    loadComponent: () =>
+      import('./pages/gestion-cotizacion/gestion-formulario/cotizacion-formulario').then(
+        (m) => m.CotizacionFormulario,
+      ),
+  },
 
 
+
+
+
+
+ {
+    path: 'ventas-por-cobrar',
+    loadComponent: () =>
+      import('./pages/ventas-por-cobrar/ventas-por-cobrar-listado/ventas-por-cobrar-listado').then(
+        (m) => m.VentasPorCobrarListadoComponent,
+      ),
+  },
+  {
+    path: 'agregar-ventas-por-cobrar',
+    loadComponent: () =>
+      import('./pages/ventas-por-cobrar/ventas-por-cobrar-formulario/ventas-por-cobrar-formulario').then(
+        (m) => m.VentasPorCobrarFormulario,
+      ),
+  },
+  {
+    path: 'editar-ventas-por-cobrar/:id',
+    loadComponent: () =>
+      import('./pages/ventas-por-cobrar/ventas-por-cobrar-formulario/ventas-por-cobrar-formulario').then(
+        (m) => m.VentasPorCobrarFormulario,
+      ),
+  },
 
 
   /* =======================
