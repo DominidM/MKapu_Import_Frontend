@@ -134,7 +134,6 @@ export class SedeService {
         finalize(() => this._loading.set(false))
       );
   }
-
   getSedes(role: string = 'Administrador'): Observable<HeadquarterResponse> {
     return this.http.get<HeadquarterResponse>(`${this.api}/admin/headquarters`, {
       headers: this.buildHeaders(role),
