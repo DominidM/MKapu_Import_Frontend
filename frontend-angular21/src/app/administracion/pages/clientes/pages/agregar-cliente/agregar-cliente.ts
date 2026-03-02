@@ -1,4 +1,5 @@
-import { Component, inject, signal } from '@angular/core';
+
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
@@ -12,66 +13,66 @@ import { SelectModule } from 'primeng/select';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ToastModule } from 'primeng/toast';
 import { MessageModule } from 'primeng/message';
-
 import { ConfirmationService, MessageService } from 'primeng/api';
-
 import { ClienteService, CreateCustomerRequest } from '../../../../services/cliente.service';
 
-const TIPOS_DOCUMENTO = [
-  { cod_sunat: '00', descripcion: 'OTROS TIPOS DE DOCUMENTOS' },
-  { cod_sunat: '01', descripcion: 'DOCUMENTO NACIONAL DE IDENTIDAD (DNI)' },
-  { cod_sunat: '04', descripcion: 'CARNET DE EXTRANJERIA' },
-  { cod_sunat: '06', descripcion: 'REGISTRO UNICO DE CONTRIBUYENTES' },
-  { cod_sunat: '07', descripcion: 'PASAPORTE' },
-];
+interface TipoDocumento {
+  documentTypeId: number;
+  sunatCode:      string;
+  description:    string;
+}
 
 @Component({
   selector: 'app-agregar-cliente',
   standalone: true,
   imports: [
-    CommonModule,
-    FormsModule,
-    RouterModule,
-    ButtonModule,
-    CardModule,
-    DividerModule,
-    InputTextModule,
-    InputNumberModule,
-    SelectModule,
-    ConfirmDialogModule,
-    ToastModule,
-    MessageModule,
+    CommonModule, FormsModule, RouterModule,
+    ButtonModule, CardModule, DividerModule,
+    InputTextModule, InputNumberModule, SelectModule,
+    ConfirmDialogModule, ToastModule, MessageModule,
   ],
   templateUrl: './agregar-cliente.html',
   styleUrl: './agregar-cliente.css',
   providers: [ConfirmationService, MessageService],
 })
-export class AgregarCliente {
-  private readonly clienteService = inject(ClienteService);
-  private readonly router = inject(Router);
-  private readonly confirmationService = inject(ConfirmationService);
-  private readonly messageService = inject(MessageService);
+export class AgregarCliente implements OnInit {
 
-  submitted = signal(false);
+  private readonly clienteService      = inject(ClienteService);
+  private readonly router              = inject(Router);
+  private readonly confirmationService = inject(ConfirmationService);
+  private readonly messageService      = inject(MessageService);
+
+  submitted      = signal(false);
+  tiposDocumento = signal<TipoDocumento[]>([]);
   readonly loading = this.clienteService.loading;
 
-  readonly tiposDocumento = TIPOS_DOCUMENTO;
-
   cliente = {
-    documentTypeSunatCode: '01',
-    nro_documento: '',
-    razon_social: '',
-    nombres: '',
-    apellidos: '',
-    direccion: '',
-    email: '',
-    telefono: null as number | null,
+    documentTypeSunatCode: '',
+    nro_documento:  '',
+    razon_social:   '',
+    nombres:        '',
+    apellidos:      '',
+    direccion:      '',
+    email:          '',
+    telefono:       null as number | null,
   };
 
-  // helpers
-  private getDocumentTypeId(codSunat: string): number {
-    const map: Record<string, number> = { '00': 1, '01': 2, '04': 3, '06': 4, '07': 5 };
-    return map[codSunat] ?? 2;
+  // ── Lifecycle ─────────────────────────────────────────────────────
+  ngOnInit(): void {
+    this.clienteService.obtenerTiposDocumento().subscribe({
+      next: tipos => {
+        this.tiposDocumento.set(tipos);
+        const dni = tipos.find(t => t.sunatCode === '01');
+        this.cliente.documentTypeSunatCode = dni?.sunatCode ?? tipos[0]?.sunatCode ?? '';
+      },
+      error: () => console.warn('No se pudieron cargar tipos de documento'),
+    });
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────────
+  private getDocumentTypeId(sunatCode: string): number {
+    const tipo = this.tiposDocumento().find(t => t.sunatCode === sunatCode);
+    return tipo?.documentTypeId ?? 2;
   }
 
   get esRUC(): boolean { return this.cliente.documentTypeSunatCode === '06'; }
@@ -83,32 +84,35 @@ export class AgregarCliente {
       case '06': return 11;
       case '04': return 12;
       case '07': return 12;
-      default: return 15;
+      default:   return 15;
     }
   }
 
-  // teléfono helpers
-  get telefonoDigitos(): number { return this.cliente.telefono ? String(this.cliente.telefono).length : 0; }
+  // ── Teléfono ──────────────────────────────────────────────────────
+  get telefonoDigitos(): number {
+    return this.cliente.telefono ? String(this.cliente.telefono).length : 0;
+  }
+
   get telefonoValido(): boolean {
     if (this.cliente.telefono === null || this.cliente.telefono === undefined) return true;
-    const digits = String(this.cliente.telefono).replace(/\D/g, '');
-    return digits.length === 9;
+    return String(this.cliente.telefono).replace(/\D/g, '').length === 9;
   }
+
   onTelefonoChange(value: number | null): void {
     if (value === null) { this.cliente.telefono = null; return; }
     const digits = String(value).replace(/\D/g, '');
     this.cliente.telefono = digits.length > 9 ? Number(digits.slice(0, 9)) : Number(digits);
   }
+
   onTelefonoKeyDown(event: KeyboardEvent): void {
     const allowedKeys = ['Backspace', 'Tab', 'Delete', 'ArrowLeft', 'ArrowRight'];
     if (allowedKeys.includes(event.key)) return;
     if (!/^\d$/.test(event.key)) { event.preventDefault(); return; }
     const input = event.target as HTMLInputElement;
-    const current = input.value?.replace(/\D/g, '') ?? '';
-    if (current.length >= 9) event.preventDefault();
+    if ((input.value?.replace(/\D/g, '') ?? '').length >= 9) event.preventDefault();
   }
 
-  // keyboards / sanitizers
+  // ── Keyboards / Sanitizers ────────────────────────────────────────
   soloLetras(event: KeyboardEvent): boolean {
     const regex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]$/;
     if (!regex.test(event.key) && event.key.length === 1) { event.preventDefault(); return false; }
@@ -128,75 +132,75 @@ export class AgregarCliente {
     return true;
   }
 
-  // Remove invisible characters (zero-width, BOM) and trim leading spaces
   private cleanStringInput(s: string): string {
     if (!s) return '';
     return s.replace(/[\u200B\uFEFF]/g, '').replace(/^\s+/, '');
   }
 
-  sanitizarSoloLetras(field: 'nombres' | 'apellidos' | 'razon_social') {
+  sanitizarSoloLetras(field: 'nombres' | 'apellidos' | 'razon_social'): void {
     let val = String((this.cliente as any)[field] ?? '');
-    val = this.cleanStringInput(val);
-    val = val.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
-    val = val.replace(/\s+/g, ' ');
-    val = val.trim();
-    val = val.toUpperCase();
+    val = this.cleanStringInput(val)
+      .replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .toUpperCase();
     (this.cliente as any)[field] = val;
   }
 
-  sanitizarTexto(field: 'direccion') {
+  sanitizarTexto(field: 'direccion'): void {
     let v = String((this.cliente as any)[field] ?? '');
-    v = this.cleanStringInput(v);
-    v = v.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s\.,#-]/g, '');
-    v = v.replace(/\s+/g, ' ');
-    v = v.trim();
-    (this.cliente as any)[field] = v.toUpperCase(); // <- convertir a MAYÚSCULAS
+    v = this.cleanStringInput(v)
+      .replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s\.,#-]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .toUpperCase();
+    (this.cliente as any)[field] = v;
   }
 
   sanitizarDocumento(): void {
-    let val = String(this.cliente.nro_documento ?? '');
-    val = this.cleanStringInput(val);
-    if (this.esDNI || this.esRUC) val = val.replace(/\D/g, '');
-    else val = val.replace(/[^a-zA-Z0-9]/g, '');
-    val = val.slice(0, this.maxLengthDocumento);
-    this.cliente.nro_documento = val.toUpperCase();
+    let val = this.cleanStringInput(String(this.cliente.nro_documento ?? ''));
+    val = (this.esDNI || this.esRUC)
+      ? val.replace(/\D/g, '')
+      : val.replace(/[^a-zA-Z0-9]/g, '');
+    this.cliente.nro_documento = val.slice(0, this.maxLengthDocumento).toUpperCase();
   }
 
   sanitizarEmail(): void {
-    let v = String(this.cliente.email ?? '');
-    v = this.cleanStringInput(v);
-    v = v.replace(/\s/g, '').toLowerCase();
-    this.cliente.email = v;
+    this.cliente.email = this.cleanStringInput(String(this.cliente.email ?? ''))
+      .replace(/\s/g, '')
+      .toLowerCase();
   }
 
-  // Heuristics to detect concatenated inputs or embedded email/phone
+  // ── Detección de concatenaciones ──────────────────────────────────
   private hasEmailLike(s: string): boolean {
     return /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/.test(s);
   }
+
   private hasPhoneLike(s: string): boolean {
     return /(\d[ \-]?){6,}/.test(s);
   }
+
   private looksTooConcatenated(s: string): boolean {
     const cleaned = String(s ?? '').trim();
     if (!cleaned) return false;
-    const noSpaces = cleaned.replace(/\s+/g, '');
-    return noSpaces.length > 20 && (cleaned.split(/\s+/).length <= 1);
+    return cleaned.replace(/\s+/g, '').length > 20 && cleaned.split(/\s+/).length <= 1;
   }
+
   private detectConcatenationIssues(): string[] {
     const issues: string[] = [];
     const c = this.cliente;
-    if (this.looksTooConcatenated(c.nombres)) issues.push('El campo "NOMBRES" parece contener texto pegado sin separadores.');
+    if (this.looksTooConcatenated(c.nombres))  issues.push('El campo "NOMBRES" parece contener texto pegado sin separadores.');
     if (this.looksTooConcatenated(c.apellidos)) issues.push('El campo "APELLIDOS" parece contener texto pegado sin separadores.');
     if (this.looksTooConcatenated(c.direccion)) issues.push('La "DIRECCIÓN" parece contener texto pegado sin separadores.');
-    if (this.hasEmailLike(c.nombres) || this.hasPhoneLike(c.nombres)) issues.push('El campo "NOMBRES" contiene un email o teléfono; revisa que no hayas pegado varios campos.');
-    if (this.hasEmailLike(c.apellidos) || this.hasPhoneLike(c.apellidos)) issues.push('El campo "APELLIDOS" contiene un email o teléfono; revisa que no hayas pegado varios campos.');
-    if (!this.hasEmailLike(c.email) && String(c.email ?? '').trim().length > 0 && c.email.indexOf(' ') >= 0) {
+    if (this.hasEmailLike(c.nombres) || this.hasPhoneLike(c.nombres))   issues.push('El campo "NOMBRES" contiene un email o teléfono.');
+    if (this.hasEmailLike(c.apellidos) || this.hasPhoneLike(c.apellidos)) issues.push('El campo "APELLIDOS" contiene un email o teléfono.');
+    if (!this.hasEmailLike(c.email) && c.email.trim().length > 0 && c.email.includes(' ')) {
       issues.push('El campo "EMAIL" contiene espacios o texto extraño.');
     }
     return issues;
   }
 
-  // validations
+  // ── Validaciones ──────────────────────────────────────────────────
   get documentoValido(): boolean {
     const doc = String(this.cliente.nro_documento ?? '').trim();
     if (!doc) return false;
@@ -204,14 +208,17 @@ export class AgregarCliente {
     if (this.esRUC) return /^\d{11}$/.test(doc);
     return doc.length >= 3;
   }
+
   get emailValido(): boolean {
     const email = String(this.cliente.email ?? '').trim();
     if (!email) return true;
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   }
-  get nombresValido(): boolean { if (this.esRUC) return true; return String(this.cliente.nombres ?? '').trim().length >= 2; }
-  get apellidosValido(): boolean { if (this.esRUC) return true; return String(this.cliente.apellidos ?? '').trim().length >= 2; }
-  get razonSocialValida(): boolean { if (!this.esRUC) return true; return String(this.cliente.razon_social ?? '').trim().length >= 3; }
+
+  get nombresValido():     boolean { return this.esRUC || String(this.cliente.nombres   ?? '').trim().length >= 2; }
+  get apellidosValido():   boolean { return this.esRUC || String(this.cliente.apellidos ?? '').trim().length >= 2; }
+  get razonSocialValida(): boolean { return !this.esRUC || String(this.cliente.razon_social ?? '').trim().length >= 3; }
+
   get formularioValido(): boolean {
     return (
       this.documentoValido &&
@@ -224,32 +231,32 @@ export class AgregarCliente {
     );
   }
 
-  // tipo cambio
+  // ── Tipo documento change ─────────────────────────────────────────
   onTipoDocumentoChange(): void {
     this.cliente.nro_documento = '';
     if (this.esRUC) {
-      this.cliente.nombres = '';
+      this.cliente.nombres   = '';
       this.cliente.apellidos = '';
     } else {
       this.cliente.razon_social = '';
     }
   }
 
-  // confirm cancel
-  confirmCancel(form?: NgForm) {
+  // ── Cancelar ──────────────────────────────────────────────────────
+  confirmCancel(form?: NgForm): void {
     if (!form?.dirty) { this.router.navigate(['/admin/clientes']); return; }
     this.confirmationService.confirm({
-      header: 'Cambios sin guardar',
+      header:  'Cambios sin guardar',
       message: 'Tienes cambios sin guardar. ¿Deseas salir?',
-      icon: 'pi pi-exclamation-triangle',
-      accept: () => this.router.navigate(['/admin/clientes']),
-      reject: () => {}
+      icon:    'pi pi-exclamation-triangle',
+      accept:  () => this.router.navigate(['/admin/clientes']),
+      reject:  () => {},
     });
   }
 
-  registrar(form?: NgForm) {
+  // ── Registrar ─────────────────────────────────────────────────────
+  registrar(form?: NgForm): void {
     this.submitted.set(true);
-
     this.sanitizarDocumento();
     this.sanitizarSoloLetras('nombres');
     this.sanitizarSoloLetras('apellidos');
@@ -257,8 +264,7 @@ export class AgregarCliente {
     this.sanitizarTexto('direccion');
     this.sanitizarEmail();
 
-    // detección de concatenaciones (si la tienes)
-    const issues = this.detectConcatenationIssues?.() ?? [];
+    const issues = this.detectConcatenationIssues();
     if (issues.length > 0) {
       this.messageService.add({ severity: 'warn', summary: 'Revisa los campos', detail: issues[0], life: 6000 });
       return;
@@ -269,33 +275,31 @@ export class AgregarCliente {
       return;
     }
 
-    const computedName = (this.cliente.nombres?.trim()) || (this.esRUC ? (this.cliente.razon_social?.trim() || '') : '');
-
     const payload: CreateCustomerRequest = {
       documentTypeId: this.getDocumentTypeId(this.cliente.documentTypeSunatCode),
-      documentValue: this.cliente.nro_documento.trim(),
-
-      name: computedName,
-
-      lastName: !this.esRUC ? (this.cliente.apellidos?.trim() || null) : null,
-
-      businessName: this.esRUC ? (this.cliente.razon_social?.trim() || null) : null,
-
-      address: (this.cliente.direccion?.trim() || '').toUpperCase() || null,
-
-      email: this.cliente.email?.trim() || null,
-      phone: this.cliente.telefono ? String(this.cliente.telefono) : null,
+      documentValue:  this.cliente.nro_documento.trim(),
+      name:           this.cliente.nombres?.trim() || (this.esRUC ? this.cliente.razon_social?.trim() : '') || '',
+      lastName:       !this.esRUC ? (this.cliente.apellidos?.trim() || null) : null,
+      businessName:   this.esRUC  ? (this.cliente.razon_social?.trim() || null) : null,
+      address:        this.cliente.direccion?.trim().toUpperCase() || null,
+      email:          this.cliente.email?.trim() || null,
+      phone:          this.cliente.telefono ? String(this.cliente.telefono) : null,
     };
 
     this.clienteService.createCustomer(payload).subscribe({
       next: (created) => {
-        this.messageService.add({ severity: 'success', summary: 'Registrado', detail: `Cliente ${created.displayName ?? created.documentValue} creado.`, life: 3000 });
+        this.messageService.add({
+          severity: 'success', summary: 'Registrado',
+          detail: `Cliente ${created.displayName ?? created.documentValue} creado.`, life: 3000,
+        });
         setTimeout(() => this.router.navigate(['/admin/clientes']), 600);
       },
       error: (err) => {
-        console.error('Error creando cliente', err);
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: err?.error?.message ?? 'No se pudo crear el cliente.' });
-      }
+        this.messageService.add({
+          severity: 'error', summary: 'Error',
+          detail: err?.error?.message ?? 'No se pudo crear el cliente.',
+        });
+      },
     });
   }
 }

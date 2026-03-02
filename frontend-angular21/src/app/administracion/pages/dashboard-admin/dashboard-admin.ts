@@ -8,9 +8,7 @@ import { TagModule } from 'primeng/tag';
 import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
 import { DashboardService } from '../../services/dashboard.service';
-// 1. IMPORTAR EL SERVICIO DE SEDES
 import { SedeService } from '../../services/sede.service';
-
 export interface TopProducto {
   nombre: string;
   ventas: number;

@@ -3,13 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 
-// PrimeNG
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { DividerModule } from 'primeng/divider';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
-import { SelectModule } from 'primeng/select';          
+import { SelectModule } from 'primeng/select';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ToastModule } from 'primeng/toast';
 import { MessageModule } from 'primeng/message';
@@ -17,13 +16,11 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 
 import { ClienteService, CreateCustomerRequest, Customer } from '../../../../services/cliente.service';
 
-const TIPOS_DOCUMENTO = [
-  { cod_sunat: '00', descripcion: 'OTROS TIPOS DE DOCUMENTOS' },
-  { cod_sunat: '01', descripcion: 'DOCUMENTO NACIONAL DE IDENTIDAD (DNI)' },
-  { cod_sunat: '04', descripcion: 'CARNET DE EXTRANJERIA' },
-  { cod_sunat: '06', descripcion: 'REGISTRO UNICO DE CONTRIBUYENTES' },
-  { cod_sunat: '07', descripcion: 'PASAPORTE' },
-];
+interface TipoDocumento {
+  documentTypeId: number;
+  sunatCode:      string;
+  description:    string;
+}
 
 @Component({
   selector: 'app-editar-cliente',
@@ -31,54 +28,91 @@ const TIPOS_DOCUMENTO = [
   imports: [
     CommonModule, FormsModule, RouterModule,
     ButtonModule, CardModule, DividerModule,
-    InputTextModule, InputNumberModule,
-    SelectModule,                                         // ← añadir
-    ConfirmDialogModule, ToastModule, MessageModule
+    InputTextModule, InputNumberModule, SelectModule,
+    ConfirmDialogModule, ToastModule, MessageModule,
   ],
   templateUrl: './editar-cliente.html',
   styleUrl: './editar-cliente.css',
   providers: [ConfirmationService, MessageService],
 })
 export class EditarCliente implements OnInit {
+
   @ViewChild('clienteForm') clienteForm?: NgForm;
 
-  private readonly clienteService = inject(ClienteService);
-  private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
-  private readonly messageService = inject(MessageService);
+  private readonly clienteService      = inject(ClienteService);
+  private readonly route               = inject(ActivatedRoute);
+  private readonly router              = inject(Router);
+  private readonly messageService      = inject(MessageService);
   private readonly confirmationService = inject(ConfirmationService);
-  private readonly cdr = inject(ChangeDetectorRef);
-  private getDocumentTypeId(codSunat: string): number {
-    const map: Record<string, number> = {
-      '00': 1,
-      '01': 2,
-      '04': 3,
-      '06': 4,
-      '07': 5
-    };
-    return map[codSunat] ?? 2;
-  }
+  private readonly cdr                 = inject(ChangeDetectorRef);
 
-
-  readonly loading = this.clienteService.loading;
-  allowNavigate = signal(false);
-  submitted = signal(false);
-
-  readonly tiposDocumento = TIPOS_DOCUMENTO;
+  readonly loading   = this.clienteService.loading;
+  allowNavigate      = signal(false);
+  submitted          = signal(false);
+  tiposDocumento     = signal<TipoDocumento[]>([]);
 
   cliente = {
-    nro_documento: '',
-    razon_social: '',
-    nombres: '',
-    apellidos: '',
-    direccion: '',
-    email: '',
-    telefono: null as number | null,
-    customerId: '',
-    documentTypeSunatCode: '01'
+    nro_documento:         '',
+    razon_social:          '',
+    nombres:               '',
+    apellidos:             '',
+    direccion:             '',
+    email:                 '',
+    telefono:              null as number | null,
+    customerId:            '',
+    documentTypeSunatCode: '',
   };
 
-  // ── Getters ──────────────────────────────────────────────
+  // ── Lifecycle ─────────────────────────────────────────────────────
+  ngOnInit(): void {
+    const id = this.route.snapshot.paramMap.get('id');
+    if (!id) { this.router.navigate(['/admin/clientes']); return; }
+
+    this.clienteService.obtenerTiposDocumento().subscribe({
+      next: tipos => {
+        this.tiposDocumento.set(tipos);
+        this.loadCliente(id);
+      },
+      error: () => {
+        console.warn('No se pudieron cargar tipos de documento');
+        this.loadCliente(id);
+      },
+    });
+  }
+
+  // ── Cargar cliente ────────────────────────────────────────────────
+  loadCliente(id: string): void {
+    this.clienteService.getCustomerById(id).subscribe({
+      next: (data: Customer) => {
+        this.cliente = {
+          nro_documento:         data.documentValue              ?? '',
+          razon_social:          data.businessName               ?? '',
+          nombres:               data.name                       ?? '',
+          apellidos:             data.lastName                   ?? '',
+          direccion:             data.address                    ?? '',
+          email:                 data.email                      ?? '',
+          telefono:              data.phone ? Number(data.phone) : null,
+          customerId:            data.customerId,
+          documentTypeSunatCode: data.documentTypeSunatCode      ?? '',
+        };
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.messageService.add({
+          severity: 'error', summary: 'Error',
+          detail: 'No se pudo cargar la información del cliente',
+        });
+        this.router.navigate(['/admin/clientes']);
+      },
+    });
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────────
+  private getDocumentTypeId(sunatCode: string): number {
+    const tipo = this.tiposDocumento().find(t => t.sunatCode === sunatCode);
+    return tipo?.documentTypeId ?? 2;
+  }
+
   get esRUC(): boolean { return this.cliente.documentTypeSunatCode === '06'; }
   get esDNI(): boolean { return this.cliente.documentTypeSunatCode === '01'; }
 
@@ -92,86 +126,45 @@ export class EditarCliente implements OnInit {
     }
   }
 
+  // ── Teléfono ──────────────────────────────────────────────────────
   get telefonoDigitos(): number {
     return this.cliente.telefono ? String(this.cliente.telefono).length : 0;
   }
 
   get telefonoValido(): boolean {
     if (this.cliente.telefono === null || this.cliente.telefono === undefined) return true;
-    const digits = String(this.cliente.telefono).replace(/\D/g, '');
-    return digits.length === 9;
-  }
-
-  ngOnInit(): void {
-    const id = this.route.snapshot.paramMap.get('id');
-    if (id) {
-      this.loadCliente(id);
-    } else {
-      this.router.navigate(['/admin/clientes']);
-    }
-  }
-
-  loadCliente(id: string): void {
-    this.clienteService.getCustomerById(id).subscribe({
-      next: (data: Customer) => {
-        this.cliente = {
-          nro_documento:         data.documentValue              ?? '',
-          razon_social:          data.businessName               ?? '',
-          nombres:               data.name                       ?? '',
-          apellidos:             data.lastName                   ?? '',
-          direccion:             data.address                    ?? '',
-          email:                 data.email                      ?? '',
-          telefono:              data.phone ? Number(data.phone) : null,
-          customerId:            data.customerId,
-          documentTypeSunatCode: data.documentTypeSunatCode
-        };
-        this.cdr.detectChanges();
-      },
-      error: () => {
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo cargar la información del cliente' });
-        this.router.navigate(['/admin/clientes']);
-      }
-    });
-  }
-
-  onTipoDocumentoChange(): void {
-    this.cliente.nro_documento = '';
-    if (this.esRUC) {
-      this.cliente.nombres = '';
-      this.cliente.apellidos = '';
-    } else {
-      this.cliente.razon_social = '';
-    }
+    return String(this.cliente.telefono).replace(/\D/g, '').length === 9;
   }
 
   onTelefonoChange(value: number | null): void {
     if (value === null) { this.cliente.telefono = null; return; }
     const digits = String(value).replace(/\D/g, '');
-    if (digits.length > 9) {
-      this.cliente.telefono = Number(digits.slice(0, 9));
-    } else {
-      this.cliente.telefono = value;
-    }
+    this.cliente.telefono = digits.length > 9 ? Number(digits.slice(0, 9)) : Number(digits);
   }
 
   onTelefonoKeyDown(event: KeyboardEvent): void {
     const allowedKeys = ['Backspace', 'Tab', 'Delete', 'ArrowLeft', 'ArrowRight'];
     if (allowedKeys.includes(event.key)) return;
     if (!/^\d$/.test(event.key)) { event.preventDefault(); return; }
-
     const input = event.target as HTMLInputElement;
-    const current = input.value?.replace(/\D/g, '') ?? '';
-    if (current.length >= 9) {
-      event.preventDefault();
+    if ((input.value?.replace(/\D/g, '') ?? '').length >= 9) event.preventDefault();
+  }
+
+  // ── Tipo documento ────────────────────────────────────────────────
+  onTipoDocumentoChange(): void {
+    this.cliente.nro_documento = '';
+    if (this.esRUC) {
+      this.cliente.nombres   = '';
+      this.cliente.apellidos = '';
+    } else {
+      this.cliente.razon_social = '';
     }
   }
 
+  // ── Keyboards ────────────────────────────────────────────────────
   soloLetras(event: KeyboardEvent): boolean {
     const regex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]$/;
-    if (!regex.test(event.key) && event.key.length === 1) {
-      event.preventDefault();
-      return false;
-    }
+    if (!regex.test(event.key) && event.key.length === 1) { event.preventDefault(); return false; }
     return true;
   }
 
@@ -188,42 +181,46 @@ export class EditarCliente implements OnInit {
     return true;
   }
 
-  sanitizarTexto(campo: 'nro_documento' | 'razon_social' | 'nombres' | 'apellidos' | 'direccion'): void {
-    let val = String((this.cliente as any)[campo] ?? '');
-    val = val.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ0-9\s]/g, '');
-    val = val.replace(/^\s+/, '');
-    val = val.toUpperCase();
-    (this.cliente as any)[campo] = val;
-  }
-
+  // ── Sanitizers ────────────────────────────────────────────────────
   sanitizarSoloLetras(campo: 'nombres' | 'apellidos' | 'razon_social'): void {
     let val = String(this.cliente[campo] ?? '');
-    val = val.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
-    val = val.replace(/^\s+/, '');
-    val = val.toUpperCase();
+    val = val.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '')
+             .replace(/^\s+/, '')
+             .replace(/\s+/g, ' ')
+             .toUpperCase();
     this.cliente[campo] = val;
   }
 
+  sanitizarTexto(campo: 'direccion'): void {
+    let v = String((this.cliente as any)[campo] ?? '');
+    v = v.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s\.,#-]/g, '')
+         .replace(/^\s+/, '')
+         .replace(/\s+/g, ' ')
+         .trim()
+         .toUpperCase();
+    (this.cliente as any)[campo] = v;
+  }
+
   sanitizarDocumento(): void {
-    let val = this.cliente.nro_documento;
-    if (this.esDNI || this.esRUC) {
-      val = val.replace(/\D/g, '');
-    } else {
-      val = val.replace(/[^a-zA-Z0-9]/g, '');
-    }
-    val = val.slice(0, this.maxLengthDocumento);
-    this.cliente.nro_documento = val.toUpperCase();
+    let val = String(this.cliente.nro_documento ?? '');
+    val = (this.esDNI || this.esRUC)
+      ? val.replace(/\D/g, '')
+      : val.replace(/[^a-zA-Z0-9]/g, '');
+    this.cliente.nro_documento = val.slice(0, this.maxLengthDocumento).toUpperCase();
   }
 
   sanitizarEmail(): void {
-    this.cliente.email = this.cliente.email.replace(/\s/g, '').toLowerCase();
+    this.cliente.email = String(this.cliente.email ?? '')
+      .replace(/\s/g, '')
+      .toLowerCase();
   }
 
+  // ── Validaciones ──────────────────────────────────────────────────
   get documentoValido(): boolean {
     const doc = this.cliente.nro_documento.trim();
     if (!doc) return false;
-    if (this.esDNI)  return /^\d{8}$/.test(doc);
-    if (this.esRUC)  return /^\d{11}$/.test(doc);
+    if (this.esDNI) return /^\d{8}$/.test(doc);
+    if (this.esRUC) return /^\d{11}$/.test(doc);
     return doc.length >= 3;
   }
 
@@ -233,20 +230,9 @@ export class EditarCliente implements OnInit {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   }
 
-  get nombresValido(): boolean {
-    if (this.esRUC) return true;
-    return this.cliente.nombres.trim().length >= 2;
-  }
-
-  get apellidosValido(): boolean {
-    if (this.esRUC) return true;
-    return this.cliente.apellidos.trim().length >= 2;
-  }
-
-  get razonSocialValida(): boolean {
-    if (!this.esRUC) return true;
-    return this.cliente.razon_social.trim().length >= 3;
-  }
+  get nombresValido():     boolean { return this.esRUC || this.cliente.nombres.trim().length >= 2; }
+  get apellidosValido():   boolean { return this.esRUC || this.cliente.apellidos.trim().length >= 2; }
+  get razonSocialValida(): boolean { return !this.esRUC || this.cliente.razon_social.trim().length >= 3; }
 
   get formularioValido(): boolean {
     return (
@@ -260,60 +246,68 @@ export class EditarCliente implements OnInit {
     );
   }
 
-
+  // ── Editar ────────────────────────────────────────────────────────
   editar(): void {
     this.submitted.set(true);
+    this.sanitizarDocumento();
+    this.sanitizarSoloLetras('nombres');
+    this.sanitizarSoloLetras('apellidos');
+    this.sanitizarSoloLetras('razon_social');
+    this.sanitizarTexto('direccion');
+    this.sanitizarEmail();
 
     if (!this.formularioValido) {
       this.messageService.add({
-        severity: 'warn',
-        summary: 'Formulario incompleto',
-        detail: 'Revisa los campos con errores antes de continuar.'
+        severity: 'warn', summary: 'Formulario incompleto',
+        detail: 'Revisa los campos con errores antes de continuar.',
       });
       return;
     }
-    const tipoDoc = this.tiposDocumento.find(t => t.cod_sunat === this.cliente.documentTypeSunatCode);
 
     const payload: Partial<CreateCustomerRequest> = {
-      documentTypeId: tipoDoc ? this.getDocumentTypeId(this.cliente.documentTypeSunatCode) : undefined,
+      documentTypeId: this.getDocumentTypeId(this.cliente.documentTypeSunatCode),
       documentValue:  this.cliente.nro_documento.trim(),
-      businessName:   this.esRUC ? this.cliente.razon_social.trim() : undefined,
-      name:           !this.esRUC ? this.cliente.nombres.trim() : undefined,
-      lastName:       !this.esRUC ? this.cliente.apellidos.trim() : undefined,
+      businessName:   this.esRUC  ? this.cliente.razon_social.trim() : undefined,
+      name:           !this.esRUC ? this.cliente.nombres.trim()      : undefined,
+      lastName:       !this.esRUC ? this.cliente.apellidos.trim()    : undefined,
       address:        this.cliente.direccion.trim(),
       email:          this.cliente.email.trim() || undefined,
-      phone:          this.cliente.telefono ? String(this.cliente.telefono) : undefined
+      phone:          this.cliente.telefono ? String(this.cliente.telefono) : undefined,
     };
 
     this.clienteService.updateCustomer(this.cliente.customerId, payload).subscribe({
       next: () => {
         this.allowNavigate.set(true);
-        this.messageService.add({ severity: 'success', summary: 'Edición Exitosa', detail: 'Los datos se actualizaron correctamente', life: 3000 });
+        this.messageService.add({
+          severity: 'success', summary: 'Edición Exitosa',
+          detail: 'Los datos se actualizaron correctamente', life: 3000,
+        });
         setTimeout(() => this.router.navigate(['/admin/clientes']), 1500);
       },
       error: () => {
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Ocurrió un problema al actualizar' });
-      }
+        this.messageService.add({
+          severity: 'error', summary: 'Error',
+          detail: 'Ocurrió un problema al actualizar',
+        });
+      },
     });
   }
 
-
-
-
+  // ── Cancelar ──────────────────────────────────────────────────────
   confirmCancel(): void {
     if (!this.clienteForm?.dirty) { this.router.navigate(['/admin/clientes']); return; }
 
     this.confirmationService.confirm({
-      header: 'Cambios sin guardar',
-      message: '¿Deseas descartar los cambios realizados?',
-      icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'Sí, salir',
-      rejectLabel: 'Continuar editando',
+      header:       'Cambios sin guardar',
+      message:      '¿Deseas descartar los cambios realizados?',
+      icon:         'pi pi-exclamation-triangle',
+      acceptLabel:  'Sí, salir',
+      rejectLabel:  'Continuar editando',
       acceptButtonProps: { severity: 'danger' },
       accept: () => {
         this.allowNavigate.set(true);
         this.router.navigate(['/admin/clientes']);
-      }
+      },
     });
   }
 }
