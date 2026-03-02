@@ -1,6 +1,6 @@
 import { Injectable, computed, signal, inject } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { environment } from '../../../enviroments/enviroment'; // Ajusta la ruta según tu proyecto
+import { environment } from '../../../enviroments/enviroment';
 import { Observable, throwError } from 'rxjs';
 import { finalize, tap, catchError } from 'rxjs/operators';
 
@@ -108,6 +108,11 @@ export class ClienteService {
       );
   }
 
+
+  // cliente.service.ts — busca algo así:
+  obtenerTiposDocumento(): Observable<any[]> {
+    return this.http.get<any[]>(`${environment.apiUrl}/sales/customers/document-types`);
+  }
 
   /**
    * Crea un nuevo cliente

@@ -25,14 +25,13 @@
         <div class="col-12 md:col-6">
           <label class="field-label">TIPO DE DOCUMENTO <span class="required">*</span></label>
           <p-select
-            [options]="tiposDocumento"
-            optionLabel="descripcion"
-            optionValue="cod_sunat"
+            [options]="tiposDocumento()"
+            optionLabel="description"
+            optionValue="sunatCode"
             [(ngModel)]="cliente.documentTypeSunatCode"
             name="tipoDoc"
-            placeholder="Seleccione tipo"
             (onChange)="onTipoDocumentoChange()"
-            styleClass="w-full">
+            class="w-full">
           </p-select>
         </div>
 

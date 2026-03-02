@@ -9,7 +9,6 @@ import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
 import { DashboardService } from '../../services/dashboard.service';
 
-
 export interface TopProducto {
   nombre: string;
   ventas: number;

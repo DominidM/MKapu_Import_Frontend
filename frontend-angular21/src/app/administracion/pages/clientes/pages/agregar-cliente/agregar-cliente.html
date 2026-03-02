@@ -20,8 +20,14 @@
       <div class="grid form-grid">
         <div class="col-12 md:col-6">
           <label class="field-label">TIPO DE DOCUMENTO</label>
-          <p-select [options]="tiposDocumento" optionLabel="descripcion" optionValue="cod_sunat"
-            [(ngModel)]="cliente.documentTypeSunatCode" name="tipoDoc" (onChange)="onTipoDocumentoChange()" class="w-full">
+          <p-select
+            [options]="tiposDocumento()"
+            optionLabel="description"
+            optionValue="sunatCode"
+            [(ngModel)]="cliente.documentTypeSunatCode"
+            name="tipoDoc"
+            (onChange)="onTipoDocumentoChange()"
+            class="w-full">
           </p-select>
         </div>
 

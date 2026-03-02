@@ -1,13 +1,10 @@
 import { computed, Injectable, signal } from '@angular/core';
 import { environment } from '../../../enviroments/enviroment';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { finalize, tap, catchError } from 'rxjs/operators';
-import { Observable, throwError } from 'rxjs';
-import { Headquarter } from '../interfaces/almacen.interface';
+import { finalize, tap, catchError, switchMap, map } from 'rxjs/operators';
+import { Observable, throwError, forkJoin, of } from 'rxjs';
+import { Headquarter, SedeBasica } from '../interfaces/almacen.interface';
 
-/**
- * Respuesta esperada del backend para el listado de almacenes.
- */
 export interface WarehouseListResponse {
   warehouses: Headquarter[];
   total: number;
@@ -15,35 +12,38 @@ export interface WarehouseListResponse {
   pageSize: number;
 }
 
-export type CreateWarehouseRequest = Omit<Headquarter, 'id' | 'id_almacen' | 'activo'>;
-export type UpdateWarehouseRequest = Partial<Omit<Headquarter, 'id' | 'id_almacen'>>;
+export interface SedeAlmacenRelacion {
+  id_sede: number;
+  sede: SedeBasica;
+  almacenes: { id_almacen: number; almacen: any }[];
+  total: number;
+}
+
+export type CreateWarehouseRequest = Omit<Headquarter, 'id' | 'id_almacen' | 'activo' | 'sede' | 'createdAt' | 'updatedAt'>;
+export type UpdateWarehouseRequest = Partial<Omit<Headquarter, 'id' | 'id_almacen' | 'sede' | 'createdAt' | 'updatedAt'>>;
 
 @Injectable({ providedIn: 'root' })
 export class AlmacenService {
   private readonly api = environment.apiUrl;
 
-  // Señales internas
   private readonly _almacenResponse = signal<WarehouseListResponse | null>(null);
   private readonly _loading = signal(false);
   private readonly _error = signal<string | null>(null);
 
-  // Exposición pública
   readonly sedesResponse = computed(() => this._almacenResponse());
   readonly sedes = computed(() => this._almacenResponse()?.warehouses ?? []);
   readonly total = computed(() => this._almacenResponse()?.total ?? 0);
-
   readonly loading = computed(() => this._loading());
   readonly error = computed(() => this._error());
 
-  constructor(private http: HttpClient) {}
+  constructor(private readonly http: HttpClient) {}
 
   private buildHeaders(role: string = 'Administrador'): HttpHeaders {
-    return new HttpHeaders({ 'x-role': role ?? '' });
+    return new HttpHeaders({ 'x-role': role });
   }
 
-  /* --------------------
-     READ / LIST
-  ---------------------*/
+  // ─── LOAD principal: almacenes + mapa de sedes ───────────────────────────────
+
   loadAlmacen(role: string = 'Administrador'): Observable<WarehouseListResponse> {
     this._loading.set(true);
     this._error.set(null);
@@ -51,9 +51,19 @@ export class AlmacenService {
     return this.http
       .get<WarehouseListResponse>(`${this.api}/logistics/warehouses`, {
         headers: this.buildHeaders(role),
+        params: { page: '1', pageSize: '1000' },
       })
       .pipe(
         tap((res) => this._almacenResponse.set(res)),
+
+        // Después de cargar almacenes, cargamos sedes para el mapa
+        switchMap((res) =>
+          this.buildSedeMap(role).pipe(
+            tap((sedeMap) => this.enrichWithSedeMap(sedeMap)),
+            map(() => res) // devolvemos el response original
+          )
+        ),
+
         catchError((err) => {
           this._error.set('No se pudo cargar almacenes.');
           return throwError(() => err);
@@ -62,185 +72,176 @@ export class AlmacenService {
       );
   }
 
-  /* --------------------
-     CREATE
-  ---------------------*/
+  // ─── Construye mapa id_almacen → SedeBasica ──────────────────────────────────
+
+  private buildSedeMap(role: string): Observable<Map<number, SedeBasica>> {
+    return this.http
+      .get<any>(`${this.api}/admin/headquarters`, {
+        headers: this.buildHeaders(role),
+      })
+      .pipe(
+        switchMap((resp) => {
+          // El endpoint puede devolver array directo o { data: [] } o { headquarters: [] }
+          const sedesList: SedeBasica[] = Array.isArray(resp)
+            ? resp
+            : (resp?.data ?? resp?.headquarters ?? []);
+
+          if (sedesList.length === 0) return of(new Map<number, SedeBasica>());
+
+          // Por cada sede consultamos sus almacenes asignados
+          const requests$ = sedesList.map((sede) =>
+            this.http
+              .get<SedeAlmacenRelacion>(
+                `${this.api}/admin/sede-almacen/sede/${sede.id_sede}`,
+                { headers: this.buildHeaders(role) }
+              )
+              .pipe(catchError(() => of({ id_sede: sede.id_sede, sede, almacenes: [], total: 0 })))
+          );
+
+          return forkJoin(requests$).pipe(
+            map((relaciones) => {
+              const map = new Map<number, SedeBasica>();
+              for (const rel of relaciones) {
+                for (const item of rel.almacenes) {
+                  map.set(item.id_almacen, rel.sede);
+                }
+              }
+              return map;
+            })
+          );
+        }),
+        catchError(() => of(new Map<number, SedeBasica>()))
+      );
+  }
+
+  // ─── Enriquece los warehouses en caché con su sede ───────────────────────────
+
+  private enrichWithSedeMap(sedeMap: Map<number, SedeBasica>): void {
+    const prev = this._almacenResponse();
+    if (!prev) return;
+    const enriched = prev.warehouses.map((w) => ({
+      ...w,
+      sede: sedeMap.get(w.id_almacen ?? w.id ?? 0) ?? null,
+    }));
+    this._almacenResponse.set({ ...prev, warehouses: enriched });
+  }
+
+  // ─── CRUD ────────────────────────────────────────────────────────────────────
+
   createAlmacen(payload: CreateWarehouseRequest, role: string = 'Administrador'): Observable<Headquarter> {
     this._loading.set(true);
     this._error.set(null);
-
     return this.http
-      .post<Headquarter>(`${this.api}/logistics/warehouses`, payload, {
-        headers: this.buildHeaders(role),
-      })
+      .post<Headquarter>(`${this.api}/logistics/warehouses`, payload, { headers: this.buildHeaders(role) })
       .pipe(
         tap((created) => {
           const prev = this._almacenResponse();
           if (!prev) return;
-          this._almacenResponse.set({
-            ...prev,
-            warehouses: [created, ...prev.warehouses],
-            total: prev.total + 1,
-          });
+          this._almacenResponse.set({ ...prev, warehouses: [created, ...prev.warehouses], total: prev.total + 1 });
         }),
         catchError((err: any) => {
-          let serverMsg = 'No se pudo registrar el almacén.';
-          try {
-            if (err?.error) {
-              if (typeof err.error === 'string' && err.error.trim()) {
-                serverMsg = err.error;
-              } else if (typeof err.error === 'object') {
-                serverMsg = err.error.message ?? err.error.error ?? JSON.stringify(err.error);
-              }
-            } else if (err?.message) {
-              serverMsg = err.message;
-            }
-          } catch {
-            serverMsg = 'Error desconocido del servidor';
-          }
-
-          this._error.set(serverMsg);
-          console.error('[AlmacenService] createSede error:', err, '=> msg:', serverMsg);
+          let msg = 'No se pudo registrar el almacén.';
+          if (err?.error) msg = typeof err.error === 'string' ? err.error : (err.error.message ?? JSON.stringify(err.error));
+          this._error.set(msg);
           return throwError(() => err);
         }),
         finalize(() => this._loading.set(false))
       );
   }
 
-  /* --------------------
-     READ BY ID
-  ---------------------*/
   getAlmacenById(id: number, role: string = 'Administrador'): Observable<Headquarter> {
     this._loading.set(true);
     this._error.set(null);
-
     return this.http
-      .get<Headquarter>(`${this.api}/logistics/warehouses/${id}`, {
-        headers: this.buildHeaders(role),
-      })
+      .get<Headquarter>(`${this.api}/logistics/warehouses/${id}`, { headers: this.buildHeaders(role) })
       .pipe(
-        catchError((err) => {
-          this._error.set('No se pudo cargar el almacén.');
-          return throwError(() => err);
-        }),
+        catchError((err) => { this._error.set('No se pudo cargar el almacén.'); return throwError(() => err); }),
         finalize(() => this._loading.set(false))
       );
   }
 
-  /* --------------------
-     UPDATE
-     (se mantiene el método existente para actualizar datos)
-  ---------------------*/
+  getSedeDeAlmacen(id_almacen: number): Observable<any> {
+    return this.http
+      .get(`${this.api}/admin/sede-almacen/almacen/${id_almacen}`, {
+        headers: this.buildHeaders(),
+      })
+      .pipe(catchError(() => of(null)));
+  }
+
+  reassignSede(id_almacen: number, id_sede: number): Observable<any> {
+    return this.http.put(
+      `${this.api}/admin/sede-almacen/${id_almacen}/sede`,
+      { id_sede },
+      { headers: this.buildHeaders() }
+    );
+  }
+
+  unassignSede(id_almacen: number): Observable<any> {
+    return this.http.delete(
+      `${this.api}/admin/sede-almacen/${id_almacen}/sede`,
+      { headers: this.buildHeaders() }
+    );
+  }
   updateAlmacen(id: number, payload: UpdateWarehouseRequest, role: string = 'Administrador'): Observable<Headquarter> {
     this._loading.set(true);
     this._error.set(null);
-
     return this.http
-      .put<Headquarter>(`${this.api}/logistics/warehouses/${id}`, payload, {
-        headers: this.buildHeaders(role),
-      })
+      .put<Headquarter>(`${this.api}/logistics/warehouses/${id}`, payload, { headers: this.buildHeaders(role) })
       .pipe(
         tap((updated) => this.patchCachedHeadquarter(id, updated)),
-        catchError((err) => {
-          this._error.set('No se pudo actualizar el almacén.');
-          return throwError(() => err);
-        }),
+        catchError((err) => { this._error.set('No se pudo actualizar el almacén.'); return throwError(() => err); }),
         finalize(() => this._loading.set(false))
       );
   }
 
-  /* --------------------
-     UPDATE STATUS (soft deactivate/activate)
-     Endpoint: PUT /logistics/warehouses/:id/status
-     - Forzamos booleano en el payload
-     - Añadimos Content-Type explícito
-     - Log de debugging para verificar lo enviado desde el navegador
-  ---------------------*/
   updateAlmacenStatus(id: number, activo: boolean, role: string = 'Administrador'): Observable<Headquarter> {
     this._loading.set(true);
     this._error.set(null);
-
-    const payload = { activo: !!activo }; // forzar booleano
-    const url = `${this.api}/logistics/warehouses/${id}/status`;
     const headers = this.buildHeaders(role).set('Content-Type', 'application/json');
-
-    // Debug log (se verá en la consola del navegador)
-    try {
-      // eslint-disable-next-line no-console
-      console.log('[AlmacenService] PUT status ->', url, payload, { headers: headers.keys() });
-    } catch (e) {
-      /* ignore logging errors */
-    }
-
     return this.http
-      .put<Headquarter>(url, payload, { headers })
+      .put<Headquarter>(`${this.api}/logistics/warehouses/${id}/status`, { activo: !!activo }, { headers })
       .pipe(
         tap((updated) => this.patchCachedHeadquarter(id, updated)),
-        catchError((err) => {
-          this._error.set('No se pudo actualizar el estado del almacén.');
-          return throwError(() => err);
-        }),
+        catchError((err) => { this._error.set('No se pudo actualizar el estado del almacén.'); return throwError(() => err); }),
         finalize(() => this._loading.set(false))
       );
   }
 
-  /**
-   * DELETE /logistics/warehouses/:id
-   * -> implementado como soft-delete (desactivación)
-   * Devuelve el Headquarter actualizado (con activo=false).
-   */
   deleteAlmacen(id: number, role: string = 'Administrador'): Observable<Headquarter> {
-    // Log para debugging
-    try {
-      // eslint-disable-next-line no-console
-      console.log('[AlmacenService] deleteAlmacen (soft) ->', id);
-    } catch (e) {
-      /* ignore */
-    }
-    // Reutiliza updateSedeStatus para hacer soft-delete
     return this.updateAlmacenStatus(id, false, role);
   }
 
-  /* --------------------
-     Raw fetch (sin signals)
-  ---------------------*/
   getSedes(role: string = 'Administrador'): Observable<WarehouseListResponse> {
     return this.http.get<WarehouseListResponse>(`${this.api}/logistics/warehouses`, {
       headers: this.buildHeaders(role),
+      params: { page: '1', pageSize: '1000' },
     });
+  }
+
+  getAlmacenesPorSede(id_sede: number): Observable<SedeAlmacenRelacion> {
+    return this.http.get<SedeAlmacenRelacion>(
+      `${this.api}/admin/sede-almacen/sede/${id_sede}`,
+      { headers: this.buildHeaders() }
+    );
   }
 
   private patchCachedHeadquarter(id: number, updated: Headquarter): void {
     const prev = this._almacenResponse();
-    if (!prev) {
-      console.debug('[AlmacenService] patchCachedHeadquarter: no cache present');
-      return;
-    }
-
+    if (!prev) return;
     const normalizedId = Number(id);
     let found = false;
-
-    const newWarehouses = prev.warehouses.map((h: Headquarter) => {
-      const hId = Number((h as any).id ?? (h as any).id_almacen);
+    const newWarehouses = prev.warehouses.map((h) => {
+      const hId = Number(h.id ?? h.id_almacen);
       if (hId === normalizedId) {
         found = true;
-        console.debug('[AlmacenService] patchCachedHeadquarter: replacing id=', normalizedId);
-        return updated;
+        return { ...updated, sede: h.sede }; // preserva la sede al hacer patch
       }
       return h;
     });
-
     if (found) {
-      this._almacenResponse.set({
-        ...prev,
-        warehouses: newWarehouses,
-      });
+      this._almacenResponse.set({ ...prev, warehouses: newWarehouses });
       return;
     }
-
-    // Fallback: si no está en cache (p. ej. pagina distinta) recargamos la lista
-    console.debug('[AlmacenService] patchCachedHeadquarter: id not found in cache, reloading list id=', normalizedId);
     this.loadAlmacen('Administrador').subscribe({ next: () => {}, error: () => {} });
   }
-
 }
