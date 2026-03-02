@@ -150,6 +150,7 @@ export interface RegistroVentaAdminRequest {
   currencyCode: string;
   responsibleId: string;
   branchId: number;
+  warehouseId: number;        
   paymentMethodId: number;
   operationNumber: string | null;
   items: {

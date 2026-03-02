@@ -103,7 +103,6 @@
 
               <div class="grid" [formGroup]="nuevoClienteForm">
 
-                <!-- 1. Tipo documento PRIMERO -->
                 <div class="field col-12 md:col-4">
                   <label class="form-label">Tipo Documento <span class="text-red-400">*</span></label>
                   <p-select
@@ -117,7 +116,6 @@
                   />
                 </div>
 
-                <!-- 2. N° Documento (readonly, viene del buscador) -->
                 <div class="field col-12 md:col-4">
                   <label class="form-label">
                     N° Documento
@@ -134,7 +132,6 @@
                   />
                 </div>
 
-                <!-- 3. Email -->
                 <div class="field col-12 md:col-4">
                   <label class="form-label">Email <span class="text-red-400">*</span></label>
                   <input pInputText formControlName="email"
@@ -145,7 +142,6 @@
                   </small>
                 </div>
 
-                <!-- ── RUC: solo Razón Social ──────────────────────── -->
                 <ng-container *ngIf="esRuc()">
                   <div class="field col-12 md:col-8">
                     <label class="form-label">Razón Social <span class="text-red-400">*</span></label>
@@ -158,7 +154,6 @@
                   </div>
                 </ng-container>
 
-                <!-- ── No RUC: Nombres + Apellidos ────────────────── -->
                 <ng-container *ngIf="!esRuc()">
                   <div class="field col-12 md:col-4">
                     <label class="form-label">Nombres <span class="text-red-400">*</span></label>
@@ -180,7 +175,6 @@
                   </div>
                 </ng-container>
 
-                <!-- 4. Teléfono -->
                 <div class="field col-12 md:col-4">
                   <label class="form-label">Teléfono</label>
                   <input pInputText formControlName="phone"
@@ -189,7 +183,6 @@
                     class="w-full" />
                 </div>
 
-                <!-- 5. Dirección -->
                 <div class="field col-12 md:col-8">
                   <label class="form-label">Dirección</label>
                   <input pInputText formControlName="address"
@@ -251,29 +244,54 @@
         <div class="section-divider"></div>
       </div>
 
+      <!-- Sede -->
       <div class="field col-12 md:col-4 mb-4">
         <label class="form-label">Sede <span class="text-red-400">*</span></label>
-        <p-select formControlName="sede" [options]="sedes()"
-          optionLabel="nombre" optionValue="id_sede"
-          placeholder="Seleccionar sede" class="w-full" />
+        <p-select
+          formControlName="sede"
+          [options]="sedes()"
+          optionLabel="nombre"
+          optionValue="id_sede"
+          placeholder="Seleccionar sede"
+          class="w-full"
+        />
+        <small *ngIf="form.get('sede')?.invalid && form.get('sede')?.touched"
+          style="font-size:0.72rem; color:#f87171;">
+          La sede es requerida.
+        </small>
       </div>
 
+      <!-- Almacén -->
       <div class="field col-12 md:col-4 mb-4">
-        <label class="form-label">Almacén</label>
+        <label class="form-label">
+          Almacén
+          <span *ngIf="almacenesLoading()" class="ml-1">
+            <i class="pi pi-spin pi-spinner" style="font-size:0.75rem"></i>
+          </span>
+        </label>
         <p-select
           formControlName="id_almacen"
-          [options]="almacenes()"
-          optionLabel="nombre"
-          optionValue="id_almacen"
-          [placeholder]="almacenes().length === 0 ? 'Sin almacenes disponibles' : 'Seleccionar almacén'"
-          [disabled]="almacenes().length === 0"
+          [options]="almacenesOptions()"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Seleccione un almacén"
+          [loading]="almacenesLoading()"
+          [showClear]="true"
+          [disabled]="!sedeSeleccionada() || almacenesLoading()"
           class="w-full"
+          (ngModelChange)="almacenSeleccionado.set($event)"
         />
         <small *ngIf="!form.get('sede')?.value" style="font-size:0.72rem; color:var(--text-muted)">
           Selecciona una sede primero.
         </small>
+        <small *ngIf="sedeSeleccionada() && almacenesOptions().length === 0 && !almacenesLoading()"
+          style="font-size:0.72rem; color:#facc15;">
+          <i class="pi pi-exclamation-triangle mr-1"></i>
+          No hay almacenes disponibles para esta sede.
+        </small>
       </div>
 
+      <!-- Estado -->
       <div class="field col-12 md:col-4 mb-4">
         <label class="form-label">Estado</label>
         <p-select *ngIf="esModoEdicion()" formControlName="estado"

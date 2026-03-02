@@ -26,6 +26,7 @@ import {
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { ProductoService } from '../../../services/producto.service';
 import { ProductoAutocomplete } from '../../../interfaces/producto.interface';
+import { SedeAlmacenService } from '../../../services/sede-almacen.service';
 
 interface DetalleItem {
   id_prod_ref: number;
@@ -72,6 +73,7 @@ export class CotizacionFormulario implements OnInit {
   private sedeService     = inject(SedeService);
   private clienteService  = inject(ClienteService);
   private productoService = inject(ProductoService);
+  private readonly sedeAlmacenService = inject(SedeAlmacenService);
   private messageService  = inject(MessageService);
 
   // ── Signals ───────────────────────────────────────────────────────────────
@@ -88,6 +90,11 @@ export class CotizacionFormulario implements OnInit {
   cargandoProducto      = signal(false);
   detalles              = signal<DetalleItem[]>([]);
   esRuc                 = signal(false);
+
+  // Señales de almacén
+  almacenSeleccionado = signal<number | null>(null);
+  almacenesOptions    = signal<{ label: string; value: number }[]>([]);
+  almacenesLoading    = signal(false);
 
   busquedaProductoVal = '';
 
@@ -152,23 +159,45 @@ export class CotizacionFormulario implements OnInit {
       else this._limpiarClienteSinDoc();
     });
 
+    // ── Cambio de sede: carga detalle + almacenes ──────────────────────────
     this.form.get('sede')?.valueChanges.subscribe((id_sede: number) => {
-      this.sedeSeleccionada.set(null);
-      this.almacenes.set([]);
+      // Resetear almacén
+      this.almacenSeleccionado.set(null);
+      this.almacenesOptions.set([]);
       this.form.get('id_almacen')?.setValue(null, { emitEvent: false });
+
+      // Resetear productos
       this.productosAutoComplete.set([]);
       this.busquedaProductoVal = '';
+      this.sedeSeleccionada.set(null);
+
       if (!id_sede) return;
 
+      // Cargar detalle de sede
       this.sedeService.getSedeById(id_sede).subscribe({
-        next: (sede) => {
-          this.sedeSeleccionada.set(sede);
-          this.almacenes.set([]); // vacío por ahora, sin backend aún
-        },
+        next:  (sede) => this.sedeSeleccionada.set(sede),
         error: () => this.sedeSeleccionada.set(null),
+      });
+
+      // Cargar almacenes de la sede
+      this.almacenesLoading.set(true);
+      this.sedeAlmacenService.loadWarehouseOptionsBySede(id_sede).subscribe({
+        next: (options) => {
+          this.almacenesOptions.set(options);
+          this.almacenesLoading.set(false);
+        },
+        error: () => {
+          this.almacenesLoading.set(false);
+          this.messageService.add({
+            severity: 'warn',
+            summary: 'Almacenes',
+            detail: 'No se pudieron cargar los almacenes de esta sede',
+          });
+        },
       });
     });
 
+    // ── Modo edición ───────────────────────────────────────────────────────
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.esModoEdicion.set(true);
@@ -184,6 +213,24 @@ export class CotizacionFormulario implements OnInit {
             fec_venc:    cot.fec_venc ? new Date(cot.fec_venc) : null,
             fec_emision: cot.fec_emision ? new Date(cot.fec_emision) : new Date(),
           });
+
+          // Pre-cargar almacenes de la sede guardada
+          if (cot.id_sede) {
+            this.almacenesLoading.set(true);
+            this.sedeAlmacenService.loadWarehouseOptionsBySede(cot.id_sede).subscribe({
+              next: (options) => {
+                this.almacenesOptions.set(options);
+                this.almacenesLoading.set(false);
+                // Pre-seleccionar almacén si el backend lo devuelve
+                const idAlmacen = (cot as any).id_almacen ?? null;
+                if (idAlmacen) {
+                  this.almacenSeleccionado.set(idAlmacen);
+                  this.form.get('id_almacen')?.setValue(idAlmacen, { emitEvent: false });
+                }
+              },
+              error: () => this.almacenesLoading.set(false),
+            });
+          }
 
           if (cot.cliente) {
             const c = cot.cliente;
@@ -263,8 +310,6 @@ export class CotizacionFormulario implements OnInit {
 
     this.clienteService.crearCliente(payload).subscribe({
       next: (nuevoCliente: ClienteResponse) => {
-
-        // ← Declarar tipoDoc ANTES de usarlo
         const tipoDoc = this.tiposDocumento().find(
           t => t.documentTypeId === nuevoCliente.documentTypeId
         );
@@ -276,7 +321,7 @@ export class CotizacionFormulario implements OnInit {
           invoiceType:             nuevoCliente.invoiceType as 'BOLETA' | 'FACTURA',
           status:                  nuevoCliente.status,
           documentTypeId:          nuevoCliente.documentTypeId,
-          documentTypeDescription: tipoDoc?.description ?? tipoDoc?.description ?? '-',
+          documentTypeDescription: tipoDoc?.description ?? '-',
           documentTypeSunatCode:   nuevoCliente.documentTypeSunatCode,
           address:                 nuevoCliente.address,
           email:                   nuevoCliente.email,
@@ -301,10 +346,9 @@ export class CotizacionFormulario implements OnInit {
       },
     });
   }
-  // ── Tipo documento → controla campos RUC / persona ───────────────────────
+
   onTipoDocumentoChange(idTipo: number | null): void {
     const tipoDoc = this.tiposDocumento().find(t => t.documentTypeId === idTipo);
-    // Intenta todas las variantes de la propiedad por compatibilidad
     const cod: string = (tipoDoc as any)?.cod_sunat
                      ?? tipoDoc?.sunatCode
                      ?? tipoDoc?.documentTypeId
@@ -331,7 +375,6 @@ export class CotizacionFormulario implements OnInit {
     this.nuevoClienteForm.get('razon_social')?.updateValueAndValidity();
   }
 
-  // ── Largo máximo del documento según tipo ────────────────────────────────
   getMaxLengthDoc(): number {
     const idTipo = this.nuevoClienteForm.get('documentTypeId')?.value;
     const tipoDoc = this.tiposDocumento().find(t => t.documentTypeId === idTipo);
@@ -339,9 +382,9 @@ export class CotizacionFormulario implements OnInit {
                      ?? tipoDoc?.sunatCode
                      ?? tipoDoc?.documentTypeId
                      ?? '';
-    if (cod === '01') return 8;   // DNI
-    if (cod === '06') return 11;  // RUC
-    if (cod === '07') return 12;  // Pasaporte
+    if (cod === '01') return 8;
+    if (cod === '06') return 11;
+    if (cod === '07') return 12;
     return 15;
   }
 
@@ -460,6 +503,7 @@ export class CotizacionFormulario implements OnInit {
     const payload = {
       documento_cliente: raw.documento,
       id_sede:           raw.sede,
+      id_almacen:        this.almacenSeleccionado() ?? raw.id_almacen ?? null,
       fec_venc:          fecVenc,
       subtotal:          this.subtotal,
       igv:               this.igv,
@@ -485,7 +529,6 @@ export class CotizacionFormulario implements OnInit {
     this.busquedaSinResultado.set(false);
     this.esRuc.set(false);
     this.nuevoClienteForm.reset();
-    // Restaurar validadores por defecto
     this.nuevoClienteForm.get('name')?.setValidators([Validators.required]);
     this.nuevoClienteForm.get('apellidos')?.setValidators([Validators.required]);
     this.nuevoClienteForm.get('razon_social')?.clearValidators();
@@ -501,8 +544,6 @@ export class CotizacionFormulario implements OnInit {
     this.form.get('id_cliente')?.setValue('', { emitEvent: false });
     this.nuevoClienteForm.patchValue({ documentValue: doc });
   }
-
-  // ── Validaciones de input ─────────────────────────────────────────────────
 
   soloNumeros(event: KeyboardEvent): boolean {
     const char = event.key;

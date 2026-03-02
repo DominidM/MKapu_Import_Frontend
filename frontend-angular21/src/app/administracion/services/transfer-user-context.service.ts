@@ -9,6 +9,7 @@ interface StoredUserShape {
   roleId?: number;
   roleName?: string;
   idSede?: number | string;
+  id_sede?: number | string; 
 }
 
 @Injectable({ providedIn: 'root' })
@@ -49,7 +50,7 @@ export class TransferUserContextService {
       return authSede !== undefined && authSede !== null ? String(authSede) : null;
     }
 
-    return String(user.idSede);
+    return String(user.idSede ?? user.id_sede);
   }
 
   isAdmin(): boolean {

@@ -160,6 +160,7 @@ export class DashboardAdmin implements OnInit {
 
   onPeriodoVentasDiaChange(value: string): void {
     this.periodoVentasDia.set(value);
+    this.cargarEstadisticas(); 
     this.cargarGraficoVentasPorDia();
   }
   onMesVentasDistritoChange(value: string): void {
@@ -184,7 +185,7 @@ export class DashboardAdmin implements OnInit {
   }
   
   cargarEstadisticas(): void {
-    this.dashboardService.getKpis(this.periodoVentasDia()).subscribe({
+  this.dashboardService.getKpis(this.periodoVentasDia(), this.idSede() || undefined).subscribe({
       next: (kpis) => {
         const vnt = Number(kpis.totalVentas) || 0;
         const ord = Number(kpis.totalOrdenes) || 0;
