@@ -11,3 +11,12 @@ table {
     font-size: 0.875rem;
   }
 }
+
+:host ::ng-deep canvas {
+  border-radius: 8px;
+}
+
+:host ::ng-deep .chartjs-tooltip {
+  background: rgba(0, 0, 0, 0.85) !important;
+  color: #fff !important;
+}
