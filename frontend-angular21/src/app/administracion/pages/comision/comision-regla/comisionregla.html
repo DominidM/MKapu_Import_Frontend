@@ -1,0 +1,230 @@
+<div class="agregar-cliente-page">
+  <p-toast position="top-right" />
+
+  <!-- HEADER -->
+  <p-card styleClass="clientes-header-card">
+    <div class="flex align-items-center justify-content-between flex-wrap gap-3">
+      <div class="flex align-items-center gap-3">
+        <span class="clientes-title-icon">
+          <i class="pi pi-wallet"></i>
+        </span>
+        <div>
+          <p class="clientes-kicker">ADMINISTRACIÓN · COMISIONES</p>
+          <h2 class="clientes-title">NUEVA REGLA DE COMISIÓN</h2>
+        </div>
+      </div>
+      <p-button icon="pi pi-arrow-left" text severity="secondary"
+        [routerLink]="['/admin/comision']" />
+    </div>
+  </p-card>
+
+  <!-- FORM -->
+  <p-card styleClass="cliente-card border-none">
+
+    <!-- ── SECCIÓN 1: Identificación ── -->
+    <div class="regla-section mb-4">
+      <div class="regla-section-title">
+        <i class="pi pi-tag"></i>
+        <span>Identificación</span>
+      </div>
+
+      <div class="grid form-grid">
+
+        <div class="col-12 md:col-6">
+          <label class="field-label">NOMBRE DE LA REGLA <span class="required">*</span></label>
+          <input pInputText class="w-full"
+            [(ngModel)]="nombre"
+            placeholder="Ej: Mejor vendedor Freidoras" />
+          <small class="p-error" *ngIf="submitted() && !nombreValido">
+            Mínimo 3 caracteres.
+          </small>
+        </div>
+
+        <div class="col-12 md:col-6">
+          <label class="field-label">DESCRIPCIÓN <span class="optional">(opcional)</span></label>
+          <input pInputText class="w-full"
+            [(ngModel)]="descripcion"
+            placeholder="Ej: Aplica al vendedor con más unidades del mes" />
+        </div>
+
+      </div>
+    </div>
+
+    <p-divider />
+
+    <!-- ── SECCIÓN 2: Objetivo ── -->
+    <div class="regla-section mb-4">
+      <div class="regla-section-title">
+        <i class="pi pi-bullseye"></i>
+        <span>Objetivo</span>
+      </div>
+
+      <div class="grid form-grid">
+
+        <div class="col-12 md:col-6">
+          <label class="field-label">CATEGORÍA (FAMILIA) <span class="required">*</span></label>
+          <p-autoComplete
+            [(ngModel)]="familiaSeleccionada"
+            [suggestions]="familiasFiltradas"
+            (completeMethod)="filtrarFamilias($event)"
+            field="label"
+            placeholder="Buscar categoría..."
+            [dropdown]="true"
+            styleClass="w-full" />
+          <small class="p-error" *ngIf="submitted() && !familiaValida">
+            Seleccione una categoría.
+          </small>
+        </div>
+
+        <div class="col-12 md:col-6">
+          <label class="field-label">TIPO DE VENTA</label>
+          <div class="toggle-group mt-1">
+            <button type="button" [class.active]="tipoVenta === 'general'"
+              (click)="tipoVenta = 'general'">
+              <i class="pi pi-shopping-cart"></i> General
+            </button>
+            <button type="button" [class.active]="tipoVenta === 'remate'"
+              (click)="tipoVenta = 'remate'">
+              <i class="pi pi-bolt"></i> Remate
+            </button>
+            <button type="button" [class.active]="tipoVenta === 'unitarias'"
+              (click)="tipoVenta = 'unitarias'">
+              <i class="pi pi-box"></i> Unitarias
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <p-divider />
+
+    <!-- ── SECCIÓN 3: Comisión ── -->
+    <div class="regla-section mb-4">
+      <div class="regla-section-title">
+        <i class="pi pi-percentage"></i>
+        <span>Comisión</span>
+      </div>
+
+      <div class="grid form-grid">
+
+        <div class="col-12 md:col-6">
+          <label class="field-label">TIPO DE COMISIÓN</label>
+          <div class="toggle-group mt-1">
+            <button type="button" [class.active]="tipoRecompensa === 'MONTO_FIJO'"
+              (click)="tipoRecompensa = 'MONTO_FIJO'">
+              <i class="pi pi-wallet"></i> Monto Fijo
+            </button>
+            <button type="button" [class.active]="tipoRecompensa === 'PORCENTAJE'"
+              (click)="tipoRecompensa = 'PORCENTAJE'">
+              <i class="pi pi-percentage"></i> Porcentaje
+            </button>
+          </div>
+        </div>
+
+        <div class="col-12 md:col-6">
+          <label class="field-label">
+            {{ tipoRecompensa === 'PORCENTAJE' ? 'PORCENTAJE (%)' : 'MONTO DE COMISIÓN (S/)' }}
+            <span class="required">*</span>
+          </label>
+          <div class="monto-wrapper">
+            <span class="monto-prefix">
+              {{ tipoRecompensa === 'PORCENTAJE' ? '%' : 'S/' }}
+            </span>
+            <p-inputnumber
+              [(ngModel)]="montoComision"
+              [min]="0"
+              [minFractionDigits]="2"
+              [maxFractionDigits]="2"
+              [useGrouping]="false"
+              styleClass="monto-input"
+              placeholder="0.00" />
+          </div>
+          <small class="p-error" *ngIf="submitted() && !montoValido">
+            El monto debe ser mayor a 0.
+          </small>
+        </div>
+
+      </div>
+    </div>
+
+    <p-divider />
+
+    <!-- ── SECCIÓN 4: Condiciones ── -->
+    <div class="regla-section mb-4">
+      <div class="regla-section-title">
+        <i class="pi pi-sliders-h"></i>
+        <span>Condiciones</span>
+      </div>
+
+      <div class="grid form-grid">
+
+        <!-- LOTE TOGGLE -->
+        <div class="col-12">
+          <div class="lote-toggle-card" [class.lote-active]="comisionPorLote">
+            <div class="lote-info">
+              <div class="lote-icon">
+                <i class="pi pi-th-large"></i>
+              </div>
+              <div>
+                <strong>Comisión por Lote</strong>
+                <small class="block">
+                  El vendedor debe superar una meta de unidades para ganar la comisión
+                </small>
+              </div>
+            </div>
+            <p-checkbox [(ngModel)]="comisionPorLote" [binary]="true" inputId="lote" />
+          </div>
+        </div>
+
+        @if (comisionPorLote) {
+          <div class="col-12 md:col-6">
+            <label class="field-label">META DE UNIDADES <span class="required">*</span></label>
+            <p-inputnumber
+              [(ngModel)]="metaUnidades"
+              [min]="2"
+              [useGrouping]="false"
+              class="w-full"
+              placeholder="10" />
+            <small class="hint">
+              <i class="pi pi-info-circle"></i>
+              El vendedor debe vender al menos {{ metaUnidades }} unidades para recibir la comisión.
+            </small>
+            <small class="p-error" *ngIf="submitted() && !metaValida">
+              La meta debe ser al menos 2 unidades.
+            </small>
+          </div>
+        }
+
+        <!-- FECHAS -->
+        <div class="col-12 md:col-6">
+          <label class="field-label">FECHA INICIO <span class="required">*</span></label>
+          <input pInputText type="date" [(ngModel)]="fechaInicio" class="w-full" />
+        </div>
+
+        <div class="col-12 md:col-6">
+          <label class="field-label">
+            FECHA FIN <span class="optional">(opcional)</span>
+          </label>
+          <input pInputText type="date" [(ngModel)]="fechaFin" class="w-full" />
+          <small class="hint">
+            <i class="pi pi-info-circle"></i>
+            Sin fecha fin, la regla aplica indefinidamente.
+          </small>
+        </div>
+
+      </div>
+    </div>
+
+    <p-divider />
+
+    <!-- ACCIONES -->
+    <div class="flex align-items-center justify-content-center gap-3 mt-3">
+      <p-button label="Cancelar" outlined severity="secondary"
+        type="button" (onClick)="cancelar()" />
+      <p-button label="Guardar Regla" icon="pi pi-check"
+        type="button" [loading]="loading()" (onClick)="guardarRegla()" />
+    </div>
+
+  </p-card>
+</div>
