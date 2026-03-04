@@ -20,7 +20,7 @@ import { TooltipModule } from 'primeng/tooltip';
 
 import { AuthService } from '../../../auth/services/auth.service';
 import { VentasAdminService } from '../../services/ventas.service';
-
+import { AccountReceivableService } from '../../services/account-receivable.service';
 import {SedeAlmacenService} from "../../services/sede-almacen.service";
 
 import { ActivatedRoute } from '@angular/router';
@@ -77,6 +77,7 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
   private readonly sedeAlmacenService = inject(SedeAlmacenService);
   private readonly route = inject(ActivatedRoute);
   private readonly quoteService = inject(QuoteService);
+  private readonly arService = inject(AccountReceivableService);
 
   readonly tituloKicker = 'VENTAS - GENERAR VENTAS';
   readonly subtituloKicker = 'GENERAR NUEVA VENTA (ADMIN)';
@@ -383,11 +384,10 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
   private leerParamsCotizacion(): void {
     const cotizacionId = this.route.snapshot.queryParamMap.get('cotizacion');
     const tipo = this.route.snapshot.queryParamMap.get('tipo') as 'contado' | 'credito';
+    console.log('🔗 params cotizacion:', cotizacionId, '| tipo:', tipo); 
     if (!cotizacionId) return;
-
     this.cotizacionOrigen.set(Number(cotizacionId));
     this.tipoPagoOrigen.set(tipo ?? 'contado');
-    this.cargarDatosDeCotizacion(Number(cotizacionId));
   }
 
   private cargarDatosDeCotizacion(id: number): void {
@@ -867,24 +867,26 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
             return false;
           }
           return true;
-        case 2:
-        if (this.metodoPagoSeleccionado() === 1 && this.montoRecibido() < this.total()) {
-          this.messageService.add({
-            severity: 'warn',
-            summary: 'Monto Insuficiente',
-            detail: 'El monto recibido debe ser mayor o igual al total',
-          });
-          return false;
-        }
-        if (this.metodoPagoSeleccionado() !== 1 && !this.numeroOperacion().trim()) {
-          this.messageService.add({
-            severity: 'warn',
-            summary: 'Número de Operación Requerido',
-            detail: 'Debe ingresar el número de operación',
-          });
-          return false;
-        }
-        return true;
+      case 2:
+      if (this.tipoPagoOrigen() === 'credito') return true;
+
+      if (this.metodoPagoSeleccionado() === 1 && this.montoRecibido() < this.total()) {
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Monto Insuficiente',
+          detail: 'El monto recibido debe ser mayor o igual al total',
+        });
+        return false;
+      }
+      if (this.metodoPagoSeleccionado() !== 1 && !this.numeroOperacion().trim()) {
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Número de Operación Requerido',
+          detail: 'Debe ingresar el número de operación',
+        });
+        return false;
+      }
+      return true;
       default:
         return true;
     }
@@ -905,90 +907,150 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
   private procesarVenta(): void {
     this.loading.set(true);
 
+    // Guardar snapshots para pantalla de éxito
     this.snapshotCliente.set(this.clienteEncontrado());
     this.snapshotSede.set(this.nombreSedeSeleccionada());
     this.snapshotMetodoPago.set(this.getLabelMetodoPago(this.metodoPagoSeleccionado()));
     this.snapshotTipoComprobante.set(this.tipoComprobante());
 
     const subtotal = Number(this.subtotal().toFixed(2));
-    const igv = Number(this.igv().toFixed(2));
-    const total = Number(this.total().toFixed(2));
-    const serie = this.tipoComprobante() === 1 ? 'F001' : 'B001';
-
+    const igv      = Number(this.igv().toFixed(2));
+    const total    = Number(this.total().toFixed(2));
+    const serie    = this.tipoComprobante() === 1 ? 'F001' : 'B001';
+    const cotizId  = this.cotizacionOrigen();
     const fechaVencimiento = new Date();
     if (this.metodoPagoSeleccionado() !== 1) {
       fechaVencimiento.setDate(fechaVencimiento.getDate() + 30);
     }
 
+    // --- CREACIÓN DEL COMPROBANTE ---
     const request: RegistroVentaAdminRequest = {
-      customerId: this.clienteEncontrado()!.customerId,
-      saleTypeId: 1,
+      customerId:      this.clienteEncontrado()!.customerId,
+      saleTypeId:      1,
       serie,
-      receiptTypeId: this.tipoComprobante(),
-      dueDate: fechaVencimiento.toISOString(),
-      operationType: OPERATION_TYPE_VENTA_INTERNA, // ← '0101'
+      receiptTypeId:   this.tipoComprobante(),
+      dueDate:         fechaVencimiento.toISOString(),
+      operationType:   OPERATION_TYPE_VENTA_INTERNA,
       subtotal,
       igv,
-      isc: 0,
+      isc:             0,
       total,
-      currencyCode: CURRENCY_PEN_ADMIN, // ← 'PEN'
-      responsibleId: this.idUsuarioActual().toString(),
-      branchId: this.sedeSeleccionada() ?? 0,
-      warehouseId: this.almacenSeleccionado() ?? 0, 
+      esCreditoPendiente: this.tipoPagoOrigen() === 'credito',
+      currencyCode:    CURRENCY_PEN_ADMIN,
+      responsibleId:   this.idUsuarioActual().toString(),
+      branchId:        this.sedeSeleccionada() ?? 0,
+      warehouseId:     this.almacenSeleccionado() ?? 0,
       paymentMethodId: this.metodoPagoSeleccionado(),
       operationNumber: this.metodoPagoSeleccionado() === 1 ? null : this.numeroOperacion(),
-    items: this.productosSeleccionados().map((item) => {
-      const producto  = this.productosCargados().find((p) => p.id === item.productId);
-      const unitPrice = Number(item.unitPrice);
-      const total     = Number(item.total);
-      return {
-        productId: producto ? producto.id.toString() : item.productId.toString(),
-        quantity:  item.quantity,
-        unitPrice: Number(unitPrice.toFixed(2)),
-        description: item.description,
-        total: Number(total.toFixed(2)),
-      };
-    }),
+      items: this.productosSeleccionados().map((item) => {
+        const producto  = this.productosCargados().find((p) => p.id === item.productId);
+        const unitPrice = Number(item.unitPrice);
+        const itemTotal = Number(item.total);
+        return {
+          productId: producto ? producto.id.toString() : item.productId.toString(),
+          quantity: item.quantity,
+          unitPrice: Number(unitPrice.toFixed(2)),
+          description: item.description,
+          total: Number(itemTotal.toFixed(2)),
+        };
+      }),
     };
 
-    console.log('📦 Body enviado (admin):', JSON.stringify(request, null, 2));
+    this.ventasService.registrarVenta(request).subscribe({
+      next: (response: any) => {
+        this.loading.set(false);
 
-  this.ventasService.registrarVenta(request).subscribe({
-    next: (response: any) => {
-      this.loading.set(false);
-      this.comprobanteGenerado.set({
-        numero_completo: `${response.serie ?? serie}-${String(response.receiptNumber ?? response.numero ?? '').padStart(8, '0')}`,
-        fec_emision: response.createdAt ?? response.fec_emision ?? new Date().toISOString(),
-        total: response.total ?? total,
-        serie: response.serie ?? serie,
-        numero: response.receiptNumber ?? response.numero ?? 0,
-        id_comprobante: response.receiptId ?? response.id_comprobante ?? 0,
-      });
-      this.messageService.add({
-        severity: 'success',
-        summary: '¡Venta Exitosa!',
-        detail: `Comprobante ${serie}-${String(response.receiptNumber ?? response.numero ?? '').padStart(8, '0')} generado`,
-        life: 5000,
-      });
+        console.log('[VENTA] Respuesta backend registrarVenta:', response);
 
-      // ── Marcar cotización origen como APROBADA si aplica ──
-      const cotizId = this.cotizacionOrigen();
-      if (cotizId) {
-        this.quoteService.updateQuoteStatus(cotizId, 'APROBADA').subscribe({
-          next: () => console.log(`Cotización #${cotizId} marcada como APROBADA`),
-          error: () => console.warn('No se pudo actualizar estado de cotización'),
+        // Mostrar los datos del comprobante generado
+        this.comprobanteGenerado.set({
+          numero_completo: `${response.serie ?? serie}-${String(response.receiptNumber ?? response.numero ?? '').padStart(8, '0')}`,
+          fec_emision:     response.createdAt ?? response.fec_emision ?? new Date().toISOString(),
+          total:           response.total ?? total,
+          serie:           response.serie ?? serie,
+          numero:          response.receiptNumber ?? response.numero ?? 0,
+          id_comprobante:  response.receiptId ?? response.id_comprobante ?? 0,
         });
-      }
-    },
-    error: (err: any) => {
-      this.loading.set(false);
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Error al Generar Venta',
-        detail: err.error?.message ?? 'Ocurrió un error al procesar la venta',
-      });
-    },
-  });
+
+        this.messageService.add({
+          severity: 'success',
+          summary:  '¡Venta Exitosa!',
+          detail:   `Comprobante ${serie}-${String(response.receiptNumber ?? response.numero ?? '').padStart(8, '0')} generado`,
+          life:     5000,
+        });
+
+        // --- MARCAR COTIZACIÓN COMO APROBADA ---
+        if (cotizId) {
+          this.quoteService.updateQuoteStatus(cotizId, 'APROBADA').subscribe({
+            next: () => console.log(`Cotización #${cotizId} marcada como APROBADA`),
+            error: () => console.warn('No se pudo actualizar estado de cotización'),
+          });
+        }
+
+        // --- CREAR CUENTA POR COBRAR SI ES CRÉDITO ---
+        if (this.tipoPagoOrigen() === 'credito') {
+          // Log para depurar el id retornado
+          console.log('[POR COBRAR] Fields de id:', response.receiptId, response.id_comprobante);
+          const receiptId =
+            typeof response.receiptId === 'number' && response.receiptId > 0
+              ? response.receiptId
+              : (typeof response.id_comprobante === 'number' && response.id_comprobante > 0
+                  ? response.id_comprobante
+                  : (typeof response.idComprobante === 'number' && response.idComprobante > 0
+                      ? response.idComprobante
+                      : undefined));
+
+          // Si no obtuviste id válido, error inmediato y no mandes nada al backend
+          if (!receiptId) {
+            console.error('[POR COBRAR] ERROR: No se obtuvo un id de comprobante válido para cuenta por cobrar', response);
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error interno',
+              detail: 'No se pudo registrar la cuenta por cobrar porque el comprobante no tiene ID.',
+            });
+            return;
+          }
+          // Si el receiptId SÍ es válido, intenta crear la cuenta por cobrar
+          const fechaVenc = new Date();
+          fechaVenc.setDate(fechaVenc.getDate() + 30);
+          const dueDate = fechaVenc.toISOString().split('T')[0];
+          this.arService.create({
+            salesReceiptId: receiptId,
+            userRef:        this.clienteEncontrado()!.name,  
+            totalAmount:    total,
+            dueDate,
+            paymentTypeId:  this.metodoPagoSeleccionado(),
+            currencyCode:   CURRENCY_PEN_ADMIN,
+            observation:    cotizId
+              ? `Crédito generado desde cotización #${cotizId}`
+              : 'Venta a crédito',
+          }).then((ar) => {
+            if (ar) {
+              this.messageService.add({
+                severity: 'info',
+                summary:  'Cuenta por Cobrar Pendiente Creada',
+                detail:   `Cuenta #${ar.id} registrada. Saldo: S/. ${ar.pendingBalance.toFixed(2)}`,
+                life:     5000,
+              });
+            } else {
+              this.messageService.add({
+                severity: 'error',
+                summary: 'Error al crear cuenta por cobrar',
+                detail: this.arService.error() ?? undefined,
+              });
+            }
+          });
+        }
+      },
+      error: (err: any) => {
+        this.loading.set(false);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error al Generar Venta',
+          detail: err.error?.message ?? 'Ocurrió un error al procesar la venta',
+        });
+      },
+    });
   }
 
   // ══════════════════════════════════════════════════════════════════════════

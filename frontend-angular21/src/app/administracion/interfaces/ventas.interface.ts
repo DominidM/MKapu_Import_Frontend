@@ -17,7 +17,7 @@ export interface SalesReceiptSummaryAdmin {
   sedeNombre: string;
   metodoPago: string;
   total: number;
-  estado: 'EMITIDO' | 'ANULADO' | 'RECHAZADO';
+  estado: 'EMITIDO' | 'ANULADO' | 'RECHAZADO' | 'PENDIENTE';
 }
 
 export interface SalesReceiptSummaryListResponseAdmin {
@@ -29,7 +29,7 @@ export interface SalesReceiptSummaryListResponseAdmin {
 }
 
 export interface SalesReceiptsQueryAdmin {
-  status?: 'EMITIDO' | 'ANULADO' | 'RECHAZADO';
+  status?: 'EMITIDO' | 'ANULADO' | 'RECHAZADO' | 'PENDIENTE';
   customerId?: string;
   receiptTypeId?: number;
   paymentMethodId?: number;
@@ -150,9 +150,10 @@ export interface RegistroVentaAdminRequest {
   currencyCode: string;
   responsibleId: string;
   branchId: number;
-  warehouseId: number;        
+  warehouseId: number;
   paymentMethodId: number;
   operationNumber: string | null;
+  esCreditoPendiente?: boolean;  
   items: {
     productId: string;
     quantity: number;
