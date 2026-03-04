@@ -1,4 +1,3 @@
-<!-- ventas/pages/reclamos-garantia/reclamos-listado/reclamos-listado.html -->
 <div class="p-2">
   <p-card class="ventas-header-card mb-4 ventas-header-bordered">
     <div class="flex align-items-center justify-content-between flex-wrap gap-2">
@@ -31,31 +30,28 @@
         <i class="pi pi-list"></i>
         <div>
           <span class="estadistica-label">Total Reclamos</span>
-          <span class="estadistica-valor">{{ estadisticas.total }}</span>
+          <span class="estadistica-valor">{{ claimService.stats().total }}</span>
         </div>
       </div>
-
       <div class="estadistica-card">
-        <i class="pi pi-clock"></i>
+        <i class="pi pi-info-circle"></i>
         <div>
-          <span class="estadistica-label">Pendientes</span>
-          <span class="estadistica-valor">{{ estadisticas.pendientes }}</span>
+          <span class="estadistica-label">Registrados</span>
+          <span class="estadistica-valor">{{ claimService.stats().registrados }}</span>
         </div>
       </div>
-
       <div class="estadistica-card">
         <i class="pi pi-sync"></i>
         <div>
           <span class="estadistica-label">En Proceso</span>
-          <span class="estadistica-valor">{{ estadisticas.en_proceso }}</span>
+          <span class="estadistica-valor">{{ claimService.stats().en_proceso }}</span>
         </div>
       </div>
-
       <div class="estadistica-card">
         <i class="pi pi-check-circle"></i>
         <div>
           <span class="estadistica-label">Resueltos</span>
-          <span class="estadistica-valor">{{ estadisticas.resueltos }}</span>
+          <span class="estadistica-valor">{{ claimService.stats().resueltos }}</span>
         </div>
       </div>
     </div>
@@ -66,15 +62,14 @@
   <div class="filtros-container mb-4">
     <div class="seccion-filtros">
       <h3><i class="pi pi-filter"></i> Filtros de búsqueda</h3>
-
       <div class="filtros-linea-1">
+
         <div class="filtro-item filtro-busqueda-65">
-          <label>Buscar por DNI, Cliente, Producto o Comprobante</label>
+          <label>Buscar por ID Comprobante, Motivo o Descripción</label>
           <input
             pInputText
             type="text"
-            [(ngModel)]="filtros.busqueda"
-            (ngModelChange)="aplicarFiltros()"
+            [(ngModel)]="filtroBusqueda"
             placeholder="Escriba aquí para buscar..."
             class="w-full"
           />
@@ -83,12 +78,11 @@
         <div class="filtro-item filtro-compacto">
           <label>Estado</label>
           <p-select
-            [(ngModel)]="filtros.estado"
+            [(ngModel)]="filtroEstado"
             [options]="estadosOptions"
             placeholder="Todos"
             optionLabel="label"
             optionValue="value"
-            (onChange)="aplicarFiltros()"
             styleClass="w-full"
           />
         </div>
@@ -103,6 +97,7 @@
             styleClass="btn-limpiar-filtros"
           />
         </div>
+
       </div>
     </div>
   </div>
@@ -120,8 +115,8 @@
         [paginator]="true"
         [rows]="10"
         [rowsPerPageOptions]="[10, 25, 50]"
-        [loading]="loading"
-        [tableStyle]="{ 'min-width': '70rem' }"
+        [loading]="claimService.loading()"
+        [tableStyle]="{ 'min-width': '60rem' }"
         styleClass="p-datatable-striped"
         currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} registros"
         [showCurrentPageReport]="true"
@@ -129,65 +124,64 @@
       >
         <ng-template pTemplate="header">
           <tr>
-            <th pSortableColumn="fecha_registro">
-              Fecha Registro <p-sortIcon field="fecha_registro" />
-            </th>
-            <th pSortableColumn="cliente_nombre">Cliente</th>
-            <th>Comprobante</th>
-            <th>Producto</th>
-            <th>Motivo</th>
-            <th pSortableColumn="estado">Estado <p-sortIcon field="estado" /></th>
-            <th>Días</th>
-            <th>Garantía</th>
-            <th class="text-center">Acciones</th>
+            <th style="width:8%"># Reclamo</th>
+            <th style="width:10%">Comprobante</th>
+            <th style="width:14%">Motivo</th>
+            <th style="width:22%">Descripción</th>
+            <th style="width:10%">Estado</th>
+            <th style="width:10%">Registrado</th>
+            <th style="width:8%">Días</th>
+            <th style="width:10%">Resuelto</th>
+            <th class="text-center" style="width:8%">Acciones</th>
           </tr>
         </ng-template>
 
         <ng-template pTemplate="body" let-reclamo>
           <tr>
-            <td>{{ reclamo.fecha_registro | date: 'dd/MM/yyyy' }}</td>
-            <td>
-              <div>
-                <strong>{{ reclamo.cliente_nombre }}</strong>
-                <div class="text-sm text-muted">{{ reclamo.cliente_dni }}</div>
-              </div>
-            </td>
+            <td class="font-semibold">#{{ reclamo.claimId }}</td>
+
             <td>
               <span class="codigo-comprobante">
-                {{ formatearComprobante(reclamo.serie_comprobante, reclamo.numero_comprobante) }}
+                Comp. #{{ reclamo.receiptId }}
               </span>
             </td>
+
+            <td>{{ reclamo.reason }}</td>
+
             <td>
-              <div>
-                <div class="codigo-producto">{{ reclamo.cod_producto }}</div>
-                <div class="text-sm">{{ reclamo.descripcion_producto }}</div>
-              </div>
+              <span class="text-sm text-600" style="white-space:pre-wrap;">
+                {{ reclamo.description | slice:0:80 }}{{ reclamo.description.length > 80 ? '...' : '' }}
+              </span>
             </td>
-            <td>{{ reclamo.motivo }}</td>
+
             <td>
               <p-tag
-                [value]="getEstadoLabel(reclamo.estado)"
-                [severity]="getEstadoSeverity(reclamo.estado)"
+                [value]="getStatusLabel(reclamo.status)"
+                [severity]="getStatusSeverity(reclamo.status)"
               />
             </td>
+
+            <td>{{ formatDate(reclamo.registeredAt) }}</td>
+
             <td>
               <span class="dias-transcurridos">
-                {{ calcularDiasDesdeRegistro(reclamo.fecha_registro) }} días
+                {{ diasDesde(reclamo.registeredAt) }} días
               </span>
             </td>
+
             <td>
-              <p-tag
-                [value]="estaEnGarantia(reclamo.fecha_compra) ? 'Vigente' : 'Vencida'"
-                [severity]="estaEnGarantia(reclamo.fecha_compra) ? 'success' : 'danger'"
-              />
-              <div class="text-sm text-muted">
-                {{ getDiasGarantiaRestantes(reclamo.fecha_compra) }} días
-              </div>
+              <span *ngIf="reclamo.resolvedAt; else sinResolver" class="text-green-500 text-sm font-semibold">
+                {{ formatDate(reclamo.resolvedAt) }}
+              </span>
+              <ng-template #sinResolver>
+                <span class="text-400 text-sm">—</span>
+              </ng-template>
             </td>
+
             <td class="text-center">
               <p-button
                 icon="pi pi-eye"
-                (onClick)="verDetalle(reclamo.id_reclamo)"
+                (onClick)="verDetalle(reclamo.claimId)"
                 [rounded]="true"
                 [text]="true"
                 severity="secondary"
@@ -196,7 +190,7 @@
               />
               <p-button
                 icon="pi pi-file-edit"
-                (onClick)="editarReclamo(reclamo.id_reclamo)"
+                (onClick)="editarReclamo(reclamo.claimId)"
                 [rounded]="true"
                 [text]="true"
                 severity="secondary"

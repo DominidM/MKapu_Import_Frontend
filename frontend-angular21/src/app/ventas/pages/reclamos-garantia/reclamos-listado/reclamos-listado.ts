@@ -1,245 +1,105 @@
 // ventas/pages/reclamos-garantia/reclamos-listado/reclamos-listado.ts
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subscription } from 'rxjs';
 
-import { Card } from 'primeng/card';
-import { Button } from 'primeng/button';
+import { Card }        from 'primeng/card';
+import { Button }      from 'primeng/button';
 import { TableModule } from 'primeng/table';
-import { Tag } from 'primeng/tag';
-import { InputText } from 'primeng/inputtext';
-import { Select } from 'primeng/select';
-import { Tooltip } from 'primeng/tooltip';
-import { Toast } from 'primeng/toast';
-
-import { ReclamosService, Reclamo, EstadoReclamo, EstadisticasReclamos } from '../../../../core/services/reclamo.service';
-import { SedeService, Sede } from '../../../../core/services/sede.service';
-import { EmpleadosService, Empleado } from '../../../../core/services/empleados.service';
+import { Tag }         from 'primeng/tag';
+import { InputText }   from 'primeng/inputtext';
+import { Select }      from 'primeng/select';
+import { Tooltip }     from 'primeng/tooltip';
+import { Toast }       from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 
-interface FiltroReclamos {
-  estado: EstadoReclamo | null;
-  busqueda: string;
-}
+import {
+  ClaimService,
+  ClaimResponseDto,
+  ClaimStatus,
+} from '../../../../core/services/claim.service';
 
 @Component({
   selector: 'app-reclamos-listado',
   standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    Card,
-    Button,
-    TableModule,
-    Tag,
-    InputText,
-    Select,
-    Tooltip,
-    Toast
-  ],
+  imports: [CommonModule, FormsModule, Card, Button, TableModule, Tag, InputText, Select, Tooltip, Toast],
   providers: [MessageService],
   templateUrl: './reclamos-listado.html',
   styleUrl: './reclamos-listado.css',
 })
-export class ReclamosListado implements OnInit, OnDestroy {
-  tituloKicker = 'VENTAS - RECLAMOS Y GARANTÍAS';
+export class ReclamosListado implements OnInit {
+
+  tituloKicker    = 'VENTAS - RECLAMOS Y GARANTÍAS';
   subtituloKicker = 'GESTIÓN DE RECLAMOS';
-  iconoCabecera = 'pi pi-shield';
+  iconoCabecera   = 'pi pi-shield';
 
-  private subscriptions = new Subscription();
+  private router          = inject(Router);
+  readonly claimService   = inject(ClaimService);
+  private messageService  = inject(MessageService);
 
-  reclamos: Reclamo[] = [];
-  reclamosFiltrados: Reclamo[] = [];
-  sedes: Sede[] = [];
-  empleadoActual: Empleado | null = null;
-
-  filtros: FiltroReclamos = {
-    estado: null,
-    busqueda: ''
-  };
+  // ── Filtros locales ──────────────────────────────────────────────
+  filtroEstado: ClaimStatus | null = null;
+  filtroBusqueda = '';
 
   estadosOptions = [
-    { label: 'Todos', value: null },
-    { label: 'Pendiente', value: EstadoReclamo.PENDIENTE },
-    { label: 'En Proceso', value: EstadoReclamo.EN_PROCESO },
-    { label: 'Resuelto', value: EstadoReclamo.RESUELTO }
+    { label: 'Todos',      value: null                   },
+    { label: 'Registrado', value: ClaimStatus.REGISTRADO },
+    { label: 'En Proceso', value: ClaimStatus.EN_PROCESO },
+    { label: 'Resuelto',   value: ClaimStatus.RESUELTO   },
+    { label: 'Rechazado',  value: ClaimStatus.RECHAZADO  },
   ];
 
-  loading: boolean = false;
+  // ── Computed filtrado ────────────────────────────────────────────
+  get reclamosFiltrados(): ClaimResponseDto[] {
+    const q   = this.filtroBusqueda.toLowerCase().trim();
+    const est = this.filtroEstado;
 
-  estadisticas: EstadisticasReclamos = {
-    total: 0,
-    pendientes: 0,
-    en_proceso: 0,
-    resueltos: 0,
-    rechazados: 0,
-    porcentaje_resueltos: 0,
-    tiempo_promedio_resolucion: 0
-  };
-
-  constructor(
-    private router: Router,
-    private reclamosService: ReclamosService,
-    private sedeService: SedeService,
-    private empleadosService: EmpleadosService,
-    private messageService: MessageService
-  ) {}
-
-  ngOnInit(): void {
-    this.cargarEmpleadoActual();
-    this.cargarSedes();
-    this.cargarReclamos();
-  }
-
-  ngOnDestroy(): void {
-    this.subscriptions.unsubscribe();
-  }
-
-  cargarEmpleadoActual(): void {
-    this.empleadoActual = this.empleadosService.getEmpleadoActual();
-
-    if (!this.empleadoActual) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Sin autenticación',
-        detail: 'No hay empleado logueado',
-        life: 3000
-      });
-    }
-  }
-
-  cargarSedes(): void {
-    const sub = this.sedeService.getSedes().subscribe({
-      next: (sedes) => {
-        this.sedes = sedes;
-      },
-      error: (error) => {
-        console.error('Error al cargar sedes:', error);
-      }
-    });
-    this.subscriptions.add(sub);
-  }
-
-  cargarReclamos(): void {
-    this.loading = true;
-
-    const sub = this.reclamosService.getReclamos().subscribe({
-      next: (reclamos) => {
-        if (this.empleadoActual?.id_sede) {
-          this.reclamos = reclamos
-            .filter((r: Reclamo) => r.id_sede === this.empleadoActual!.id_sede)
-            .sort((a: Reclamo, b: Reclamo) => new Date(b.fecha_registro).getTime() - new Date(a.fecha_registro).getTime());
-        } else {
-          this.reclamos = reclamos.sort((a: Reclamo, b: Reclamo) => 
-            new Date(b.fecha_registro).getTime() - new Date(a.fecha_registro).getTime()
-          );
-        }
-
-        this.reclamosFiltrados = [...this.reclamos];
-        this.calcularEstadisticas();
-        this.loading = false;
-      },
-      error: (error: any) => {
-        console.error('Error al cargar reclamos:', error);
-        this.loading = false;
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudieron cargar los reclamos',
-          life: 3000
-        });
-      }
-    });
-    this.subscriptions.add(sub);
-  }
-
-  aplicarFiltros(): void {
-    let resultado = [...this.reclamos];
-
-    if (this.filtros.estado) {
-      resultado = resultado.filter((r: Reclamo) => r.estado === this.filtros.estado);
-    }
-
-    if (this.filtros.busqueda && this.filtros.busqueda.trim()) {
-      const busqueda = this.filtros.busqueda.toLowerCase().trim();
-      resultado = resultado.filter((r: Reclamo) => 
-        r.cliente_dni.includes(busqueda) ||
-        r.cliente_nombre.toLowerCase().includes(busqueda) ||
-        r.cod_producto.toLowerCase().includes(busqueda) ||
-        r.descripcion_producto.toLowerCase().includes(busqueda) ||
-        this.formatearComprobante(r.serie_comprobante, r.numero_comprobante).toLowerCase().includes(busqueda)
-      );
-    }
-
-    this.reclamosFiltrados = resultado;
-    this.calcularEstadisticas();
-  }
-
-  limpiarFiltros(): void {
-    this.filtros = {
-      estado: null,
-      busqueda: ''
-    };
-    this.aplicarFiltros();
-
-    this.messageService.add({
-      severity: 'info',
-      summary: 'Filtros limpiados',
-      detail: 'Se restablecieron todos los filtros',
-      life: 2000
+    return this.claimService.claims().filter(c => {
+      const matchQ   = !q   || String(c.receiptId).includes(q) ||
+                               c.reason.toLowerCase().includes(q) ||
+                               c.description.toLowerCase().includes(q);
+      const matchEst = !est || c.status === est;
+      return matchQ && matchEst;
     });
   }
 
-  calcularEstadisticas(): void {
-    this.estadisticas = this.reclamosService.getEstadisticas();
+  // ── Init ─────────────────────────────────────────────────────────
+  async ngOnInit(): Promise<void> {
+    // Carga todos los reclamos — ajusta si tienes endpoint GET /claims
+    // Por ahora cargamos vacío; se llena cuando el usuario filtra por comprobante
+    // Si tu backend tiene GET /claims (lista general), agrégalo aquí:
+    // await this.claimService.getAll();
   }
 
+  // ── Acciones ─────────────────────────────────────────────────────
   nuevoReclamo(): void {
-    const isAdmin = this.router.url.startsWith('/admin');
-    const base = isAdmin ? '/admin/reclamos-listado' : '/ventas/reclamos-listado';
+    const base = this.getBase();
     this.router.navigate([`${base}/crear`]);
   }
 
-  verDetalle(idReclamo: number): void {
-    const isAdmin = this.router.url.startsWith('/admin');
-    const base = isAdmin ? '/admin/reclamos-listado' : '/ventas/reclamos-listado';
-    this.router.navigate([`${base}/detalle`, idReclamo]);
+  verDetalle(id: number): void {
+    this.router.navigate([`${this.getBase()}/detalle`, id]);
   }
 
-  editarReclamo(idReclamo: number): void {
-    const isAdmin = this.router.url.startsWith('/admin');
-    const base = isAdmin ? '/admin/reclamos-listado' : '/ventas/reclamos-listado';
-    this.router.navigate([`${base}/editar`, idReclamo]);
+  editarReclamo(id: number): void {
+    this.router.navigate([`${this.getBase()}/editar`, id]);
   }
 
-  getEstadoSeverity(estado: EstadoReclamo): 'warn' | 'info' | 'success' | 'danger' {
-    return this.reclamosService.getEstadoSeverity(estado);
+  limpiarFiltros(): void {
+    this.filtroEstado   = null;
+    this.filtroBusqueda = '';
   }
 
-  getEstadoLabel(estado: EstadoReclamo): string {
-    return this.reclamosService.getEstadoLabel(estado);
+  // ── Helpers ───────────────────────────────────────────────────────
+  private getBase(): string {
+    return this.router.url.startsWith('/admin')
+      ? '/admin/reclamos-listado'
+      : '/ventas/reclamos-listado';
   }
 
-  calcularDiasDesdeRegistro(fecha: Date): number {
-    return this.reclamosService.calcularDiasTranscurridos(fecha);
-  }
-
-  formatearComprobante(serie: string, numero: number): string {
-    return this.reclamosService.formatearComprobante(serie, numero);
-  }
-
-  getSede(idSede: string): string {
-    const sede = this.sedes.find((s: Sede) => s.id_sede === idSede);
-    return sede ? sede.nombre : 'N/A';
-  }
-
-  getDiasGarantiaRestantes(fechaCompra: Date): number {
-    return this.reclamosService.calcularDiasRestantes(fechaCompra);
-  }
-
-  estaEnGarantia(fechaCompra: Date): boolean {
-    return this.reclamosService.validarGarantia(fechaCompra);
-  }
+  getStatusLabel(status: ClaimStatus)    { return this.claimService.getStatusLabel(status); }
+  getStatusSeverity(status: ClaimStatus) { return this.claimService.getStatusSeverity(status); }
+  formatDate(iso: string)                { return this.claimService.formatDate(iso); }
+  diasDesde(iso: string)                 { return this.claimService.calcularDiasDesdeRegistro(iso); }
 }
