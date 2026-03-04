@@ -21,10 +21,11 @@ import { TooltipModule } from 'primeng/tooltip';
 import { AuthService } from '../../../auth/services/auth.service';
 import { VentasAdminService } from '../../services/ventas.service';
 
-import { AlmacenService } from '../../services/almacen.service';
 import {SedeAlmacenService} from "../../services/sede-almacen.service";
 
-
+import { ActivatedRoute } from '@angular/router';
+import { QuoteService } from '../../services/quote.service'; 
+import { Quote } from '../../interfaces/quote.interface'; 
 
 import {
   ClienteBusquedaAdminResponse,
@@ -74,6 +75,8 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
   private readonly confirmationService = inject(ConfirmationService);
   private readonly router = inject(Router);
   private readonly sedeAlmacenService = inject(SedeAlmacenService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly quoteService = inject(QuoteService);
 
   readonly tituloKicker = 'VENTAS - GENERAR VENTAS';
   readonly subtituloKicker = 'GENERAR NUEVA VENTA (ADMIN)';
@@ -131,6 +134,9 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
   almacenesOptions = signal<{ label: string; value: number }[]>([]);
   almacenesLoading = signal(false);
 
+  // Señales para posible clonación de cotización
+  cotizacionOrigen = signal<number | null>(null);
+  tipoPagoOrigen = signal<'contado' | 'credito'>('contado');
 
   nuevoClienteForm: {
     documentTypeId: number | null;
@@ -238,6 +244,7 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
     this.cargarSesion();
     this.cargarTiposDocumento();
     this.cargarSedes();
+    this.leerParamsCotizacion(); 
   }
 
   ngAfterViewInit(): void {
@@ -268,6 +275,12 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
       next: (data) => {
         this.sedes.set(data.filter((s) => s.activo));
         this.sedesLoading.set(false);
+
+        // Si venía de cotización, hacer prefill DESPUÉS de que las sedes estén listas
+        const cotizId = this.cotizacionOrigen();
+        if (cotizId) {
+          this.cargarDatosDeCotizacion(cotizId);
+        }
       },
       error: () => {
         this.sedesLoading.set(false);
@@ -364,6 +377,112 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
           });
         },
       });
+  }
+
+
+  private leerParamsCotizacion(): void {
+    const cotizacionId = this.route.snapshot.queryParamMap.get('cotizacion');
+    const tipo = this.route.snapshot.queryParamMap.get('tipo') as 'contado' | 'credito';
+    if (!cotizacionId) return;
+
+    this.cotizacionOrigen.set(Number(cotizacionId));
+    this.tipoPagoOrigen.set(tipo ?? 'contado');
+    this.cargarDatosDeCotizacion(Number(cotizacionId));
+  }
+
+  private cargarDatosDeCotizacion(id: number): void {
+    this.loading.set(true);
+    this.quoteService.getQuoteById(id).subscribe({
+      next: (cotizacion) => {
+        this.loading.set(false);
+        this.prefillDesdeCotizacion(cotizacion);
+      },
+      error: () => {
+        this.loading.set(false);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudo cargar la cotización',
+        });
+      },
+    });
+  }
+
+  private prefillDesdeCotizacion(cotizacion: Quote): void {
+    // 1. Sede — onSedeChange dispara la carga de almacenes
+    if (cotizacion.id_sede) {
+      this.onSedeChange(cotizacion.id_sede);
+
+      // Espera a que almacenesLoading termine y pre-selecciona el primero
+      const waitAlmacen = setInterval(() => {
+        if (!this.almacenesLoading() && this.almacenesOptions().length > 0) {
+          clearInterval(waitAlmacen);
+          // Pre-selecciona el primer almacén disponible de la sede
+          this.almacenSeleccionado.set(this.almacenesOptions()[0].value);
+        }
+      }, 100);
+    }
+
+    // 2. Tipo comprobante
+    const tipoDoc = cotizacion.cliente?.id_tipo_documento;
+    this.tipoComprobante.set(tipoDoc === 1 ? 1 : 2);
+
+    // 3. Cliente
+    if (cotizacion.cliente?.valor_doc) {
+      this.clienteDocumento.set(cotizacion.cliente.valor_doc);
+      const nombreCompleto = cotizacion.cliente.razon_social
+        ? cotizacion.cliente.razon_social
+        : `${cotizacion.cliente.nombre_cliente ?? ''} ${cotizacion.cliente.apellidos_cliente ?? ''}`.trim();
+
+      this.clienteEncontrado.set({
+        customerId: String(cotizacion.id_cliente),
+        name: nombreCompleto,
+        documentValue: cotizacion.cliente.valor_doc,
+        documentTypeDescription: tipoDoc === 1 ? 'RUC' : 'DNI',
+        documentTypeSunatCode: tipoDoc === 1 ? '6' : '1',
+        invoiceType: tipoDoc === 1 ? 'FACTURA' : 'BOLETA',
+        status: 'ACTIVO',
+        address: cotizacion.cliente.direccion ?? '',
+        email: cotizacion.cliente.email ?? '',
+        phone: cotizacion.cliente.telefono ?? '',
+        displayName: nombreCompleto,
+      });
+      this.busquedaRealizada.set(true);
+    }
+
+  // 4. Productos
+  if (cotizacion.detalles?.length) {
+    const items: ItemVentaUIAdmin[] = cotizacion.detalles.map((d) => {
+      const precio   = Number(d.precio);
+      const cantidad = Number(d.cantidad);
+      const total    = cantidad * precio;
+      return {
+        productId:   d.id_prod_ref,
+        codigo:      d.cod_prod,
+        quantity:    cantidad,
+        unitPrice:   precio,
+        description: d.descripcion,
+        total,
+        igvUnitario: Number((precio - precio / (1 + IGV_RATE_ADMIN)).toFixed(2)),
+      };
+    });
+    this.productosSeleccionados.set(items);
+  }
+
+    // 5. Método de pago
+    if (this.tipoPagoOrigen() === 'credito') {
+      this.metodoPagoSeleccionado.set(3);
+    }
+
+    // 6. Salta al paso 1 (ya tiene cliente en paso 0 y sede+productos en paso 1)
+    this.activeStep.set(1);
+
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Cotización cargada',
+      detail: `Datos pre-llenados desde cotización #${this.cotizacionOrigen()}`,
+      life: 4000,
+    });
   }
 
   cargarMasProductos(): void {
@@ -815,49 +934,61 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
       currencyCode: CURRENCY_PEN_ADMIN, // ← 'PEN'
       responsibleId: this.idUsuarioActual().toString(),
       branchId: this.sedeSeleccionada() ?? 0,
+      warehouseId: this.almacenSeleccionado() ?? 0, 
       paymentMethodId: this.metodoPagoSeleccionado(),
       operationNumber: this.metodoPagoSeleccionado() === 1 ? null : this.numeroOperacion(),
-      items: this.productosSeleccionados().map((item) => {
-        const producto = this.productosCargados().find((p) => p.id === item.productId);
-        return {
-          productId: producto ? producto.id.toString() : item.productId.toString(),
-          quantity: item.quantity,
-          unitPrice: Number(item.unitPrice.toFixed(2)),
-          description: item.description,
-          total: Number(item.total.toFixed(2)),
-        };
-      }),
+    items: this.productosSeleccionados().map((item) => {
+      const producto  = this.productosCargados().find((p) => p.id === item.productId);
+      const unitPrice = Number(item.unitPrice);
+      const total     = Number(item.total);
+      return {
+        productId: producto ? producto.id.toString() : item.productId.toString(),
+        quantity:  item.quantity,
+        unitPrice: Number(unitPrice.toFixed(2)),
+        description: item.description,
+        total: Number(total.toFixed(2)),
+      };
+    }),
     };
 
     console.log('📦 Body enviado (admin):', JSON.stringify(request, null, 2));
 
-    this.ventasService.registrarVenta(request).subscribe({
-      next: (response: any) => {
-        this.loading.set(false);
-        this.comprobanteGenerado.set({
-          numero_completo: `${response.serie ?? serie}-${String(response.receiptNumber ?? response.numero ?? '').padStart(8, '0')}`,
-          fec_emision: response.createdAt ?? response.fec_emision ?? new Date().toISOString(),
-          total: response.total ?? total,
-          serie: response.serie ?? serie,
-          numero: response.receiptNumber ?? response.numero ?? 0,
-          id_comprobante: response.receiptId ?? response.id_comprobante ?? 0,
+  this.ventasService.registrarVenta(request).subscribe({
+    next: (response: any) => {
+      this.loading.set(false);
+      this.comprobanteGenerado.set({
+        numero_completo: `${response.serie ?? serie}-${String(response.receiptNumber ?? response.numero ?? '').padStart(8, '0')}`,
+        fec_emision: response.createdAt ?? response.fec_emision ?? new Date().toISOString(),
+        total: response.total ?? total,
+        serie: response.serie ?? serie,
+        numero: response.receiptNumber ?? response.numero ?? 0,
+        id_comprobante: response.receiptId ?? response.id_comprobante ?? 0,
+      });
+      this.messageService.add({
+        severity: 'success',
+        summary: '¡Venta Exitosa!',
+        detail: `Comprobante ${serie}-${String(response.receiptNumber ?? response.numero ?? '').padStart(8, '0')} generado`,
+        life: 5000,
+      });
+
+      // ── Marcar cotización origen como APROBADA si aplica ──
+      const cotizId = this.cotizacionOrigen();
+      if (cotizId) {
+        this.quoteService.updateQuoteStatus(cotizId, 'APROBADA').subscribe({
+          next: () => console.log(`Cotización #${cotizId} marcada como APROBADA`),
+          error: () => console.warn('No se pudo actualizar estado de cotización'),
         });
-        this.messageService.add({
-          severity: 'success',
-          summary: '¡Venta Exitosa!',
-          detail: `Comprobante ${serie}-${String(response.receiptNumber ?? response.numero ?? '').padStart(8, '0')} generado`,
-          life: 5000,
-        });
-      },
-      error: (err: any) => {
-        this.loading.set(false);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error al Generar Venta',
-          detail: err.error?.message ?? 'Ocurrió un error al procesar la venta',
-        });
-      },
-    });
+      }
+    },
+    error: (err: any) => {
+      this.loading.set(false);
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error al Generar Venta',
+        detail: err.error?.message ?? 'Ocurrió un error al procesar la venta',
+      });
+    },
+  });
   }
 
   // ══════════════════════════════════════════════════════════════════════════

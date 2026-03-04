@@ -13,8 +13,9 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { AutoComplete } from 'primeng/autocomplete';
 import { TooltipModule } from 'primeng/tooltip';
 import { SedeService } from '../../../services/sede.service';
-import { QuoteService } from '../../../services/quote.service';
 import { QuoteListItem } from '../../../interfaces/quote.interface';
+import { QuoteService } from '../../../services/quote.service';
+import { SedeAlmacenService } from '../../../services/sede-almacen.service';
 
 @Component({
   selector: 'app-gestion-cotizaciones',
@@ -36,6 +37,7 @@ export class GestionCotizacionesComponent implements OnInit {
   // ── Servicios ─────────────────────────────────────────────────────────────
   private sedeService         = inject(SedeService);
   private quoteService        = inject(QuoteService);
+  private readonly sedeAlmacenService = inject(SedeAlmacenService);
   private confirmationService = inject(ConfirmationService);
   private messageService      = inject(MessageService);
 
@@ -267,10 +269,16 @@ export class GestionCotizacionesComponent implements OnInit {
   irDetalle(id: number) { this.router.navigate(['/admin/ver-detalle-cotizacion', id]); }
 
   irAgregarVenta(id: number) {
-    this.router.navigate(['/admin/ventas/nueva'], { queryParams: { cotizacion: id } });
+    this.router.navigate(
+      ['/admin/generar-ventas-administracion'],
+      { queryParams: { cotizacion: id, tipo: 'contado' } }
+    );
   }
-
+  
   irAgregarVentaPorCobrar(id: number) {
-    this.router.navigate(['/admin/ventas-por-cobrar/nueva'], { queryParams: { cotizacion: id } });
+    this.router.navigate(
+      ['/admin/generar-ventas-administracion'],
+      { queryParams: { cotizacion: id, tipo: 'credito' } }
+    );
   }
 }

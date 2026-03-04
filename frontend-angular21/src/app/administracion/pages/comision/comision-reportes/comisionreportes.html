@@ -1,0 +1,198 @@
+<div class="p-2">
+
+  <p-card class="sedes-header-card mb-4 ventas-header-bordered">
+    <div class="flex align-items-center justify-content-between flex-wrap gap-2">
+      <div class="flex align-items-center gap-3">
+        <span class="sedes-title-icon">
+          <i class="pi pi-chart-line"></i>
+        </span>
+        <div>
+          <p class="sedes-kicker">ADMINISTRADOR · ADMINISTRACIÓN · COMISIONES</p>
+          <h2 class="sedes-title">REPORTES DE COMISIONES</h2>
+        </div>
+      </div>
+      <p-button label="Exportar" icon="pi pi-download" styleClass="sedes-pill" />
+    </div>
+  </p-card>
+
+  <!-- FILTRO DE FECHAS -->
+  <p-card class="mb-3">
+    <div class="flex flex-wrap gap-3 align-items-end">
+
+      <div class="flex flex-column gap-1">
+        <label class="field-label">DESDE</label>
+        <input pInputText type="date" [(ngModel)]="fechaDesde" />
+      </div>
+
+      <div class="flex flex-column gap-1">
+        <label class="field-label">HASTA</label>
+        <input pInputText type="date" [(ngModel)]="fechaHasta" />
+      </div>
+
+      <div class="flex flex-column gap-1">
+        <label class="field-label">PERÍODO RÁPIDO</label>
+        <p-autoComplete
+          [(ngModel)]="periodoSeleccionado"
+          [suggestions]="periodosFiltrados"
+          (completeMethod)="filtrarPeriodos($event)"
+          (onSelect)="onPeriodoSelect($event)"
+          field="nombre"
+          placeholder="Este mes..." />
+      </div>
+
+      <p-button
+        label="Calcular"
+        icon="pi pi-refresh"
+        [loading]="loading()"
+        (onClick)="calcular()" />
+
+    </div>
+  </p-card>
+
+  <!-- ERROR -->
+  @if (error()) {
+    <p-card class="mb-3">
+      <span class="text-red-500">{{ error() }}</span>
+    </p-card>
+  }
+
+  <!-- MÉTRICAS -->
+  <div class="comision-metrics grid mt-2">
+
+    <div class="col-12 md:col-6 xl:col-3">
+      <p-card class="metric-card metric-info">
+        <div class="metric-header">
+          <span class="metric-icon metric-icon-info"><i class="pi pi-money-bill"></i></span>
+          <span class="metric-title">Total a Pagar</span>
+        </div>
+        <div class="metric-value">S/ {{ totalPagar() | number:'1.2-2' }}</div>
+        <div class="metric-sub">Comisiones pendientes</div>
+      </p-card>
+    </div>
+
+    <div class="col-12 md:col-6 xl:col-3">
+      <p-card class="metric-card metric-success">
+        <div class="metric-header">
+          <span class="metric-icon metric-icon-success"><i class="pi pi-wallet"></i></span>
+          <span class="metric-title">Total Comisiones</span>
+        </div>
+        <div class="metric-value">S/ {{ totalComisiones() | number:'1.2-2' }}</div>
+        <div class="metric-sub">Acumulado del período</div>
+      </p-card>
+    </div>
+
+    <div class="col-12 md:col-6 xl:col-3">
+      <p-card class="metric-card metric-warning">
+        <div class="metric-header">
+          <span class="metric-icon metric-icon-warning"><i class="pi pi-trophy"></i></span>
+          <span class="metric-title">Vendedor Top</span>
+        </div>
+        <div class="metric-value text-base">{{ vendedorTop().nombre }}</div>
+        <div class="metric-sub">S/ {{ vendedorTop().comision | number:'1.2-2' }} en comisiones</div>
+      </p-card>
+    </div>
+
+    <div class="col-12 md:col-6 xl:col-3">
+      <p-card class="metric-card metric-info">
+        <div class="metric-header">
+          <span class="metric-icon metric-icon-info"><i class="pi pi-users"></i></span>
+          <span class="metric-title">Vendedores</span>
+        </div>
+        <div class="metric-value">{{ totalVendedores() }}</div>
+        <div class="metric-sub">Con comisiones en el período</div>
+      </p-card>
+    </div>
+
+  </div>
+
+  <!-- TABLA -->
+  <p-card class="mt-3">
+
+    <div class="flex flex-wrap gap-3 align-items-center mb-3">
+
+      <span class="flex-1">
+        <input pInputText type="text" placeholder="Buscar por vendedor o comprobante..."
+          [(ngModel)]="filtroBusqueda" class="w-full" />
+      </span>
+
+      <p-autoComplete
+        [(ngModel)]="estadoSeleccionado"
+        [suggestions]="estadosFiltrados"
+        (completeMethod)="filtrarEstados($event)"
+        field="nombre"
+        placeholder="Filtrar estado..." />
+
+      <p-tag [value]="reportesFiltrados().length + ' resultados'" severity="info" />
+
+    </div>
+
+    @if (loading()) {
+      <div class="flex justify-content-center p-4">
+        <i class="pi pi-spin pi-spinner text-2xl"></i>
+      </div>
+    }
+
+    @if (!loading() && reportesFiltrados().length === 0) {
+      <div class="sedes-empty-state">
+        <div class="sedes-empty-icon"><i class="pi pi-inbox"></i></div>
+        <div class="sedes-empty-title">Sin comisiones en el período</div>
+        <div class="sedes-empty-subtitle">Ajusta las fechas y presiona Calcular.</div>
+      </div>
+    }
+
+    @if (reportesFiltrados().length > 0) {
+      <p-table
+        [value]="reportesFiltrados()"
+        [paginator]="true"
+        [rows]="10"
+        [rowsPerPageOptions]="[5, 10, 20]"
+        styleClass="sedes-table"
+        [tableStyle]="{ 'min-width': '55rem' }">
+
+        <ng-template pTemplate="header">
+          <tr>
+            <th>VENDEDOR</th>
+            <th>COMPROBANTE</th>
+            <th class="text-right">MONTO</th>
+            <th class="text-right">PORCENTAJE</th>
+            <th>FECHA</th>
+            <th>ESTADO</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-r>
+          <tr>
+            <td>
+              <div class="flex align-items-center gap-2">
+                <span class="vendedor-avatar">
+                  {{ r.id_vendedor_ref.charAt(0).toUpperCase() }}
+                </span>
+                <span>{{ r.id_vendedor_ref }}</span>
+              </div>
+            </td>
+            <td>
+              <span class="font-mono text-xs">#{{ r.id_comprobante }}</span>
+            </td>
+            <td class="text-right font-bold text-yellow-400">
+              S/ {{ r.monto | number:'1.2-2' }}
+            </td>
+            <td class="text-right">
+              <span class="porcentaje-chip">{{ r.porcentaje }}%</span>
+            </td>
+            <td>
+              <span class="text-sm">
+                {{ r.fecha_registro | date:'dd/MM/yyyy' }}
+              </span>
+            </td>
+            <td>
+              <p-tag [value]="r.estado" [severity]="getSeverity(r.estado)" />
+            </td>
+          </tr>
+        </ng-template>
+
+      </p-table>
+    }
+
+  </p-card>
+
+</div>

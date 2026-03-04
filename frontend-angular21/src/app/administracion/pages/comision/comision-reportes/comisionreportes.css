@@ -290,4 +290,35 @@
     opacity: 1;
     animation: metricShine 0.9s ease;
   }
+
+  .vendedor-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(246, 175, 51, 0.15);
+  color: #F6AF33;
+  font-weight: 700;
+  font-size: 0.8rem;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.porcentaje-chip {
+  background: rgba(246, 175, 51, 0.12);
+  color: #F6AF33;
+  border: 1px solid rgba(246, 175, 51, 0.3);
+  border-radius: 20px;
+  padding: 0.15rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.field-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #9ca3af;
+}
   

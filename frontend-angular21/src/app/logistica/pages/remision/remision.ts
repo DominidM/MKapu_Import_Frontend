@@ -15,6 +15,9 @@ import {
 } from '../../interfaces/remision.interface';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { ToastModule } from 'primeng/toast';
+import { ConfirmDialog, ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ConfirmationService, MessageService } from 'primeng/api';
 
 @Component({
   selector: 'app-remision',
@@ -29,7 +32,10 @@ import { FormsModule } from '@angular/forms';
     DatePicker,
     Select,
     InputTextModule,
+    ToastModule,
+    ConfirmDialogModule,
   ],
+  providers: [MessageService, ConfirmationService],
   templateUrl: './remision.html',
   styleUrl: './remision.css',
 })

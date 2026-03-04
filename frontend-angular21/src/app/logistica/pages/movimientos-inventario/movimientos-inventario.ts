@@ -41,7 +41,7 @@ export class MovimientosInventario {
   filtroTexto = signal<string>('');
   filtroFechas = signal<Date[] | undefined>(undefined);
   private transferContextService = inject(TransferUserContextService);
-  sedeId = signal<String>('');
+  sedeId = signal<string>('');
   private readonly currentSedeId: string | null = localStorage.getItem('current_sede_id');
   opcionesEstado = [
     { label: 'Todos', value: 0 },
@@ -57,6 +57,7 @@ export class MovimientosInventario {
   }
 
   cargarMovimientos() {
+    sedeId: this.sedeId(),
     this.cargando.set(true);
     this.obtenerFiltroSede();
     const fechas = this.filtroFechas();
@@ -79,14 +80,14 @@ export class MovimientosInventario {
       },
     });
   }
+
   obtenerFiltroSede(): void {
     const id = this.transferContextService.getCurrentHeadquarterId();
+    console.log('ID sede obtenido:', id);
     if (id) {
       this.sedeId.set(id);
-      console.log('Sede asignada al filtro:', this.sedeId);
     }
   }
-
 
   aplicarFiltros() {
     this.cargarMovimientos();

@@ -1,106 +1,132 @@
-import { Component } from '@angular/core';
+import { Component, inject, computed, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CardModule } from 'primeng/card';
-
-/* PrimeNG */
 import { ButtonModule } from 'primeng/button';
-import { AutoCompleteModule } from 'primeng/autocomplete';
-import { SelectButtonModule } from 'primeng/selectbutton';
-import { InputNumberModule } from 'primeng/inputnumber';
+import { InputTextModule } from 'primeng/inputtext';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
-import { PaginatorModule } from 'primeng/paginator';
+import { SelectModule } from 'primeng/select';
 import { RouterModule } from '@angular/router';
-
-/* 👉 NUEVA REGLA COMPONENT */
+import { CommissionService, CommissionRule } from '../../services/commission.service';
+import { CategoriaService } from '../../services/categoria.service';
 
 @Component({
   selector: 'app-comision',
   standalone: true,
   imports: [
-    CommonModule,
-    FormsModule,
-    ButtonModule,
-    AutoCompleteModule,
-    SelectButtonModule,
-    InputNumberModule,
-    TableModule,
-    TagModule,
-    PaginatorModule,
-    CardModule,
-    RouterModule
+    CommonModule, FormsModule, ButtonModule,
+    InputTextModule, TableModule, TagModule,
+    SelectModule, CardModule, RouterModule,
   ],
   templateUrl: './comision.html',
   styleUrls: ['./comision.css'],
 })
-export class Comision {
+export class Comision implements OnInit {
+  private readonly commissionService = inject(CommissionService);
+  private readonly categoriaService  = inject(CategoriaService);
 
-  /* =======================
-     CONTROL UI
- 
-  /* =======================
-     AUTOCOMPLETE FAMILIAS
-  ======================= */
-  familias = [
-    { nombre: 'Electrónica' },
-    { nombre: 'Hogar' },
-    { nombre: 'Ropa' },
-    { nombre: 'Herramientas' },
-    { nombre: 'Juguetes' },
+  readonly loading  = this.commissionService.loading;
+  readonly error    = this.commissionService.error;
+  readonly categorias = this.categoriaService.categorias;
+
+  // ── Filtros como signals ───────────────────────────────────────────────────
+  readonly filtroBusqueda   = signal('');
+  readonly filtroTipo       = signal<string | null>(null);
+  readonly filtroRecompensa = signal<string | null>(null);
+  readonly filtroActivo     = signal<boolean | null>(true);
+
+  tiposObjetivo = [
+    { label: 'Categoría', value: 'CATEGORIA' },
+    { label: 'Producto',  value: 'PRODUCTO' },
   ];
 
-  familiasFiltradas: any[] = [];
-  familiaSeleccionada: any;
+  tiposRecompensa = [
+    { label: 'Monto Fijo', value: 'MONTO_FIJO' },
+    { label: 'Porcentaje', value: 'PORCENTAJE' },
+  ];
 
-  filtrarFamilias(event: any) {
-    const query = event.query.toLowerCase();
-    this.familiasFiltradas = this.familias.filter(f =>
-      f.nombre.toLowerCase().includes(query)
+  estadosFiltro = [
+    { label: 'Activas',   value: true },
+    { label: 'Inactivas', value: false },
+    { label: 'Todas',     value: null },
+  ];
+
+  limpiarFiltros() {
+    this.filtroBusqueda.set('');
+    this.filtroTipo.set(null);
+    this.filtroRecompensa.set(null);
+    this.filtroActivo.set(true);
+  }
+
+  // ── Computed rows ──────────────────────────────────────────────────────────
+  readonly reglas = computed(() => {
+    const catMap = new Map(
+      this.categorias().map(c => [c.id_categoria, c.nombre])
     );
+    return this.commissionService.rules().map(r => ({
+      id:           `RC-${String(r.id_regla).padStart(3, '0')}`,
+      nombre:       r.nombre,
+      descripcion:  r.descripcion ?? '',
+      familia:      catMap.get(r.id_objetivo) ?? `ID: ${r.id_objetivo}`,
+      tipo:         r.tipo_objetivo === 'PRODUCTO' ? 'Producto' : 'Categoría',
+      tipoSeverity: (r.tipo_objetivo === 'PRODUCTO' ? 'info' : 'success') as any,
+      condicion:    r.meta_unidades > 1 ? `Lote (≥${r.meta_unidades} uds.)` : 'Por Unidad',
+      recompensa:   r.tipo_recompensa === 'PORCENTAJE' ? '%' : 'S/',
+      comision:     Number(r.valor_recompensa),
+      activo:       r.activo,
+      raw:          r,
+    }));
+  });
+
+  readonly reglasFiltradas = computed(() => {
+    let data = this.reglas();
+    const activo     = this.filtroActivo();
+    const busqueda   = this.filtroBusqueda().trim().toLowerCase();
+    const tipo       = this.filtroTipo();
+    const recompensa = this.filtroRecompensa();
+
+    if (activo !== null) {
+      data = data.filter(r => r.activo === activo);
+    }
+    if (busqueda) {
+      data = data.filter(r => r.nombre.toLowerCase().includes(busqueda));
+    }
+    if (tipo) {
+      data = data.filter(r => r.raw.tipo_objetivo === tipo);
+    }
+    if (recompensa) {
+      data = data.filter(r => r.raw.tipo_recompensa === recompensa);
+    }
+    return data;
+  });
+
+  // ── KPIs ───────────────────────────────────────────────────────────────────
+  readonly totalReglasActivas = computed(() =>
+    this.commissionService.rules().filter(r => r.activo).length
+  );
+
+  readonly totalInactivas = computed(() =>
+    this.commissionService.rules().filter(r => !r.activo).length
+  );
+
+  readonly promedioComision = computed(() => {
+    const lista = this.commissionService.activeRules();
+    if (!lista.length) return 0;
+    return lista.reduce((acc, r) => acc + Number(r.valor_recompensa), 0) / lista.length;
+  });
+
+  readonly reglasConMeta = computed(() =>
+    this.commissionService.activeRules().filter(r => r.meta_unidades > 1).length
+  );
+
+  // ── Lifecycle ──────────────────────────────────────────────────────────────
+  ngOnInit() {
+    this.commissionService.loadRules().subscribe();
+    this.categoriaService.loadCategorias().subscribe();
   }
 
-  /* =======================
-     TIPO DE VENTA
-  ======================= */
-  tiposVenta = [
-    { label: 'General', value: 'general' },
-    { label: 'Remate', value: 'remate' },
-    { label: 'Unitarias', value: 'unitarias' },
-  ];
-
-  tipoVentaSeleccionado = 'general';
-
-  /* =======================
-     FORMULARIO
-  ======================= */
-  comisionPorLote = false;
-  montoComision = 0;
-
-  /* =======================
-     TABLA (mock)
-  ======================= */
-  reglas = [
-    { id: 'RC-001', familia: 'Electrónica', tipo: 'General', condicion: 'Por Unidad', comision: 5.0, severity: 'info' },
-    { id: 'RC-002', familia: 'Hogar', tipo: 'Remate', condicion: 'Lote (>10)', comision: 12.5, severity: 'danger' },
-    { id: 'RC-003', familia: 'Ropa', tipo: 'Unitarias', condicion: 'Por Unidad', comision: 2.0, severity: 'success' },
-    { id: 'RC-004', familia: 'Ropa', tipo: 'Unitarias', condicion: 'Por Unidad', comision: 2.0, severity: 'success' },
-    { id: 'RC-005', familia: 'Herramientas', tipo: 'General', condicion: 'Por Unidad', comision: 6.0, severity: 'info' },
-  ];
-
-  /* =======================
-     KPIs
-  ======================= */
-  get totalReglasActivas() {
-    return this.reglas.length;
-  }
-
-  get totalCategorias() {
-    return new Set(this.reglas.map(r => r.familia)).size;
-  }
-
-  get promedioComision() {
-    if (!this.reglas.length) return 0;
-    return this.reglas.reduce((a, r) => a + r.comision, 0) / this.reglas.length;
+  onToggleStatus(rule: CommissionRule) {
+    this.commissionService.toggleRuleStatus(rule.id_regla, !rule.activo).subscribe();
   }
 }

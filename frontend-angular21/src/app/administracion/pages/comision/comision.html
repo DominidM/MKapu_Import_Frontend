@@ -1,184 +1,225 @@
 <div class="p-2">
-
-    <p-card class="sedes-header-card">
-      <div class="flex align-items-center justify-content-between flex-wrap gap-3">
-  
-        <!-- TITULO -->
-        <div class="flex align-items-center gap-3">
-          <span class="sedes-title-icon">
-            <i class="pi pi-wallet"></i>
-          </span>
-          <div>
-            <p class="sedes-kicker">
-              ADMINISTRADOR · ADMINISTRACIÓN · COMISIONES
-            </p>
-            <h2 class="sedes-title">
-              GESTIÓN DE REGLAS DE COMISIÓN
-            </h2>
-          </div>
+  <p-card class="sedes-header-card mb-4 ventas-header-bordered">
+    <div class="flex align-items-center justify-content-between flex-wrap gap-2">
+      <div class="flex align-items-center gap-3">
+        <span class="sedes-title-icon">
+          <i class="pi pi-wallet"></i>
+        </span>
+        <div>
+          <p class="sedes-kicker mb-0">ADMINISTRADOR · ADMINISTRACIÓN · COMISIONES</p>
+          <h2 class="sedes-title mb-0">GESTIÓN DE REGLAS DE COMISIÓN</h2>
         </div>
-  
-        <!-- BOTÓN CREAR REGLA (MISMO PATRÓN QUE AGREGAR SEDE) -->
-        <div class="flex justify-items-end gap-2">
-
-            <p-button
-            label="Reportes"
-            icon="pi pi-book"
-            styleClass="sedes-pill"
-            [routerLink]="['/admin/comision-reportes']">
-          </p-button>
-
-
-
-          <p-button
-            label="Crear Regla"
-            icon="pi pi-plus"
-            styleClass="sedes-pill"
-            [routerLink]="['/admin/comision-regla']">
-          </p-button>
-
-        </div>
-  
       </div>
-    </p-card>
-  
-    <!-- ================= STATS ================= -->
-    <div class="comision-metrics grid">
-  
-      <!-- REGLAS ACTIVAS -->
-      <div class="col-12 md:col-6 xl:col-4">
-        <p-card class="metric-card metric-info">
-          <div class="metric-header">
-            <span class="metric-title">Reglas Activas</span>
-            <span class="metric-icon metric-icon-info">
-              <i class="pi pi-list"></i>
-            </span>
-          </div>
-          <div class="metric-value">{{ totalReglasActivas }}</div>
-          <div class="metric-sub">Reglas configuradas</div>
-        </p-card>
+      <div class="flex gap-2">
+        <p-button
+          label="Reportes"
+          icon="pi pi-book"
+          [outlined]="true"
+          severity="secondary"
+          styleClass="sedes-pill"
+          [routerLink]="['/admin/comision-reportes']" />
+        <p-button
+          label="Crear Regla"
+          icon="pi pi-plus"
+          styleClass="sedes-pill"
+          [routerLink]="['/admin/comision-regla']" />
       </div>
-  
-      <!-- CATEGORÍAS -->
-      <div class="col-12 md:col-6 xl:col-4">
-        <p-card class="metric-card metric-success">
-          <div class="metric-header">
-            <span class="metric-title">Categorías</span>
-            <span class="metric-icon metric-icon-success">
-              <i class="pi pi-tags"></i>
-            </span>
-          </div>
-          <div class="metric-value">{{ totalCategorias }}</div>
-          <div class="metric-sub">Familias con comisión</div>
-        </p-card>
-      </div>
-  
-      <!-- PROMEDIO COMISIÓN -->
-      <div class="col-12 md:col-6 xl:col-4">
-        <p-card class="metric-card metric-warning">
-          <div class="metric-header">
-            <span class="metric-title">Promedio Comisión</span>
-            <span class="metric-icon metric-icon-warning">
-              <i class="pi pi-percentage"></i>
-            </span>
-          </div>
-          <div class="metric-value">
-            S/ {{ promedioComision | number:'1.2-2' }}
-          </div>
-          <div class="metric-sub">Valor promedio por regla</div>
-        </p-card>
-      </div>
-  
     </div>
-  
-    <!-- ================= TABLA ================= -->
-    <p-card>
-  
-      <div class="flex align-items-center justify-content-between mb-3">
-        <div class="flex align-items-center gap-2">
-          <span class="sedes-section-icon">
-            <i class="pi pi-list"></i>
-          </span>
-          <span class="text-sm font-semibold">
-            REGLAS EXISTENTES
-          </span>
-          <p-tag
-            [value]="'[' + reglas.length + '] Reglas'"
-            severity="info">
-          </p-tag>
-        </div>
-  
-        <div class="flex gap-2">
-          <p-button icon="pi pi-filter" text severity="secondary"></p-button>
-          <p-button icon="pi pi-sort-alt" text severity="secondary"></p-button>
-        </div>
+  </p-card>
+</div>
+
+<div class="p-2">
+
+  <!-- CONTADORES -->
+  <div class="contadores-productos mb-4">
+
+    <div class="contador-card" [class.contador-activo]="filtroActivo() === true"
+      style="cursor:pointer" (click)="filtroActivo.set(true)">
+      <i class="pi pi-check-circle"></i>
+      <div>
+        <span class="contador-label">Activas</span>
+        <span class="contador-valor">{{ totalReglasActivas() }}</span>
+        <span class="contador-detalle"><i class="pi pi-list"></i> Reglas vigentes</span>
       </div>
-  
-      <!-- EMPTY STATE -->
-      <div *ngIf="reglas.length === 0" class="sedes-empty-state">
-        <div class="sedes-empty-icon">
-          <i class="pi pi-inbox"></i>
-        </div>
-        <div class="sedes-empty-title">
-          No hay reglas registradas
-        </div>
-        <div class="sedes-empty-subtitle">
-          Presiona “Crear Regla” para crear la primera.
-        </div>
+    </div>
+
+    <div class="contador-card" [class.contador-inactivo]="filtroActivo() === false"
+      style="cursor:pointer" (click)="filtroActivo.set(false)">
+      <i class="pi pi-ban"></i>
+      <div>
+        <span class="contador-label">Inactivas</span>
+        <span class="contador-valor">{{ totalInactivas() }}</span>
+        <span class="contador-detalle"><i class="pi pi-eye-slash"></i> Desactivadas</span>
       </div>
-  
-      <!-- TABLE -->
+    </div>
+    <div class="contador-card">
+      <i class="pi pi-percentage"></i>
+      <div>
+        <span class="contador-label">Promedio</span>
+        <span class="contador-valor">S/ {{ promedioComision() | number:'1.2-2' }}</span>
+        <span class="contador-detalle"><i class="pi pi-arrow-up"></i> Por regla activa</span>
+      </div>
+    </div>
+
+    <div class="contador-card">
+      <i class="pi pi-bolt"></i>
+      <div>
+        <span class="contador-label">Con Meta</span>
+        <span class="contador-valor">{{ reglasConMeta() }}</span>
+        <span class="contador-detalle"><i class="pi pi-th-large"></i> Por lote</span>
+      </div>
+    </div>
+
+  </div>
+  <!-- FILTROS -->
+  <div class="surface-card border-round-xl shadow-1 mb-4">
+    <div class="p-3">
+      <div class="flex flex-wrap gap-3 align-items-end">
+
+        <div class="flex-1 p-fluid">
+          <label class="font-medium mb-2 block">Buscar Regla</label>
+          <input pInputText
+            [ngModel]="filtroBusqueda()"
+            (ngModelChange)="filtroBusqueda.set($event)"
+            placeholder="Nombre de la regla..."
+            class="w-full" />
+        </div>
+
+        <div class="flex flex-column w-12rem">
+          <label class="font-medium mb-2 block">Estado</label>
+          <p-select
+            [options]="estadosFiltro"
+            [ngModel]="filtroActivo()"
+            (ngModelChange)="filtroActivo.set($event)"
+            optionLabel="label"
+            optionValue="value"
+            class="w-full" />
+        </div>
+
+        <div class="flex flex-column w-14rem">
+          <label class="font-medium mb-2 block">Tipo de Objetivo</label>
+          <p-select
+            [options]="tiposObjetivo"
+            [ngModel]="filtroTipo()"
+            (ngModelChange)="filtroTipo.set($event)"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Todos"
+            [showClear]="true"
+            class="w-full" />
+        </div>
+
+        <div class="flex flex-column w-14rem">
+          <label class="font-medium mb-2 block">Tipo de Comisión</label>
+          <p-select
+            [options]="tiposRecompensa"
+            [ngModel]="filtroRecompensa()"
+            (ngModelChange)="filtroRecompensa.set($event)"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Todos"
+            [showClear]="true"
+            class="w-full" />
+        </div>
+
+        <div class="flex gap-2 align-items-center">
+          <p-button icon="pi pi-filter-slash" label="Limpiar"
+            severity="danger" size="small"
+            (onClick)="limpiarFiltros()" />
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- TABLA -->
+  <div class="mb-6">
+    <div class="surface-card border-round-xl shadow-1 overflow-hidden">
+
       <p-table
-        *ngIf="reglas.length > 0"
-        [value]="reglas"
-        styleClass="sedes-table"
+        [value]="reglasFiltradas()"
+        [loading]="loading()"
         [paginator]="true"
         [rows]="5"
-        [rowsPerPageOptions]="[5,10,20]"
-        [tableStyle]="{ 'min-width': '60rem' }">
-  
+        [rowsPerPageOptions]="[5, 10, 25]"
+        styleClass="productos-table-nativa productos-table-hover">
+
         <ng-template pTemplate="header">
           <tr>
-            <th>ID</th>
-            <th>FAMILIA</th>
-            <th>TIPO</th>
-            <th>CONDICIÓN</th>
-            <th class="text-right">COMISIÓN</th>
-            <th>ACCIONES</th>
+            <th style="width: 10%">ID</th>
+            <th style="width: 25%">NOMBRE</th>
+            <th style="width: 18%">FAMILIA</th>
+            <th style="width: 10%">TIPO</th>
+            <th style="width: 15%">CONDICIÓN</th>
+            <th style="width: 12%">COMISIÓN</th>
+            <th style="width: 10%">ACCIONES</th>
           </tr>
         </ng-template>
-  
+
         <ng-template pTemplate="body" let-r>
           <tr>
-            <td>#{{ r.id }}</td>
-  
-            <td class="inline-flex align-items-center gap-2">
-              <i class="pi pi-box text-yellow-400"></i>
-              {{ r.familia }}
-            </td>
-  
             <td>
-              <p-tag [value]="r.tipo" [severity]="r.severity"></p-tag>
+              <span class="font-mono text-xs text-color-secondary">#{{ r.id }}</span>
             </td>
-  
-            <td>{{ r.condicion }}</td>
-  
-            <td class="text-right font-bold text-yellow-400">
-              S/ {{ r.comision.toFixed(2) }}
-            </td>
-  
+
             <td>
-              <div class="flex gap-2">
-                <p-button icon="pi pi-pencil" text severity="secondary"></p-button>
-                <p-button icon="pi pi-trash" text severity="danger"></p-button>
+              <div class="flex flex-column gap-1">
+                <span class="font-semibold">{{ r.nombre }}</span>
+                <small class="text-color-secondary" *ngIf="r.descripcion">
+                  {{ r.descripcion }}
+                </small>
+              </div>
+            </td>
+
+            <td>
+              <div class="flex align-items-center gap-2">
+                <i class="pi pi-box text-yellow-400"></i>
+                <span>{{ r.familia }}</span>
+              </div>
+            </td>
+
+            <td>
+              <p-tag [value]="r.tipo" [severity]="r.tipoSeverity" />
+            </td>
+
+            <td>
+              <span class="text-sm">{{ r.condicion }}</span>
+            </td>
+
+            <td>
+              <span class="font-bold text-yellow-400">
+                {{ r.recompensa === '%' ? '' : 'S/ ' }}{{ r.comision.toFixed(2) }}{{ r.recompensa === '%' ? '%' : '' }}
+              </span>
+            </td>
+
+            <td>
+              <div class="flex align-items-center gap-2">
+                <p-button icon="pi pi-pencil" text severity="secondary"
+                  styleClass="productos-icon-btn productos-icon-warn" />
+                <p-button
+                  [icon]="r.activo ? 'pi pi-eye-slash' : 'pi pi-eye'"
+                  text
+                  [severity]="r.activo ? 'danger' : 'success'"
+                  styleClass="productos-icon-btn"
+                  (onClick)="onToggleStatus(r.raw)" />
               </div>
             </td>
           </tr>
         </ng-template>
-  
+
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="7" class="text-center py-6">
+              <i class="pi pi-inbox text-4xl text-400 mb-3 block"></i>
+              <p class="text-900 font-medium mb-0">No se encontraron reglas</p>
+              <p class="text-600 mt-2">Ajusta los filtros o crea una nueva regla</p>
+            </td>
+          </tr>
+        </ng-template>
+
       </p-table>
-  
-    </p-card>
-  
+
+    </div>
   </div>
-  
+
+</div>

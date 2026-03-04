@@ -326,13 +326,13 @@ export const ADMIN_ROUTES: Routes = [
   {
     path: 'comision-regla',
     loadComponent: () =>
-      import('./pages/comision-regla/comisionregla').then((m) => m.ComisionRegla),
+      import('./pages/comision/comision-regla/comisionregla').then((m) => m.ComisionRegla),
   },
 
   {
     path: 'comision-reportes',
     loadComponent: () =>
-      import('./pages/comision-reportes/comisionreportes').then((m) => m.ComisionReportes),
+      import('./pages/comision/comision-reportes/comisionreportes').then((m) => m.ComisionReportes),
   },
   /* =======================
   GESTIÓN DE Conteos
