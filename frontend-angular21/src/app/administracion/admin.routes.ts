@@ -592,6 +592,43 @@ export const ADMIN_ROUTES: Routes = [
       ],
     },
 
+   {
+        path: 'terminos-condiciones',
+        loadComponent: () =>
+          import('./pages/reportes/pages/terminos-condiciones/terminos-condiciones').then(
+            (m) => m.TerminosCondicionesComponent,
+          ),
+      },
 
+
+
+      {
+        path: 'reclamos-listado',
+        loadComponent: () =>
+          import('../ventas/pages/reclamos-garantia/reclamos-listado/reclamos-listado').then(
+            (m) => m.ReclamosListado,
+          ),
+      },
+      {
+        path: 'reclamos/crear',
+        loadComponent: () =>
+          import('../ventas/pages/reclamos-garantia/reclamos-crear/reclamos-crear').then(
+            (m) => m.ReclamosCrear,
+          ),
+      },
+      {
+        path: 'reclamos/editar/:id',
+        loadComponent: () =>
+          import('../ventas/pages/reclamos-garantia/reclamos-editar/reclamos-editar').then(
+            (m) => m.ReclamosEditar,
+          ),
+      },
+      {
+        path: 'reclamos/detalle/:id',
+        loadComponent: () =>
+          import('../ventas/pages/reclamos-garantia/reclamos-detalles/reclamos-detalles').then(
+            (m) => m.ReclamosDetalles,
+          ),
+      },
 
 ];

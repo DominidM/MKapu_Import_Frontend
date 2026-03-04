@@ -45,6 +45,16 @@
       </div>
 
       <p-button
+        icon="pi pi-file-edit"
+        class="mr-2"
+        text
+        severity="secondary"
+        pTooltip="Términos y Condiciones"
+        tooltipPosition="bottom"
+        [routerLink]="['/admin/terminos-condiciones']"
+      />
+
+      <p-button
         [icon]="themeService.isDark() ? 'pi pi-sun' : 'pi pi-moon'"
         class="mr-2"
         text
