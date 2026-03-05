@@ -10,12 +10,7 @@
         </div>
       </div>
       <div>
-        <p-button
-          label="Crear Venta por Cobrar"
-          icon="pi pi-plus"
-          styleClass="cotizaciones-pill cotizaciones-pill-warning"
-          (onClick)="irAgregarVentaPorCobrar(null)">
-        </p-button>
+
       </div>
     </div>
   </p-card>
@@ -182,13 +177,13 @@
                 (onClick)="verDetalle(a.id)">
               </p-button>
               <span class="accion-separador"></span>
-              <p-button
-                icon="pi pi-shopping-cart"
-                styleClass="accion-btn accion-btn--venta p-button-text p-button-rounded"
-                pTooltip="Registrar Pago"
-                tooltipPosition="top"
-                (onClick)="irAgregarVentaPorCobrar(a.id)">
-              </p-button>
+            <p-button
+              icon="pi pi-shopping-cart"
+              styleClass="accion-btn accion-btn--venta p-button-text p-button-rounded"
+              pTooltip="Registrar Pago"
+              tooltipPosition="top"
+              (onClick)="irAgregarVentaPorCobrar(a.id)">   
+            </p-button>
               <p-button
                 icon="pi pi-times"
                 styleClass="accion-btn accion-btn--eliminar p-button-text p-button-rounded"

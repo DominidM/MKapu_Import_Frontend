@@ -68,6 +68,15 @@ export class VentasAdminService {
     );
   }
 
+
+    emitirComprobante(id: number): Observable<any> {
+    return this.http.put<any>(
+      `${this.salesUrl}/receipts/${id}/emit`,
+      {},
+      { headers: this.headers },
+    );
+  }
+  
   obtenerVentaConHistorial(
     id: number,
     historialPage = 1,

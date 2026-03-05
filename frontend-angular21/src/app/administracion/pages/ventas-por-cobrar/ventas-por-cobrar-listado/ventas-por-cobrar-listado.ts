@@ -156,46 +156,51 @@ export class VentasPorCobrarListadoComponent implements OnInit {
   // ── Acciones ─────────────────────────────────────────────────────
 // ventas-por-cobrar-listado.component.ts
 
-irAgregarVentaPorCobrar(id: number | null) {
-  if (id) {
-    // Editar
-    this.router.navigate(['/admin/editar-ventas-por-cobrar', id]);
-  } else {
-    // Crear nuevo
-    this.router.navigate(['/admin/agregar-ventas-por-cobrar']);
+  irAgregarVentaPorCobrar(id: number) {
+    this.router.navigate(['/admin/pagar-ventas-por-cobrar', id]);
   }
-}
 
   verDetalle(id: number) {
     this.router.navigate(['/admin/editar-ventas-por-cobrar', id]);
   }
   
-    rechazarCotizacion(id: number) {
-    this.confirmationService.confirm({
-      message: '¿Estás seguro de cancelar esta venta por cobrar?',
-      header: 'Confirmar Cancelación',
-      icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'Sí, cancelar',
-      rejectLabel: 'No',
-      accept: async () => {
-        const res = await this.arService.cancel({
-          accountReceivableId: id,
-          reason: 'Cancelado desde listado',
+rechazarCotizacion(id: number) {
+  const cuenta = this.arService.accounts().find(a => a.id === id);
+
+  this.confirmationService.confirm({
+    message: `¿Cancelar esta venta por cobrar? <br>
+              <small class="text-400">
+                También se anulará el comprobante de venta #${cuenta?.salesReceiptId ?? ''}.
+              </small>`,
+    header: 'Confirmar Cancelación',
+    icon: 'pi pi-exclamation-triangle',
+    acceptLabel: 'Sí, cancelar todo',
+    rejectLabel: 'No',
+    accept: async () => {
+
+      // 1️⃣ Cancelar cuenta por cobrar (persiste en BD)
+      const res = await this.arService.cancel({
+        accountReceivableId: id,
+        reason: 'Cancelado desde listado',
+      });
+
+      if (!res) {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: this.arService.error() ?? 'No se pudo cancelar.',
         });
-        if (res) {
-          this.messageService.add({
-            severity: 'info',
-            summary: 'Cancelada',
-            detail: 'La venta por cobrar fue cancelada.',
-          });
-        } else {
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: this.arService.error() ?? 'No se pudo cancelar.',
-          });
-        }
-      },
-    });
-  }
+        return;
+      }
+
+      if (cuenta?.salesReceiptId) {
+        this.messageService.add({
+          severity: 'info',
+          summary: 'Cancelada',
+          detail: `Cuenta cancelada. Comprobante #${cuenta.salesReceiptId} marcado como ANULADO.`,
+        });
+      }
+    },
+  });
+}
 }
