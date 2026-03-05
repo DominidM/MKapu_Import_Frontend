@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router'; // 👈 Importamos el Router
+import { Router } from '@angular/router'; 
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { TableModule } from 'primeng/table';
@@ -13,6 +13,7 @@ import { DatePickerModule } from 'primeng/datepicker';
 import { MovimientoInventario } from '../../interfaces/movimiento-inventario.interface';
 import { TransferUserContextService } from '../../../administracion/services/transfer-user-context.service';
 import { CardModule } from 'primeng/card';
+import { DialogModule } from 'primeng/dialog';
 @Component({
   selector: 'app-movimientos-inventario',
   standalone: true,
