@@ -1,0 +1,134 @@
+<!-- terminos-condiciones.component.html -->
+<div class="terminos-page p-3">
+
+  <!-- HEADER -->
+  <p-card class="productos-header-card mb-4 productos-header-bordered">
+    <div class="flex align-items-center justify-content-between flex-wrap gap-2">
+      <div class="flex align-items-center gap-3">
+        <span class="productos-title-icon">
+          <i class="pi pi-file-edit"></i>
+        </span>
+        <div>
+          <p class="productos-kicker mb-0">LEGAL · EMPRESA</p>
+          <h2 class="productos-title mb-0">Términos y Condiciones</h2>
+        </div>
+      </div>
+      <div class="flex align-items-center gap-2">
+        <span class="terminos-version-badge">
+          <i class="pi pi-tag mr-1"></i>v{{ version }}
+        </span>
+        <span class="terminos-fecha-badge">
+          <i class="pi pi-calendar mr-1"></i>Vigente desde {{ fechaVigencia }}
+        </span>
+      </div>
+    </div>
+  </p-card>
+
+  <div class="terminos-layout">
+
+    <!-- ÍNDICE LATERAL -->
+    <div class="terminos-sidebar">
+      <div class="terminos-index-card">
+        <div class="terminos-index-header">
+          <i class="pi pi-list mr-2"></i>
+          Índice
+        </div>
+        <ul class="terminos-index-list">
+          @for (seccion of secciones; track seccion.id) {
+            <li
+              class="terminos-index-item"
+              [class.active]="seccionActiva === seccion.id"
+              (click)="irASeccion(seccion.id)">
+              <span class="terminos-index-num">{{ seccion.numero }}</span>
+              <span class="terminos-index-titulo">{{ seccion.titulo }}</span>
+            </li>
+          }
+        </ul>
+      </div>
+
+      <!-- ACCIONES -->
+      <div class="terminos-acciones-card mt-3">
+        <p-button
+          label="Imprimir"
+          icon="pi pi-print"
+          styleClass="w-full productos-pill mb-2"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="imprimir()">
+        </p-button>
+        <p-button
+          label="Descargar PDF"
+          icon="pi pi-download"
+          styleClass="w-full productos-pill"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="descargarPDF()">
+        </p-button>
+      </div>
+    </div>
+
+    <!-- CONTENIDO -->
+    <div class="terminos-content" #contenidoRef>
+
+      <!-- INTRO -->
+      <div class="terminos-intro-card mb-4">
+        <div class="flex align-items-start gap-3">
+          <i class="pi pi-info-circle terminos-intro-icon mt-1"></i>
+          <div>
+            <p class="terminos-intro-text mb-0">
+              Bienvenido a <strong>{{ nombreEmpresa }}</strong>. Al utilizar nuestros servicios,
+              usted acepta los siguientes términos y condiciones. Le recomendamos leer
+              detenidamente este documento antes de continuar usando la plataforma.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECCIONES -->
+      @for (seccion of secciones; track seccion.id) {
+        <div class="terminos-seccion" [id]="seccion.id">
+          <div class="terminos-seccion-header">
+            <div class="terminos-seccion-num">{{ seccion.numero }}</div>
+            <h3 class="terminos-seccion-titulo">{{ seccion.titulo }}</h3>
+          </div>
+          <div class="terminos-seccion-body">
+            @for (parrafo of seccion.contenido; track $index) {
+              <p class="terminos-parrafo">{{ parrafo }}</p>
+            }
+            @if (seccion.items && seccion.items.length > 0) {
+              <ul class="terminos-lista">
+                @for (item of seccion.items; track $index) {
+                  <li class="terminos-lista-item">
+                    <i class="pi pi-check-circle terminos-lista-icon"></i>
+                    <span>{{ item }}</span>
+                  </li>
+                }
+              </ul>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- FOOTER LEGAL -->
+      <div class="terminos-footer-legal mt-5">
+        <div class="flex align-items-center gap-3">
+          <div class="terminos-footer-logo">
+            <i class="pi pi-building text-3xl"></i>
+          </div>
+          <div>
+            <p class="font-bold mb-1">{{ nombreEmpresa }}</p>
+            <p class="text-400 text-sm mb-0">{{ direccionEmpresa }}</p>
+            <p class="text-400 text-sm mb-0">{{ emailContacto }} · {{ telefonoContacto }}</p>
+          </div>
+        </div>
+        <p-divider></p-divider>
+        <p class="text-400 text-sm text-center mb-0">
+          © {{ anioActual }} {{ nombreEmpresa }}. Todos los derechos reservados.
+          Última actualización: {{ fechaUltimaActualizacion }}.
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+</div>

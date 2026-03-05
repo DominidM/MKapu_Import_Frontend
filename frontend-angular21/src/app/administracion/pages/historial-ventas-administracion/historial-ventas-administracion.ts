@@ -97,6 +97,8 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
     { label: 'Emitido', value: 'EMITIDO' },
     { label: 'Anulado', value: 'ANULADO' },
     { label: 'Rechazado', value: 'RECHAZADO' },
+    { label: 'Pendiente', value: 'PENDIENTE' },
+
   ];
 
   tiposPago = [
