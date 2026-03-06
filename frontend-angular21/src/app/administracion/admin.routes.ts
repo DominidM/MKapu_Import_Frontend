@@ -1,5 +1,7 @@
 import { Routes } from '@angular/router';
 import { pendingChangesGuard } from '../core/guards/pending-changes.guard';
+import { CashboxGuard } from '../ventas/guards/cashbox.guard';
+
 
 export const ADMIN_ROUTES: Routes = [
   {
@@ -253,6 +255,42 @@ export const ADMIN_ROUTES: Routes = [
       },
     ],
   },
+
+
+  /* =======================
+        roles y permisos
+    ======================= */
+  {
+    path: 'roles-permisos',
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/roles-permisos/pages/roles-permisos/role-permission-listado.component').then((m) => m.RolePermissionListadoComponent),
+      },
+
+      /*
+      {
+        path: 'agregar-roles-permisos',
+        loadComponent: () =>
+          import('./pages/roles-permisos/pages/roles-permisos/role-permission-form.component').then(
+            (m) => m.RolePermissionFormComponent  ,
+          ),
+        canDeactivate: [pendingChangesGuard],
+      },
+      {
+        path: 'editar-categoria/:id',
+        loadComponent: () =>
+          import('./pages/categoria/pages/editar-categoria/editar-categoria').then(
+            (m) => m.EditarCategoria,
+          ),
+        canDeactivate: [pendingChangesGuard],
+      },
+      */
+    ],
+  },
+
+
 
   /* =======================
       CLIENTES
@@ -638,6 +676,30 @@ export const ADMIN_ROUTES: Routes = [
           (m) => m.ReclamosDetalles,
         ),
     },
+
+
+
+
+
+    {
+      path: 'imprimir-comprobante-administracion',
+      canActivate: [CashboxGuard],
+      loadComponent: () =>
+        import('../ventas/shared/imprimir-comprobante/imprimir-comprobante').then(
+          (m) => m.ImprimirComprobante,
+        ),
+    },
+
+  {
+    path: 'ver-detalle/:id',
+    canActivate: [CashboxGuard],
+    loadComponent: () =>
+      import('../ventas/shared/detalles-venta/detalle-venta').then((m) => m.DetalleVenta),
+  },
+  
+
+
+
   ],
 },
 ];

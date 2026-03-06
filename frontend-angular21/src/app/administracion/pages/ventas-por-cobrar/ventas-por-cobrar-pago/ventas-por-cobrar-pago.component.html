@@ -11,13 +11,8 @@
           <h2 class="cotizaciones-title mb-0">Registrar Pago</h2>
         </div>
       </div>
-      <p-button
-        label="Volver"
-        icon="pi pi-arrow-left"
-        severity="secondary"
-        [outlined]="true"
-        styleClass="productos-pill"
-        (onClick)="cancelar()">
+      <p-button label="Volver" icon="pi pi-arrow-left" severity="secondary"
+        [outlined]="true" styleClass="productos-pill" (onClick)="cancelar()">
       </p-button>
     </div>
   </p-card>
@@ -25,7 +20,6 @@
 
 <div class="p-2">
 
-  <!-- LOADING -->
   @if (arService.loading()) {
     <div class="surface-card border-round-xl shadow-1 mb-4 p-4 flex align-items-center gap-3">
       <i class="pi pi-spin pi-spinner text-primary text-2xl"></i>
@@ -42,7 +36,7 @@
 
   @if (!arService.loading() && cuenta()) {
 
-    <!-- ═══ BANNER RESUMEN DE CUENTA ══════════════════════════════════ -->
+    <!-- BANNER RESUMEN -->
     <div class="surface-card border-round-xl shadow-1 mb-4 p-4"
          style="border-left: 4px solid var(--p-primary-color)">
 
@@ -87,7 +81,7 @@
         </div>
         <div class="col-12 md:col-4">
           <div class="surface-100 border-round p-3 text-center"
-               style="border: 1px solid var(--green-200); background: var(--green-50)">
+               style="border:1px solid var(--green-200); background:var(--green-50)">
             <span class="text-500 text-xs block mb-1">YA PAGADO</span>
             <span class="font-bold text-xl text-green-600">
               {{ cuenta()!.currencyCode }} {{ cuenta()!.paidAmount | number:'1.2-2' }}
@@ -96,7 +90,7 @@
         </div>
         <div class="col-12 md:col-4">
           <div class="border-round p-3 text-center"
-               style="border: 1px solid var(--orange-200); background: var(--orange-50)">
+               style="border:1px solid var(--orange-200); background:var(--orange-50)">
             <span class="text-500 text-xs block mb-1">SALDO PENDIENTE</span>
             <span class="font-bold text-xl text-orange-600">
               {{ cuenta()!.currencyCode }} {{ cuenta()!.pendingBalance | number:'1.2-2' }}
@@ -119,10 +113,9 @@
           </div>
         </div>
       </div>
-
     </div>
 
-    <!-- ═══ FORMULARIO DE ABONO ════════════════════════════════════════ -->
+    <!-- FORMULARIO DE ABONO -->
     @if (cuenta()!.status !== 'PAGADO' && cuenta()!.status !== 'CANCELADO') {
       <div class="surface-card border-round-xl shadow-1 overflow-hidden">
         <div class="p-4">
@@ -137,8 +130,8 @@
 
           <form [formGroup]="form" (ngSubmit)="guardar()" class="formgrid grid">
 
-            <!-- ── Monto ─────────────────────────────────────────── -->
-            <div class="field col-12 md:col-6 mb-4">
+            <!-- ── Monto ──────────────────────────────────────────── -->
+            <div class="field col-12 md:col-4 mb-4">
               <label class="font-medium mb-2 block">
                 Monto a Abonar <span class="text-red-400">*</span>
               </label>
@@ -168,17 +161,40 @@
               </small>
             </div>
 
-            <!-- ── Moneda (readonly desde cuenta) ────────────────── -->
-            <div class="field col-12 md:col-6 mb-4">
+            <!-- ── Tipo de Pago ────────────────────────────────────── -->
+            <div class="field col-12 md:col-4 mb-4">
+              <label class="font-medium mb-2 block">
+                Método de Pago <span class="text-red-400">*</span>
+              </label>
+              <p-select
+                formControlName="paymentTypeId"
+                [options]="metodosPago"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Selecciona método"
+                styleClass="w-full"
+                [ngClass]="{ 'ng-invalid ng-dirty': isInvalid('paymentTypeId') }">
+              </p-select>
+              @if (isInvalid('paymentTypeId')) {
+                <small class="text-red-400 text-sm mt-1 block">
+                  <i class="pi pi-exclamation-circle mr-1"></i>
+                  Selecciona el método de pago.
+                </small>
+              }
+              <!-- ↓ nuevo: aviso cuando ya está fijado -->
+              @if (cuenta()?.paymentTypeId && (cuenta()!.status === 'PARCIAL' || cuenta()!.status === 'PAGADO')) {
+                <small class="text-400 text-xs mt-1 block">
+                  <i class="pi pi-lock mr-1"></i>
+                  Fijado en el primer abono — no puede cambiarse.
+                </small>
+              }
+            </div>
+
+            <!-- ── Moneda (readonly) ──────────────────────────────── -->
+            <div class="field col-12 md:col-4 mb-4">
               <label class="font-medium mb-2 block">Moneda</label>
-              <input
-                pInputText
-                [value]="cuenta()!.currencyCode"
-                [disabled]="true"
-                class="w-full">
-              <small class="text-400 text-xs mt-1 block">
-                Fijada desde el comprobante original.
-              </small>
+              <input pInputText [value]="cuenta()!.currencyCode" [disabled]="true" class="w-full">
+              <small class="text-400 text-xs mt-1 block">Fijada desde el comprobante original.</small>
             </div>
 
             <!-- ── Resumen dinámico ───────────────────────────────── -->
@@ -233,13 +249,8 @@
 
             <!-- ── Acciones ───────────────────────────────────────── -->
             <div class="col-12 flex gap-2 justify-content-end pt-2">
-              <p-button
-                type="button"
-                label="Cancelar"
-                icon="pi pi-times"
-                severity="secondary"
-                [outlined]="true"
-                styleClass="productos-pill"
+              <p-button type="button" label="Cancelar" icon="pi pi-times"
+                severity="secondary" [outlined]="true" styleClass="productos-pill"
                 (onClick)="cancelar()">
               </p-button>
               <p-button
@@ -276,43 +287,33 @@
         <p-button label="Volver al listado" icon="pi pi-arrow-left" (onClick)="cancelar()"></p-button>
       </div>
     }
-
   }
 </div>
 
-<!-- ═══ OVERLAY DE CARGA DURANTE PROCESO ═══════════════════════════ -->
+<!-- OVERLAY PROCESANDO -->
 @if (isSubmitting()) {
   <div class="fixed top-0 left-0 w-full h-full flex align-items-center justify-content-center"
-       style="background: rgba(0,0,0,0.6); z-index: 9999; backdrop-filter: blur(4px);">
+       style="background:rgba(0,0,0,0.6); z-index:9999; backdrop-filter:blur(4px);">
     <div class="surface-card border-round-2xl p-5 shadow-8 text-center"
-         style="min-width: 320px; border: 1px solid var(--p-primary-color)">
-
-      <!-- Icono animado -->
+         style="min-width:320px; border:1px solid var(--p-primary-color)">
       <div class="mb-4 flex justify-content-center">
         <div class="border-circle flex align-items-center justify-content-center"
-             style="width:64px; height:64px; background: var(--p-primary-color); animation: pulseGlow 1.2s ease-in-out infinite;">
+             style="width:64px; height:64px; background:var(--p-primary-color); animation:pulseGlow 1.2s ease-in-out infinite;">
           <i class="pi pi-spin pi-spinner text-3xl text-0"></i>
         </div>
       </div>
-
-      <!-- Paso actual -->
       <p class="font-bold text-900 text-lg mb-2">Procesando pago</p>
       <p class="text-500 text-sm mb-0">{{ pasoActual() ?? 'Iniciando...' }}</p>
-
-      <!-- Barra de progreso animada -->
-      <div class="mt-4 border-round overflow-hidden w-full"
-           style="height: 4px; background: var(--surface-200)">
+      <div class="mt-4 border-round overflow-hidden w-full" style="height:4px; background:var(--surface-200)">
         <div class="border-round h-full"
-             style="background: var(--p-primary-color);
-                    animation: progressBar 1.5s ease-in-out infinite;
-                    width: 40%">
+             style="background:var(--p-primary-color);
+                    animation:progressBar 1.5s ease-in-out infinite;
+                    width:40%">
         </div>
       </div>
-
     </div>
   </div>
 }
-
 
 <p-toast></p-toast>
 <p-confirmdialog></p-confirmdialog>

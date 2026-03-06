@@ -6,11 +6,13 @@ import { SelectModule } from 'primeng/select';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
+import { firstValueFrom } from 'rxjs';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmDialog, ConfirmDialogModule } from 'primeng/confirmdialog';
 import { Router, RouterModule } from '@angular/router';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { AutoComplete } from 'primeng/autocomplete';
+import { VentasAdminService } from '../../../services/ventas.service';
 import { TooltipModule } from 'primeng/tooltip';
 import { SedeService } from '../../../services/sede.service';
 import {
@@ -38,6 +40,7 @@ export class VentasPorCobrarListadoComponent implements OnInit {
   private router              = inject(Router);
   private sedeService         = inject(SedeService);
   readonly arService          = inject(AccountReceivableService);
+  private ventasService       = inject(VentasAdminService);
 
   public tituloKicker    = 'ADMINISTRACIÓN';
   public subtituloKicker = 'VENTAS POR COBRAR';
@@ -202,6 +205,7 @@ export class VentasPorCobrarListadoComponent implements OnInit {
       acceptLabel: 'Sí, cancelar todo',
       rejectLabel: 'No',
       accept: async () => {
+        // 1️⃣ Cancelar la cuenta por cobrar
         const res = await this.arService.cancel({
           accountReceivableId: id,
           reason: 'Cancelado desde listado',
@@ -211,15 +215,35 @@ export class VentasPorCobrarListadoComponent implements OnInit {
           this.messageService.add({
             severity: 'error',
             summary:  'Error',
-            detail:   this.arService.error() ?? 'No se pudo cancelar.',
+            detail:   this.arService.error() ?? 'No se pudo cancelar la cuenta.',
           });
           return;
+        }
+
+        // 2️⃣ Anular el comprobante de venta asociado
+        if (cuenta?.salesReceiptId) {
+          try {
+            await firstValueFrom(
+              this.ventasService.anularVenta(
+                cuenta.salesReceiptId,
+                'Cancelado desde ventas por cobrar',
+              )
+            );
+          } catch {
+            // La cuenta ya quedó cancelada — solo avisamos del comprobante
+            this.messageService.add({
+              severity: 'warn',
+              summary:  'Cuenta cancelada',
+              detail:   `La cuenta fue cancelada pero no se pudo anular el comprobante #${cuenta.salesReceiptId}.`,
+            });
+            return;
+          }
         }
 
         this.messageService.add({
           severity: 'info',
           summary:  'Cancelada',
-          detail:   `Cuenta cancelada. Comprobante #${cuenta?.salesReceiptId ?? ''} marcado como ANULADO.`,
+          detail:   `Cuenta cancelada y comprobante #${cuenta?.salesReceiptId ?? ''} marcado como ANULADO.`,
         });
       },
     });

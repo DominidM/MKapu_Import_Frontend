@@ -11,6 +11,7 @@ import { ButtonModule }        from 'primeng/button';
 import { CardModule }          from 'primeng/card';
 import { InputTextModule }     from 'primeng/inputtext';
 import { InputNumberModule }   from 'primeng/inputnumber';
+import { SelectModule }        from 'primeng/select';
 import { TagModule }           from 'primeng/tag';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { firstValueFrom }      from 'rxjs';
@@ -29,7 +30,7 @@ import { VentasAdminService } from '../../../services/ventas.service';
   imports: [
     CommonModule, FormsModule, ReactiveFormsModule,
     ToastModule, ButtonModule, CardModule,
-    InputTextModule, InputNumberModule,
+    InputTextModule, InputNumberModule, SelectModule,
     TagModule, ConfirmDialogModule,
   ],
   templateUrl: './ventas-por-cobrar-pago.component.html',
@@ -42,12 +43,15 @@ export class VentasPorCobrarPagoComponent implements OnInit {
   private route               = inject(ActivatedRoute);
   private messageService      = inject(MessageService);
   private confirmationService = inject(ConfirmationService);
-  private ventasService       = inject(VentasAdminService); 
+  private ventasService       = inject(VentasAdminService);
   readonly arService          = inject(AccountReceivableService);
 
-  isSubmitting = signal(false);
-  pasoActual    = signal<string | null>(null); 
-  cuenta       = computed(() => this.arService.selected());
+  isSubmitting  = signal(false);
+  pasoActual    = signal<string | null>(null);
+  cuenta        = computed(() => this.arService.selected());
+
+  // ── Opciones de tipo de pago cargadas desde el servicio ──────────
+  metodosPago: { label: string; value: number }[] = [];
 
   porcentajePagado = computed(() => {
     const c = this.cuenta();
@@ -62,25 +66,70 @@ export class VentasPorCobrarPagoComponent implements OnInit {
   });
 
   form: FormGroup = this.fb.group({
-    amount: [null, [Validators.required, Validators.min(0.01)]],
+    amount:        [null,  [Validators.required, Validators.min(0.01)]],
+    paymentTypeId: [null,  [Validators.required]],
   });
 
-  async ngOnInit() {
-    const id = Number(this.route.snapshot.paramMap.get('id'));
-    if (!id) { this.router.navigate(['/admin/ventas-por-cobrar']); return; }
+async ngOnInit() {
+  const id = Number(this.route.snapshot.paramMap.get('id'));
+  if (!id) { this.router.navigate(['/admin/ventas-por-cobrar']); return; }
 
-    await this.arService.getById(id);
+  await Promise.all([
+    this.arService.getById(id),
+    this._cargarMetodosPago(),
+  ]);
 
-    if (!this.cuenta()) {
-      this.messageService.add({
-        severity: 'error', summary: 'No encontrada',
-        detail: `No se encontró la cuenta #${id}.`,
-      });
-      setTimeout(() => this.router.navigate(['/admin/ventas-por-cobrar']), 1500);
-      return;
+  if (!this.cuenta()) {
+    this.messageService.add({
+      severity: 'error', summary: 'No encontrada',
+      detail: `No se encontró la cuenta #${id}.`,
+    });
+    setTimeout(() => this.router.navigate(['/admin/ventas-por-cobrar']), 1500);
+    return;
+  }
+
+  this._setMaxValidator();
+  this._aplicarTipoPagoFijado(); // ← nuevo
+}
+
+// ── Preselecciona y bloquea el tipo de pago si ya fue definido ────
+// DESPUÉS:
+private _aplicarTipoPagoFijado() {
+  const cuenta     = this.cuenta();
+  const tipoPagoId = cuenta?.paymentTypeId;
+  const estado     = cuenta?.status;
+
+  // Solo bloquear si ya hubo al menos un abono (PARCIAL) o está pagado
+  const yaAbonado = estado === 'PARCIAL' || estado === 'PAGADO';
+
+  if (tipoPagoId && yaAbonado) {
+    this.form.patchValue({ paymentTypeId: tipoPagoId });
+    this.form.get('paymentTypeId')?.disable();
+  } else {
+    // PENDIENTE o sin tipo — habilitar y limpiar
+    this.form.get('paymentTypeId')?.enable();
+    this.form.patchValue({ paymentTypeId: null });
+  }
+}
+
+// ── Después del abono exitoso, re-aplicar el bloqueo ─────────────
+// (reemplaza la llamada existente a arService.getById en _ejecutarPago)
+private async _refrescarCuenta(id: number) {
+  await this.arService.getById(id);
+  this._aplicarTipoPagoFijado();
+}
+
+
+  private async _cargarMetodosPago() {
+    try {
+      const lista = await firstValueFrom(this.ventasService.obtenerMetodosPago());
+      // Excluir "POR DEFINIR" del dropdown — solo tipos reales
+      this.metodosPago = lista
+        .filter(m => m.id !== 0)
+        .map(m => ({ label: m.descripcion, value: m.id }));
+    } catch {
+      this.metodosPago = [];
     }
-
-    this._setMaxValidator();
   }
 
   pagarSaldoCompleto() {
@@ -108,66 +157,67 @@ export class VentasPorCobrarPagoComponent implements OnInit {
 
   cancelar() { this.router.navigate(['/admin/ventas-por-cobrar']); }
 
-    private async _ejecutarPago() {
+  private async _ejecutarPago() {
     this.isSubmitting.set(true);
-    const { amount }  = this.form.getRawValue();
+    const { amount, paymentTypeId } = this.form.getRawValue();
     const cuenta      = this.cuenta()!;
     const esPagoFinal = amount >= cuenta.pendingBalance;
 
     try {
-        this.pasoActual.set('Registrando pago...');
-        const res = await this.arService.applyPayment({
+      this.pasoActual.set('Registrando pago...');
+      const res = await this.arService.applyPayment({
         accountReceivableId: cuenta.id,
         amount,
-        currencyCode: cuenta.currencyCode,
-        });
-        if (!res) throw new Error(this.arService.error() ?? 'Error al aplicar pago');
+        currencyCode:  cuenta.currencyCode,
+        paymentTypeId,   // ← tipo de pago real elegido por el usuario
+      });
+      if (!res) throw new Error(this.arService.error() ?? 'Error al aplicar pago');
 
-        if (esPagoFinal) {
+      if (esPagoFinal) {
         this.pasoActual.set('Emitiendo comprobante y descontando stock...');
         await firstValueFrom(
-            this.ventasService.emitirComprobante(cuenta.salesReceiptId)
+          this.ventasService.emitirComprobante(cuenta.salesReceiptId, paymentTypeId),
         );
-        }
+      }
 
-        this.pasoActual.set(null);
-        this.messageService.add({
+      this.pasoActual.set(null);
+      this.messageService.add({
         severity: 'success',
         summary:  esPagoFinal ? '¡Cuenta saldada!' : 'Abono registrado',
         detail:   esPagoFinal
-            ? 'Pago completado. Comprobante EMITIDO y stock descontado.'
-            : `Abono de ${cuenta.currencyCode} ${amount.toFixed(2)} aplicado.`,
-        });
+          ? 'Pago completado. Comprobante EMITIDO y stock descontado.'
+          : `Abono de ${cuenta.currencyCode} ${amount.toFixed(2)} aplicado.`,
+      });
 
-        await this.arService.getById(cuenta.id);
-        this.form.reset();
-        this._setMaxValidator();
+      await this._refrescarCuenta(cuenta.id);
+      this.form.reset();
+      this._setMaxValidator();
 
-        if (esPagoFinal) {
+      if (esPagoFinal) {
         setTimeout(() => this.router.navigate(['/admin/ventas-por-cobrar']), 1800);
-        }
+      }
 
     } catch (err: any) {
-        this.pasoActual.set(null);
-        this.messageService.add({
+      this.pasoActual.set(null);
+      this.messageService.add({
         severity: 'error',
         summary:  'Error al registrar pago',
         detail:   err?.message ?? 'No se pudo procesar el pago.',
-        });
+      });
     } finally {
-        this.isSubmitting.set(false);
+      this.isSubmitting.set(false);
     }
-    }
+  }
 
-    private _setMaxValidator() {
-        const max = this.cuenta()?.pendingBalance ?? 0;
-        this.form.get('amount')?.setValidators([
-        Validators.required,
-        Validators.min(0.01),
-        Validators.max(max),
-        ]);
-        this.form.get('amount')?.updateValueAndValidity();
-    }
+  private _setMaxValidator() {
+    const max = this.cuenta()?.pendingBalance ?? 0;
+    this.form.get('amount')?.setValidators([
+      Validators.required,
+      Validators.min(0.01),
+      Validators.max(max),
+    ]);
+    this.form.get('amount')?.updateValueAndValidity();
+  }
 
   // ── Helpers visuales ─────────────────────────────────────────────
 

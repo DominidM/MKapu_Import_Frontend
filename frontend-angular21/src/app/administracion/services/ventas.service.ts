@@ -69,10 +69,10 @@ export class VentasAdminService {
     );
   }
 
-  emitirComprobante(id: number): Observable<any> {
+  emitirComprobante(id: number, paymentTypeId?: number): Observable<any> {
     return this.http.put<any>(
       `${this.salesUrl}/receipts/${id}/emit`,
-      {},
+      { paymentTypeId },
       { headers: this.headers },
     );
   }
