@@ -1,64 +1,61 @@
 import { Routes } from '@angular/router';
 import { pendingChangesGuard } from '../core/guards/pending-changes.guard';
 
-export const ADMIN_ROUTES: Routes = [
-  {
-    path: 'notificaciones',
-    loadComponent: () =>
-      import('./pages/reportes/pages/notificacion-transferencia/notificacion-transferencia').then(
-        (m) => m.NotificacionTransferencia,
-      ),
-  },
-  {
-    path: 'dashboard-admin',
-    loadComponent: () =>
-      import('./pages/dashboard-admin/dashboard-admin').then((m) => m.DashboardAdmin),
-  },
+  export const ADMIN_ROUTES: Routes = [
+    {
+      path: 'notificaciones',
+      loadComponent: () =>
+        import('./pages/reportes/pages/notificacion-transferencia/notificacion-transferencia').then((m) => m.NotificacionTransferencia),
+    },
+    {
+      path: 'dashboard-admin',
+      loadComponent: () =>
+        import('./pages/dashboard-admin/dashboard-admin').then((m) => m.DashboardAdmin),
+    },
 
-  {
+    {
     path: 'dashboard-almacen',
     loadComponent: () =>
-      import('../almacen/pages/dashboard-almacen/dashboard-almacen').then(
-        (m) => m.DashboardAlmacen,
-      ),
-  },
-  {
+      import('../almacen/pages/dashboard-almacen/dashboard-almacen').then((m) => m.DashboardAlmacen),
+    },
+    {
     path: 'dashboard-ventas',
     loadComponent: () =>
       import('../ventas/pages/dashboard-ventas/dashboard-ventas').then((m) => m.DashboardVentas),
-  },
+    },
 
-  /* =======================
+    /* =======================
       USUARIOS
     ======================= */
-  {
-    path: 'usuarios',
-    children: [
-      {
-        path: '',
-        loadComponent: () =>
-          import('./pages/usuarios/pages/administracion-crear-usuario/administracion-crear-usuario').then(
-            (m) => m.AdministracionCrearUsuario,
-          ),
-      },
-      {
-        path: 'crear-usuario',
-        loadComponent: () =>
-          import('./pages/usuarios/pages/administracion/administracion').then(
-            (m) => m.Administracion,
-          ),
-      },
-      {
-        path: 'editar-usuario/:id',
-        loadComponent: () =>
-          import('./pages/usuarios/pages/administracion-editar-usuario/administracion-editar-usuario').then(
-            (m) => m.AdministracionEditarUsuario,
-          ),
-      },
-    ],
-  },
+    {
+      path: 'usuarios',
+      children: [
+        {
+          path: '',
+          loadComponent: () =>
+            import('./pages/usuarios/pages/administracion-crear-usuario/administracion-crear-usuario').then(
+              (m) => m.AdministracionCrearUsuario,
+            ),
+        },
+        {
+          path: 'crear-usuario',
+          loadComponent: () =>
+            import('./pages/usuarios/pages/administracion/administracion').then(
+              (m) => m.Administracion,
+            ),
+        },
+        {
+          path: 'editar-usuario/:id',
+          loadComponent: () =>
+            import('./pages/usuarios/pages/administracion-editar-usuario/administracion-editar-usuario').then(
+              (m) => m.AdministracionEditarUsuario,
+            ),
+        },
+      ],
+    },
 
-  /* =======================
+
+    /* =======================
       Almacen
     ======================= */
     {
@@ -122,7 +119,9 @@ export const ADMIN_ROUTES: Routes = [
   {
     path: 'transferencia',
     loadComponent: () =>
-      import('./pages/reportes/pages/transferencia/transferencia').then((m) => m.Transferencia),
+      import('./pages/reportes/pages/transferencia/transferencia').then(
+        (m) => m.Transferencia,
+      ),
   },
   {
     path: 'transferencia/nueva-transferencia',
@@ -171,116 +170,137 @@ export const ADMIN_ROUTES: Routes = [
   ======================= */
   {
     path: 'gestion-productos',
-    loadComponent: () =>
-      import('./pages/gestion-productos/productos-listado/gestion-listado').then(
-        (m) => m.GestionListado,
-      ),
+    loadComponent: () => import('./pages/gestion-productos/productos-listado/gestion-listado')
+      .then((m) => m.GestionListado),
   },
 
   {
     path: 'gestion-productos/crear-producto',
-    loadComponent: () =>
-      import('./pages/gestion-productos/productos-formulario/productos-formulario').then(
-        (m) => m.ProductosFormulario,
-      ),
+    loadComponent: () => import('./pages/gestion-productos/productos-formulario/productos-formulario')
+      .then((m) => m.ProductosFormulario),
   },
   {
     path: 'gestion-productos/editar-producto/:id',
-    loadComponent: () =>
-      import('./pages/gestion-productos/productos-formulario/productos-formulario').then(
-        (m) => m.ProductosFormulario,
-      ),
+    loadComponent: () => import('./pages/gestion-productos/productos-formulario/productos-formulario')
+      .then((m) => m.ProductosFormulario),
   },
   {
     path: 'gestion-productos/ver-detalle-producto/:id',
-    loadComponent: () =>
-      import('./pages/gestion-productos/productos-detalles/productos-detalles').then(
-        (m) => m.ProductosDetalles,
-      ),
+    loadComponent: () => import('./pages/gestion-productos/productos-detalles/productos-detalles')
+      .then((m) => m.ProductosDetalles),
   },
 
-  /* =======================
+    /* =======================
       SEDES
     ======================= */
-  {
-    path: 'sedes',
-    children: [
-      {
-        path: '',
-        loadComponent: () => import('./pages/sedes/pages/sedes/sedes').then((m) => m.Sedes),
-      },
-      {
-        path: 'agregar-sede',
-        loadComponent: () =>
-          import('./pages/sedes/pages/agregar-sede/agregar-sede').then((m) => m.AgregarSede),
-        canDeactivate: [pendingChangesGuard],
-      },
-      {
-        path: 'editar-sede',
-        loadComponent: () =>
-          import('./pages/sedes/pages/editar-sede/editar-sede').then((m) => m.EditarSede),
-        canDeactivate: [pendingChangesGuard],
-      },
-    ],
-  },
+    {
+      path: 'sedes',
+      children: [
+        {
+          path: '',
+          loadComponent: () =>
+            import('./pages/sedes/pages/sedes/sedes').then((m) => m.Sedes),
+        },
+        {
+          path: 'agregar-sede',
+          loadComponent: () =>
+            import('./pages/sedes/pages/agregar-sede/agregar-sede').then(
+              (m) => m.AgregarSede,
+            ),
+          canDeactivate: [pendingChangesGuard],
+        },
+        {
+          path: 'editar-sede',
+          loadComponent: () =>
+            import('./pages/sedes/pages/editar-sede/editar-sede').then(
+              (m) => m.EditarSede,
+            ),
+          canDeactivate: [pendingChangesGuard],
+        },
+      ],
+    },
 
-  /* =======================
+
+
+
+   /* =======================
         categorias
     ======================= */
-  {
-    path: 'categoria',
-    children: [
-      {
-        path: '',
-        loadComponent: () =>
-          import('./pages/categoria/pages/categoria/categoria').then((m) => m.CategoriaListado),
-      },
-      {
-        path: 'agregar-categoria',
-        loadComponent: () =>
-          import('./pages/categoria/pages/agregar-categoria/agregar-categoria').then(
-            (m) => m.AgregarCategoria,
-          ),
-        canDeactivate: [pendingChangesGuard],
-      },
-      {
-        path: 'editar-categoria/:id',
-        loadComponent: () =>
-          import('./pages/categoria/pages/editar-categoria/editar-categoria').then(
-            (m) => m.EditarCategoria,
-          ),
-        canDeactivate: [pendingChangesGuard],
-      },
-    ],
-  },
+    {
+      path: 'categoria',
+      children: [
+        {
+          path: '',
+          loadComponent: () =>
+            import('./pages/categoria/pages/categoria/categoria').then(
+              (m) => m.CategoriaListado
+            ),
+        },
+        {
+          path: 'agregar-categoria',
+          loadComponent: () =>
+            import('./pages/categoria/pages/agregar-categoria/agregar-categoria').then(
+              (m) => m.AgregarCategoria,
+            ),
+          canDeactivate: [pendingChangesGuard],
+        },
+        {
+          path: 'editar-categoria/:id',
+          loadComponent: () =>
+            import('./pages/categoria/pages/editar-categoria/editar-categoria').then(
+              (m) => m.EditarCategoria,
+            ),
+          canDeactivate: [pendingChangesGuard],
+        },
+      ],
+    },
 
-  /* =======================
+
+    /* =======================
       CLIENTES
     ======================= */
-  {
-    path: 'clientes',
-    children: [
-      {
-        path: '',
-        loadComponent: () =>
-          import('./pages/clientes/pages/clientes/clientes').then((m) => m.Clientes),
-      },
-      {
-        path: 'agregar-cliente',
-        loadComponent: () =>
-          import('./pages/clientes/pages/agregar-cliente/agregar-cliente').then(
-            (m) => m.AgregarCliente,
-          ),
-      },
-      {
-        path: 'editar-cliente/:id',
-        loadComponent: () =>
-          import('./pages/clientes/pages/editar-cliente/editar-cliente').then(
-            (m) => m.EditarCliente,
-          ),
-      },
-    ],
-  },
+    {
+      path: 'clientes',
+      children: [
+        {
+          path: '',
+          loadComponent: () =>
+            import('./pages/clientes/pages/clientes/clientes').then(m => m.Clientes),
+        },
+        {
+          path: 'agregar-cliente',
+          loadComponent: () =>
+            import('./pages/clientes/pages/agregar-cliente/agregar-cliente').then(m => m.AgregarCliente),
+        },
+        {
+          path: 'editar-cliente/:id',
+          loadComponent: () =>
+            import('./pages/clientes/pages/editar-cliente/editar-cliente').then(m => m.EditarCliente),
+        },
+      ],
+    },
+    /* =======================
+      INGRESOS ALMACÉN
+    ======================= */
+    {
+      path: 'ingresos-almacen',
+      children: [
+        {
+          path: '',
+          loadComponent: () =>
+            import('./pages/ingresos-almacen/pages/ingresos-almacen/ingresos-almacen').then(
+              (m) => m.IngresosAlmacen,
+            ),
+        },
+        {
+          path: 'ingresos-agregar',
+          loadComponent: () =>
+            import('./pages/ingresos-almacen/pages/ingresos-agregar/ingresos-agregar').then(
+              (m) => m.IngresosAgregar,
+            ),
+        },
+      ],
+    },
 
   /* =======================
     VENTAS ADMINISTRACIÓN
@@ -288,18 +308,18 @@ export const ADMIN_ROUTES: Routes = [
   {
     path: 'generar-ventas-administracion',
     loadComponent: () =>
-      import('./pages/generar-ventas-administracion/generar-ventas-administracion').then((m) => m.GenerarVentasAdministracion),
+      import('../ventas/pages/generar-venta/generar-venta').then((m) => m.GenerarVenta),
   },
   {
     path: 'historial-ventas-administracion',
     loadComponent: () =>
-      import('./pages/historial-ventas-administracion/historial-ventas-administracion').then((m) => m.HistorialVentasAdministracion),
+      import('../ventas/pages/historial-ventas/historial-ventas').then((m) => m.HistorialVentas),
   },
   {
     path: 'detalles-ventas-administracion/:id',
     loadComponent: () =>
-      import('../ventas/shared/detalles-venta/detalle-venta').then(
-        (m) => m.DetalleVenta,
+      import('./shared/detalles-ventas-administracion/detalles-ventas-administracion').then(
+        (m) => m.DetallesVentasAdministracion,
       ),
   },
   {
@@ -320,43 +340,54 @@ export const ADMIN_ROUTES: Routes = [
   ======================= */
   {
     path: 'comision',
-    loadComponent: () => import('./pages/comision/comision').then((m) => m.Comision),
+    loadComponent: () =>
+      import('./pages/comision/comision')
+        .then((m) => m.Comision
+        ),
+
   },
+
+
 
   {
     path: 'comision-regla',
     loadComponent: () =>
-      import('./pages/comision/comision-regla/comisionregla').then((m) => m.ComisionRegla),
+      import('./pages/comision-regla/comisionregla')
+        .then((m) => m.ComisionRegla),
   },
+
 
   {
     path: 'comision-reportes',
     loadComponent: () =>
-      import('./pages/comision/comision-reportes/comisionreportes').then((m) => m.ComisionReportes),
+      import('./pages/comision-reportes/comisionreportes')
+        .then((m) => m.ComisionReportes),
   },
+
   /* =======================
   GESTIÓN DE Conteos
 ======================= */
   {
     path: 'conteo-inventario',
     loadComponent: () =>
-     import('../logistica/pages/conteo-inventario/conteoinventario')
-       .then((m) => m.ConteoInventarios),
+      import('./pages/conteo-inventario/conteoinventario')
+        .then((m) => m.ConteoInventarios),
   },
 
   {
     path: 'conteo-crear',
     loadComponent: () =>
-      import('../logistica/pages/conteo-crear/conteocrear')
+      import('./pages/conteo-crear/conteocrear')
         .then((m) => m.ConteoCrear),
-
   },
   {
     path: 'conteo-detalle/:id',
     loadComponent: () =>
-     import('../logistica/pages/conteo-detalle/conteodetalle')
+      import('./pages/conteo-detalle/conteodetalle')
         .then((m) => m.ConteoDetalle),
   },
+
+
 
   /* =======================
     MERMAS
@@ -367,7 +398,9 @@ export const ADMIN_ROUTES: Routes = [
       {
         path: '',
         loadComponent: () =>
-          import('./pages/mermas/pages/mermas-pr/mermas-pr').then((m) => m.MermasPr),
+          import('./pages/mermas/pages/mermas-pr/mermas-pr').then(
+            (m) => m.MermasPr,
+          ),
       },
       {
         path: 'registro-merma',
@@ -386,6 +419,7 @@ export const ADMIN_ROUTES: Routes = [
     ],
   },
 
+
   /* =======================
     REMATES
   ======================= */
@@ -395,7 +429,9 @@ export const ADMIN_ROUTES: Routes = [
       {
         path: '',
         loadComponent: () =>
-          import('./pages/remates/pages/remates-pr/remates-pr').then((m) => m.RematesPr),
+          import('./pages/remates/pages/remates-pr/remates-pr').then(
+            (m) => m.RematesPr,
+          ),
       },
       {
         path: 'registro-remate',
@@ -406,60 +442,6 @@ export const ADMIN_ROUTES: Routes = [
       },
     ],
   },
-
-    /* =======================
-      cotizacion
-  ======================= */
-
-  {
-    path: 'cotizaciones',
-    loadComponent: () =>
-      import('./pages/gestion-cotizacion/gestion-listado/gestion-listado').then(
-        (m) => m.GestionCotizacionesComponent,
-      ),
-  },
-  {
-    path: 'agregar-cotizaciones',
-    loadComponent: () =>
-      import('./pages/gestion-cotizacion/gestion-formulario/cotizacion-formulario').then(
-        (m) => m.CotizacionFormulario,
-      ),
-  },
-  {
-    path: 'editar-cotizacion/:id',
-    loadComponent: () =>
-      import('./pages/gestion-cotizacion/gestion-formulario/cotizacion-formulario').then(
-        (m) => m.CotizacionFormulario,
-      ),
-  },
-
-
-
-
-
-
- {
-    path: 'ventas-por-cobrar',
-    loadComponent: () =>
-      import('./pages/ventas-por-cobrar/ventas-por-cobrar-listado/ventas-por-cobrar-listado').then(
-        (m) => m.VentasPorCobrarListadoComponent,
-      ),
-  },
-  {
-    path: 'agregar-ventas-por-cobrar',
-    loadComponent: () =>
-      import('./pages/ventas-por-cobrar/ventas-por-cobrar-formulario/ventas-por-cobrar-formulario').then(
-        (m) => m.VentasPorCobrarFormulario,
-      ),
-  },
-  {
-    path: 'editar-ventas-por-cobrar/:id',
-    loadComponent: () =>
-      import('./pages/ventas-por-cobrar/ventas-por-cobrar-formulario/ventas-por-cobrar-formulario').then(
-        (m) => m.VentasPorCobrarFormulario,
-      ),
-  },
-
 
   /* =======================
     DESPACHO PRODUCTOS
@@ -478,159 +460,45 @@ export const ADMIN_ROUTES: Routes = [
         (m) => m.DetallesDespacho,
       ),
   },
-  {
+   {
     path: 'despacho-productos/agregar-despacho/:id',
     loadComponent: () =>
       import('./pages/despacho-productos/pages/agregar-despacho/agregar-despacho').then(
         (m) => m.AgregarDespacho,
       ),
   },
-  {
+   {
     path: 'despacho-productos/editar-despacho/:id',
     loadComponent: () =>
       import('./pages/despacho-productos/pages/editar-despacho/editar-despacho').then(
         (m) => m.EditarDespacho,
       ),
   },
+  // 👇 ESTA QUEDA SIN GUARDS
+  {
+    path: 'despacho-productos/confirmar-despacho/:id',
+    loadComponent: () =>
+      import('./pages/despacho-productos/pages/confirmar-despacho/confirmar-despacho')
+        .then(m => m.ConfirmarDespacho)
+  },
+
 
   {
     path: 'proveedores',
-    loadComponent: () =>
-      import('./pages/gestion-proveedor/proveedor-listado/proveedor-listado').then(
-        (m) => m.ProveedorListado,
-      ),
+    loadComponent: () => import('./pages/gestion-proveedor/proveedor-listado/proveedor-listado').then(m => m.ProveedorListado),
     children: [
       {
         path: 'crear',
-        loadComponent: () =>
-          import('./pages/gestion-proveedor/proveedor-formulario/proveedor-formulario').then(
-            (m) => m.ProveedorFormulario,
-          ),
+        loadComponent: () => import('./pages/gestion-proveedor/proveedor-formulario/proveedor-formulario').then(m => m.ProveedorFormulario)
       },
       {
         path: 'editar/:id',
-        loadComponent: () =>
-          import('./pages/gestion-proveedor/proveedor-formulario/proveedor-formulario').then(
-            (m) => m.ProveedorFormulario,
-          ),
+        loadComponent: () => import('./pages/gestion-proveedor/proveedor-formulario/proveedor-formulario').then(m => m.ProveedorFormulario)
       },
       {
         path: 'ver-detalle/:id',
-        loadComponent: () =>
-          import('./pages/gestion-proveedor/proveedor-detalles/proveedor-detalles').then(
-            (m) => m.ProveedorDetalles,
-          ),
-      },
-    ],
+        loadComponent: () => import('./pages/gestion-proveedor/proveedor-detalles/proveedor-detalles').then(m => m.ProveedorDetalles)
+      }
+    ]
   },
-
-  {
-    path: 'promociones',
-    children: [
-      {
-        path: '',
-        loadComponent: () =>
-          import('./pages/gestion-promociones/promociones-listado/promociones-listado').then(
-            (m) => m.PromocionesListado,
-          ),
-      },
-      {
-        path: 'crear',
-        loadComponent: () =>
-          import('./pages/gestion-promociones/promociones-formulario/promociones-formulario').then(
-            (m) => m.PromocionesFormulario,
-          ),
-      },
-      {
-        path: 'editar/:id',
-        loadComponent: () =>
-          import('./pages/gestion-promociones/promociones-formulario/promociones-formulario').then(
-            (m) => m.PromocionesFormulario,
-          ),
-      },
-      {
-        path: 'ver-detalle/:id',
-        loadComponent: () =>
-          import('./pages/gestion-promociones/promociones-detalles/promociones-detalles').then(
-            (m) => m.PromocionesDetalles,
-          ),
-      },
-    ],
-  },
-
-
-
-
-
-   /* =======================
-      DESCUENTOS
-    ======================= */
-    {
-      path: 'descuentos',
-      children: [
-        {
-          path: '',
-          loadComponent: () =>
-            import('./pages/descuento/pages/descuento/descuento').then((m) => m.DescuentoPage),
-        },
-        {
-          path: 'agregar-descuento',
-          loadComponent: () =>
-            import('./pages/descuento/pages/agregar-descuento/agregar-descuento').then(
-              (m) => m.AgregarDescuento,
-            ),
-          canDeactivate: [pendingChangesGuard],
-        },
-        {
-          path: 'editar-descuento/:id',
-          loadComponent: () =>
-            import('./pages/descuento/pages/editar-descuento/editar-descuento').then(
-              (m) => m.EditarDescuento,
-            ),
-          canDeactivate: [pendingChangesGuard],
-        },
-      ],
-    },
-
-   {
-        path: 'terminos-condiciones',
-        loadComponent: () =>
-          import('./pages/reportes/pages/terminos-condiciones/terminos-condiciones').then(
-            (m) => m.TerminosCondicionesComponent,
-          ),
-    },
-
-{
-  path: 'reclamos-listado',
-  children: [
-    {
-      path: '',
-      loadComponent: () =>
-        import('../ventas/pages/reclamos-garantia/reclamos-listado/reclamos-listado').then(
-          (m) => m.ReclamosListado,
-        ),
-    },
-    {
-      path: 'crear',
-      loadComponent: () =>
-        import('../ventas/pages/reclamos-garantia/reclamos-crear/reclamos-crear').then(
-          (m) => m.ReclamosCrear,
-        ),
-    },
-    {
-      path: 'editar/:id',
-      loadComponent: () =>
-        import('../ventas/pages/reclamos-garantia/reclamos-editar/reclamos-editar').then(
-          (m) => m.ReclamosEditar,
-        ),
-    },
-    {
-      path: 'detalle/:id',   // ← faltaba esta
-      loadComponent: () =>
-        import('../ventas/pages/reclamos-garantia/reclamos-detalles/reclamos-detalles').then(
-          (m) => m.ReclamosDetalles,
-        ),
-    },
-  ],
-},
 ];
