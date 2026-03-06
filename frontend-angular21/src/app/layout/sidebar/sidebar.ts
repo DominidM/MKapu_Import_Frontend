@@ -48,7 +48,6 @@ export class Sidebar implements OnInit {
     { path: '/admin/dashboard-admin',                 allowedRoles: [UserRole.ADMIN],   label: 'Dashboard',                         icon: 'pi pi-home' },
 
     { path: '',                                       allowedRoles: [UserRole.ADMIN],   label: 'VENTAS',                            isSection: true },
-    { path: '/admin/control-caja',                    allowedRoles: [UserRole.ADMIN],   label: 'Control de Caja',                   icon: 'pi pi-box' },
     { path: '/admin/generar-ventas-administracion',   allowedRoles: [UserRole.ADMIN],   label: 'Crear Venta Administración',        icon: 'pi pi-plus-circle' },
     { path: '/admin/historial-ventas-administracion', allowedRoles: [UserRole.ADMIN],   label: 'Historial Ventas Administración',   icon: 'pi pi-list' },
     { path: '/admin/ventas-por-cobrar',               allowedRoles: [UserRole.ADMIN],   label: 'Ventas por Cobrar',                 icon: 'pi pi-wallet' },
@@ -70,7 +69,7 @@ export class Sidebar implements OnInit {
 
     { path: '',                                       allowedRoles: [UserRole.ADMIN],   label: 'ADMINISTRACIÓN',               isSection: true },
     { path: '/admin/usuarios',                        allowedRoles: [UserRole.ADMIN],   label: 'Trabajadores',                 icon: 'pi pi-user-plus' },
-    { path: '/admin/roles',                           allowedRoles: [UserRole.ADMIN],   label: 'Rol y Permisos',                icon: 'pi pi-users' },
+    { path: '/admin/roles-permisos',                  allowedRoles: [UserRole.ADMIN],   label: 'Rol y Permisos',                icon: 'pi pi-users' },
     { path: '/admin/clientes',                        allowedRoles: [UserRole.ADMIN],   label: 'Clientes',                     icon: 'pi pi-users' },
     { path: '/admin/sedes',                           allowedRoles: [UserRole.ADMIN],   label: 'Sedes',                        icon: 'pi pi-building' },
     { path: '/admin/almacen',                         allowedRoles: [UserRole.ADMIN],   label: 'Almacén',                      icon: 'pi pi-box' },

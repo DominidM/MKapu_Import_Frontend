@@ -82,7 +82,7 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
     sedeSeleccionada: null,
     tipoComprobante: null,
     estado: 'EMITIDO',  
-    fechaInicio: null,
+    fechaInicio: new Date(),
     fechaFin: null,
     busqueda: '',
     tipoPago: null,

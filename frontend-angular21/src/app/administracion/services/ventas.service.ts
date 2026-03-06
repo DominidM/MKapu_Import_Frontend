@@ -25,6 +25,7 @@ import {
   ClienteAdminResponse,
   TipoDocumentoAdmin,
   PromocionAdmin,
+  MetodoPagoAdmin,
 } from '../interfaces/ventas.interface';
 
 @Injectable({ providedIn: 'root' })
@@ -68,15 +69,14 @@ export class VentasAdminService {
     );
   }
 
-
-    emitirComprobante(id: number): Observable<any> {
+  emitirComprobante(id: number, paymentTypeId?: number): Observable<any> {
     return this.http.put<any>(
       `${this.salesUrl}/receipts/${id}/emit`,
-      {},
+      { paymentTypeId },
       { headers: this.headers },
     );
   }
-  
+
   obtenerVentaConHistorial(
     id: number,
     historialPage = 1,
@@ -271,4 +271,40 @@ export class VentasAdminService {
       })
       .pipe(catchError(() => of([])));
   }
+
+  // En ventas.service.ts — reemplaza consultarDniReniec por esto:
+
+  consultarDocumentoIdentidad(numero: string): Observable<{
+    nombres: string;
+    apellidoPaterno: string;
+    apellidoMaterno: string;
+    nombreCompleto: string;
+    tipoDocumento: 'DNI' | 'RUC';
+    razonSocial?: string;
+    direccion?: string;
+  }> {
+    return this.http
+      .get<any>(`${this.salesUrl}/reniec/consultar/${numero}`, {
+        headers: this.headers,
+      })
+      .pipe(
+        catchError(() =>
+          of({
+            nombres: '',
+            apellidoPaterno: '',
+            apellidoMaterno: '',
+            nombreCompleto: '',
+            tipoDocumento: 'DNI' as const,
+          }),
+        ),
+      );
+  }
+
+  obtenerMetodosPago(): Observable<MetodoPagoAdmin[]> {
+  return this.http
+    .get<MetodoPagoAdmin[]>(`${this.salesUrl}/receipts/payment-types`, {
+      headers: this.headers,
+    })
+    .pipe(catchError(() => of([])));
+}
 }
