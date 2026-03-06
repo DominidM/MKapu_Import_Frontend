@@ -425,7 +425,6 @@
         </div>
 
         <div class="content-centrado">
-          <!-- TIPO DE COMPROBANTE -->
           <div class="comprobante-section">
             <label class="section-label"><i class="pi pi-file-edit"></i> Tipo de Comprobante</label>
             <div class="flex justify-content-center">
@@ -448,13 +447,11 @@
 
           <p-divider styleClass="section-divider" />
 
-          <!-- CLIENTE -->
           <div class="cliente-section">
             <label class="section-label"><i class="pi pi-users"></i> Datos del Cliente</label>
 
             <div class="buscar-cliente-section">
               <div class="flex gap-2 align-items-end flex-wrap mb-2">
-                <!-- Selector tipo documento -->
                 <div style="flex: 0 0 210px; min-width: 160px">
                   <label class="input-label">Tipo de Documento</label>
                   <p-select
@@ -468,7 +465,6 @@
                     [disabled]="!!clienteEncontrado() || tipoComprobante() === 1"
                   />
                 </div>
-                <!-- Input documento -->
                 <div style="flex: 1; min-width: 160px">
                   <label class="input-label">{{
                     tipoComprobante() === 2 ? 'Número de Documento' : 'RUC (11 dígitos)'
@@ -489,7 +485,6 @@
                     [disabled]="!!clienteEncontrado()"
                   />
                 </div>
-                <!-- Botón buscar -->
                 <div style="flex: 0 0 200px; min-width: 160px">
                   <label class="input-label">&nbsp;</label>
                   <p-button
@@ -504,7 +499,6 @@
                 </div>
               </div>
 
-              <!-- Contador dígitos -->
               <div
                 *ngIf="clienteDocumento() && !clienteEncontrado()"
                 class="mt-2 flex align-items-center gap-2"
@@ -526,7 +520,6 @@
               </div>
             </div>
 
-            <!-- CLIENTE ENCONTRADO -->
             <div *ngIf="clienteEncontrado()" class="cliente-encontrado-card mt-3">
               <p-card class="cliente-card-success">
                 <div class="cliente-content">
@@ -644,7 +637,6 @@
               </p-card>
             </div>
 
-            <!-- NO ENCONTRADO -->
             <div
               *ngIf="busquedaRealizada() && !clienteEncontrado() && !creandoCliente()"
               class="mt-3"
@@ -662,7 +654,6 @@
               </div>
             </div>
 
-            <!-- ════ FORMULARIO NUEVO CLIENTE con RENIEC/SUNAT ════ -->
             <div *ngIf="creandoCliente()" class="nuevo-cliente-form mt-3">
               <p-divider align="center">
                 <span class="divider-text"
@@ -670,7 +661,6 @@
                 >
               </p-divider>
               <div class="form-grid">
-                <!-- Tipo de documento -->
                 <div class="form-field full-width">
                   <label>Tipo de Documento *</label>
                   <p-select
@@ -688,7 +678,6 @@
                   />
                 </div>
 
-                <!-- Número documento + spinner -->
                 <div class="form-field full-width">
                   <label>Número de Documento *</label>
                   <div class="flex align-items-center gap-2">
@@ -709,15 +698,13 @@
                     ></i>
                   </div>
 
-                  <!-- Hint dinámico según tipo de documento seleccionado -->
                   <ng-container *ngIf="nuevoClienteForm.documentTypeId">
                     <ng-container *ngFor="let t of tiposDocumento()">
                       <ng-container *ngIf="t.documentTypeId === nuevoClienteForm.documentTypeId">
-                        <!-- Hint DNI -->
                         <small
                           *ngIf="
-                            t.description?.toUpperCase()?.includes('DNI') ||
-                            t.description?.toUpperCase()?.includes('IDENTIDAD')
+                            t.description.toUpperCase().includes('DNI') ||
+                            t.description.toUpperCase().includes('IDENTIDAD')
                           "
                           class="text-500 mt-1 block"
                         >
@@ -726,11 +713,10 @@
                           <strong>RENIEC</strong> automáticamente
                         </small>
 
-                        <!-- Hint RUC -->
                         <small
                           *ngIf="
-                            t.description?.toUpperCase()?.includes('RUC') ||
-                            t.description?.toUpperCase()?.includes('CONTRIBUYENTE')
+                            t.description.toUpperCase().includes('RUC') ||
+                            t.description.toUpperCase().includes('CONTRIBUYENTE')
                           "
                           class="text-500 mt-1 block"
                         >
@@ -743,7 +729,6 @@
                   </ng-container>
                 </div>
 
-                <!-- Nombre / Razón Social -->
                 <div class="form-field full-width">
                   <label>Nombre completo / Razón Social *</label>
                   <div class="flex align-items-center gap-2">
@@ -753,7 +738,6 @@
                       placeholder="Nombre o razón social"
                       class="w-full"
                     />
-                    <!-- Badge RENIEC/SUNAT -->
                     <span
                       *ngIf="nombreDesdeReniec()"
                       class="flex align-items-center gap-1 text-green-600"
@@ -816,11 +800,9 @@
                 </div>
               </div>
             </div>
-            <!-- fin nuevo cliente -->
           </div>
         </div>
       </div>
-      <!-- fin step 1 -->
 
       <!-- ══ STEP 2 — Pago, Promociones y Entrega ══ -->
       <div *ngIf="activeStep() === 2" class="step-content">
@@ -829,7 +811,6 @@
           <h3>Pago, Promociones y Entrega</h3>
         </div>
 
-        <!-- CRÉDITO -->
         <div *ngIf="tipoPagoOrigen() === 'credito'" class="content-centrado">
           <div
             class="surface-card border-round-xl p-5 text-center"
@@ -857,9 +838,7 @@
           </div>
         </div>
 
-        <!-- CONTADO -->
         <div *ngIf="tipoPagoOrigen() !== 'credito'" class="content-centrado">
-          <!-- ENTREGA -->
           <div class="tipo-pago-section">
             <label class="section-label"><i class="pi pi-truck"></i> Tipo de Entrega</label>
             <div class="metodos-pago-grid">
@@ -915,7 +894,6 @@
 
           <p-divider styleClass="section-divider"></p-divider>
 
-          <!-- PROMOCIONES -->
           <div class="tipo-pago-section">
             <label class="section-label"
               ><i class="pi pi-percentage"></i> Promociones Disponibles</label
@@ -1006,12 +984,15 @@
 
           <p-divider styleClass="section-divider"></p-divider>
 
-          <!-- MÉTODO DE PAGO -->
+          <!-- MÉTODO DE PAGO — fix: metodoPagoOptions() con () -->
           <div class="tipo-pago-section">
             <label class="section-label"><i class="pi pi-wallet"></i> Método de Pago</label>
-            <div class="metodos-pago-grid">
+            <div *ngIf="metodosPago().length === 0" class="flex justify-content-center p-4">
+              <i class="pi pi-spin pi-spinner text-2xl"></i>
+            </div>
+            <div class="metodos-pago-grid" *ngIf="metodosPago().length > 0">
               <div
-                *ngFor="let metodo of metodoPagoOptions"
+                *ngFor="let metodo of metodoPagoOptions()"
                 class="metodo-pago-card"
                 [class.selected]="metodoPagoSeleccionado() === metodo.value"
                 (click)="metodoPagoSeleccionado.set(metodo.value)"
@@ -1023,7 +1004,12 @@
                 </div>
               </div>
             </div>
-            <div *ngIf="metodoPagoSeleccionado() === 1" class="pago-detalles-animated mt-4">
+
+            <!-- Efectivo (codSunat 008 → id dinámico) -->
+            <div
+              *ngIf="metodosPago().length > 0 && metodoPagoSeleccionado() === metodosPago()[0].id && metodosPago()[0].codSunat === '008'"
+              class="pago-detalles-animated mt-4"
+            >
               <div class="monto-destacado-box">
                 <i class="pi pi-tag"></i><span>Total a Pagar</span
                 ><strong class="monto-destacado">S/. {{ total() | number: '1.2-2' }}</strong>
@@ -1045,29 +1031,33 @@
                 ><span class="vuelto-valor">S/. {{ vuelto() | number: '1.2-2' }}</span>
               </div>
             </div>
-            <div
-              *ngIf="metodoPagoSeleccionado() === 2 || metodoPagoSeleccionado() === 3"
-              class="pago-detalles-animated mt-4"
-            >
-              <div class="monto-destacado-box">
-                <i class="pi pi-tag"></i><span>Total a Pagar</span
-                ><strong class="monto-destacado">S/. {{ total() | number: '1.2-2' }}</strong>
+
+            <!-- Otros métodos (transferencia, tarjeta, etc.) -->
+            <ng-container *ngFor="let m of metodosPago()">
+              <div
+                *ngIf="metodoPagoSeleccionado() === m.id && m.codSunat !== '008'"
+                class="pago-detalles-animated mt-4"
+              >
+                <div class="monto-destacado-box">
+                  <i class="pi pi-tag"></i><span>Total a Pagar</span
+                  ><strong class="monto-destacado">S/. {{ total() | number: '1.2-2' }}</strong>
+                </div>
+                <div class="pago-header-inline mt-3">
+                  <i class="pi pi-credit-card"></i
+                  ><span>{{ getLabelMetodoPago(metodoPagoSeleccionado()) }}</span>
+                </div>
+                <div class="form-field mt-3">
+                  <label class="input-label">Nº de Operación</label>
+                  <input
+                    pInputText
+                    [value]="numeroOperacion()"
+                    (input)="numeroOperacion.set($any($event.target).value)"
+                    placeholder="Ingrese número de operación"
+                    class="w-full input-operacion"
+                  />
+                </div>
               </div>
-              <div class="pago-header-inline mt-3">
-                <i class="pi pi-credit-card"></i
-                ><span>{{ getLabelMetodoPago(metodoPagoSeleccionado()) }}</span>
-              </div>
-              <div class="form-field mt-3">
-                <label class="input-label">Nº de Operación</label>
-                <input
-                  pInputText
-                  [value]="numeroOperacion()"
-                  (input)="numeroOperacion.set($any($event.target).value)"
-                  placeholder="Ingrese número de operación"
-                  class="w-full input-operacion"
-                />
-              </div>
-            </div>
+            </ng-container>
           </div>
 
           <p-divider styleClass="section-divider"></p-divider>
@@ -1097,7 +1087,6 @@
           </div>
         </div>
       </div>
-      <!-- fin step 2 -->
 
       <!-- ══ STEP 3 — Confirmar Venta ══ -->
       <div *ngIf="activeStep() === 3" class="step-content">
@@ -1277,10 +1266,8 @@
           </div>
         </div>
       </div>
-      <!-- fin step 3 -->
     </div>
 
-    <!-- NAVEGACIÓN WIZARD -->
     <p-divider styleClass="wizard-divider" />
     <div class="wizard-navigation" *ngIf="!comprobanteGenerado()">
       <p-button

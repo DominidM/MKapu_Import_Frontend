@@ -344,11 +344,12 @@ export const IGV_RATE_ADMIN = 0.18;
 export const CURRENCY_PEN_ADMIN = 'PEN';
 export const OPERATION_TYPE_VENTA_INTERNA = '0101';
 
-export const METODOS_PAGO_ADMIN = [
-  { id: 1, description: 'Efectivo' },
-  { id: 2, description: 'Yape / Plin' },
-  { id: 3, description: 'Tarjeta' },
-] as const;
+export interface MetodoPagoAdmin {
+  id: number;
+  codSunat: string;
+  descripcion: string;
+}
+
 
 export const TIPOS_COMPROBANTE_ADMIN = [
   { id: 2, description: 'Boleta', serie: 'B001' },

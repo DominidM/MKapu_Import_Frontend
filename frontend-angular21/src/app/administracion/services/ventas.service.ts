@@ -25,6 +25,7 @@ import {
   ClienteAdminResponse,
   TipoDocumentoAdmin,
   PromocionAdmin,
+  MetodoPagoAdmin,
 } from '../interfaces/ventas.interface';
 
 @Injectable({ providedIn: 'root' })
@@ -298,4 +299,12 @@ export class VentasAdminService {
         ),
       );
   }
+
+  obtenerMetodosPago(): Observable<MetodoPagoAdmin[]> {
+  return this.http
+    .get<MetodoPagoAdmin[]>(`${this.salesUrl}/receipts/payment-types`, {
+      headers: this.headers,
+    })
+    .pipe(catchError(() => of([])));
+}
 }
