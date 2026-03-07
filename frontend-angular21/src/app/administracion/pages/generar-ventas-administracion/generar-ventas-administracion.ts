@@ -41,7 +41,9 @@ import {
   OPERATION_TYPE_VENTA_INTERNA,
   CURRENCY_PEN_ADMIN,
   PromocionAdmin,
-  MetodoPagoAdmin,
+  MetodoPagoAdmin, // ← coma corregida
+  TipoVentaAdmin,
+  TipoComprobanteAdmin,
 } from '../../interfaces/ventas.interface';
 
 export type TipoEntrega = 'recojo' | 'delivery';
@@ -92,10 +94,8 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
     'Confirmar Venta',
   ];
 
-  readonly tipoComprobanteOptions = [
-    { label: 'Boleta', value: 2, icon: 'pi pi-file' },
-    { label: 'Factura', value: 1, icon: 'pi pi-file-edit' },
-  ];
+  tiposVenta = signal<TipoVentaAdmin[]>([]);
+  tiposComprobante = signal<TipoComprobanteAdmin[]>([]);
 
   readonly opcionesTipoPrecio = [
     { label: 'Unidad', value: 'unidad' },
@@ -201,6 +201,12 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
   snapshotMetodoPago = signal<string>('');
   snapshotTipoComprobante = signal<number>(2);
 
+  tipoVentaSeleccionado = signal<number>(1); // 1 = VENTA NORMAL por defecto
+
+  readonly nombreTipoVentaSeleccionado = computed(
+    () => this.tiposVenta().find((t) => t.id === this.tipoVentaSeleccionado())?.descripcion ?? '—',
+  );
+
   private iconoPorMetodoPago(codSunat: string): string {
     const iconos: Record<string, string> = {
       '008': 'pi pi-money-bill',
@@ -226,17 +232,42 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
 
   readonly documentoConfig = computed(() => {
     if (this.tipoComprobante() === 1) {
-      return { maxLength: 11, minLength: 11, soloNumeros: true, placeholder: 'Ingrese RUC (11 dígitos)' };
+      return {
+        maxLength: 11,
+        minLength: 11,
+        soloNumeros: true,
+        placeholder: 'Ingrese RUC (11 dígitos)',
+      };
     }
     const tipo = this.tiposDocumento().find((t) => t.documentTypeId === this.tipoDocBoleta());
     const desc = tipo?.description?.toUpperCase() ?? '';
     if (desc.includes('DNI'))
-      return { maxLength: 8, minLength: 8, soloNumeros: true, placeholder: 'Ingrese DNI (8 dígitos)' };
+      return {
+        maxLength: 8,
+        minLength: 8,
+        soloNumeros: true,
+        placeholder: 'Ingrese DNI (8 dígitos)',
+      };
     if (desc.includes('CARNET') || desc.includes('EXTRANJERI'))
-      return { maxLength: 12, minLength: 9, soloNumeros: false, placeholder: 'Ingrese Carnet de Extranjería' };
+      return {
+        maxLength: 12,
+        minLength: 9,
+        soloNumeros: false,
+        placeholder: 'Ingrese Carnet de Extranjería',
+      };
     if (desc.includes('PASAPORTE'))
-      return { maxLength: 20, minLength: 5, soloNumeros: false, placeholder: 'Ingrese número de pasaporte' };
-    return { maxLength: 20, minLength: 1, soloNumeros: false, placeholder: 'Ingrese número de documento' };
+      return {
+        maxLength: 20,
+        minLength: 5,
+        soloNumeros: false,
+        placeholder: 'Ingrese número de pasaporte',
+      };
+    return {
+      maxLength: 20,
+      minLength: 1,
+      soloNumeros: false,
+      placeholder: 'Ingrese número de documento',
+    };
   });
 
   readonly longitudDocumento = computed(() => this.documentoConfig().maxLength);
@@ -274,9 +305,12 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
     const p = this.productoTemp();
     if (!p) return 0;
     switch (this.tipoPrecioTemp()) {
-      case 'caja': return p.precioCaja;
-      case 'mayorista': return p.precioMayorista;
-      default: return p.precioUnidad;
+      case 'caja':
+        return p.precioCaja;
+      case 'mayorista':
+        return p.precioMayorista;
+      default:
+        return p.precioUnidad;
     }
   });
 
@@ -309,6 +343,8 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
     this.cargarSedes();
     this.leerParamsCotizacion();
     this.cargarMetodosPago();
+    this.cargarTiposVenta(); // ← nuevo
+    this.cargarTiposComprobante(); // ← nuevo
   }
 
   ngAfterViewInit(): void {
@@ -339,6 +375,20 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
     });
   }
 
+  // ← nuevo
+  private cargarTiposVenta(): void {
+    this.ventasService.obtenerTiposVenta().subscribe({
+      next: (data) => this.tiposVenta.set(data),
+    });
+  }
+
+  // ← nuevo
+  private cargarTiposComprobante(): void {
+    this.ventasService.obtenerTiposComprobante().subscribe({
+      next: (data) => this.tiposComprobante.set(data),
+    });
+  }
+
   private cargarSedes(): void {
     this.sedesLoading.set(true);
     this.ventasService.obtenerSedes().subscribe({
@@ -350,7 +400,11 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
       },
       error: () => {
         this.sedesLoading.set(false);
-        this.messageService.add({ severity: 'warn', summary: 'Sedes', detail: 'No se pudieron cargar las sedes' });
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Sedes',
+          detail: 'No se pudieron cargar las sedes',
+        });
       },
     });
   }
@@ -372,7 +426,11 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
       },
       error: () => {
         this.almacenesLoading.set(false);
-        this.messageService.add({ severity: 'warn', summary: 'Almacenes', detail: 'No se pudieron cargar los almacenes de esta sede' });
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Almacenes',
+          detail: 'No se pudieron cargar los almacenes de esta sede',
+        });
       },
     });
   }
@@ -419,7 +477,11 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
         error: () => {
           this.productosLoading.set(false);
           this.cargandoMas.set(false);
-          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los productos' });
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'No se pudieron cargar los productos',
+          });
         },
       });
   }
@@ -441,7 +503,11 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
       },
       error: () => {
         this.loading.set(false);
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo cargar la cotización' });
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudo cargar la cotización',
+        });
       },
     });
   }
@@ -541,10 +607,16 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
       return;
     }
     this.ventasService
-      .buscarProductosVentas(query, this.sedeSeleccionada() ?? undefined, this.familiaSeleccionada() ?? undefined)
+      .buscarProductosVentas(
+        query,
+        this.sedeSeleccionada() ?? undefined,
+        this.familiaSeleccionada() ?? undefined,
+      )
       .subscribe({
         next: (res) => {
-          this.productosSugeridos.set(res.data.map((p) => this.ventasService.mapearAutocompleteVentas(p)));
+          this.productosSugeridos.set(
+            res.data.map((p) => this.ventasService.mapearAutocompleteVentas(p)),
+          );
         },
         error: () => this.productosSugeridos.set([]),
       });
@@ -571,7 +643,11 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
     const cantidad = this.cantidadTemp();
     if (!producto || cantidad <= 0) return;
     if (cantidad > producto.stock) {
-      this.messageService.add({ severity: 'error', summary: 'Stock Insuficiente', detail: `Solo hay ${producto.stock} unidades disponibles en ${producto.sede}` });
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Stock Insuficiente',
+        detail: `Solo hay ${producto.stock} unidades disponibles en ${producto.sede}`,
+      });
       return;
     }
     const precioUnitario = this.precioSegunTipo();
@@ -585,13 +661,19 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
       igvUnitario: Number((precioUnitario - precioUnitario / (1 + IGV_RATE_ADMIN)).toFixed(2)),
     };
     const lista = [...this.productosSeleccionados()];
-    const idx = lista.findIndex((p) => p.productId === item.productId && p.unitPrice === item.unitPrice);
+    const idx = lista.findIndex(
+      (p) => p.productId === item.productId && p.unitPrice === item.unitPrice,
+    );
     if (idx >= 0) {
       const actualizado = { ...lista[idx] };
       actualizado.quantity += cantidad;
       actualizado.total = actualizado.quantity * actualizado.unitPrice;
       if (actualizado.quantity > producto.stock) {
-        this.messageService.add({ severity: 'error', summary: 'Stock Insuficiente', detail: `Solo hay ${producto.stock} unidades disponibles` });
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Stock Insuficiente',
+          detail: `Solo hay ${producto.stock} unidades disponibles`,
+        });
         return;
       }
       lista[idx] = actualizado;
@@ -599,7 +681,11 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
       lista.push(item);
     }
     this.productosSeleccionados.set(lista);
-    this.messageService.add({ severity: 'success', summary: 'Producto Agregado', detail: `${cantidad} × ${producto.nombre}` });
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Producto Agregado',
+      detail: `${cantidad} × ${producto.nombre}`,
+    });
     this.productoTemp.set(null);
     this.cantidadTemp.set(1);
   }
@@ -615,7 +701,11 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
         const lista = [...this.productosSeleccionados()];
         lista.splice(index, 1);
         this.productosSeleccionados.set(lista);
-        this.messageService.add({ severity: 'info', summary: 'Producto Eliminado', detail: 'El producto fue removido del carrito' });
+        this.messageService.add({
+          severity: 'info',
+          summary: 'Producto Eliminado',
+          detail: 'El producto fue removido del carrito',
+        });
       },
     });
   }
@@ -657,7 +747,11 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
         this.busquedaRealizada.set(true);
         this.clienteLoading.set(false);
         this.editandoCliente.set(false);
-        this.messageService.add({ severity: 'success', summary: 'Cliente Encontrado', detail: res.name });
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Cliente Encontrado',
+          detail: res.name,
+        });
       },
       error: () => {
         this.clienteEncontrado.set(null);
@@ -679,7 +773,9 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
   );
 
   readonly tipoDocRucId = computed(
-    () => this.tiposDocumento().find((t) => t.description?.toUpperCase().includes('RUC'))?.documentTypeId ?? null,
+    () =>
+      this.tiposDocumento().find((t) => t.description?.toUpperCase().includes('RUC'))
+        ?.documentTypeId ?? null,
   );
 
   onDocumentoNuevoClienteChange(valor: string): void {
@@ -702,14 +798,29 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
           this.nuevoClienteForm.name = res.nombreCompleto;
           this.nombreDesdeReniec.set(true);
           if (esRuc && res.direccion) this.nuevoClienteForm.address = res.direccion;
-          this.messageService.add({ severity: 'success', summary: esRuc ? 'SUNAT' : 'RENIEC', detail: res.nombreCompleto, life: 3000 });
+          this.messageService.add({
+            severity: 'success',
+            summary: esRuc ? 'SUNAT' : 'RENIEC',
+            detail: res.nombreCompleto,
+            life: 3000,
+          });
         } else {
-          this.messageService.add({ severity: 'warn', summary: esRuc ? 'RUC no encontrado' : 'DNI no encontrado', detail: 'No se encontraron datos. Ingrese el nombre manualmente.', life: 3000 });
+          this.messageService.add({
+            severity: 'warn',
+            summary: esRuc ? 'RUC no encontrado' : 'DNI no encontrado',
+            detail: 'No se encontraron datos. Ingrese el nombre manualmente.',
+            life: 3000,
+          });
         }
       },
       error: () => {
         this.reniecLoading.set(false);
-        this.messageService.add({ severity: 'warn', summary: 'Sin conexión a RENIEC', detail: 'Ingrese el nombre manualmente.', life: 3000 });
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Sin conexión a RENIEC',
+          detail: 'Ingrese el nombre manualmente.',
+          life: 3000,
+        });
       },
     });
   }
@@ -719,7 +830,12 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
     if (!tipoId) return false;
     const tipo = this.tiposDocumento().find((t) => t.documentTypeId === tipoId);
     const desc = tipo?.description?.toUpperCase() ?? '';
-    return desc.includes('DNI') || desc.includes('IDENTIDAD') || desc.includes('RUC') || desc.includes('CONTRIBUYENTE');
+    return (
+      desc.includes('DNI') ||
+      desc.includes('IDENTIDAD') ||
+      desc.includes('RUC') ||
+      desc.includes('CONTRIBUYENTE')
+    );
   });
 
   limpiarCliente(): void {
@@ -742,13 +858,24 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
   }
 
   private resetNuevoClienteForm(): void {
-    this.nuevoClienteForm = { documentTypeId: null, documentValue: '', name: '', address: '', email: '', phone: '' };
+    this.nuevoClienteForm = {
+      documentTypeId: null,
+      documentValue: '',
+      name: '',
+      address: '',
+      email: '',
+      phone: '',
+    };
   }
 
   crearNuevoCliente(): void {
     const { documentTypeId, documentValue, name } = this.nuevoClienteForm;
     if (!documentTypeId || !documentValue.trim() || !name.trim()) {
-      this.messageService.add({ severity: 'warn', summary: 'Campos requeridos', detail: 'Tipo de documento, número y nombre son obligatorios' });
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Campos requeridos',
+        detail: 'Tipo de documento, número y nombre son obligatorios',
+      });
       return;
     }
     this.creandoCliente.set(true);
@@ -781,11 +908,19 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
         this.busquedaRealizada.set(true);
         this.editandoCliente.set(false);
         this.resetNuevoClienteForm();
-        this.messageService.add({ severity: 'success', summary: 'Cliente Creado', detail: `${nuevo.name} fue registrado y seleccionado` });
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Cliente Creado',
+          detail: `${nuevo.name} fue registrado y seleccionado`,
+        });
       },
       error: (err: any) => {
         this.creandoCliente.set(false);
-        this.messageService.add({ severity: 'error', summary: 'Error al crear cliente', detail: err?.error?.message ?? 'Ocurrió un error al registrar el cliente' });
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error al crear cliente',
+          detail: err?.error?.message ?? 'Ocurrió un error al registrar el cliente',
+        });
       },
     });
   }
@@ -793,7 +928,12 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
   iniciarEdicionCliente(): void {
     const c = this.clienteEncontrado();
     if (!c) return;
-    this.editarClienteForm = { name: c.name ?? '', address: c.address ?? '', email: c.email ?? '', phone: c.phone ?? '' };
+    this.editarClienteForm = {
+      name: c.name ?? '',
+      address: c.address ?? '',
+      email: c.email ?? '',
+      phone: c.phone ?? '',
+    };
     this.editandoCliente.set(true);
   }
 
@@ -815,12 +955,26 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
       next: (res: ClienteAdminResponse) => {
         this.guardandoCliente.set(false);
         this.editandoCliente.set(false);
-        this.clienteEncontrado.set({ ...cliente, name: res.name, address: res.address, email: res.email, phone: res.phone });
-        this.messageService.add({ severity: 'success', summary: 'Cliente Actualizado', detail: 'Los datos del cliente se actualizaron correctamente' });
+        this.clienteEncontrado.set({
+          ...cliente,
+          name: res.name,
+          address: res.address,
+          email: res.email,
+          phone: res.phone,
+        });
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Cliente Actualizado',
+          detail: 'Los datos del cliente se actualizaron correctamente',
+        });
       },
       error: (err: any) => {
         this.guardandoCliente.set(false);
-        this.messageService.add({ severity: 'error', summary: 'Error al actualizar cliente', detail: err?.error?.message ?? 'Ocurrió un error al actualizar el cliente' });
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error al actualizar cliente',
+          detail: err?.error?.message ?? 'Ocurrió un error al actualizar el cliente',
+        });
       },
     });
   }
@@ -829,19 +983,32 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
     this.promocionesLoading.set(true);
     this.ventasService.obtenerPromocionesActivas().subscribe({
       next: (promos) => {
-        const normalizadas: PromocionAdmin[] = promos.map((p) => ({ ...p, activo: this.normalizarActivo(p.activo) }));
+        const normalizadas: PromocionAdmin[] = promos.map((p) => ({
+          ...p,
+          activo: this.normalizarActivo(p.activo),
+        }));
         const activas = normalizadas.filter((p) => p.activo);
         this.promocionesDisponibles.set(activas);
         this.promocionesLoading.set(false);
         if (!activas.length) {
-          this.messageService.add({ severity: 'info', summary: 'Sin promociones', detail: 'No hay promociones disponibles', life: 3000 });
+          this.messageService.add({
+            severity: 'info',
+            summary: 'Sin promociones',
+            detail: 'No hay promociones disponibles',
+            life: 3000,
+          });
         }
       },
       error: (err) => {
         this.promocionesLoading.set(false);
         this.promocionesDisponibles.set([]);
         if (err?.status !== 404) {
-          this.messageService.add({ severity: 'warn', summary: 'Promociones', detail: 'No se pudieron cargar las promociones', life: 3000 });
+          this.messageService.add({
+            severity: 'warn',
+            summary: 'Promociones',
+            detail: 'No se pudieron cargar las promociones',
+            life: 3000,
+          });
         }
       },
     });
@@ -891,36 +1058,64 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
     switch (this.activeStep()) {
       case 0:
         if (!this.sedeSeleccionada()) {
-          this.messageService.add({ severity: 'warn', summary: 'Sede Requerida', detail: 'Debe seleccionar una sede para continuar' });
+          this.messageService.add({
+            severity: 'warn',
+            summary: 'Sede Requerida',
+            detail: 'Debe seleccionar una sede para continuar',
+          });
           return false;
         }
         if (!this.almacenSeleccionado()) {
-          this.messageService.add({ severity: 'warn', summary: 'Almacén Requerido', detail: 'Debe seleccionar un almacén para continuar' });
+          this.messageService.add({
+            severity: 'warn',
+            summary: 'Almacén Requerido',
+            detail: 'Debe seleccionar un almacén para continuar',
+          });
           return false;
         }
         if (this.productosSeleccionados().length === 0) {
-          this.messageService.add({ severity: 'warn', summary: 'Carrito Vacío', detail: 'Debe agregar al menos un producto' });
+          this.messageService.add({
+            severity: 'warn',
+            summary: 'Carrito Vacío',
+            detail: 'Debe agregar al menos un producto',
+          });
           return false;
         }
         return true;
       case 1:
         if (!this.clienteEncontrado()) {
-          this.messageService.add({ severity: 'warn', summary: 'Cliente Requerido', detail: 'Debe buscar y seleccionar un cliente' });
+          this.messageService.add({
+            severity: 'warn',
+            summary: 'Cliente Requerido',
+            detail: 'Debe buscar y seleccionar un cliente',
+          });
           return false;
         }
         return true;
       case 2:
         if (this.tipoEntrega() === 'delivery' && !this.direccionDelivery().trim()) {
-          this.messageService.add({ severity: 'warn', summary: 'Dirección Requerida', detail: 'Ingrese la dirección de delivery' });
+          this.messageService.add({
+            severity: 'warn',
+            summary: 'Dirección Requerida',
+            detail: 'Ingrese la dirección de delivery',
+          });
           return false;
         }
         if (this.tipoPagoOrigen() === 'credito') return true;
         if (this.metodoPagoSeleccionado() === 1 && this.montoRecibido() < this.total()) {
-          this.messageService.add({ severity: 'warn', summary: 'Monto Insuficiente', detail: 'El monto recibido debe ser mayor o igual al total' });
+          this.messageService.add({
+            severity: 'warn',
+            summary: 'Monto Insuficiente',
+            detail: 'El monto recibido debe ser mayor o igual al total',
+          });
           return false;
         }
         if (this.metodoPagoSeleccionado() !== 1 && !this.numeroOperacion().trim()) {
-          this.messageService.add({ severity: 'warn', summary: 'Número de Operación Requerido', detail: 'Debe ingresar el número de operación' });
+          this.messageService.add({
+            severity: 'warn',
+            summary: 'Número de Operación Requerido',
+            detail: 'Debe ingresar el número de operación',
+          });
           return false;
         }
         return true;
@@ -955,7 +1150,8 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
     const cotizId = this.cotizacionOrigen();
 
     const fechaVencimiento = new Date();
-    if (this.metodoPagoSeleccionado() !== 1) fechaVencimiento.setDate(fechaVencimiento.getDate() + 30);
+    if (this.metodoPagoSeleccionado() !== 1)
+      fechaVencimiento.setDate(fechaVencimiento.getDate() + 30);
 
     const request: RegistroVentaAdminRequest = {
       customerId: this.clienteEncontrado()!.customerId,
@@ -1024,7 +1220,12 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
                   ? response.idComprobante
                   : undefined;
           if (!receiptId) {
-            this.messageService.add({ severity: 'error', summary: 'Error interno', detail: 'No se pudo registrar la cuenta por cobrar porque el comprobante no tiene ID.' });
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error interno',
+              detail:
+                'No se pudo registrar la cuenta por cobrar porque el comprobante no tiene ID.',
+            });
             return;
           }
           const fechaVenc = new Date();
@@ -1037,20 +1238,35 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
               dueDate: fechaVenc.toISOString().split('T')[0],
               paymentTypeId: this.metodoPagoSeleccionado()!,
               currencyCode: CURRENCY_PEN_ADMIN,
-              observation: cotizId ? `Crédito generado desde cotización #${cotizId}` : 'Venta a crédito',
+              observation: cotizId
+                ? `Crédito generado desde cotización #${cotizId}`
+                : 'Venta a crédito',
             })
             .then((ar) => {
               if (ar) {
-                this.messageService.add({ severity: 'info', summary: 'Cuenta por Cobrar Creada', detail: `Cuenta #${ar.id} registrada. Saldo: S/. ${ar.pendingBalance.toFixed(2)}`, life: 5000 });
+                this.messageService.add({
+                  severity: 'info',
+                  summary: 'Cuenta por Cobrar Creada',
+                  detail: `Cuenta #${ar.id} registrada. Saldo: S/. ${ar.pendingBalance.toFixed(2)}`,
+                  life: 5000,
+                });
               } else {
-                this.messageService.add({ severity: 'error', summary: 'Error al crear cuenta por cobrar', detail: this.arService.error() ?? undefined });
+                this.messageService.add({
+                  severity: 'error',
+                  summary: 'Error al crear cuenta por cobrar',
+                  detail: this.arService.error() ?? undefined,
+                });
               }
             });
         }
       },
       error: (err: any) => {
         this.loading.set(false);
-        this.messageService.add({ severity: 'error', summary: 'Error al Generar Venta', detail: err.error?.message ?? 'Ocurrió un error al procesar la venta' });
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error al Generar Venta',
+          detail: err.error?.message ?? 'Ocurrió un error al procesar la venta',
+        });
       },
     });
   }
@@ -1110,11 +1326,10 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
     return 'success';
   }
 
-getLabelMetodoPago(id: number | null): string {
-  if (id === null) return 'N/A';
-  return this.metodosPago().find((m) => m.id === id)?.descripcion ?? 'N/A';
-}
-
+  getLabelMetodoPago(id: number | null): string {
+    if (id === null) return 'N/A';
+    return this.metodosPago().find((m) => m.id === id)?.descripcion ?? 'N/A';
+  }
 
   obtenerSiglasDocumento(desc: string): string {
     if (!desc) return '';

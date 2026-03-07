@@ -351,10 +351,18 @@ export interface MetodoPagoAdmin {
 }
 
 
-export const TIPOS_COMPROBANTE_ADMIN = [
-  { id: 2, description: 'Boleta', serie: 'B001' },
-  { id: 1, description: 'Factura', serie: 'F001' },
-] as const;
+export interface TipoVentaAdmin {
+  id: number;
+  tipo: string;
+  descripcion: string;
+}
+
+export interface TipoComprobanteAdmin {
+  id: number;
+  codSunat: string;
+  descripcion: string;
+  estado: boolean;
+}
 
 
 

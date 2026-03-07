@@ -425,24 +425,48 @@
         </div>
 
         <div class="content-centrado">
+          <!-- ← CAMBIO 1: tiposComprobante() dinámico desde API -->
           <div class="comprobante-section">
             <label class="section-label"><i class="pi pi-file-edit"></i> Tipo de Comprobante</label>
-            <div class="flex justify-content-center">
+            <div *ngIf="tiposComprobante().length === 0" class="flex justify-content-center p-3">
+              <i class="pi pi-spin pi-spinner text-xl"></i>
+            </div>
+            <div *ngIf="tiposComprobante().length > 0" class="flex justify-content-center">
               <p-selectButton
                 [ngModel]="tipoComprobante()"
                 (ngModelChange)="tipoComprobante.set($event); onTipoComprobanteChange()"
-                [options]="tipoComprobanteOptions"
-                optionLabel="label"
-                optionValue="value"
+                [options]="tiposComprobante()"
+                optionLabel="descripcion"
+                optionValue="id"
                 styleClass="select-comprobante-inline"
               >
                 <ng-template let-item>
                   <div class="option-inline">
-                    <i [class]="item.icon"></i><span>{{ item.label }}</span>
+                    <span>{{ item.descripcion }}</span>
                   </div>
                 </ng-template>
               </p-selectButton>
             </div>
+          </div>
+
+          <p-divider styleClass="section-divider" />
+
+          <!-- ← CAMBIO 2: tiposVenta() dinámico desde API -->
+          <div class="comprobante-section">
+            <label class="section-label"><i class="pi pi-tag"></i> Tipo de Venta</label>
+            <div *ngIf="tiposVenta().length === 0" class="flex justify-content-center p-3">
+              <i class="pi pi-spin pi-spinner text-xl"></i>
+            </div>
+            <p-select
+              *ngIf="tiposVenta().length > 0"
+              [ngModel]="tipoVentaSeleccionado()"
+              (ngModelChange)="tipoVentaSeleccionado.set($event)"
+              [options]="tiposVenta()"
+              optionLabel="descripcion"
+              optionValue="id"
+              placeholder="Seleccione tipo de venta"
+              styleClass="w-full"
+            />
           </div>
 
           <p-divider styleClass="section-divider" />
@@ -984,7 +1008,6 @@
 
           <p-divider styleClass="section-divider"></p-divider>
 
-          <!-- MÉTODO DE PAGO — fix: metodoPagoOptions() con () -->
           <div class="tipo-pago-section">
             <label class="section-label"><i class="pi pi-wallet"></i> Método de Pago</label>
             <div *ngIf="metodosPago().length === 0" class="flex justify-content-center p-4">
@@ -1005,9 +1028,12 @@
               </div>
             </div>
 
-            <!-- Efectivo (codSunat 008 → id dinámico) -->
             <div
-              *ngIf="metodosPago().length > 0 && metodoPagoSeleccionado() === metodosPago()[0].id && metodosPago()[0].codSunat === '008'"
+              *ngIf="
+                metodosPago().length > 0 &&
+                metodoPagoSeleccionado() === metodosPago()[0].id &&
+                metodosPago()[0].codSunat === '008'
+              "
               class="pago-detalles-animated mt-4"
             >
               <div class="monto-destacado-box">
@@ -1032,7 +1058,6 @@
               </div>
             </div>
 
-            <!-- Otros métodos (transferencia, tarjeta, etc.) -->
             <ng-container *ngFor="let m of metodosPago()">
               <div
                 *ngIf="metodoPagoSeleccionado() === m.id && m.codSunat !== '008'"
@@ -1118,6 +1143,11 @@
                   ><strong class="resumen-value">{{
                     tipoComprobante() === 1 ? 'Factura' : 'Boleta'
                   }}</strong>
+                </div>
+                <!-- ← CAMBIO 3: mostrar tipo de venta en resumen -->
+                <div class="resumen-item">
+                  <span class="label"><i class="pi pi-tag"></i> Tipo de Venta:</span
+                  ><strong class="resumen-value">{{ nombreTipoVentaSeleccionado() }}</strong>
                 </div>
                 <div class="resumen-item">
                   <span class="label"><i class="pi pi-wallet"></i> Pago:</span

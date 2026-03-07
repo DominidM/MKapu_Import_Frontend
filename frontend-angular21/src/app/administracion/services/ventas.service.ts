@@ -26,6 +26,8 @@ import {
   TipoDocumentoAdmin,
   PromocionAdmin,
   MetodoPagoAdmin,
+  TipoVentaAdmin,
+  TipoComprobanteAdmin,
 } from '../interfaces/ventas.interface';
 
 @Injectable({ providedIn: 'root' })
@@ -301,10 +303,26 @@ export class VentasAdminService {
   }
 
   obtenerMetodosPago(): Observable<MetodoPagoAdmin[]> {
-  return this.http
-    .get<MetodoPagoAdmin[]>(`${this.salesUrl}/receipts/payment-types`, {
-      headers: this.headers,
-    })
-    .pipe(catchError(() => of([])));
-}
+    return this.http
+      .get<MetodoPagoAdmin[]>(`${this.salesUrl}/receipts/payment-types`, {
+        headers: this.headers,
+      })
+      .pipe(catchError(() => of([])));
+  }
+
+  obtenerTiposVenta(): Observable<TipoVentaAdmin[]> {
+    return this.http
+      .get<TipoVentaAdmin[]>(`${this.salesUrl}/receipts/sale-types`, {
+        headers: this.headers,
+      })
+      .pipe(catchError(() => of([])));
+  }
+
+  obtenerTiposComprobante(): Observable<TipoComprobanteAdmin[]> {
+    return this.http
+      .get<TipoComprobanteAdmin[]>(`${this.salesUrl}/receipts/receipt-types`, {
+        headers: this.headers,
+      })
+      .pipe(catchError(() => of([])));
+  }
 }
