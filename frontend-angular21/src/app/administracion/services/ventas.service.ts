@@ -43,10 +43,6 @@ export class VentasAdminService {
     return new HttpHeaders({ 'x-role': 'Administrador' });
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // HISTORIAL DE VENTAS
-  // ─────────────────────────────────────────────────────────────────────────
-
   listarHistorialVentas(
     query: SalesReceiptsQueryAdmin = {},
   ): Observable<SalesReceiptSummaryListResponseAdmin> {
@@ -90,10 +86,6 @@ export class VentasAdminService {
     );
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // KPI
-  // ─────────────────────────────────────────────────────────────────────────
-
   getKpiSemanal(sedeId?: number): Observable<SalesReceiptKpiDto> {
     let params = new HttpParams();
     if (sedeId != null) params = params.set('sedeId', String(sedeId));
@@ -102,10 +94,6 @@ export class VentasAdminService {
       params,
     });
   }
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // REGISTRO / ANULACIÓN DE VENTA
-  // ─────────────────────────────────────────────────────────────────────────
 
   registrarVenta(request: RegistroVentaAdminRequest): Observable<RegistroVentaAdminResponse> {
     return this.http.post<RegistroVentaAdminResponse>(`${this.salesUrl}/receipts`, request, {
@@ -121,19 +109,12 @@ export class VentasAdminService {
     );
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // SEDES
-  // ─────────────────────────────────────────────────────────────────────────
 
   obtenerSedes(): Observable<SedeAdmin[]> {
     return this.http
       .get<any>(`${this.adminUrl}/headquarters`, { headers: this.headers })
       .pipe(map((res) => res.data ?? res.headquarters ?? res ?? []));
   }
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // PRODUCTOS
-  // ─────────────────────────────────────────────────────────────────────────
 
   obtenerProductosConStock(
     idSede?: number,
@@ -149,6 +130,13 @@ export class VentasAdminService {
       headers: this.headers,
       params,
     });
+  }
+
+  getDetalleComprobante(receiptId: number): Observable<any> {
+    return this.http.get<any>(
+      `${this.salesUrl}/receipts/${receiptId}/detalle`, 
+      { headers: this.headers }
+    );
   }
 
   buscarProductosVentas(
@@ -227,10 +215,6 @@ export class VentasAdminService {
       headers: this.headers,
     });
   }
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // MAPPERS
-  // ─────────────────────────────────────────────────────────────────────────
 
   mapearProductoConStock(prod: ProductoStockAdmin): ProductoUIAdmin {
     return {
