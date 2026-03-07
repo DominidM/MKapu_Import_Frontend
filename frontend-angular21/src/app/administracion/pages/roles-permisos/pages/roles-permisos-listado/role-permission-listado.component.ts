@@ -22,6 +22,7 @@ import {
   RoleWithPermissionsResponseDto,
   PermissionInRoleDto,
 }                                         from '../../../../interfaces/role-permission.interface';
+import { LoadingOverlayComponent } from '../../../../../shared/components/loading-overlay/loading-overlay.component';
 
 type ViewMode = 'todos' | 'activos' | 'inactivos';
 
@@ -34,6 +35,7 @@ type ViewMode = 'todos' | 'activos' | 'inactivos';
     AutoCompleteModule, TableModule, TagModule,
     ToastModule, ConfirmDialogModule, MessageModule,
     SelectModule, CheckboxModule,
+    LoadingOverlayComponent,
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './role-permission-listado.html',
