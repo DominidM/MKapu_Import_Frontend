@@ -158,6 +158,8 @@ export interface RegistroVentaAdminRequest {
   receiptTypeId: number;
   dueDate: string;
   subtotal: number;
+  operationType?: string; // ← opcional, no se envía
+  currencyCode?: string;
   igv: number;
   isc: number;
   total: number;
