@@ -36,6 +36,7 @@
         <div class="estadistica-card"><p-skeleton height="60px" /></div>
         <div class="estadistica-card"><p-skeleton height="60px" /></div>
       </div>
+
     } @else if (caja()) {
       <div class="seccion-estadisticas">
 
@@ -43,7 +44,9 @@
           <i class="pi pi-hashtag"></i>
           <div>
             <span class="estadistica-label">ID Sesión</span>
-            <span class="estadistica-valor mono">{{ caja().id_caja }}</span>
+            <span class="estadistica-valor mono">
+              {{ (cajaDetalle() ?? caja()).id_caja }}
+            </span>
           </div>
         </div>
 
@@ -60,7 +63,7 @@
           <div>
             <span class="estadistica-label">Fecha apertura</span>
             <span class="estadistica-valor fecha">
-              {{ caja().fec_apertura | date:'dd/MM/yy HH:mm' }}
+              {{ (cajaDetalle() ?? caja()).fec_apertura | date:'dd/MM/yy HH:mm' }}
             </span>
           </div>
         </div>
@@ -69,13 +72,16 @@
           <i class="pi pi-dollar"></i>
           <div>
             <span class="estadistica-label">Monto inicial</span>
-            <span class="estadistica-valor">S/ {{ caja().monto_inicial ?? '—' }}</span>
+            <span class="estadistica-valor">
+              S/ {{ (cajaDetalle() ?? caja()).monto_inicial ?? '—' }}
+            </span>
           </div>
         </div>
 
       </div>
+
     } @else {
-      <!-- Caja cerrada: stats vacías -->
+      <!-- Caja cerrada -->
       <div class="seccion-estadisticas">
         <div class="estadistica-card">
           <i class="pi pi-shopping-cart"></i>
@@ -114,9 +120,7 @@
   </div>
 </div>
 
-<!-- ══════════════════════════════
-     CAJA ABIERTA — Resumen del día
-══════════════════════════════ -->
+<!-- CAJA ABIERTA — Resumen del día -->
 @if (caja() && !loading()) {
   <div class="p-2">
     <p-card class="tarjeta-principal">
@@ -160,9 +164,7 @@
   </div>
 }
 
-<!-- ══════════════════════════════
-     CAJA CERRADA — Formulario apertura
-══════════════════════════════ -->
+<!-- CAJA CERRADA — Formulario apertura -->
 @if (!caja() && !loading()) {
   <div class="p-2">
     <div class="filtros-container mb-4">
@@ -170,7 +172,7 @@
         <h3><i class="pi pi-unlock"></i> Abrir nueva sesión de caja</h3>
         <div class="apertura-form">
           <div class="filtro-item">
-            <label>Monto inicial (S/)</label>
+            <label>Monto inicial (S/) <span style="opacity:0.5">— opcional</span></label>
             <p-inputNumber
               inputId="monto"
               [ngModel]="montoInicial()"
@@ -191,7 +193,6 @@
               icon="pi pi-unlock"
               severity="success"
               styleClass="btn-abrir-caja"
-              [disabled]="!canOpen()"
               [loading]="loading()"
               (onClick)="abrirCaja()"
             />

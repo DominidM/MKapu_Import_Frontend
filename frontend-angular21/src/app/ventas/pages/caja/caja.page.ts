@@ -2,16 +2,15 @@ import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular
 import { CajaService }          from '../../services/caja.service';
 import { RoleService }          from '../../../core/services/role.service';
 import { CashboxSocketService } from '../../services/cashbox-socket.service';
-import { CommonModule, DatePipe, CurrencyPipe } from '@angular/common';
+import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { CardModule }           from 'primeng/card';
 import { ButtonModule }         from 'primeng/button';
 import { InputNumberModule }    from 'primeng/inputnumber';
-import { TagModule }            from 'primeng/tag';
-import { DividerModule }        from 'primeng/divider';
 import { SkeletonModule }       from 'primeng/skeleton';
 import { ConfirmDialogModule }  from 'primeng/confirmdialog';
 import { ConfirmationService }  from 'primeng/api';
 import { FormsModule }          from '@angular/forms';
+import { RouterModule }         from '@angular/router';
 
 @Component({
   selector: 'app-caja',
@@ -19,30 +18,26 @@ import { FormsModule }          from '@angular/forms';
   styleUrls: ['./caja.page.css'],
   standalone: true,
   imports: [
-    CommonModule, DatePipe, FormsModule,
+    CommonModule, DatePipe, DecimalPipe, FormsModule,
     CardModule, ButtonModule, InputNumberModule,
-    TagModule, DividerModule, SkeletonModule, ConfirmDialogModule,
+    SkeletonModule, ConfirmDialogModule, RouterModule,
   ],
   providers: [ConfirmationService],
 })
 export class CajaPage implements OnInit, OnDestroy {
-  private roleService      = inject(RoleService);
-  private cashboxService   = inject(CajaService);
-  private confirmService   = inject(ConfirmationService);
-  protected cashboxSocket  = inject(CashboxSocketService);
+  private roleService     = inject(RoleService);
+  private cashboxService  = inject(CajaService);
+  private confirmService  = inject(ConfirmationService);
+  protected cashboxSocket = inject(CashboxSocketService);
 
   readonly caja         = this.cashboxSocket.caja;
+  readonly cajaDetalle  = signal<any>(null);
   readonly loading      = signal<boolean>(false);
-  readonly montoInicial = signal<number | null>(null);
-  readonly resumen      = signal<any>(null); // ventas del día
+  readonly resumen      = signal<any>(null);
+  readonly montoInicial = signal<number | null>(null); // 👈 opcional
 
-  readonly canOpen = computed(() =>
-    this.montoInicial() != null && (this.montoInicial() ?? 0) > 0
-  );
-
-  // Tiempo que lleva abierta la caja
   readonly tiempoAbierta = computed(() => {
-    const c = this.caja();
+    const c = this.cajaDetalle() ?? this.caja();
     if (!c?.fec_apertura) return null;
     const diff = Date.now() - new Date(c.fec_apertura).getTime();
     const h    = Math.floor(diff / 3_600_000);
@@ -51,8 +46,14 @@ export class CajaPage implements OnInit, OnDestroy {
   });
 
   readonly idSede: number | undefined;
+
   private cajaListener = () => {
     this.loading.set(false);
+    if (this.cashboxSocket.caja()) {
+      this.cargarCajaDesdeDB();
+    } else {
+      this.cajaDetalle.set(null);
+    }
     if (this.idSede) this.cargarResumen();
   };
 
@@ -63,11 +64,18 @@ export class CajaPage implements OnInit, OnDestroy {
   ngOnInit(): void {
     if (!this.idSede) return;
     this.loading.set(true);
+
     this.cashboxSocket.checkActiveSession(this.idSede)
+      .then(() => {
+        if (this.cashboxSocket.caja()) {
+          this.cargarCajaDesdeDB();
+        }
+      })
       .finally(() => {
         this.loading.set(false);
         this.cargarResumen();
       });
+
     this.cashboxSocket.onCashboxEvent(this.cajaListener);
   }
 
@@ -75,9 +83,16 @@ export class CajaPage implements OnInit, OnDestroy {
     this.cashboxSocket.offCashboxEvent(this.cajaListener);
   }
 
+  private cargarCajaDesdeDB(): void {
+    if (!this.idSede) return;
+    this.cashboxService.getActiveCashbox(this.idSede).subscribe({
+      next:  (data) => this.cajaDetalle.set(data),
+      error: ()     => this.cajaDetalle.set(null),
+    });
+  }
+
   cargarResumen(): void {
     if (!this.idSede) return;
-    // Ajusta este endpoint según tu backend
     this.cashboxService.getResumenDia(this.idSede).subscribe({
       next:  (data) => this.resumen.set(data),
       error: ()     => this.resumen.set(null),
@@ -85,9 +100,9 @@ export class CajaPage implements OnInit, OnDestroy {
   }
 
   abrirCaja(): void {
-    if (!this.idSede || !this.canOpen()) return;
+    if (!this.idSede) return;
     this.loading.set(true);
-    this.cashboxService.openCashbox(this.idSede, this.montoInicial()!).subscribe({
+    this.cashboxService.openCashbox(this.idSede, this.montoInicial() ?? undefined).subscribe({
       next:  () => this.montoInicial.set(null),
       error: () => this.loading.set(false),
     });
@@ -101,14 +116,15 @@ export class CajaPage implements OnInit, OnDestroy {
       acceptLabel: 'Sí, cerrar',
       rejectLabel: 'Cancelar',
       acceptButtonStyleClass: 'p-button-danger',
-      accept:  () => this.cerrarCaja(),
+      accept: () => this.cerrarCaja(),
     });
   }
 
   private cerrarCaja(): void {
-    if (!this.caja()) return;
+    const detalle = this.cajaDetalle() ?? this.caja();
+    if (!detalle) return;
     this.loading.set(true);
-    this.cashboxService.closeCashbox(this.caja().id_caja).subscribe({
+    this.cashboxService.closeCashbox(detalle.id_caja).subscribe({
       error: (err) => {
         alert(err.error?.message || 'No se pudo cerrar la caja');
         this.loading.set(false);
