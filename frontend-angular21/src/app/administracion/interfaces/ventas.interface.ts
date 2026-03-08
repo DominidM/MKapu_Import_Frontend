@@ -156,9 +156,7 @@ export interface RegistroVentaAdminRequest {
   saleTypeId: number;
   serie: string;
   receiptTypeId: number;
-  dueDate: string;
-  operationType: string;   
-  currencyCode: string;    
+  dueDate: string;  
   subtotal: number;
   operationType?: string; // ← opcional, no se envía
   currencyCode?: string;
