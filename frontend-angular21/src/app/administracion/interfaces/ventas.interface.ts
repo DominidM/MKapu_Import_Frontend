@@ -157,6 +157,8 @@ export interface RegistroVentaAdminRequest {
   serie: string;
   receiptTypeId: number;
   dueDate: string;
+  operationType: string;   
+  currencyCode: string;    
   subtotal: number;
   igv: number;
   isc: number;
