@@ -29,7 +29,7 @@ import { LoadingOverlayComponent } from '../../../shared/components/loading-over
   selector: 'app-detalles-ventas-administracion',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, Card, Button, Divider, Tag, TableModule, Skeleton, Tooltip, Toast, LoadingOverlayComponent],
+  imports: [CommonModule, Card, Button, Divider, Tag, TableModule, Tooltip, Toast, LoadingOverlayComponent],
   providers: [MessageService],
   templateUrl: './detalles-ventas-administracion.html',
   styleUrls: ['./detalles-ventas-administracion.css'],
