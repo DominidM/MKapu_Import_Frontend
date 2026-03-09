@@ -1,4 +1,3 @@
-// ventas/pages/reclamos-garantia/reclamos-listado/reclamos-listado.ts
 import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -23,6 +22,7 @@ import {
 } from '../../../../core/services/claim.service';
 import { LoadingOverlayComponent } from '../../../../shared/components/loading-overlay/loading-overlay.component';
 import { getHoyPeru } from '../../../../shared/utils/date-peru.utils';
+import { AuthService } from '../../../../auth/services/auth.service';
 
 @Component({
   selector: 'app-reclamos-listado',
@@ -43,40 +43,36 @@ import { getHoyPeru } from '../../../../shared/utils/date-peru.utils';
   ],
   providers: [MessageService],
   templateUrl: './reclamos-listado.html',
-  styleUrl:    './reclamos-listado.css',
+  styleUrl: './reclamos-listado.css',
 })
 export class ReclamosListado implements OnInit, OnDestroy {
-
-  // ── Meta ────────────────────────────────────────────────────────────────────
-  tituloKicker    = 'VENTAS - RECLAMOS Y GARANTÍAS';
+  tituloKicker = 'VENTAS - RECLAMOS Y GARANTÍAS';
   subtituloKicker = 'GESTIÓN DE RECLAMOS';
-  iconoCabecera   = 'pi pi-shield';
+  iconoCabecera = 'pi pi-shield';
 
-  // ── DI ──────────────────────────────────────────────────────────────────────
-  private readonly router         = inject(Router);
-  private readonly cdr            = inject(ChangeDetectorRef);
+  private readonly router = inject(Router);
+  private readonly cdr = inject(ChangeDetectorRef);
   private readonly messageService = inject(MessageService);
-  readonly         claimService   = inject(ClaimService);
+  readonly claimService = inject(ClaimService);
+  private readonly authService = inject(AuthService);
 
   private subscriptions = new Subscription();
 
-  // ── Filtros ─────────────────────────────────────────────────────────────────
-  filtroEstado:      ClaimStatus | null = null;
-  filtroBusqueda     = '';
-  filtroFechaInicio: Date | null = getHoyPeru();   // inicia con hoy (hora Perú)
-  filtroFechaFin:    Date | null = null;
+  filtroEstado: ClaimStatus | null = null;
+  filtroBusqueda = '';
+  filtroFechaInicio: Date | null = getHoyPeru();
+  filtroFechaFin: Date | null = null;
 
   estadosOptions = [
-    { label: 'Todos',      value: null                   },
+    { label: 'Todos', value: null },
     { label: 'Registrado', value: ClaimStatus.REGISTRADO },
     { label: 'En Proceso', value: ClaimStatus.EN_PROCESO },
-    { label: 'Resuelto',   value: ClaimStatus.RESUELTO   },
-    { label: 'Rechazado',  value: ClaimStatus.RECHAZADO  },
+    { label: 'Resuelto', value: ClaimStatus.RESUELTO },
+    { label: 'Rechazado', value: ClaimStatus.RECHAZADO },
   ];
 
-  // ── Lista filtrada ───────────────────────────────────────────────────────────
   get reclamosFiltrados(): ClaimResponseDto[] {
-    const q   = this.filtroBusqueda.toLowerCase().trim();
+    const q = this.filtroBusqueda.toLowerCase().trim();
     const est = this.filtroEstado;
 
     const desde = this.filtroFechaInicio
@@ -87,18 +83,15 @@ export class ReclamosListado implements OnInit, OnDestroy {
       : null;
 
     return this.claimService.claims().filter((c) => {
-      // Búsqueda texto — usa campos reales del DTO
       const matchQ =
         !q ||
         (c.saleReceiptId && c.saleReceiptId.toLowerCase().includes(q)) ||
-        (c.reason        && c.reason.toLowerCase().includes(q))        ||
-        (c.description   && c.description.toLowerCase().includes(q));
+        (c.reason && c.reason.toLowerCase().includes(q)) ||
+        (c.description && c.description.toLowerCase().includes(q));
 
-      // Estado
       const matchEst = !est || c.status === est;
 
-      // Rango de fechas — campo real del DTO: registerDate
-      const fechaReg   = c.registerDate ? new Date(c.registerDate).getTime() : null;
+      const fechaReg = c.registerDate ? new Date(c.registerDate).getTime() : null;
       const matchDesde = !desde || (fechaReg !== null && fechaReg >= desde);
       const matchHasta = !hasta || (fechaReg !== null && fechaReg <= hasta);
 
@@ -106,16 +99,27 @@ export class ReclamosListado implements OnInit, OnDestroy {
     });
   }
 
-  // ── Lifecycle ────────────────────────────────────────────────────────────────
   async ngOnInit(): Promise<void> {
     try {
-      await this.claimService.loadClaims('2'); // TODO: quitar hardcode
+      const currentUser = this.authService.getCurrentUser(); 
+      
+      const sedeId = currentUser?.idSede?.toString(); 
+      if (sedeId) {
+        await this.claimService.loadClaims(sedeId);
+      } else {
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Advertencia',
+          detail: 'No se encontró la sede del usuario actual.',
+          life: 3000,
+        });
+      }
     } catch {
       this.messageService.add({
         severity: 'error',
-        summary:  'Error',
-        detail:   'No se pudieron cargar los reclamos',
-        life:     3000,
+        summary: 'Error',
+        detail: 'No se pudieron cargar los reclamos',
+        life: 3000,
       });
     }
   }
@@ -124,18 +128,22 @@ export class ReclamosListado implements OnInit, OnDestroy {
     this.subscriptions.unsubscribe();
   }
 
-  // ── Navegación ───────────────────────────────────────────────────────────────
-  nuevoReclamo(): void  { this.router.navigate([`${this.routeBase}/crear`]);         }
-  verDetalle(id: string): void { this.router.navigate([`${this.routeBase}/detalle`, id]); }
-  editarReclamo(id: string): void { this.router.navigate([`${this.routeBase}/editar`, id]);  }
+  nuevoReclamo(): void {
+    this.router.navigate([`${this.routeBase}/crear`]);
+  }
+  verDetalle(id: string): void {
+    this.router.navigate([`${this.routeBase}/detalle`, id]);
+  }
+  editarReclamo(id: string): void {
+    this.router.navigate([`${this.routeBase}/editar`, id]);
+  }
 
-  // ── Acciones pendientes de backend ───────────────────────────────────────────
   imprimirReclamo(_reclamo: ClaimResponseDto): void {
     this.messageService.add({
       severity: 'info',
-      summary:  'Imprimir',
-      detail:   'Generando PDF del reclamo...',
-      life:     3000,
+      summary: 'Imprimir',
+      detail: 'Generando PDF del reclamo...',
+      life: 3000,
     });
     // TODO backend — descomentar cuando esté listo:
     // const sub = this.claimService.imprimirReclamo(_reclamo.id).subscribe({
@@ -148,9 +156,9 @@ export class ReclamosListado implements OnInit, OnDestroy {
   enviarCorreo(_reclamo: ClaimResponseDto): void {
     this.messageService.add({
       severity: 'info',
-      summary:  'Correo',
-      detail:   'Enviando correo del reclamo...',
-      life:     3000,
+      summary: 'Correo',
+      detail: 'Enviando correo del reclamo...',
+      life: 3000,
     });
     // TODO backend — descomentar cuando esté listo:
     // const sub = this.claimService.enviarCorreoReclamo(_reclamo.id).subscribe({
@@ -160,21 +168,26 @@ export class ReclamosListado implements OnInit, OnDestroy {
     // this.subscriptions.add(sub);
   }
 
-  // ── Filtros ──────────────────────────────────────────────────────────────────
   limpiarFiltros(): void {
-    this.filtroEstado      = null;
-    this.filtroBusqueda    = '';
+    this.filtroEstado = null;
+    this.filtroBusqueda = '';
     this.filtroFechaInicio = null;
-    this.filtroFechaFin    = null;
+    this.filtroFechaFin = null;
   }
 
-  // ── Helpers públicos ─────────────────────────────────────────────────────────
-  getStatusLabel(status: ClaimStatus)    { return this.claimService.getStatusLabel(status);         }
-  getStatusSeverity(status: ClaimStatus) { return this.claimService.getStatusSeverity(status);      }
-  formatDate(iso: string)                { return this.claimService.formatDate(iso);                }
-  diasDesde(iso: string)                 { return this.claimService.calcularDiasDesdeRegistro(iso); }
+  getStatusLabel(status: ClaimStatus) {
+    return this.claimService.getStatusLabel(status);
+  }
+  getStatusSeverity(status: ClaimStatus) {
+    return this.claimService.getStatusSeverity(status);
+  }
+  formatDate(iso: string) {
+    return this.claimService.formatDate(iso);
+  }
+  diasDesde(iso: string) {
+    return this.claimService.calcularDiasDesdeRegistro(iso);
+  }
 
-  // ── Privados ─────────────────────────────────────────────────────────────────
   private get routeBase(): string {
     return this.router.url.includes('/admin')
       ? '/admin/reclamos-listado'
