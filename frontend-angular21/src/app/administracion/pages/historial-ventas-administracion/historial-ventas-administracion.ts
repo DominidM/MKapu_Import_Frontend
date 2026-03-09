@@ -122,10 +122,9 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
     tipoPago: null,
   };
 
-  readonly rangoSemanaLabel = computed(
-    () =>
-      `Semana: ${formatFechaPeru(getLunesSemanaActualPeru())} - ${formatFechaPeru(getDomingoSemanaActualPeru())}`,
-  );
+  GenerarVenta() {
+    this.router.navigate(['./admin/generar-ventas-administracion']);
+  }
 
   sugerenciasBusqueda: string[] = [];
   todasLasSugerencias: string[] = [];
@@ -409,8 +408,6 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
     });
   }
 
-  
-
   crearGuiaRemision(comprobante: any): void {
     this.router.navigate(['/logistica/remision/nueva'], {
       queryParams: {
@@ -419,8 +416,6 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
       },
     });
   }
-
-  
 
   anularComprobante(comprobante: SalesReceiptSummaryAdmin): void {
     if (comprobante.estado !== 'EMITIDO') return;
