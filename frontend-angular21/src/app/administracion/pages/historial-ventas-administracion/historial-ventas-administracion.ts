@@ -17,6 +17,7 @@ import { AutoComplete } from 'primeng/autocomplete';
 import { MessageService, ConfirmationService } from 'primeng/api';
 
 import { LoadingOverlayComponent } from '../../../shared/components/loading-overlay/loading-overlay.component';
+import { PaginadorComponent } from '../../../shared/components/paginador/Paginador.component';
 import { VentasAdminService } from '../../services/ventas.service';
 import { AuthService } from '../../../auth/services/auth.service';
 import { ExcelUtils } from '../../utils/excel.utils';
@@ -62,6 +63,7 @@ interface FiltroVentasAdmin {
     Tooltip,
     AutoComplete,
     LoadingOverlayComponent,
+    PaginadorComponent,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './historial-ventas-administracion.html',
@@ -92,6 +94,7 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
 
   metodosPago: { label: string; value: number | null }[] = [{ label: 'Todos', value: null }];
 
+  firstRow = 0;
   readonly estadosComprobante = [
     { label: 'Todos', value: null },
     { label: 'Emitido', value: 'EMITIDO' },
@@ -123,7 +126,6 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
   limitePorPagina = 5;
   totalRegistros = 0;
   totalPaginas = 0;
-  firstRow = 0;
 
   totalVentas = 0;
   numeroVentas = 0;
@@ -339,7 +341,6 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
 
   aplicarFiltros(): void {
     this.paginaActual = 1;
-    this.firstRow = 0;
     this.cargarComprobantes();
     this.cargarKpis();
   }
@@ -370,6 +371,13 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
     this.cargarComprobantes();
   }
 
+  onLimitChange(nuevoLimite: number): void {
+    this.limitePorPagina = nuevoLimite;
+    this.paginaActual = 1;
+    this.firstRow = 0;
+    this.cargarComprobantes();
+  }
+
   nuevaVenta(): void {
     this.router.navigate(['/admin/generar-ventas-administracion']);
   }
@@ -397,7 +405,6 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
 
   anularComprobante(comprobante: SalesReceiptSummaryAdmin): void {
     if (comprobante.estado !== 'EMITIDO') return;
-
     this.confirmationService.confirm({
       message: `¿Está seguro de anular el comprobante ${this.getNumeroFormateado(comprobante)}?`,
       header: 'Confirmar Anulación',
@@ -443,7 +450,6 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
 
     const nombreArchivo = ExcelUtils.generarNombreConFecha('ventas');
     ExcelUtils.exportarAExcel(datosExcel, nombreArchivo, 'Comprobantes');
-
     this.messageService.add({
       severity: 'success',
       summary: 'Exportación exitosa',

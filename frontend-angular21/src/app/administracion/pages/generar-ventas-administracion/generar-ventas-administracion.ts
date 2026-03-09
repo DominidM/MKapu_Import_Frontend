@@ -826,7 +826,9 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
   }
 
   private prefillDesdeCotizacion(cotizacion: Quote): void {
+
     if (cotizacion.id_sede) this.onSedeChange(cotizacion.id_sede);
+
     const tipoDoc = cotizacion.cliente?.id_tipo_documento;
     this.tipoComprobante.set(tipoDoc === 1 ? 1 : 2);
     if (cotizacion.cliente?.valor_doc) {
