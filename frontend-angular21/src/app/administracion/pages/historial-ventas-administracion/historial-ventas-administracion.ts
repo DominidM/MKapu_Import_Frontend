@@ -1,12 +1,4 @@
-import {
-  Component,
-  OnInit,
-  OnDestroy,
-  inject,
-  ChangeDetectorRef,
-  computed,
-  signal,
-} from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -22,6 +14,7 @@ import { ConfirmDialog } from 'primeng/confirmdialog';
 import { DatePicker } from 'primeng/datepicker';
 import { Tooltip } from 'primeng/tooltip';
 import { AutoComplete } from 'primeng/autocomplete';
+import { Dialog } from 'primeng/dialog';
 import { MessageService, ConfirmationService } from 'primeng/api';
 
 import { LoadingOverlayComponent } from '../../../shared/components/loading-overlay/loading-overlay.component';
@@ -32,7 +25,6 @@ import { ExcelUtils } from '../../utils/excel.utils';
 import {
   getLunesSemanaActualPeru,
   getDomingoSemanaActualPeru,
-  formatFechaPeru,
 } from '../../../shared/utils/date-peru.utils';
 
 import {
@@ -42,7 +34,6 @@ import {
   SalesReceiptKpiDto,
   MetodoPagoAdmin,
   TipoComprobanteAdmin,
-  ProductoDetalleAdmin,
 } from '../../interfaces/ventas.interface';
 
 interface FiltroVentasAdmin {
@@ -71,6 +62,7 @@ interface FiltroVentasAdmin {
     DatePicker,
     Tooltip,
     AutoComplete,
+    Dialog,
     LoadingOverlayComponent,
     PaginadorComponent,
   ],
@@ -98,11 +90,25 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
 
   sedes: SedeAdmin[] = [];
   sedesOptions: { label: string; value: number | null }[] = [];
-
   tiposComprobante: { label: string; value: number | null }[] = [{ label: 'Todos', value: null }];
   metodosPago: { label: string; value: number | null }[] = [{ label: 'Todos', value: null }];
 
+  wspConsultando = false;
+  accionesDialogVisible = false;
+  accionesComprobante: SalesReceiptSummaryAdmin | null = null;
+  verPdfCargando = false;
+
   pdfCargando = signal<number | null>(null);
+  emailCargando = signal<number | null>(null);
+  wspCargando = signal<number | null>(null);
+  accionesCargando = signal<number | null>(null);
+
+  // ── Dialog WhatsApp ───────────────────────────────────────────────
+  wspDialogVisible = false;
+  wspReady = false;
+  wspQr: string | null = null;
+  wspPollingInterval: any = null;
+  wspComprobanteActual: SalesReceiptSummaryAdmin | null = null;
 
   readonly estadosComprobante = [
     { label: 'Todos', value: null },
@@ -122,10 +128,6 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
     tipoPago: null,
   };
 
-  GenerarVenta() {
-    this.router.navigate(['./admin/generar-ventas-administracion']);
-  }
-
   sugerenciasBusqueda: string[] = [];
   todasLasSugerencias: string[] = [];
 
@@ -134,7 +136,6 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
   limitePorPagina = 5;
   totalRegistros = 0;
   totalPaginas = 0;
-
   totalVentas = 0;
   numeroVentas = 0;
   totalBoletas = 0;
@@ -194,6 +195,7 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.busquedaSubject.complete();
     this.subscriptions.unsubscribe();
+    this.detenerPollingWsp();
   }
 
   // ── Paginador ─────────────────────────────────────────────────────
@@ -280,7 +282,6 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
         this.comprobantesFiltrados = [...this.comprobantes];
         this.cargarSugerenciasBusqueda();
         this.loading = false;
-
         setTimeout(() => {
           this.totalRegistros = res?.total ?? this.comprobantes.length;
           this.totalPaginas = res?.total_pages ?? 1;
@@ -379,9 +380,72 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
     this.todasLasSugerencias = Array.from(set).sort();
   }
 
+  // ── Dialog acciones ───────────────────────────────────────────────
+  abrirDialogAcciones(comprobante: SalesReceiptSummaryAdmin): void {
+    this.accionesComprobante = comprobante;
+    this.accionesDialogVisible = true;
+  }
+
+  cerrarDialogAcciones(): void {
+    this.accionesDialogVisible = false;
+    this.accionesComprobante = null;
+  }
+
+  verPdfEnPestana(comprobante: SalesReceiptSummaryAdmin): void {
+    this.verPdfCargando = true;
+    this.ventasService.verComprobantePdfEnPestana(comprobante.idComprobante).subscribe({
+      next: () => {
+        this.verPdfCargando = false;
+      },
+      error: () => {
+        this.verPdfCargando = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudo abrir el PDF',
+          life: 3000,
+        });
+      },
+    });
+  }
+
+  enviarCotizacionDesdeDialog(comprobante: SalesReceiptSummaryAdmin): void {
+    this.emailCargando.set(comprobante.idComprobante);
+
+    this.ventasService.enviarComprobantePorEmail(comprobante.idComprobante).subscribe({
+      next: (res) => {
+        this.emailCargando.set(null);
+        this.cerrarDialogAcciones();
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Email enviado',
+          detail: res.message ?? `Comprobante enviado a ${res.sentTo}`,
+          life: 4000,
+        });
+      },
+      error: () => {
+        this.emailCargando.set(null);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudo enviar el comprobante por email',
+          life: 3000,
+        });
+      },
+    });
+  }
+
+  abrirDialogWspDesdeAcciones(comprobante: SalesReceiptSummaryAdmin): void {
+    this.abrirDialogWsp(comprobante);
+  }
+
   // ── Acciones ──────────────────────────────────────────────────────
   nuevaVenta(): void {
     this.router.navigate(['/admin/generar-ventas-administracion']);
+  }
+
+  GenerarVenta(): void {
+    this.router.navigate(['./admin/generar-ventas-administracion']);
   }
 
   verDetalleVenta(comprobante: SalesReceiptSummaryAdmin): void {
@@ -396,7 +460,10 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
     const nombre = `comprobante-${comprobante.serie}-${String(comprobante.numero).padStart(8, '0')}.pdf`;
 
     this.ventasService.descargarComprobantePdf(comprobante.idComprobante, nombre).subscribe({
-      next: () => this.pdfCargando.set(null),
+      next: () => {
+        this.pdfCargando.set(null);
+        this.cerrarDialogAcciones();
+      },
       error: () => {
         this.pdfCargando.set(null);
         this.messageService.add({
@@ -408,6 +475,117 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
     });
   }
 
+  enviarCotizacion(comprobante: SalesReceiptSummaryAdmin): void {
+    this.emailCargando.set(comprobante.idComprobante);
+
+    this.ventasService.enviarComprobantePorEmail(comprobante.idComprobante).subscribe({
+      next: (res) => {
+        this.emailCargando.set(null);
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Email enviado',
+          detail: res.message ?? `Comprobante enviado a ${res.sentTo}`,
+          life: 4000,
+        });
+      },
+      error: () => {
+        this.emailCargando.set(null);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudo enviar el comprobante por email',
+          life: 3000,
+        });
+      },
+    });
+  }
+
+  confirmarEnvioWsp(): void {
+    if (!this.wspComprobanteActual) return;
+
+    const comprobante = this.wspComprobanteActual;
+    this.wspCargando.set(comprobante.idComprobante);
+    this.wspDialogVisible = false;
+    this.accionesDialogVisible = false;
+    this.detenerPollingWsp();
+
+    this.ventasService.enviarComprobantePorWhatsApp(comprobante.idComprobante).subscribe({
+      next: (res) => {
+        this.wspCargando.set(null);
+        this.messageService.add({
+          severity: 'success',
+          summary: 'WhatsApp enviado',
+          detail: res.message ?? `Comprobante enviado a ${res.sentTo}`,
+          life: 4000,
+        });
+      },
+      error: () => {
+        this.wspCargando.set(null);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudo enviar el comprobante por WhatsApp',
+          life: 3000,
+        });
+      },
+    });
+  }
+
+  private iniciarPollingWsp(): void {
+    this.detenerPollingWsp();
+    this.wspPollingInterval = setInterval(() => {
+      this.ventasService.obtenerEstadoWhatsApp().subscribe({
+        next: ({ ready, qr }) => {
+          this.wspReady = ready;
+          this.wspQr = qr;
+          this.cdr.markForCheck();
+          if (ready) this.detenerPollingWsp();
+        },
+      });
+    }, 2000);
+  }
+
+  private detenerPollingWsp(): void {
+    if (this.wspPollingInterval) {
+      clearInterval(this.wspPollingInterval);
+      this.wspPollingInterval = null;
+    }
+  }
+
+  abrirDialogWsp(comprobante: SalesReceiptSummaryAdmin): void {
+    this.wspComprobanteActual = comprobante;
+    this.wspDialogVisible = true;
+    this.wspReady = false;
+    this.wspQr = null;
+    this.wspConsultando = true; // ← nuevo flag
+
+    this.ventasService.obtenerEstadoWhatsApp().subscribe({
+      next: ({ ready, qr }) => {
+        this.wspConsultando = false;
+        this.wspReady = ready;
+        this.wspQr = qr;
+        this.cdr.markForCheck();
+        if (!ready) this.iniciarPollingWsp();
+      },
+      error: () => {
+        this.wspConsultando = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudo consultar el estado de WhatsApp',
+          life: 3000,
+        });
+      },
+    });
+  }
+
+  cerrarDialogWsp(): void {
+    this.wspDialogVisible = false;
+    this.wspComprobanteActual = null;
+    this.detenerPollingWsp();
+  }
+
+  // ── Otras acciones ────────────────────────────────────────────────
   crearGuiaRemision(comprobante: any): void {
     this.router.navigate(['/logistica/remision/nueva'], {
       queryParams: {

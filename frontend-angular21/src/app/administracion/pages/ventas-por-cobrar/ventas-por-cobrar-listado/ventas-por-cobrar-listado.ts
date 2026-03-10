@@ -25,7 +25,8 @@ import {
   AccountReceivableResponse,
   AccountReceivableStatus,
 } from '../../../services/account-receivable.service';
-import { getHoyPeru } from '../../../../shared/utils/date-peru.utils';
+import {   getLunesSemanaActualPeru,
+  getDomingoSemanaActualPeru, getHoyPeru } from '../../../../shared/utils/date-peru.utils';
 
 @Component({
   selector: 'app-ventas-por-cobrar-listado',
