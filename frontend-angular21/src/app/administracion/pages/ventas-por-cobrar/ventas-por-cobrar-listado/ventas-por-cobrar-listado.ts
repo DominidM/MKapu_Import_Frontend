@@ -25,8 +25,10 @@ import {
   AccountReceivableResponse,
   AccountReceivableStatus,
 } from '../../../services/account-receivable.service';
-import {   getLunesSemanaActualPeru,
-  getDomingoSemanaActualPeru, getHoyPeru } from '../../../../shared/utils/date-peru.utils';
+import {
+  getLunesSemanaActualPeru,
+  getDomingoSemanaActualPeru,
+} from '../../../../shared/utils/date-peru.utils';
 
 @Component({
   selector: 'app-ventas-por-cobrar-listado',
@@ -48,7 +50,7 @@ import {   getLunesSemanaActualPeru,
     LoadingOverlayComponent,
     DatePickerModule,
     PaginadorComponent,
-    DialogModule, // ← nuevo
+    DialogModule,
   ],
   templateUrl: './ventas-por-cobrar-listado.html',
   styleUrl: './ventas-por-cobrar-listado.css',
@@ -70,8 +72,9 @@ export class VentasPorCobrarListadoComponent implements OnInit, OnDestroy {
   estadoSeleccionado = signal<AccountReceivableStatus | null>('PENDIENTE');
   sedeSeleccionada = signal<number | null>(null);
   rows = signal<number>(5);
-  fechaInicio = signal<Date | null>(getHoyPeru());
-  fechaFin = signal<Date | null>(null);
+
+  fechaInicio = signal<Date | null>(getLunesSemanaActualPeru());
+  fechaFin = signal<Date | null>(getDomingoSemanaActualPeru());
 
   paginaActual = signal<number>(1);
   totalPaginas = computed(() => {
@@ -124,7 +127,6 @@ export class VentasPorCobrarListadoComponent implements OnInit, OnDestroy {
     { label: 'Cancelado', value: 'CANCELADO' },
   ];
 
-  // ── WhatsApp ──────────────────────────────────────────────────────
   mostrarDialogWsp = false;
   enviandoWsp = false;
   wspReady = false;
@@ -177,8 +179,6 @@ export class VentasPorCobrarListadoComponent implements OnInit, OnDestroy {
         }),
     });
   }
-
-  // ── WhatsApp ──────────────────────────────────────────────────────
 
   abrirDialogWsp(a: AccountReceivableResponse): void {
     this.cuentaWsp = a;
@@ -253,8 +253,6 @@ export class VentasPorCobrarListadoComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ── Filtros y paginación ──────────────────────────────────────────
-
   async onEstadoChange(v: AccountReceivableStatus | null) {
     this.estadoSeleccionado.set(v);
     this.paginaActual.set(1);
@@ -291,8 +289,10 @@ export class VentasPorCobrarListadoComponent implements OnInit, OnDestroy {
   limpiarFiltros() {
     this.buscarValue.set('');
     this.sugerencias.set([]);
-    this.fechaInicio.set(null);
-    this.fechaFin.set(null);
+    // 👇 3. Al limpiar filtros, reseteamos a la semana actual en lugar de dejar nulo
+    this.fechaInicio.set(getLunesSemanaActualPeru());
+    this.fechaFin.set(getDomingoSemanaActualPeru());
+
     this.sedeSeleccionada.set(null);
     this.estadoSeleccionado.set(null);
     this.paginaActual.set(1);
@@ -358,8 +358,6 @@ export class VentasPorCobrarListadoComponent implements OnInit, OnDestroy {
       life: 3000,
     });
   }
-
-  // ── Helpers visuales ──────────────────────────────────────────────
 
   getTagClass(status: AccountReceivableStatus): string {
     switch (status) {
