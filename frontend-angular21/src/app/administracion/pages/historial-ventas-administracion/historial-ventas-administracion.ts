@@ -1,8 +1,21 @@
-import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef, signal } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  inject,
+  ChangeDetectorRef,
+  signal,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { Subject, Subscription, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
+import {
+  Subject,
+  Subscription,
+  debounceTime,
+  distinctUntilChanged,
+  switchMap,
+} from 'rxjs';
 
 import { Card } from 'primeng/card';
 import { Button } from 'primeng/button';
@@ -36,6 +49,12 @@ import {
   TipoComprobanteAdmin,
 } from '../../interfaces/ventas.interface';
 
+import {
+  AccionesComprobanteDialogComponent,
+  AccionesComprobanteConfig,
+  AccionComprobante,
+} from '../../../shared/components/acciones-comprobante-dialog/acciones-comprobante';
+
 interface FiltroVentasAdmin {
   sedeSeleccionada: number | null;
   tipoComprobante: number | null;
@@ -65,6 +84,7 @@ interface FiltroVentasAdmin {
     Dialog,
     LoadingOverlayComponent,
     PaginadorComponent,
+    AccionesComprobanteDialogComponent,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './historial-ventas-administracion.html',
@@ -94,16 +114,17 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
   metodosPago: { label: string; value: number | null }[] = [{ label: 'Todos', value: null }];
 
   wspConsultando = false;
-  accionesDialogVisible = false;
-  accionesComprobante: SalesReceiptSummaryAdmin | null = null;
-  verPdfCargando = false;
 
   pdfCargando = signal<number | null>(null);
   emailCargando = signal<number | null>(null);
   wspCargando = signal<number | null>(null);
   accionesCargando = signal<number | null>(null);
 
-  // ── Dialog WhatsApp ───────────────────────────────────────────────
+  dialogVisible = false;
+  dialogConfig: AccionesComprobanteConfig | null = null;
+  dialogAccionCargando: string | null = null;
+  private comprobanteDialogActual: SalesReceiptSummaryAdmin | null = null;
+
   wspDialogVisible = false;
   wspReady = false;
   wspQr: string | null = null;
@@ -141,7 +162,6 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
   totalBoletas = 0;
   totalFacturas = 0;
 
-  // ── Lifecycle ─────────────────────────────────────────────────────
   ngOnInit(): void {
     const user = this.authService.getCurrentUser();
     if (user?.idSede) this.filtros.sedeSeleccionada = user.idSede;
@@ -168,7 +188,8 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
       )
       .subscribe({
         next: (res: any) => {
-          const data: SalesReceiptSummaryAdmin[] = res?.receipts ?? res?.data ?? res?.items ?? [];
+          const data: SalesReceiptSummaryAdmin[] =
+            res?.receipts ?? res?.data ?? res?.items ?? [];
           const set = new Set<string>();
           data.forEach((c) => {
             const nombre = c.clienteNombre?.trim();
@@ -198,7 +219,6 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
     this.detenerPollingWsp();
   }
 
-  // ── Paginador ─────────────────────────────────────────────────────
   onPageChange(page: number): void {
     this.paginaActual = page;
     this.cargarComprobantes();
@@ -210,7 +230,6 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
     this.cargarComprobantes();
   }
 
-  // ── Filtros ───────────────────────────────────────────────────────
   aplicarFiltros(): void {
     this.paginaActual = 1;
     this.cargarComprobantes();
@@ -256,7 +275,6 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
     this.busquedaSubject.next(query);
   }
 
-  // ── Carga de datos ────────────────────────────────────────────────
   cargarComprobantes(): void {
     this.loading = true;
 
@@ -270,7 +288,9 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
       dateFrom: this.filtros.fechaInicio
         ? this.filtros.fechaInicio.toISOString().split('T')[0]
         : undefined,
-      dateTo: this.filtros.fechaFin ? this.filtros.fechaFin.toISOString().split('T')[0] : undefined,
+      dateTo: this.filtros.fechaFin
+        ? this.filtros.fechaFin.toISOString().split('T')[0]
+        : undefined,
       search: this.filtros.busqueda.trim() || undefined,
       _t: Date.now(),
     };
@@ -380,66 +400,141 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
     this.todasLasSugerencias = Array.from(set).sort();
   }
 
-  // ── Dialog acciones ───────────────────────────────────────────────
   abrirDialogAcciones(comprobante: SalesReceiptSummaryAdmin): void {
-    this.accionesComprobante = comprobante;
-    this.accionesDialogVisible = true;
+    this.comprobanteDialogActual = comprobante;
+    this.dialogConfig = {
+      titulo: this.getNumeroFormateado(comprobante),
+      subtitulo: comprobante.clienteNombre,
+      mostrarWsp: true,
+      mostrarEmail: true,
+      labelPdf: 'PDF',
+      labelVoucher: 'Voucher',
+    };
+    this.dialogVisible = true;
+    this.cdr.markForCheck();
   }
 
-  cerrarDialogAcciones(): void {
-    this.accionesDialogVisible = false;
-    this.accionesComprobante = null;
-  }
+  onAccionDialog(accion: AccionComprobante): void {
+    const comprobante = this.comprobanteDialogActual;
+    if (!comprobante) return;
 
-  verPdfEnPestana(comprobante: SalesReceiptSummaryAdmin): void {
-    this.verPdfCargando = true;
-    this.ventasService.verComprobantePdfEnPestana(comprobante.idComprobante).subscribe({
-      next: () => {
-        this.verPdfCargando = false;
-      },
-      error: () => {
-        this.verPdfCargando = false;
+    this.dialogAccionCargando = accion;
+    this.cdr.markForCheck();
+
+    switch (accion) {
+      case 'wsp':
+        this.dialogVisible = false;
+        this.dialogAccionCargando = null;
+        this.abrirDialogWsp(comprobante);
+        break;
+
+      case 'email':
+        this.ventasService
+          .enviarComprobantePorEmail(comprobante.idComprobante)
+          .subscribe({
+            next: (res) => {
+              this.dialogAccionCargando = null;
+              this.dialogVisible = false;
+              this.messageService.add({
+                severity: 'success',
+                summary: 'Email enviado',
+                detail: res.message ?? `Comprobante enviado a ${res.sentTo}`,
+                life: 4000,
+              });
+              this.cdr.markForCheck();
+            },
+            error: () => {
+              this.dialogAccionCargando = null;
+              this.messageService.add({
+                severity: 'error',
+                summary: 'Error',
+                detail: 'No se pudo enviar el comprobante por email',
+                life: 3000,
+              });
+              this.cdr.markForCheck();
+            },
+          });
+        break;
+
+      case 'pdf-imprimir':
+        this.ventasService
+          .verComprobantePdfEnPestana(comprobante.idComprobante)
+          .subscribe({
+            next: () => {
+              this.dialogAccionCargando = null;
+              this.cdr.markForCheck();
+            },
+            error: () => {
+              this.dialogAccionCargando = null;
+              this.messageService.add({
+                severity: 'error',
+                summary: 'Error',
+                detail: 'No se pudo abrir el PDF',
+                life: 3000,
+              });
+              this.cdr.markForCheck();
+            },
+          });
+        break;
+
+      case 'pdf-descargar': {
+        const nombre = `comprobante-${comprobante.serie}-${String(comprobante.numero).padStart(8, '0')}.pdf`;
+        this.ventasService
+          .descargarComprobantePdf(comprobante.idComprobante, nombre)
+          .subscribe({
+            next: () => {
+              this.dialogAccionCargando = null;
+              this.cdr.markForCheck();
+            },
+            error: () => {
+              this.dialogAccionCargando = null;
+              this.messageService.add({
+                severity: 'error',
+                summary: 'Error',
+                detail: 'No se pudo descargar el PDF',
+                life: 3000,
+              });
+              this.cdr.markForCheck();
+            },
+          });
+        break;
+      }
+
+      // 🚧 PENDIENTE — conectar servicio de voucher térmico
+      case 'voucher-imprimir':
+        console.log('TODO: imprimir voucher térmico', comprobante.idComprobante);
+        this.dialogAccionCargando = null;
         this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudo abrir el PDF',
+          severity: 'info',
+          summary: 'Próximamente',
+          detail: 'La impresión de voucher térmico estará disponible pronto',
           life: 3000,
         });
-      },
-    });
-  }
+        this.cdr.markForCheck();
+        break;
 
-  enviarCotizacionDesdeDialog(comprobante: SalesReceiptSummaryAdmin): void {
-    this.emailCargando.set(comprobante.idComprobante);
-
-    this.ventasService.enviarComprobantePorEmail(comprobante.idComprobante).subscribe({
-      next: (res) => {
-        this.emailCargando.set(null);
-        this.cerrarDialogAcciones();
+      // 🚧 PENDIENTE — conectar servicio de voucher térmico
+      case 'voucher-descargar':
+        console.log('TODO: descargar voucher térmico', comprobante.idComprobante);
+        this.dialogAccionCargando = null;
         this.messageService.add({
-          severity: 'success',
-          summary: 'Email enviado',
-          detail: res.message ?? `Comprobante enviado a ${res.sentTo}`,
-          life: 4000,
-        });
-      },
-      error: () => {
-        this.emailCargando.set(null);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudo enviar el comprobante por email',
+          severity: 'info',
+          summary: 'Próximamente',
+          detail: 'La descarga de voucher térmico estará disponible pronto',
           life: 3000,
         });
-      },
-    });
+        this.cdr.markForCheck();
+        break;
+    }
   }
 
-  abrirDialogWspDesdeAcciones(comprobante: SalesReceiptSummaryAdmin): void {
-    this.abrirDialogWsp(comprobante);
+  onDialogCerrar(): void {
+    this.dialogVisible = false;
+    this.dialogAccionCargando = null;
+    this.comprobanteDialogActual = null;
+    this.cdr.markForCheck();
   }
 
-  // ── Acciones ──────────────────────────────────────────────────────
   nuevaVenta(): void {
     this.router.navigate(['/admin/generar-ventas-administracion']);
   }
@@ -449,55 +544,10 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
   }
 
   verDetalleVenta(comprobante: SalesReceiptSummaryAdmin): void {
-    this.router.navigate(['/admin/detalles-ventas-administracion', comprobante.idComprobante], {
-      state: { rutaRetorno: '/admin/historial-ventas-administracion' },
-    });
-  }
-
-  imprimirComprobante(comprobante: SalesReceiptSummaryAdmin): void {
-    this.pdfCargando.set(comprobante.idComprobante);
-
-    const nombre = `comprobante-${comprobante.serie}-${String(comprobante.numero).padStart(8, '0')}.pdf`;
-
-    this.ventasService.descargarComprobantePdf(comprobante.idComprobante, nombre).subscribe({
-      next: () => {
-        this.pdfCargando.set(null);
-        this.cerrarDialogAcciones();
-      },
-      error: () => {
-        this.pdfCargando.set(null);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudo descargar el PDF del comprobante',
-        });
-      },
-    });
-  }
-
-  enviarCotizacion(comprobante: SalesReceiptSummaryAdmin): void {
-    this.emailCargando.set(comprobante.idComprobante);
-
-    this.ventasService.enviarComprobantePorEmail(comprobante.idComprobante).subscribe({
-      next: (res) => {
-        this.emailCargando.set(null);
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Email enviado',
-          detail: res.message ?? `Comprobante enviado a ${res.sentTo}`,
-          life: 4000,
-        });
-      },
-      error: () => {
-        this.emailCargando.set(null);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudo enviar el comprobante por email',
-          life: 3000,
-        });
-      },
-    });
+    this.router.navigate(
+      ['/admin/detalles-ventas-administracion', comprobante.idComprobante],
+      { state: { rutaRetorno: '/admin/historial-ventas-administracion' } },
+    );
   }
 
   confirmarEnvioWsp(): void {
@@ -506,25 +556,53 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
     const comprobante = this.wspComprobanteActual;
     this.wspCargando.set(comprobante.idComprobante);
     this.wspDialogVisible = false;
-    this.accionesDialogVisible = false;
     this.detenerPollingWsp();
 
-    this.ventasService.enviarComprobantePorWhatsApp(comprobante.idComprobante).subscribe({
-      next: (res) => {
-        this.wspCargando.set(null);
-        this.messageService.add({
-          severity: 'success',
-          summary: 'WhatsApp enviado',
-          detail: res.message ?? `Comprobante enviado a ${res.sentTo}`,
-          life: 4000,
-        });
+    this.ventasService
+      .enviarComprobantePorWhatsApp(comprobante.idComprobante)
+      .subscribe({
+        next: (res) => {
+          this.wspCargando.set(null);
+          this.messageService.add({
+            severity: 'success',
+            summary: 'WhatsApp enviado',
+            detail: res.message ?? `Comprobante enviado a ${res.sentTo}`,
+            life: 4000,
+          });
+        },
+        error: () => {
+          this.wspCargando.set(null);
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'No se pudo enviar el comprobante por WhatsApp',
+            life: 3000,
+          });
+        },
+      });
+  }
+
+  abrirDialogWsp(comprobante: SalesReceiptSummaryAdmin): void {
+    this.wspComprobanteActual = comprobante;
+    this.wspDialogVisible = true;
+    this.wspReady = false;
+    this.wspQr = null;
+    this.wspConsultando = true;
+
+    this.ventasService.obtenerEstadoWhatsApp().subscribe({
+      next: ({ ready, qr }) => {
+        this.wspConsultando = false;
+        this.wspReady = ready;
+        this.wspQr = qr;
+        this.cdr.markForCheck();
+        if (!ready) this.iniciarPollingWsp();
       },
       error: () => {
-        this.wspCargando.set(null);
+        this.wspConsultando = false;
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
-          detail: 'No se pudo enviar el comprobante por WhatsApp',
+          detail: 'No se pudo consultar el estado de WhatsApp',
           life: 3000,
         });
       },
@@ -552,40 +630,12 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
     }
   }
 
-  abrirDialogWsp(comprobante: SalesReceiptSummaryAdmin): void {
-    this.wspComprobanteActual = comprobante;
-    this.wspDialogVisible = true;
-    this.wspReady = false;
-    this.wspQr = null;
-    this.wspConsultando = true; // ← nuevo flag
-
-    this.ventasService.obtenerEstadoWhatsApp().subscribe({
-      next: ({ ready, qr }) => {
-        this.wspConsultando = false;
-        this.wspReady = ready;
-        this.wspQr = qr;
-        this.cdr.markForCheck();
-        if (!ready) this.iniciarPollingWsp();
-      },
-      error: () => {
-        this.wspConsultando = false;
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudo consultar el estado de WhatsApp',
-          life: 3000,
-        });
-      },
-    });
-  }
-
   cerrarDialogWsp(): void {
     this.wspDialogVisible = false;
     this.wspComprobanteActual = null;
     this.detenerPollingWsp();
   }
 
-  // ── Otras acciones ────────────────────────────────────────────────
   crearGuiaRemision(comprobante: any): void {
     this.router.navigate(['/logistica/remision/nueva'], {
       queryParams: {
@@ -650,24 +700,19 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
     });
   }
 
-  // ── Helpers ───────────────────────────────────────────────────────
   getSeverityEstado(estado: string): 'success' | 'danger' | 'warn' | 'info' {
     switch (estado) {
-      case 'EMITIDO':
-        return 'success';
-      case 'ANULADO':
-        return 'danger';
-      case 'RECHAZADO':
-        return 'warn';
-      default:
-        return 'info';
+      case 'EMITIDO':   return 'success';
+      case 'ANULADO':   return 'danger';
+      case 'RECHAZADO': return 'warn';
+      default:          return 'info';
     }
   }
 
   getTipoComprobanteLabel(tipo: string): string {
     if (!tipo) return 'N/A';
     const t = tipo.toUpperCase();
-    if (t.includes('BOLETA') || tipo === '03') return 'Boleta';
+    if (t.includes('BOLETA')  || tipo === '03') return 'Boleta';
     if (t.includes('FACTURA') || tipo === '01') return 'Factura';
     return tipo;
   }
