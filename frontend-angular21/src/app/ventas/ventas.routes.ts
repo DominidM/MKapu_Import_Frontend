@@ -17,27 +17,19 @@ export const VENTAS_ROUTES: Routes = [
     path: 'generar-ventas',
     canActivate: [CashboxGuard],
     loadComponent: () =>
-      import('./pages/generar-venta/generar-venta').then((m) => m.GenerarVenta),
+      import('../administracion/pages/generar-ventas-administracion/generar-ventas-administracion').then((m) => m.GenerarVentasAdministracion),
   },
   {
     path: 'historial-ventas',
     canActivate: [CashboxGuard],
     loadComponent: () =>
-      import('./pages/historial-ventas/historial-ventas').then((m) => m.HistorialVentas),
-  },
-  {
-    path: 'imprimir-comprobante',
-    canActivate: [CashboxGuard],
-    loadComponent: () =>
-      import('./shared/imprimir-comprobante/imprimir-comprobante').then(
-        (m) => m.ImprimirComprobante,
-      ),
+      import('../administracion/pages/historial-ventas-administracion/historial-ventas-administracion').then((m) => m.HistorialVentasAdministracion),
   },
   {
     path: 'ver-detalle/:id',
     canActivate: [CashboxGuard],
     loadComponent: () =>
-      import('./shared/detalles-venta/detalle-venta').then((m) => m.DetalleVenta),
+      import('../administracion/shared/detalles-ventas-administracion/detalles-ventas-administracion').then((m) => m.DetallesVentasAdministracion),
   },
   
 

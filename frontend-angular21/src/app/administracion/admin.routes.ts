@@ -412,7 +412,7 @@ export const ADMIN_ROUTES: Routes = [
   {
     path: 'historial-ventas-administracion',
     loadComponent: () =>
-      import('../ventas/pages/historial-ventas/historial-ventas').then((m) => m.HistorialVentas),
+      import('./pages/historial-ventas-administracion/historial-ventas-administracion').then((m) => m.HistorialVentasAdministracion),
   },
   {
     path: 'detalles-ventas-administracion/:id',
@@ -750,29 +750,6 @@ export const ADMIN_ROUTES: Routes = [
           (m) => m.ReclamosDetalles,
         ),
     },
-
-
-
-
-
-    {
-      path: 'imprimir-comprobante-administracion',
-      canActivate: [CashboxGuard],
-      loadComponent: () =>
-        import('../ventas/shared/imprimir-comprobante/imprimir-comprobante').then(
-          (m) => m.ImprimirComprobante,
-        ),
-    },
-
-  {
-    path: 'ver-detalle/:id',
-    canActivate: [CashboxGuard],
-    loadComponent: () =>
-      import('../ventas/shared/detalles-venta/detalle-venta').then((m) => m.DetalleVenta),
-  },
-  
-
-
 
   ],
 },
