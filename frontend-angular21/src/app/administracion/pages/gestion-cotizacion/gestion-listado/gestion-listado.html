@@ -231,27 +231,12 @@
                       (onClick)="irDetalle(c.id_cotizacion)">
                     </p-button>
 
-                    <p-button icon="pi pi-print"
-                      [rounded]="true" [text]="true" severity="secondary"
-                      pTooltip="Imprimir" tooltipPosition="top"
-                      (onClick)="imprimirCotizacion(c)">
-                    </p-button>
-
-                    <p-button icon="pi pi-send"
-                      [rounded]="true" [text]="true" severity="secondary"
-                      pTooltip="Enviar por Email" tooltipPosition="top"
-                      (onClick)="enviarCotizacion(c)">
-                    </p-button>
-
-                    <!-- ✅ WhatsApp — ahora con acción -->
+                    <!-- ★ Acciones (PDF / Voucher / WSP / Email) -->
                     <p-button
-                      icon="pi pi-whatsapp"
-                      [rounded]="true"
-                      [text]="true"
-                      severity="success"
-                      pTooltip="Enviar por WhatsApp"
-                      tooltipPosition="top"
-                      (onClick)="abrirDialogWsp(c)">
+                      icon="pi pi-file-pdf"
+                      [rounded]="true" [text]="true" severity="secondary"
+                      pTooltip="Documentos" tooltipPosition="top"
+                      (onClick)="abrirAcciones(c)">
                     </p-button>
 
                     <ng-container *ngIf="c.estado === 'PENDIENTE'">
@@ -322,6 +307,15 @@
   </div>
 
 </div>
+
+<!-- ══ DIALOG DE ACCIONES (shared) ══════════════════════════════════════════ -->
+<app-acciones-comprobante-dialog
+  [(visible)]="accionesVisible"
+  [config]="accionesConfig"
+  [accionCargando]="accionCargando"
+  (accion)="onAccion($event)"
+  (cerrar)="accionesVisible = false">
+</app-acciones-comprobante-dialog>
 
 <!-- ══ DIALOG WHATSAPP ═══════════════════════════════════════════════════════ -->
 <p-dialog
