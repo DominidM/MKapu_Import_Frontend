@@ -575,41 +575,38 @@ export const ADMIN_ROUTES: Routes = [
   ======================= */
   {
     path: 'despacho-productos',
-    loadComponent: () =>
-      import('./pages/despacho-productos/pages/listado-despacho/listado-despacho').then(
-        (m) => m.ListadoDespacho,
-      ),
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/despacho-productos/pages/listado-despacho/listado-despacho').then(
+            (m) => m.ListadoDespacho,
+          ),
+      },
+    
+      {
+        path: 'agregar-despacho',
+        loadComponent: () =>
+          import('./pages/despacho-productos/pages/agregar-despacho/agregar-despacho').then(
+            (m) => m.AgregarDespacho,
+          ),
+      },
+      {
+        path: 'detalle-despacho/:id',
+        loadComponent: () =>
+          import('./pages/despacho-productos/pages/detalles-despacho/detalles-despacho').then(
+            (m) => m.DetallesDespacho,
+          ),
+      },
+      {
+        path: 'editar-despacho/:id',
+        loadComponent: () =>
+          import('./pages/despacho-productos/pages/editar-despacho/editar-despacho').then(
+            (m) => m.EditarDespacho,
+          ),
+      },
+    ],
   },
-  {
-    path: 'despacho-productos/detalle-despacho/:id',
-    loadComponent: () =>
-      import('./pages/despacho-productos/pages/detalles-despacho/detalles-despacho').then(
-        (m) => m.DetallesDespacho,
-      ),
-  },
-  {
-    path: 'despacho-productos/agregar-despacho',
-    loadComponent: () =>
-      import('./pages/despacho-productos/pages/agregar-despacho/agregar-despacho').then(
-        (m) => m.AgregarDespacho,
-      ),
-  },
-  {
-    path: 'despacho-productos/editar-despacho/:id',
-    loadComponent: () =>
-      import('./pages/despacho-productos/pages/editar-despacho/editar-despacho').then(
-        (m) => m.EditarDespacho,
-      ),
-  },
-  /*
-  {
-    path: 'despacho-productos/confirmar-despacho',
-    loadComponent: () =>
-      import('./pages/despacho-productos/pages/confirmar-despacho/confirmar-despacho').then(
-        (m) => m.ConfirmarDespacho,
-      ),
-  },
-
   /* =======================
       CONTEO DE INVENTARIO
   ======================= */
