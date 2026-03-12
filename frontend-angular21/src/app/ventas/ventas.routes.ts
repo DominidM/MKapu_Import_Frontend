@@ -100,6 +100,7 @@ export const VENTAS_ROUTES: Routes = [
   },
 
 
+
   /* =======================
       COTIZACIONES
   ======================= */
@@ -141,7 +142,6 @@ export const VENTAS_ROUTES: Routes = [
     path: 'movimientos-inventario/detalle/:id',
     loadComponent: () => import('../logistica/pages/movimientos-inventario-detalle/movimientos-inventario-detalle').then(m => m.DetalleMovimientoInventario)
   },
-
 
   {
     path: 'promociones',

@@ -151,16 +151,7 @@ export const routes: Routes = [
         ]
       },
 
-      // ================= COTIZACIONES =================
-      {
-        path: 'ventas/cotizaciones',
-        children: [
-          { path: '', loadComponent: () => import('./ventas/pages/cotizaciones/listado-cotizacion/listado-cotizacion').then(m => m.ListadoCotizacion) },
-          { path: 'crear', loadComponent: () => import('./ventas/pages/cotizaciones/formulario-cotizacion/formulario-cotizacion').then(m => m.FormularioCotizacion) },
-          { path: 'editar/:id', loadComponent: () => import('./ventas/pages/cotizaciones/formulario-cotizacion/formulario-cotizacion').then(m => m.FormularioCotizacion) },
-          { path: 'detalle/:id', loadComponent: () => import('./ventas/pages/cotizaciones/detalle-cotizacion/detalle-cotizacion').then(m => m.DetalleCotizacion) },
-        ]
-      },
+    
       {
         path: 'admin/cotizaciones',
         children: [
