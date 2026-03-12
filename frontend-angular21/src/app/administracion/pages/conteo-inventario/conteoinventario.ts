@@ -39,7 +39,6 @@ import { getLunesSemanaActualPeru, getDomingoSemanaActualPeru } from '../../../s
     PaginadorComponent,
   ],
   templateUrl: './conteoinventario.html',
-  styleUrls: ['./conteoinventario.css'],
 })
 export class ConteoInventarios implements OnInit {
   private router = inject(Router);

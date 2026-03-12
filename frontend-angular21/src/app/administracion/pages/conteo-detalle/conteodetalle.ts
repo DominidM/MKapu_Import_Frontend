@@ -32,7 +32,6 @@ interface ProductoDetalle {
     ProgressBarModule
   ],
   templateUrl: './conteodetalle.html',
-  styleUrls: ['./conteodetalle.css']
 })
 export class ConteoDetalle implements OnInit {
 

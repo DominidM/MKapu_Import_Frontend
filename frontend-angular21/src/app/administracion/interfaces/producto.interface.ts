@@ -47,7 +47,6 @@ export interface ProductoStockResponse {
     total_records: number;
     total_pages: number;
   };
-<<<<<<< HEAD
 }
 
 export interface ProductoAutocomplete {
@@ -155,6 +154,3 @@ export interface UpdateProductoPreciosDto {
   pre_may: number;
   pre_caja: number;
 }
-=======
-}
->>>>>>> 41e708d8501d2a3c6685bc3a5a1cd999923d2339

@@ -44,7 +44,6 @@ interface ProductoConteo {
     RouterModule
   ],
   templateUrl: './conteocrear.html',
-  styleUrls: ['./conteocrear.css']
 })
 export class ConteoCrear implements OnInit {
 
