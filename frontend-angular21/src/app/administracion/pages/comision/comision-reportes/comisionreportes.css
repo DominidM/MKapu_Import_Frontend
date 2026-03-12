@@ -2,7 +2,6 @@
    HEADER (ORIGINAL – NO TOCAR)
 ======================= */
 :host {
-<<<<<<< HEAD:frontend-angular21/src/app/administracion/pages/comision/comision-reportes/comisionreportes.css
     display: block;
   }
   
@@ -220,10 +219,6 @@
     }
   }
   
-=======
-  display: block;
-}
->>>>>>> 41e708d8501d2a3c6685bc3a5a1cd999923d2339:frontend-angular21/src/app/administracion/pages/conteo-inventario/conteoinventario.css
 
 .sedes-page {
   display: flex;
@@ -444,7 +439,6 @@
 ===================================== */
 
 :host-context(.app-dark) .comision-metrics .metric-card {
-<<<<<<< HEAD:frontend-angular21/src/app/administracion/pages/comision/comision-reportes/comisionreportes.css
     color: #f9fafb;
     box-shadow: 0 14px 40px rgba(0, 0, 0, 0.55);
   }
@@ -542,70 +536,3 @@
   color: #9ca3af;
 }
   
-=======
-  color: #f9fafb;
-  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.55);
-}
-
-/* ---------- INFO (AZUL OSCURO) ---------- */
-:host-context(.app-dark) .comision-metrics .metric-info {
-  background: linear-gradient(135deg, #061b28, #020f1a);
-  border: 1px solid rgba(56, 189, 248, 0.25);
-  --metric-shine: rgba(56, 189, 248, 0.55);
-}
-
-/* ---------- SUCCESS (VERDE OSCURO) ---------- */
-:host-context(.app-dark) .comision-metrics .metric-success {
-  background: linear-gradient(135deg, #06281e, #03160f);
-  border: 1px solid rgba(34, 197, 94, 0.25);
-  --metric-shine: rgba(34, 197, 94, 0.55);
-}
-
-/* ---------- WARNING (ROJO / ÁMBAR OSCURO) ---------- */
-:host-context(.app-dark) .comision-metrics .metric-warning {
-  background: linear-gradient(135deg, #2a0f0f, #140606);
-  border: 1px solid rgba(239, 68, 68, 0.28);
-  --metric-shine: rgba(239, 68, 68, 0.55);
-}
-
-/* ---------- TEXTO ---------- */
-:host-context(.app-dark) .comision-metrics .metric-title {
-  color: #e5e7eb;
-  opacity: 0.95;
-}
-
-:host-context(.app-dark) .comision-metrics .metric-value {
-  color: #ffffff;
-  font-weight: 700;
-}
-
-:host-context(.app-dark) .comision-metrics .metric-sub {
-  color: #9ca3af;
-}
-
-/* ---------- ICONOS ---------- */
-:host-context(.app-dark) .metric-icon-info {
-  background: rgba(56, 189, 248, 0.15);
-  color: #7dd3fc;
-}
-
-:host-context(.app-dark) .metric-icon-success {
-  background: rgba(34, 197, 94, 0.15);
-  color: #86efac;
-}
-
-:host-context(.app-dark) .metric-icon-warning {
-  background: rgba(239, 68, 68, 0.15);
-  color: #fca5a5;
-}
-
-/* ---------- SHINE (VISIBLE COMO EN LA IMAGEN) ---------- */
-:host-context(.app-dark) .comision-metrics .metric-card::before {
-  opacity: 0;
-}
-
-:host-context(.app-dark) .comision-metrics .metric-card:hover::before {
-  opacity: 1;
-  animation: metricShine 0.9s ease;
-}
->>>>>>> 41e708d8501d2a3c6685bc3a5a1cd999923d2339:frontend-angular21/src/app/administracion/pages/conteo-inventario/conteoinventario.css
