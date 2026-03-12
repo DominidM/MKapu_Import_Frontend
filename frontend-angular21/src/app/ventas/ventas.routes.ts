@@ -76,35 +76,6 @@ export const VENTAS_ROUTES: Routes = [
     loadComponent: () => import('./pages/dashboard-ventas/dashboard-ventas').then((m) => m.DashboardVentas)
   },
 
-  // ─── COTIZACIONES ───────────────────────────────────────────
-  {
-    path: 'cotizaciones',
-    canActivate: [CashboxGuard],
-    loadComponent: () =>
-      import('./pages/cotizaciones/listado-cotizacion/listado-cotizacion')
-        .then((m) => m.ListadoCotizacion),
-  },
-  {
-    path: 'cotizaciones/crear',
-    canActivate: [CashboxGuard],
-    loadComponent: () =>
-      import('./pages/cotizaciones/formulario-cotizacion/formulario-cotizacion')
-        .then((m) => m.FormularioCotizacion),
-  },
-  {
-    path: 'cotizaciones/editar/:id',
-    canActivate: [CashboxGuard],
-    loadComponent: () =>
-      import('./pages/cotizaciones/formulario-cotizacion/formulario-cotizacion')
-        .then((m) => m.FormularioCotizacion),
-  },
-  {
-    path: 'cotizaciones/detalle/:id',
-    canActivate: [CashboxGuard],
-    loadComponent: () =>
-      import('./pages/cotizaciones/detalle-cotizacion/detalle-cotizacion')
-        .then((m) => m.DetalleCotizacion),
-  },
 
   {
     path: 'promociones',
