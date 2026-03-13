@@ -80,7 +80,7 @@ export class VentasPorCobrarListadoComponent implements OnInit, OnDestroy {
   sedeSeleccionada   = signal<number | null>(null);
   rows               = signal<number>(5);
   fechaInicio        = signal<Date | null>(getLunesSemanaActualPeru());
-  fechaFin           = signal<Date | null>(null);
+  fechaFin           = signal<Date | null>(getDomingoSemanaActualPeru());
   paginaActual       = signal<number>(1);
 
   totalPaginas = computed(() => {

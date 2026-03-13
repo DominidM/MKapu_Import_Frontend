@@ -21,7 +21,7 @@ import { SedeAlmacenService } from '../../../services/sede-almacen.service';
 
 import { PaginadorComponent } from '../../../../shared/components/paginador/Paginador.component';
 import { LoadingOverlayComponent } from '../../../../shared/components/loading-overlay/loading-overlay.component';
-import { getHoyPeru } from '../../../../shared/utils/date-peru.utils';
+import { getDomingoSemanaActualPeru, getHoyPeru, getLunesSemanaActualPeru } from '../../../../shared/utils/date-peru.utils';
 import { AccionesComprobanteDialogComponent, AccionesComprobanteConfig, AccionComprobante } from '../../../../shared/components/acciones-comprobante-dialog/acciones-comprobante';
 
 @Component({
@@ -56,8 +56,8 @@ export class GestionCotizacionesComponent implements OnInit, OnDestroy {
   sedeSeleccionada      = signal<number | null>(null);
   currentPage           = signal<number>(1);
   rows                  = signal<number>(5);
-  fechaFin              = signal<Date | null>(null);
-  fechaInicio           = signal<Date | null>(getHoyPeru());
+  fechaFin              = signal<Date | null>(getDomingoSemanaActualPeru());
+  fechaInicio           = signal<Date | null>(getLunesSemanaActualPeru());
 
   estadosOptions = [
     { label: 'Todos',     value: null        },
