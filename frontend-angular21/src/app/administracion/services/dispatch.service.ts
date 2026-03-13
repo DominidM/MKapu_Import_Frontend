@@ -287,7 +287,6 @@ export class DispatchService {
     if (found) {
       this._dispatchResponse.set({ dispatches: newDispatches });
     } else {
-    
       this.loadDispatches().subscribe({ next: () => {}, error: () => {} });
     }
   }
