@@ -35,6 +35,7 @@ import {
   AccionesComprobanteConfig,
   AccionComprobante,
 } from '../../../../shared/components/acciones-comprobante-dialog/acciones-comprobante';
+import { SharedTableContainerComponent } from '../../../../shared/components/table.componente/shared-table-container.component';
 
 @Component({
   selector: 'app-ventas-por-cobrar-listado',
@@ -53,11 +54,10 @@ import {
     RouterModule,
     AutoComplete,
     TooltipModule,
-    LoadingOverlayComponent,
     DatePickerModule,
-    PaginadorComponent,
     DialogModule,
-    AccionesComprobanteDialogComponent, // ← shared dialog
+    AccionesComprobanteDialogComponent,
+    SharedTableContainerComponent,
   ],
   templateUrl: './ventas-por-cobrar-listado.html',
   styleUrl: './ventas-por-cobrar-listado.css',

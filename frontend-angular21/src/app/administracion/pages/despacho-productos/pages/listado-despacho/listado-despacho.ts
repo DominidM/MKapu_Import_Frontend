@@ -26,6 +26,7 @@ import { ProductoService } from '../../../../services/producto.service';
 import { AuthService } from '../../../../../auth/services/auth.service';
 import { environment } from '../../../../../../enviroments/enviroment';
 import { ConfirmacionDespachoStateService } from '../../../../services/confirmacion-despacho.state.service';
+import { getDomingoSemanaActualPeru, getLunesSemanaActualPeru } from '../../../../../shared/utils/date-peru.utils';
 
 // ── Interfaces locales ──────────────────────────────────────────
 interface ProductoMapItem { nombre: string; codigo: string; }
@@ -77,8 +78,8 @@ export class ListadoDespacho {
   // ── Filtros ────────────────────────────────────────────────────
   searchTerm    = signal<string | null>(null);
   estadoFiltro  = signal<string>('TODOS');
-  fechaDesde    = signal<Date | null>(null);
-  fechaHasta    = signal<Date | null>(null);
+  fechaDesde    = signal<Date | null>(getLunesSemanaActualPeru());
+  fechaHasta    = signal<Date | null>(getDomingoSemanaActualPeru());
   empleados     = signal<Empleado[]>([]);
 
   // ── Cache enriquecida de ventas (para tabla) ───────────────────

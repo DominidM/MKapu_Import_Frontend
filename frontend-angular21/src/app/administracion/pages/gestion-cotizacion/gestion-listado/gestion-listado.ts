@@ -23,6 +23,7 @@ import { PaginadorComponent } from '../../../../shared/components/paginador/Pagi
 import { LoadingOverlayComponent } from '../../../../shared/components/loading-overlay/loading-overlay.component';
 import { getDomingoSemanaActualPeru, getHoyPeru, getLunesSemanaActualPeru } from '../../../../shared/utils/date-peru.utils';
 import { AccionesComprobanteDialogComponent, AccionesComprobanteConfig, AccionComprobante } from '../../../../shared/components/acciones-comprobante-dialog/acciones-comprobante';
+import { SharedTableContainerComponent } from '../../../../shared/components/table.componente/shared-table-container.component';
 
 @Component({
   selector: 'app-gestion-cotizaciones',
@@ -31,9 +32,8 @@ import { AccionesComprobanteDialogComponent, AccionesComprobanteConfig, AccionCo
     CommonModule, FormsModule, TableModule, SelectModule, CardModule,
     ButtonModule, TagModule, ToastModule, ConfirmDialog, ConfirmDialogModule,
     RouterModule, AutoComplete, TooltipModule, DatePickerModule,
-    LoadingOverlayComponent, PaginadorComponent,
     DialogModule,
-    AccionesComprobanteDialogComponent,
+    AccionesComprobanteDialogComponent, SharedTableContainerComponent,
   ],
   templateUrl: './gestion-listado.html',
   styleUrl: './gestion-listado.css',
