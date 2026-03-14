@@ -537,24 +537,44 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
         });
         break;
       }
-
+        
       case 'voucher-imprimir':
-        this.dialogAccionCargando = null;
-        this.messageService.add({
-          severity: 'info', summary: 'Próximamente',
-          detail: 'La impresión de voucher térmico estará disponible pronto', life: 3000,
+        this.ventasService.verVoucherTermicoEnPestana(comprobante.idComprobante,true).subscribe({
+          next: () => {
+            this.dialogAccionCargando = null;
+            this.dialogVisible        = false;
+            this.cdr.markForCheck();
+          },
+          error: () => {
+            this.dialogAccionCargando = null;
+            this.messageService.add({
+              severity: 'error', summary: 'Error',
+              detail: 'No se pudo abrir el voucher térmico', life: 3000,
+            });
+            this.cdr.markForCheck();
+          },
         });
-        this.cdr.markForCheck();
         break;
 
-      case 'voucher-descargar':
-        this.dialogAccionCargando = null;
-        this.messageService.add({
-          severity: 'info', summary: 'Próximamente',
-          detail: 'La descarga de voucher térmico estará disponible pronto', life: 3000,
+        case 'voucher-descargar': {
+        const nombreTicket = `ticket-${comprobante.serie}-${String(comprobante.numero).padStart(8, '0'),true}.pdf`;
+        this.ventasService.descargarVoucherTermico(comprobante.idComprobante, nombreTicket).subscribe({
+          next: () => {
+            this.dialogAccionCargando = null;
+            this.dialogVisible        = false;
+            this.cdr.markForCheck();
+          },
+          error: () => {
+            this.dialogAccionCargando = null;
+            this.messageService.add({
+              severity: 'error', summary: 'Error',
+              detail: 'No se pudo descargar el voucher térmico', life: 3000,
+            });
+            this.cdr.markForCheck();
+          },
         });
-        this.cdr.markForCheck();
         break;
+      }
     }
   }
 

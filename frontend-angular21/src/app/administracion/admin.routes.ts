@@ -185,7 +185,7 @@ export const ADMIN_ROUTES: Routes = [
     data: { permiso: 'CREAR_COTIZACIONES' },
     children: [
       { path: '', loadComponent: () => import('./pages/gestion-cotizacion/gestion-listado/gestion-listado').then((m) => m.GestionCotizacionesComponent) },
-      { path: 'agregar', loadComponent: () => import('./pages/gestion-cotizacion/gestion-formulario/cotizacion-formulario').then((m) => m.CotizacionFormulario) },
+      { path: 'agregar-cotizaciones', loadComponent: () => import('./pages/gestion-cotizacion/gestion-formulario/cotizacion-formulario').then((m) => m.CotizacionFormulario) },
       { path: 'ver-detalle/:id', loadComponent: () => import('./pages/gestion-cotizacion/detalle-gestion-formulario/detalle-cotizacion-formulario').then((m) => m.DetalleCotizacionComponent) },
     ],
   },

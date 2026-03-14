@@ -35,18 +35,21 @@
 }
 :host ::ng-deep .cotizacion-header-card .p-card-body { padding: 0.85rem 1.25rem; }
 
-.cotizacion-title-icon {
-  width: 38px;
-  height: 38px;
+.cotizaciones-title-icon {
+  width: 40px;
+  height: 40px;
   display: grid;
   place-items: center;
-  border-radius: 8px;
-  background: var(--gold);
-  color: #111;
-  font-size: 17px;
-  flex-shrink: 0;
+  border-radius: 999px;
+  background: #f5c34d;
+  color: #1f2937;
+  font-size: 18px;
 }
 
+:host-context(.app-dark) .cotizaciones-title-icon {
+  background: #e8a424 !important;
+  color: #1f2937 !important;
+}
 .cotizacion-kicker {
   margin: 0;
   font-size: 0.6rem;

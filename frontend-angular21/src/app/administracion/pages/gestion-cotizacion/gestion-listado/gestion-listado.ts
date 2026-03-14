@@ -19,8 +19,6 @@ import { QuoteListItem } from '../../../interfaces/quote.interface';
 import { QuoteService } from '../../../services/quote.service';
 import { SedeAlmacenService } from '../../../services/sede-almacen.service';
 
-import { PaginadorComponent } from '../../../../shared/components/paginador/Paginador.component';
-import { LoadingOverlayComponent } from '../../../../shared/components/loading-overlay/loading-overlay.component';
 import { getDomingoSemanaActualPeru, getHoyPeru, getLunesSemanaActualPeru } from '../../../../shared/utils/date-peru.utils';
 import { AccionesComprobanteDialogComponent, AccionesComprobanteConfig, AccionComprobante } from '../../../../shared/components/acciones-comprobante-dialog/acciones-comprobante';
 import { SharedTableContainerComponent } from '../../../../shared/components/table.componente/shared-table-container.component';
