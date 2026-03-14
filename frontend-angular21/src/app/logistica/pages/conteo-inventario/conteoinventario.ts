@@ -214,10 +214,10 @@ export class ConteoInventarios implements OnInit {
   }
 
   verDetalle(row: any): void {
-    this.router.navigate(['/logistica/conteo-inventario/conteo-detalle', row.idConteo]);
+    this.router.navigate(['/admin/conteo-inventario/detalle', row.idConteo]);
   }
   
   crearConteo(): void {
-    this.router.navigate(['/logistica/conteo-inventario/conteo-crear']);
+    this.router.navigate(['/admin/conteo-inventario/crear']);
   }
 }

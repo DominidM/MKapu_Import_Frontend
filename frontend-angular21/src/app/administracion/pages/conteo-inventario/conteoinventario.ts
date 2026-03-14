@@ -217,6 +217,6 @@ export class ConteoInventarios implements OnInit {
   }
   
   crearConteo(): void {
-    this.router.navigate(['/logistica/conteo-crear']);
+    this.router.navigate(['conteo-inventario/crear']);
   }
 }

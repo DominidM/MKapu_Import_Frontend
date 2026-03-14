@@ -281,7 +281,6 @@ export const ADMIN_ROUTES: Routes = [
     canActivate: [roleGuard],
     data: { permiso: 'CREAR_DESPACHO' }
   },
-
   {
     path: 'conteo-inventario',
     canActivate: [roleGuard],
@@ -292,6 +291,7 @@ export const ADMIN_ROUTES: Routes = [
       { path: 'detalle/:id', loadComponent: () => import('../logistica/pages/conteo-detalle/conteodetalle').then((m) => m.ConteoDetalle) },
     ],
   },
+
   { path: 'conteo-crear', redirectTo: 'conteo-inventario/crear', pathMatch: 'full' },
   { path: 'conteo-detalle/:id', redirectTo: 'conteo-inventario/detalle/:id', pathMatch: 'full' },
 
