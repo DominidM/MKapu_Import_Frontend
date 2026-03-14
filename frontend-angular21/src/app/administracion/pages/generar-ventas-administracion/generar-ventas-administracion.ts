@@ -47,6 +47,7 @@ import {
   TipoVentaAdmin,
   TipoComprobanteAdmin,
 } from '../../interfaces/ventas.interface';
+import { CajaService } from '../../../ventas/services/caja.service';
 
 export type TipoEntrega = 'recojo' | 'delivery';
 
@@ -100,7 +101,8 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
 
   readonly esAdmin: boolean;
 
-  /** Nombre legible de la sede del usuario de ventas (badge informativo). */
+  private readonly cajaService = inject(CajaService);
+  saldoCaja = signal<number | null>(null);
   readonly sedeNombreVentas: string;
 
   tiposVenta = signal<TipoVentaAdmin[]>([]);
@@ -402,6 +404,7 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
     this.cargarMetodosPago();
     this.cargarTiposVenta();
     this.cargarTiposComprobante();
+    this.cargarSaldoCaja();
   }
 
   ngAfterViewInit(): void {
@@ -460,6 +463,17 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
         if (dni) this.tipoDocBoleta.set(dni.documentTypeId);
       },
       error: () => console.warn('No se pudieron cargar tipos de documento'),
+    });
+  }
+
+  private cargarSaldoCaja(): void {
+    const sedeId = this.sedeSeleccionada();
+    if (!sedeId) return;
+    this.cajaService.getResumenDia(sedeId).subscribe({
+      next: (res) => {
+        this.saldoCaja.set(res?.dineroEnCaja ?? null);
+      },
+      error: () => this.saldoCaja.set(null),
     });
   }
 
