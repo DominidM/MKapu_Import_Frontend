@@ -3,14 +3,26 @@
 }
 
 .ventas-title-icon {
+  background: #e8a424 !important;
+  color: #1f2937 !important;
   width: 40px;
   height: 40px;
   display: grid;
   place-items: center;
   border-radius: 999px;
-  background: #F5C34D;
-  color: #1F2937;
   font-size: 18px;
+}
+
+.contador-detalle {
+  font-size: 0.75rem;
+  color: inherit;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.contador-detalle i {
+  font-size: 0.75rem;
 }
 
 .ventas-kicker {
@@ -56,7 +68,7 @@
 :host ::ng-deep .ventas-pill:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12) !important;
-  background-color: #F6AF33;
+  background-color: #f6af33;
 }
 
 :host ::ng-deep .ventas-pill:disabled {
@@ -65,7 +77,7 @@
 }
 
 :host ::ng-deep .ventas-pill-warning {
-  background: #F6AF33 !important;
+  background: #f6af33 !important;
   color: #1f2937 !important;
 }
 
@@ -111,7 +123,7 @@
   left: 0;
   width: 100%;
   height: 4px;
-  background: linear-gradient(90deg, #F6AF33 0%, #e8a424 100%);
+  background: linear-gradient(90deg, #f6af33 0%, #e8a424 100%);
   transform: scaleX(0);
   transform-origin: left;
   transition: transform 0.3s ease;
@@ -128,7 +140,7 @@
 
 .estadistica-card i {
   font-size: 2.5rem;
-  color: #F6AF33;
+  color: #f6af33;
   transition: all 0.3s ease;
 }
 
@@ -181,7 +193,7 @@
 }
 
 .seccion-filtros h3 i {
-  color: #F6AF33;
+  color: #f6af33;
   font-size: 1.1rem;
 }
 
@@ -297,11 +309,11 @@
 }
 
 :host ::ng-deep .filtro-cliente-50 .p-autocomplete .p-autocomplete-input:hover {
-  border-color: #F6AF33 !important;
+  border-color: #f6af33 !important;
 }
 
 :host ::ng-deep .filtro-cliente-50 .p-autocomplete .p-autocomplete-input:focus {
-  border-color: #F6AF33 !important;
+  border-color: #f6af33 !important;
   box-shadow: 0 0 0 2px rgba(246, 175, 51, 0.15) !important;
   outline: none !important;
 }
@@ -332,11 +344,11 @@
 }
 
 :host ::ng-deep .fechas-con-guion .p-datepicker .p-inputtext:hover {
-  border-color: #F6AF33 !important;
+  border-color: #f6af33 !important;
 }
 
 :host ::ng-deep .fechas-con-guion .p-datepicker .p-inputtext:focus {
-  border-color: #F6AF33 !important;
+  border-color: #f6af33 !important;
   box-shadow: 0 0 0 2px rgba(246, 175, 51, 0.15) !important;
   outline: none !important;
 }
@@ -390,12 +402,12 @@
 
 :host ::ng-deep .filtros-linea-2 .p-select:hover,
 :host ::ng-deep .filtros-linea-2 .p-inputtext:hover {
-  border-color: #F6AF33 !important;
+  border-color: #f6af33 !important;
 }
 
 :host ::ng-deep .filtros-linea-2 .p-select:focus,
 :host ::ng-deep .filtros-linea-2 .p-inputtext:focus {
-  border-color: #F6AF33 !important;
+  border-color: #f6af33 !important;
   box-shadow: 0 0 0 2px rgba(246, 175, 51, 0.15) !important;
   outline: none !important;
 }
@@ -474,19 +486,19 @@
 }
 
 .tipo-pago-cell i.pi-money-bill {
-  color: #10B981;
+  color: #10b981;
 }
 
 .tipo-pago-cell i.pi-credit-card {
-  color: #3B82F6;
+  color: #3b82f6;
 }
 
 .tipo-pago-cell i.pi-mobile {
-  color: #F59E0B;
+  color: #f59e0b;
 }
 
 .tipo-pago-cell i.pi-wallet {
-  color: #6B7280;
+  color: #6b7280;
 }
 
 .acciones-tabla {
@@ -668,7 +680,7 @@
 }
 
 :host ::ng-deep .p-paginator .p-paginator-page.p-highlight {
-  background: #F6AF33 !important;
+  background: #f6af33 !important;
   color: #1f2937 !important;
   font-weight: 600 !important;
 }
@@ -687,13 +699,13 @@
 
 :host ::ng-deep .p-paginator-rpp-dropdown .p-dropdown:hover,
 :host ::ng-deep .p-paginator-rpp-dropdown .p-select:hover {
-  border-color: #F6AF33 !important;
+  border-color: #f6af33 !important;
   box-shadow: 0 1px 3px rgba(246, 175, 51, 0.2) !important;
 }
 
 :host ::ng-deep .p-paginator-rpp-dropdown .p-dropdown:focus,
 :host ::ng-deep .p-paginator-rpp-dropdown .p-select:focus {
-  border-color: #F6AF33 !important;
+  border-color: #f6af33 !important;
   box-shadow: 0 0 0 2px rgba(246, 175, 51, 0.15) !important;
 }
 
@@ -739,11 +751,11 @@
 }
 
 :host-context(.app-dark) .seccion-estadisticas {
-  background: #18181B;
+  background: #18181b;
 }
 
 :host-context(.app-dark) .estadistica-card {
-  background: #18181B;
+  background: #18181b;
   border-right-color: #27272a;
 }
 
@@ -761,7 +773,7 @@
 }
 
 :host-context(.app-dark) .filtros-container {
-  background: #18181B;
+  background: #18181b;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
 }
 
@@ -791,11 +803,16 @@
   color: #ffffff !important;
 }
 
-:host-context(.app-dark) :host ::ng-deep .filtro-cliente-50 .p-autocomplete .p-autocomplete-input:hover,
+:host-context(.app-dark)
+  :host
+  ::ng-deep
+  .filtro-cliente-50
+  .p-autocomplete
+  .p-autocomplete-input:hover,
 :host-context(.app-dark) :host ::ng-deep .fechas-con-guion .p-datepicker .p-inputtext:hover,
 :host-context(.app-dark) :host ::ng-deep .filtros-linea-2 .p-select:hover,
 :host-context(.app-dark) :host ::ng-deep .filtros-linea-2 .p-inputtext:hover {
-  border-color: #F6AF33 !important;
+  border-color: #f6af33 !important;
 }
 
 :host-context(.app-dark) :host ::ng-deep .filtro-cliente-50 .p-autocomplete-dropdown,
@@ -811,19 +828,19 @@
 }
 
 :host-context(.app-dark) .responsable-text {
-  color: #E4E4E7;
+  color: #e4e4e7;
 }
 
 :host-context(.app-dark) .tipo-pago-cell i.pi-money-bill {
-  color: #4ADE80;
+  color: #4ade80;
 }
 
 :host-context(.app-dark) .tipo-pago-cell i.pi-credit-card {
-  color: #60A5FA;
+  color: #60a5fa;
 }
 
 :host-context(.app-dark) .tipo-pago-cell i.pi-mobile {
-  color: #FBBF24;
+  color: #fbbf24;
 }
 
 :host-context(.app-dark) .ventas-icon-soft {
@@ -857,7 +874,7 @@
 }
 
 :host-context(.app-dark) :host ::ng-deep .p-paginator {
-  background: #18181B !important;
+  background: #18181b !important;
   border-top-color: #27272a !important;
 }
 
@@ -871,11 +888,11 @@
 
 :host-context(.app-dark) :host ::ng-deep .p-paginator .p-paginator-page:hover {
   background: #27272a !important;
-  color: #F6AF33 !important;
+  color: #f6af33 !important;
 }
 
 :host-context(.app-dark) :host ::ng-deep .p-paginator .p-paginator-page.p-highlight {
-  background: #F6AF33 !important;
+  background: #f6af33 !important;
   color: #09090b !important;
 }
 
@@ -888,7 +905,7 @@
 
 :host-context(.app-dark) :host ::ng-deep .p-paginator-rpp-dropdown .p-dropdown:hover,
 :host-context(.app-dark) :host ::ng-deep .p-paginator-rpp-dropdown .p-select:hover {
-  border-color: #F6AF33 !important;
+  border-color: #f6af33 !important;
   box-shadow: 0 1px 3px rgba(246, 175, 51, 0.3) !important;
 }
 
@@ -898,7 +915,7 @@
 
 :host-context(.app-dark) :host ::ng-deep .p-paginator .p-paginator-element:not(:disabled):hover {
   background: #27272a !important;
-  color: #F6AF33 !important;
+  color: #f6af33 !important;
 }
 
 @media (min-width: 1201px) and (max-width: 1600px) {
@@ -949,11 +966,11 @@
   .seccion-estadisticas {
     grid-template-columns: repeat(2, 1fr);
   }
-  
+
   .estadistica-card:nth-child(2) {
     border-right: none;
   }
-  
+
   .estadistica-card:nth-child(1),
   .estadistica-card:nth-child(2) {
     border-bottom: 2px solid #e5e7eb;
@@ -967,12 +984,12 @@
   .filtros-linea-2 {
     flex-wrap: wrap;
   }
-  
+
   .filtro-compacto {
     flex: 1 1 calc(50% - 0.5rem);
     min-width: 140px;
   }
-  
+
   .filtro-boton-limpiar {
     flex: 1 1 100%;
     min-width: 100%;
@@ -1067,7 +1084,7 @@
   .seccion-estadisticas {
     grid-template-columns: 1fr;
   }
-  
+
   .estadistica-card {
     border-right: none;
     border-bottom: 2px solid #e5e7eb;
@@ -1077,11 +1094,11 @@
   :host-context(.app-dark) .estadistica-card {
     border-bottom-color: #27272a;
   }
-  
+
   .estadistica-card:last-child {
     border-bottom: none;
   }
-  
+
   .estadistica-valor {
     font-size: 1.5rem;
   }
@@ -1093,21 +1110,21 @@
   .filtros-container {
     padding: 0.875rem;
   }
-  
+
   .filtros-linea-1 {
     flex-direction: column !important;
     gap: 0.875rem !important;
   }
-  
+
   .filtro-cliente-50::after {
     display: none;
   }
-  
+
   .filtro-cliente-50,
   .filtro-grupo-fechas {
     width: 100%;
   }
-  
+
   .fechas-con-guion {
     width: 100%;
     flex-direction: column;
@@ -1118,7 +1135,7 @@
   .fecha-separador {
     display: none !important;
   }
-  
+
   :host ::ng-deep .fechas-con-guion .p-datepicker {
     flex: 1;
     width: 100% !important;
@@ -1127,12 +1144,12 @@
   :host ::ng-deep .fechas-con-guion .p-datepicker .p-inputtext {
     border-radius: 6px !important;
   }
-  
+
   .filtros-linea-2 {
     flex-direction: column;
     gap: 0.75rem;
   }
-  
+
   .filtro-compacto,
   .filtro-boton-limpiar {
     width: 100%;
@@ -1339,5 +1356,387 @@
 
   :host ::ng-deep .p-paginator {
     padding: 0.75rem !important;
+  }
+
+  @media (max-width: 600px) {
+    .contador-card {
+      padding: 1rem;
+    }
+
+    .contador-label {
+      font-size: 0.6rem;
+    }
+
+    .contador-valor {
+      font-size: 1.25rem;
+    }
+
+    .contador-card i {
+      font-size: 1.65rem;
+    }
+
+    .contador-detalle {
+      font-size: 0.65rem;
+    }
+  }
+}
+
+/* ── Acciones dialog ──────────────────────────────────────── */
+.acciones-seccion-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #9ca3af;
+  margin: 0 0 0.75rem 0.25rem;
+}
+
+.acciones-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  padding: 0 0.25rem;
+}
+
+.accion-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.accion-item span {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #374151;
+  text-align: center;
+}
+
+.accion-icono-btn {
+  width: 72px;
+  height: 72px;
+  border-radius: 16px;
+  border: none;
+  background-color: #f5b953;
+  color: #1f2937;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    transform 0.1s,
+    box-shadow 0.2s;
+  font-size: 1.8rem;
+  box-shadow: 0 2px 8px rgba(246, 175, 51, 0.35);
+}
+
+.accion-icono-btn:hover {
+  background-color: #e8a424;
+  transform: scale(1.05);
+  box-shadow: 0 4px 14px rgba(232, 164, 36, 0.45);
+}
+
+.accion-icono-btn:active {
+  transform: scale(0.97);
+  background-color: #d4941a;
+}
+
+.accion-icono-btn.loading {
+  opacity: 0.65;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* dark mode */
+:host-context(.app-dark) .accion-item span {
+  color: #e4e4e7;
+}
+
+:host-context(.app-dark) .acciones-seccion-label {
+  color: #71717a;
+}
+
+:host-context(.app-dark) .accion-icono-btn {
+  background-color: #f6af33;
+  color: #09090b;
+  box-shadow: 0 2px 8px rgba(246, 175, 51, 0.25);
+}
+
+:host-context(.app-dark) .accion-icono-btn:hover {
+  background-color: #e8a424;
+  box-shadow: 0 4px 14px rgba(232, 164, 36, 0.4);
+}
+
+.sede-fija-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.75rem;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-color, #d0d0d0);
+  font-size: 0.82rem;
+  font-weight: 600;
+  width: 100%;
+  cursor: default;
+}
+.sede-fija-badge i {
+  color: #60a5fa;
+  font-size: 0.85rem;
+}
+
+
+/* =========================================================
+   ESTILOS DEL TICKET (PANTALLA Y VISTA PREVIA)
+========================================================= */
+.ticket-container {
+  width: 100%;
+  max-width: 320px;
+  margin: 0 auto;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 11px;
+  color: #000;
+  background: white;
+  padding: 10px;
+}
+
+.ticket-header, .ticket-footer { text-align: center; }
+
+.logo-texto {
+  font-family: 'Arial Black', Impact, sans-serif;
+  font-size: 28px;
+  margin: 0;
+  letter-spacing: -1px;
+  text-transform: lowercase;
+}
+
+.logo-subtexto {
+  font-family: 'Arial', sans-serif;
+  font-size: 14px;
+  margin: -5px 0 0 0;
+  letter-spacing: 2px;
+}
+
+.ticket-header p, .ticket-footer p { 
+  margin: 2px 0; 
+  font-size: 11px;
+}
+
+.documento-titulo {
+  font-size: 13px;
+  margin: 0;
+  font-weight: normal;
+}
+
+.separador {
+  text-align: center;
+  margin: 4px 0;
+  letter-spacing: 1px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.separador-doble {
+  text-align: center;
+  letter-spacing: 1px;
+  overflow: hidden;
+  white-space: nowrap;
+  padding: 2px 0;
+}
+
+.ticket-items { 
+  width: 100%; 
+  border-collapse: collapse; 
+  margin: 5px 0;
+}
+
+.ticket-items th { font-weight: normal; text-align: left; padding: 2px 0; }
+.ticket-items td { padding: 4px 0; vertical-align: top; }
+
+/* Alineación como en tu foto */
+.col-desc { width: 45%; }
+.col-cant { width: 15%; text-align: center; }
+.col-precio { width: 20%; text-align: right; }
+.col-total { width: 20%; text-align: right; }
+
+.ticket-totales { margin-top: 5px; }
+.total-row { 
+  display: flex; 
+  justify-content: space-between; 
+  margin: 2px 0; 
+}
+.total-final { margin-top: 4px; }
+
+.qr-container {
+  margin-top: 15px;
+  text-align: center;
+}
+.qr-container img {
+  width: 120px;
+  height: 120px;
+}
+
+/* =========================================================
+   ESTILOS DEL TICKET (PANTALLA Y VISTA PREVIA)
+========================================================= */
+.ticket-container {
+  width: 100%;
+  max-width: 320px;
+  margin: 0 auto;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 12px;
+  color: #000000;
+  font-weight: 600; /* Letras oscuras */
+  background: white;
+  padding: 10px;
+}
+
+.ticket-header, .ticket-footer { text-align: center; }
+
+.logo-texto {
+  font-family: 'Arial Black', Impact, sans-serif;
+  font-size: 28px;
+  margin: 0;
+  letter-spacing: -1px;
+  text-transform: lowercase;
+  color: #000000;
+}
+
+.logo-subtexto {
+  font-family: 'Arial', sans-serif;
+  font-size: 14px;
+  margin: -5px 0 0 0;
+  letter-spacing: 2px;
+  font-weight: bold;
+  color: #000000;
+}
+
+.ticket-header p, .ticket-footer p { 
+  margin: 2px 0; 
+  font-size: 11px;
+  color: #000000;
+}
+
+.documento-titulo {
+  font-size: 13px;
+  margin: 0;
+  font-weight: bold;
+  color: #000000;
+}
+
+.separador {
+  text-align: center;
+  margin: 4px 0;
+  letter-spacing: 1px;
+  overflow: hidden;
+  white-space: nowrap;
+  color: #000000;
+}
+
+.separador-doble {
+  text-align: center;
+  letter-spacing: 1px;
+  overflow: hidden;
+  white-space: nowrap;
+  padding: 2px 0;
+  color: #000000;
+}
+
+/* --- TABLA ARREGLADA --- */
+.ticket-items { 
+  width: 100%; 
+  border-collapse: collapse; 
+  margin: 2px 0;
+  table-layout: fixed; /* Mantiene el ancho estricto ahora que no hay colspans */
+}
+
+.ticket-items th { 
+  font-weight: bold; 
+  text-align: left; 
+  padding: 2px 0;
+  color: #000000;
+}
+
+.ticket-items td { 
+  padding: 4px 0; 
+  vertical-align: top;
+  color: #000000;
+}
+
+/* Ajuste exacto de las columnas */
+.col-desc { width: 44%; word-wrap: break-word; padding-right: 5px !important;}
+.col-cant { width: 12%; text-align: center; }
+.col-precio { width: 20%; text-align: right; }
+.col-total { width: 24%; text-align: right; }
+
+.ticket-totales { margin-top: 5px; }
+.total-row { 
+  display: flex; 
+  justify-content: space-between; 
+  margin: 2px 0; 
+  color: #000000;
+}
+.total-final { margin-top: 4px; font-weight: bold; font-size: 13px;}
+
+.qr-container {
+  margin-top: 15px;
+  text-align: center;
+}
+.qr-container img {
+  width: 120px;
+  height: 120px;
+  display: inline-block;
+}
+
+/* =========================================================
+   MEDIA PRINT: FUERZA BRUTA PARA PRIMENG
+========================================================= */
+@media print {
+  /* Ocultar TODO el cuerpo de Angular */
+  body * {
+    visibility: hidden;
+  }
+  
+  /* Mostrar SOLO el div del ticket y todo su contenido */
+  #impresion-ticket-termico, 
+  #impresion-ticket-termico * {
+    visibility: visible !important;
+  }
+  
+  /* Posicionar el ticket exactamente en el borde de la impresora */
+  #impresion-ticket-termico {
+    position: fixed !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 80mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* ELIMINAR EL MODAL Y BOTONES DE PRIMENG */
+  :host ::ng-deep .p-dialog-mask {
+    background: transparent !important;
+  }
+  
+  :host ::ng-deep .p-dialog {
+    box-shadow: none !important;
+    border: none !important;
+    background: transparent !important;
+  }
+
+  /* Esto mata la cabecera (la X) y el pie de página (los botones) al imprimir */
+  :host ::ng-deep .p-dialog-header,
+  :host ::ng-deep .p-dialog-footer,
+  .no-print {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  /* Evitar que el modal corte el ticket si es muy largo */
+  :host ::ng-deep .p-dialog-content {
+    overflow: visible !important;
+    padding: 0 !important;
   }
 }

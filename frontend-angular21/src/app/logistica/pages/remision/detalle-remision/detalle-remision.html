@@ -1,0 +1,91 @@
+<div class="p-4 fadein animation-duration-300">
+  <p-toast></p-toast>
+
+  <div *ngIf="loading()" class="flex flex-column justify-content-center align-items-center" style="height: 60vh">
+    <p-progressSpinner strokeWidth="4"></p-progressSpinner>
+    <span class="text-color-secondary mt-3 font-medium text-lg">Cargando detalles de la guía...</span>
+  </div>
+
+  <p-card *ngIf="!loading() && remision() as detalle" styleClass="shadow-3 border-round-xl border-none">
+    <ng-template pTemplate="header">
+      <div class="flex flex-wrap align-items-center justify-content-between px-4 pt-4 pb-2 border-bottom-1 surface-border gap-3">
+        <div class="flex align-items-center gap-3">
+          <button
+            pButton
+            icon="pi pi-arrow-left"
+            class="p-button-rounded p-button-secondary p-button-text"
+            (click)="volver()"
+            pTooltip="Regresar"
+          ></button>
+          
+          <div class="flex flex-column">
+            <div class="flex align-items-center gap-2">
+              <h2 class="m-0 text-xl font-bold text-color">Guía de Remisión</h2>
+              <p-tag
+                [severity]="detalle.estado === 0 || detalle.estado === 'EMITIDO' ? 'success' : 'danger'"
+                [value]="detalle.estado === 0 ? 'EMITIDO' : (detalle.estado).toString()"
+                styleClass="px-3 text-xs uppercase font-bold"
+              ></p-tag>
+            </div>
+            <span class="text-primary font-bold text-lg">{{ detalle.serie }}-{{ detalle.numero }}</span>
+          </div>
+        </div>
+
+        <div class="flex gap-2">
+          <p-button
+            icon="pi pi-file-pdf"
+            label="Descargar PDF"
+            severity="danger"
+            styleClass="p-button-outlined shadow-1"
+            (onClick)="descargarPdf()"
+          ></p-button>
+          <p-button
+            icon="pi pi-file-excel"
+            label="Descargar Excel"
+            severity="success"
+            styleClass="p-button-outlined shadow-1"
+            (onClick)="descargarExcel()"
+          ></p-button>
+        </div>
+      </div>
+    </ng-template>
+
+    <div class="grid mt-2">
+      <div class="col-12">
+        <div class="grid p-3 surface-50 border-round-lg border-1 surface-border m-0">
+          <div class="col-12 md:col-4 lg:col-3 py-3 flex align-items-start gap-3">
+            <div class="icon-circle bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300">
+              <i class="pi pi-tag"></i>
+            </div>
+            <div>
+              <span class="block text-color-secondary text-xs font-bold uppercase mb-1">Motivo de Traslado</span>
+              <span class="text-color font-semibold">{{ detalle.motivo_traslado }}</span>
+            </div>
+          </div>
+          </div>
+      </div>
+    </div>
+
+    <div class="mt-5">
+      <h3 class="m-0 text-lg font-bold mb-3">Bienes Transportados ({{ detalle.items?.length || 0 }})</h3>
+      <p-table [value]="detalle.items || []" responsiveLayout="scroll" styleClass="p-datatable-sm shadow-1 border-1 surface-border border-round-lg overflow-hidden">
+        <ng-template pTemplate="header">
+          <tr>
+            <th class="bg-surface-100">Código</th>
+            <th class="bg-surface-100 text-right">Cantidad</th>
+            <th class="bg-surface-100 text-right">Peso Unit.</th>
+            <th class="bg-surface-100 text-right">Peso Total</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-item>
+          <tr>
+            <td class="font-bold text-primary">{{ item.cod_prod }}</td>
+            <td class="text-right">{{ item.cantidad }}</td>
+            <td class="text-right">{{ item.peso_unitario | number:'1.3-3' }}</td>
+            <td class="text-right font-bold text-color">{{ item.peso_total | number:'1.3-3' }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </p-card>
+</div>

@@ -12,7 +12,7 @@ export interface Empleado {
   dni: string;
   email: string;
   telefono?: string;
-  cargo: 'ADMIN' | 'VENTAS' | 'ALMACENERO';
+  cargo: 'ADMIN' | 'VENTAS' | 'ALMACENERO' | 'LOGISTICA';
   id_sede: string;
   nombre_sede?: string;
   usuario: string;
@@ -44,96 +44,7 @@ export class EmpleadosService {
   private empleadoActual: Empleado | null = null;
 
   private empleadosMock: Empleado[] = [
-    {
-      id_empleado: 'EMP-001',
-      nombres: 'Juan Carlos',
-      apellidos: 'Pérez García',
-      dni: '12345678',
-      email: 'juan.perez@mkapapu.com',
-      telefono: '987654321',
-      cargo: 'ADMIN',
-      id_sede: 'SEDE001',
-      nombre_sede: 'LAS FLORES',
-      usuario: 'jperez',
-      password: 'admin123',
-      estado: true,
-      fecha_contratacion: new Date('2023-01-15'),
-    },
-    {
-      id_empleado: 'EMP-002',
-      nombres: 'María Elena',
-      apellidos: 'Rodríguez López',
-      dni: '87654321',
-      email: 'maria.rodriguez@mkapapu.com',
-      telefono: '912345678',
-      cargo: 'VENTAS',
-      id_sede: 'SEDE001',
-      nombre_sede: 'LAS FLORES',
-      usuario: 'mrodriguez',
-      password: 'ventas123',
-      estado: true,
-      fecha_contratacion: new Date('2023-03-20'),
-    },
-    {
-      id_empleado: 'EMP-003',
-      nombres: 'Carlos Alberto',
-      apellidos: 'Sánchez Díaz',
-      dni: '45678912',
-      email: 'carlos.sanchez@mkapapu.com',
-      telefono: '998877665',
-      cargo: 'ALMACENERO',
-      id_sede: 'SEDE001',
-      nombre_sede: 'LAS FLORES',
-      usuario: 'csanchez',
-      password: 'almacen123',
-      estado: true,
-      fecha_contratacion: new Date('2023-06-10'),
-    },
-    {
-      id_empleado: 'EMP-099',
-      nombres: 'Admin',
-      apellidos: 'Sistema',
-      dni: '11111111',
-      email: 'admin@mkapapu.com',
-      telefono: '999999999',
-      cargo: 'ADMIN',
-      id_sede: 'SEDE001',
-      nombre_sede: 'LAS FLORES',
-      usuario: 'admin',
-      password: 'admin',
-      estado: true,
-      fecha_contratacion: new Date('2023-01-01'),
-    },
-    {
-      id_empleado: 'EMP-098',
-      nombres: 'Vendedor',
-      apellidos: 'Sistema',
-      dni: '22222222',
-      email: 'ventas@mkapapu.com',
-      telefono: '988888888',
-      cargo: 'VENTAS',
-      id_sede: 'SEDE001',
-      nombre_sede: 'LAS FLORES',
-      usuario: 'ventas',
-      password: 'ventas',
-      estado: true,
-      fecha_contratacion: new Date('2023-01-01'),
-    },
-    {
-      id_empleado: 'EMP-097',
-      nombres: 'Almacenero',
-      apellidos: 'Sistema',
-      dni: '33333333',
-      email: 'almacen@mkapapu.com',
-      telefono: '977777777',
-      cargo: 'ALMACENERO',
-      id_sede: 'SEDE001',
-      nombre_sede: 'LAS FLORES',
-      usuario: 'almacen',
-      password: 'almacen',
-      estado: true,
-      fecha_contratacion: new Date('2023-01-01'),
-    },
+   
   ];
 
   constructor() {
@@ -163,7 +74,8 @@ export class EmpleadosService {
     const map = {
       'ADMIN': UserRole.ADMIN,
       'VENTAS': UserRole.VENTAS,
-      'ALMACENERO': UserRole.ALMACEN
+      'ALMACENERO': UserRole.ALMACEN,
+      'LOGISTICA': UserRole.LOGISTICA
     };
     return map[cargo];
   }
@@ -172,7 +84,8 @@ export class EmpleadosService {
     const map = {
       [UserRole.ADMIN]: 'ADMIN' as const,
       [UserRole.VENTAS]: 'VENTAS' as const,
-      [UserRole.ALMACEN]: 'ALMACENERO' as const
+      [UserRole.ALMACEN]: 'ALMACENERO' as const,
+      [UserRole.LOGISTICA]: 'LOGISTICA' as const
     };
     return map[roleId];
   }
@@ -291,6 +204,7 @@ export class EmpleadosService {
       ADMIN: 'Administrador',
       VENTAS: 'Vendedor',
       ALMACENERO: 'Almacenero',
+      LOGISTICA: 'Logistica'
     };
     return etiquetas[cargo];
   }

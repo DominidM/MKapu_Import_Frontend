@@ -1,0 +1,336 @@
+<!-- ventas-por-cobrar-formulario.html -->
+
+<div class="p-2">
+  <!-- CABECERA -->
+  <p-card class="productos-header-card mb-4 productos-header-bordered">
+    <div class="flex align-items-center justify-content-between flex-wrap gap-2">
+      <div class="flex align-items-center gap-3">
+        <span class="productos-title-icon">
+          <i class="pi pi-credit-card"></i>
+        </span>
+        <div>
+          <p class="productos-kicker mb-0">Administración · Ventas por Cobrar</p>
+          <h2 class="productos-title mb-0">Nueva Venta por Cobrar</h2>
+        </div>
+      </div>
+      <div class="flex gap-2">
+        <p-button
+          label="Volver"
+          icon="pi pi-arrow-left"
+          severity="secondary"
+          [outlined]="true"
+          styleClass="productos-pill"
+          (onClick)="cancelar()"
+        ></p-button>
+      </div>
+    </div>
+  </p-card>
+</div>
+
+<div class="p-2">
+
+  <!-- BANNER: cotización origen (solo si viene de una cotización) -->
+  @if (loadingCotizacion()) {
+    <div class="surface-card border-round-xl shadow-1 mb-4 p-4 flex align-items-center gap-3">
+      <i class="pi pi-spin pi-spinner text-primary text-2xl"></i>
+      <span class="text-600">Cargando datos de la cotización...</span>
+    </div>
+  }
+
+  @if (!loadingCotizacion() && cotizacionOrigen()) {
+    <div class="surface-card border-round-xl shadow-1 mb-4 p-4" style="border-left: 4px solid var(--p-primary-color)">
+      <div class="flex align-items-center gap-2 mb-3">
+        <i class="pi pi-link text-primary text-xl"></i>
+        <span class="font-bold text-900">Originada desde Cotización</span>
+        <p-tag
+          [value]="'#' + cotizacionOrigen()!.id_cotizacion"
+          severity="info"
+          styleClass="font-bold ml-1"
+        ></p-tag>
+        <p-tag
+          value="PENDIENTE"
+          severity="warn"
+          styleClass="font-bold"
+        ></p-tag>
+      </div>
+
+      <div class="grid">
+        <div class="col-12 md:col-3">
+          <span class="text-500 text-sm block mb-1">Cliente</span>
+          <span class="font-bold text-900">{{ cotizacionOrigen()!.cliente?.nombre_cliente ?? '—' }}</span>
+        </div>
+        <div class="col-12 md:col-3">
+          <span class="text-500 text-sm block mb-1">Documento</span>
+          <span class="font-medium">{{ cotizacionOrigen()!.cliente?.valor_doc ?? '—' }}</span>
+        </div>
+        <div class="col-12 md:col-3">
+          <span class="text-500 text-sm block mb-1">Monto Total Cotizado</span>
+          <span class="font-bold text-primary text-lg">
+            PEN {{ cotizacionOrigen()!.total | number:'1.2-2' }}
+          </span>
+        </div>
+        <div class="col-12 md:col-3">
+          <span class="text-500 text-sm block mb-1">Sede</span>
+          <span class="font-medium">{{ cotizacionOrigen()!.sede?.nombre_sede ?? '—' }}</span>
+        </div>
+      </div>
+
+      <p class="text-500 text-sm mt-3 mb-0">
+        <i class="pi pi-info-circle mr-1"></i>
+        Al guardar, se creará un comprobante en estado <strong>PENDIENTE</strong> y la cotización
+        pasará a <strong>APROBADA</strong>. El saldo se irá abonando con pagos parciales.
+      </p>
+    </div>
+  }
+
+  <!-- FORMULARIO -->
+  <div class="surface-card border-round-xl shadow-1 overflow-hidden">
+    <div class="p-4">
+      <form [formGroup]="form" (ngSubmit)="guardar()" class="formgrid grid">
+
+        <!-- ══ COMPROBANTE ══════════════════════════════════════════ -->
+        <div class="col-12 mb-3">
+          <div class="flex align-items-center gap-2 mb-1">
+            <i class="pi pi-file text-primary"></i>
+            <span class="font-bold text-700 text-sm" style="letter-spacing: 0.05em; text-transform: uppercase;">
+              Comprobante de Venta
+            </span>
+          </div>
+          <hr class="m-0" style="border-color: var(--surface-border)">
+        </div>
+
+        <!-- salesReceiptId — solo visible si NO viene de cotización -->
+        @if (!cotizacionId()) {
+          <div class="field col-12 md:col-6 mb-4">
+            <label class="font-medium mb-2 block">
+              ID Comprobante de Venta <span class="text-red-400">*</span>
+            </label>
+            <p-inputNumber
+              formControlName="salesReceiptId"
+              placeholder="Ej: 8"
+              [min]="1"
+              [useGrouping]="false"
+              styleClass="w-full"
+              [ngClass]="{ 'ng-invalid ng-dirty': isInvalid('salesReceiptId') }"
+            />
+            <small *ngIf="isInvalid('salesReceiptId')" class="text-red-400 text-sm mt-1 block">
+              <i class="pi pi-exclamation-circle mr-1"></i>El ID del comprobante es requerido.
+            </small>
+          </div>
+        }
+
+        <!-- userRef -->
+        <div class="field col-12 md:col-6 mb-4">
+          <label class="font-medium mb-2 block">
+            Referencia de Cliente <span class="text-red-400">*</span>
+          </label>
+          <input
+            pInputText
+            formControlName="userRef"
+            placeholder="Documento o UUID del cliente"
+            class="w-full"
+            [ngClass]="{ 'ng-invalid ng-dirty': isInvalid('userRef') }"
+          />
+          <small *ngIf="isInvalid('userRef')" class="text-red-400 text-sm mt-1 block">
+            <i class="pi pi-exclamation-circle mr-1"></i>La referencia de cliente es requerida.
+          </small>
+        </div>
+
+        <!-- ══ MONTOS ════════════════════════════════════════════════ -->
+        <div class="col-12 mb-3">
+          <div class="flex align-items-center gap-2 mb-1">
+            <i class="pi pi-wallet text-primary"></i>
+            <span class="font-bold text-700 text-sm" style="letter-spacing: 0.05em; text-transform: uppercase;">
+              Monto y Moneda
+            </span>
+          </div>
+          <hr class="m-0" style="border-color: var(--surface-border)">
+        </div>
+
+        <!-- totalAmount -->
+        <div class="field col-12 md:col-4 mb-4">
+          <label class="font-medium mb-2 block">
+            Monto Total <span class="text-red-400">*</span>
+          </label>
+          <p-inputNumber
+            formControlName="totalAmount"
+            placeholder="0.00"
+            [minFractionDigits]="2"
+            [maxFractionDigits]="2"
+            [min]="0.01"
+            mode="decimal"
+            styleClass="w-full"
+            [ngClass]="{ 'ng-invalid ng-dirty': isInvalid('totalAmount') }"
+          />
+          <small *ngIf="isInvalid('totalAmount')" class="text-red-400 text-sm mt-1 block">
+            <i class="pi pi-exclamation-circle mr-1"></i>Ingrese un monto válido.
+          </small>
+        </div>
+
+        <!-- currencyCode -->
+        <div class="field col-12 md:col-4 mb-4">
+          <label class="font-medium mb-2 block">
+            Moneda <span class="text-red-400">*</span>
+          </label>
+          <p-select
+            formControlName="currencyCode"
+            [options]="monedas()"
+            optionLabel="descripcion"
+            optionValue="codigo"
+            placeholder="Seleccionar moneda"
+            class="w-full"
+            [ngClass]="{ 'ng-invalid ng-dirty': isInvalid('currencyCode') }"
+          ></p-select>
+          <small *ngIf="isInvalid('currencyCode')" class="text-red-400 text-sm mt-1 block">
+            <i class="pi pi-exclamation-circle mr-1"></i>Selecciona una moneda.
+          </small>
+        </div>
+
+        <!-- paymentTypeId -->
+        <div class="field col-12 md:col-4 mb-4">
+          <label class="font-medium mb-2 block">
+            Tipo de Pago <span class="text-red-400">*</span>
+          </label>
+          <p-select
+            formControlName="paymentTypeId"
+            [options]="tiposPago()"
+            optionLabel="descripcion"
+            optionValue="id"
+            placeholder="Seleccionar tipo"
+            class="w-full"
+            [ngClass]="{ 'ng-invalid ng-dirty': isInvalid('paymentTypeId') }"
+          ></p-select>
+          @if (loadingCatalogos()) {
+            <div class="flex align-items-center gap-2 mt-1">
+              <i class="pi pi-spin pi-spinner text-primary text-sm"></i>
+              <small class="text-500">Cargando opciones...</small>
+            </div>
+          }
+          <small *ngIf="isInvalid('paymentTypeId')" class="text-red-400 text-sm mt-1 block">
+            <i class="pi pi-exclamation-circle mr-1"></i>Selecciona un tipo de pago.
+          </small>
+        </div>
+
+        <!-- ══ VENCIMIENTO ═══════════════════════════════════════════ -->
+        <div class="col-12 mb-3">
+          <div class="flex align-items-center gap-2 mb-1">
+            <i class="pi pi-calendar text-primary"></i>
+            <span class="font-bold text-700 text-sm" style="letter-spacing: 0.05em; text-transform: uppercase;">
+              Fecha de Vencimiento
+            </span>
+          </div>
+          <hr class="m-0" style="border-color: var(--surface-border)">
+        </div>
+
+        <div class="field col-12 md:col-6 mb-4">
+          <label class="font-medium mb-2 block">
+            Fecha límite de pago <span class="text-red-400">*</span>
+          </label>
+          <p-datepicker
+            formControlName="dueDate"
+            dateFormat="dd/mm/yy"
+            [minDate]="manana"
+            placeholder="Seleccionar fecha límite"
+            [showIcon]="true"
+            appendTo="body"
+            class="w-full"
+            styleClass="w-full"
+            [ngClass]="{ 'ng-invalid ng-dirty': isInvalid('dueDate') }"
+          ></p-datepicker>
+          <small *ngIf="isInvalid('dueDate')" class="text-red-400 text-sm mt-1 block">
+            <i class="pi pi-exclamation-circle mr-1"></i>La fecha de vencimiento es requerida.
+          </small>
+        </div>
+
+        <!-- ══ RESUMEN DINÁMICO ═══════════════════════════════════════ -->
+        @if (form.get('totalAmount')?.value && form.get('currencyCode')?.value) {
+          <div class="col-12 mb-4">
+            <div class="surface-100 border-round-xl p-4" style="border: 1px solid var(--surface-border)">
+              <div class="flex align-items-center gap-2 mb-3">
+                <i class="pi pi-receipt text-primary"></i>
+                <span class="font-bold text-700 text-sm" style="letter-spacing: 0.05em; text-transform: uppercase;">
+                  Resumen del comprobante a crear
+                </span>
+              </div>
+              <div class="grid">
+                <div class="col-12 md:col-3">
+                  <span class="text-500 text-sm block mb-1">Monto Total</span>
+                  <span class="font-bold text-lg text-primary">
+                    {{ form.get('currencyCode')?.value }}
+                    {{ form.get('totalAmount')?.value | number:'1.2-2' }}
+                  </span>
+                </div>
+                <div class="col-12 md:col-3">
+                  <span class="text-500 text-sm block mb-1">Saldo Inicial</span>
+                  <span class="font-bold text-lg">
+                    {{ form.get('currencyCode')?.value }}
+                    {{ form.get('totalAmount')?.value | number:'1.2-2' }}
+                  </span>
+                </div>
+                <div class="col-12 md:col-3">
+                  <span class="text-500 text-sm block mb-1">Estado inicial</span>
+                  <p-tag value="PENDIENTE" severity="warn" styleClass="font-bold"></p-tag>
+                </div>
+                <div class="col-12 md:col-3">
+                  <span class="text-500 text-sm block mb-1">Monto Pagado</span>
+                  <span class="font-bold text-lg text-green-500">
+                    {{ form.get('currencyCode')?.value }} 0.00
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- ══ OBSERVACIÓN ═══════════════════════════════════════════ -->
+        <div class="col-12 mb-3">
+          <div class="flex align-items-center gap-2 mb-1">
+            <i class="pi pi-comment text-primary"></i>
+            <span class="font-bold text-700 text-sm" style="letter-spacing: 0.05em; text-transform: uppercase;">
+              Observación
+            </span>
+          </div>
+          <hr class="m-0" style="border-color: var(--surface-border)">
+        </div>
+
+        <div class="field col-12 mb-4">
+          <label class="font-medium mb-2 block">
+            Observación <span class="text-400">(opcional)</span>
+          </label>
+          <textarea
+            pTextarea
+            formControlName="observation"
+            placeholder="Ej: Venta a crédito 30 días..."
+            rows="3"
+            class="w-full"
+            style="resize: vertical;"
+          ></textarea>
+        </div>
+
+        <!-- ══ ACCIONES ══════════════════════════════════════════════ -->
+        <div class="col-12 flex gap-2 justify-content-end pt-2">
+          <p-button
+            type="button"
+            label="Cancelar"
+            icon="pi pi-times"
+            severity="secondary"
+            [outlined]="true"
+            styleClass="productos-pill"
+            (onClick)="cancelar()"
+          ></p-button>
+          <p-button
+            type="submit"
+            label="Guardar Venta por Cobrar"
+            [icon]="isSubmitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"
+            [disabled]="form.invalid || isSubmitting()"
+            styleClass="productos-pill productos-pill-warning"
+          ></p-button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+</div>
+
+<p-toast></p-toast>

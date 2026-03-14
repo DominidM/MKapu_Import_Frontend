@@ -1,8 +1,21 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  inject,
+  ChangeDetectorRef,
+  signal,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { Subscription } from 'rxjs';
+import {
+  Subject,
+  Subscription,
+  debounceTime,
+  distinctUntilChanged,
+  switchMap,
+} from 'rxjs';
 
 import { Card } from 'primeng/card';
 import { Button } from 'primeng/button';
@@ -14,24 +27,43 @@ import { ConfirmDialog } from 'primeng/confirmdialog';
 import { DatePicker } from 'primeng/datepicker';
 import { Tooltip } from 'primeng/tooltip';
 import { AutoComplete } from 'primeng/autocomplete';
-
-import { VentasService, ComprobanteVenta } from '../../../core/services/ventas.service';
-import { SedeService, Sede } from '../../../core/services/sede.service';
-import { EmpleadosService, Empleado } from '../../../core/services/empleados.service';
-import { ComprobantesService } from '../../../core/services/comprobantes.service';
-import { PosService } from '../../../core/services/pos.service';
+import { Dialog } from 'primeng/dialog';
 import { MessageService, ConfirmationService } from 'primeng/api';
 
+import { LoadingOverlayComponent } from '../../../shared/components/loading-overlay/loading-overlay.component';
+import { PaginadorComponent } from '../../../shared/components/paginador/Paginador.component';
+import { VentasAdminService } from '../../services/ventas.service';
+import { AuthService } from '../../../auth/services/auth.service';
 import { ExcelUtils } from '../../utils/excel.utils';
+import { UserRole } from '../../../core/constants/roles.constants';
+import {
+  getLunesSemanaActualPeru,
+  getDomingoSemanaActualPeru,
+} from '../../../shared/utils/date-peru.utils';
+
+import {
+  SalesReceiptSummaryAdmin,
+  SalesReceiptsQueryAdmin,
+  SedeAdmin,
+  SalesReceiptKpiDto,
+  MetodoPagoAdmin,
+  TipoComprobanteAdmin,
+} from '../../interfaces/ventas.interface';
+
+import {
+  AccionesComprobanteDialogComponent,
+  AccionesComprobanteConfig,
+  AccionComprobante,
+} from '../../../shared/components/acciones-comprobante-dialog/acciones-comprobante';
 
 interface FiltroVentasAdmin {
-  sedeSeleccionada: string | null;
-  tipoComprobante: string | null;
+  sedeSeleccionada: number | null;
+  tipoComprobante: number | null;
   estado: string | null;
   fechaInicio: Date | null;
   fechaFin: Date | null;
   busqueda: string;
-  tipoPago: string | null;
+  tipoPago: number | null;
 }
 
 @Component({
@@ -50,149 +82,287 @@ interface FiltroVentasAdmin {
     DatePicker,
     Tooltip,
     AutoComplete,
+    Dialog,
+    LoadingOverlayComponent,
+    PaginadorComponent,
+    AccionesComprobanteDialogComponent,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './historial-ventas-administracion.html',
   styleUrl: './historial-ventas-administracion.css',
 })
 export class HistorialVentasAdministracion implements OnInit, OnDestroy {
-  tituloKicker = 'ADMINISTRACIÓN - HISTORIAL DE VENTAS';
-  subtituloKicker = 'CONSULTA Y GESTIÓN DE VENTAS';
-  iconoCabecera = 'pi pi-list';
+  private readonly router              = inject(Router);
+  private readonly ventasService       = inject(VentasAdminService);
+  private readonly authService         = inject(AuthService);
+  private readonly messageService      = inject(MessageService);
+  private readonly confirmationService = inject(ConfirmationService);
+  private readonly cdr                 = inject(ChangeDetectorRef);
 
-  private subscriptions = new Subscription();
+  readonly tituloKicker    = 'VENTAS - HISTORIAL DE VENTAS';
+  readonly subtituloKicker = 'CONSULTA Y GESTIÓN DE VENTAS';
+  readonly iconoCabecera   = 'pi pi-list';
 
-  comprobantes: ComprobanteVenta[] = [];
-  comprobantesFiltrados: ComprobanteVenta[] = [];
-  comprobanteSeleccionado: ComprobanteVenta | null = null;
+  private subscriptions   = new Subscription();
+  private busquedaSubject = new Subject<string>();
 
-  sedes: Sede[] = [];
-  sedesOptions: { label: string; value: string }[] = [];
-  empleadoActual: Empleado | null = null;
+  comprobantes: SalesReceiptSummaryAdmin[]          = [];
+  comprobantesFiltrados: SalesReceiptSummaryAdmin[] = [];
+
+  sedes: SedeAdmin[] = [];
+  sedesOptions:     { label: string; value: number | null }[] = [];
+  tiposComprobante: { label: string; value: number | null }[] = [{ label: 'Todos', value: null }];
+  metodosPago:      { label: string; value: number | null }[] = [{ label: 'Todos', value: null }];
+
+  wspConsultando = false;
+
+  pdfCargando      = signal<number | null>(null);
+  emailCargando    = signal<number | null>(null);
+  wspCargando      = signal<number | null>(null);
+  accionesCargando = signal<number | null>(null);
+
+  readonly esAdmin: boolean;
+  readonly sedeNombreVentas: string;
+
+  /** Sede del usuario logueado — usada como valor por defecto al limpiar filtros */
+  private readonly sedePropiaId: number | null;
+
+  dialogVisible        = false;
+  dialogConfig: AccionesComprobanteConfig | null = null;
+  dialogAccionCargando: string | null = null;
+  private comprobanteDialogActual: SalesReceiptSummaryAdmin | null = null;
+
+  wspDialogVisible  = false;
+  wspReady          = false;
+  wspQr: string | null = null;
+  wspPollingInterval: any = null;
+  wspComprobanteActual: SalesReceiptSummaryAdmin | null = null;
+
+  // Dialogo voucher termico
+  ticketDialogVisible = false;
+  ticketConsultando = false;
+  ticketDetalle: any = null;
+  ticketQrUrl: string = ''; 
+
+  readonly estadosComprobante = [
+    { label: 'Todos',     value: null },
+    { label: 'Emitido',   value: 'EMITIDO' },
+    { label: 'Anulado',   value: 'ANULADO' },
+    { label: 'Rechazado', value: 'RECHAZADO' },
+    { label: 'Pendiente', value: 'PENDIENTE' },
+  ];
 
   filtros: FiltroVentasAdmin = {
     sedeSeleccionada: null,
-    tipoComprobante: null,
-    estado: null,
-    fechaInicio: null,
-    fechaFin: null,
-    busqueda: '',
-    tipoPago: null,
+    tipoComprobante:  null,
+    estado:           'EMITIDO',
+    fechaInicio:      getLunesSemanaActualPeru(),
+    fechaFin:         getDomingoSemanaActualPeru(),
+    busqueda:         '',
+    tipoPago:         null,
   };
 
-  tiposComprobante: any[] = [];
-  estadosComprobante: any[] = [];
-  tiposPago: any[] = [];
+  sugerenciasBusqueda:  string[] = [];
+  todasLasSugerencias:  string[] = [];
 
-  sugerenciasBusqueda: string[] = [];
-  todasLasSugerencias: string[] = [];
+  loading         = false;
+  paginaActual    = 1;
+  limitePorPagina = 5;
+  totalRegistros  = 0;
+  totalPaginas    = 0;
+  totalVentas     = 0;
+  numeroVentas    = 0;
+  totalBoletas    = 0;
+  totalFacturas   = 0;
 
-  loading: boolean = false;
-  mostrarDetalle: boolean = false;
+  constructor() {
+    const user              = this.authService.getCurrentUser();
+    this.esAdmin            = this.authService.getRoleId() === UserRole.ADMIN;
+    this.sedeNombreVentas   = user?.sedeNombre ?? 'Mi sede';
+    this.sedePropiaId       = user?.idSede ?? null;
+  }
 
-  totalVentas: number = 0;
-  numeroVentas: number = 0;
-  totalBoletas: number = 0;
-  totalFacturas: number = 0;
-
-  inicioSemana: Date = new Date();
-  finSemana: Date = new Date();
-
-  constructor(
-    private router: Router,
-    private ventasService: VentasService,
-    private sedeService: SedeService,
-    private empleadosService: EmpleadosService,
-    private comprobantesService: ComprobantesService,
-    private posService: PosService,
-    private messageService: MessageService,
-    private confirmationService: ConfirmationService,
-  ) {}
+  // ── Lifecycle ─────────────────────────────────────────────────────
 
   ngOnInit(): void {
-    this.calcularRangoSemana();
-    this.cargarOpcionesFiltros();
-    this.cargarEmpleadoActual();
-    this.cargarSedes();
-    this.cargarComprobantes();
-  }
+    // Ambos roles arrancan con su propia sede pre-seleccionada
+    this.filtros.sedeSeleccionada = this.sedePropiaId;
 
-  ngOnDestroy(): void {
-    this.subscriptions.unsubscribe();
-  }
+    this.cargarTiposComprobante();
+    this.cargarMetodosPago();
 
-  calcularRangoSemana(): void {
-    const hoy = new Date();
-    const diaSemana = hoy.getDay();
-
-    const diasDesdeInicio = diaSemana === 0 ? 6 : diaSemana - 1;
-
-    this.inicioSemana = new Date(hoy);
-    this.inicioSemana.setDate(hoy.getDate() - diasDesdeInicio);
-    this.inicioSemana.setHours(0, 0, 0, 0);
-
-    this.finSemana = new Date(this.inicioSemana);
-    this.finSemana.setDate(this.inicioSemana.getDate() + 6);
-    this.finSemana.setHours(23, 59, 59, 999);
-
-    console.log('📅 Semana actual:', {
-      inicio: this.inicioSemana.toLocaleDateString('es-PE'),
-      fin: this.finSemana.toLocaleDateString('es-PE'),
-    });
-  }
-
-  cargarOpcionesFiltros(): void {
-    this.tiposComprobante = this.comprobantesService.getTiposComprobanteOptions();
-    this.estadosComprobante = this.comprobantesService.getEstadosComprobanteOptions();
-    this.tiposPago = this.posService.getTiposPagoOptions();
-  }
-
-  cargarEmpleadoActual(): void {
-    this.empleadoActual = this.empleadosService.getEmpleadoActual();
-
-    if (!this.empleadoActual) {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Error de autenticación',
-        detail: 'No hay un empleado autenticado. Redirigiendo...',
-        life: 3000,
-      });
-
-      setTimeout(() => {
-        this.router.navigate(['/login']);
-      }, 1000);
-      return;
+    if (this.esAdmin) {
+      // cargarSedes() se encarga de llamar cargarComprobantes() y cargarKpis()
+      // una vez que las opciones del selector ya están listas
+      this.cargarSedes();
+    } else {
+      this.cargarComprobantes();
+      this.cargarKpis();
     }
+
+    this.configurarBusqueda();
 
     this.messageService.add({
       severity: 'success',
-      summary: 'Modo Administración',
-      detail: 'Visualizando ventas de todas las sedes',
+      summary: this.esAdmin ? 'Modo Administración' : 'Historial de Ventas',
+      detail: this.esAdmin
+        ? `Visualizando ventas de: ${this.sedeNombreVentas}`
+        : `Visualizando ventas de: ${this.sedeNombreVentas}`,
       life: 3000,
     });
   }
 
-  cargarSedes(): void {
-    const sub = this.sedeService.getSedes().subscribe({
-      next: (sedes) => {
-        this.sedes = sedes;
+  ngOnDestroy(): void {
+    this.busquedaSubject.complete();
+    this.subscriptions.unsubscribe();
+    this.detenerPollingWsp();
+  }
 
-        this.sedesOptions = [
-          { label: 'Todas las sedes', value: '' },
-          ...sedes.map((sede) => ({
-            label: sede.nombre,
-            value: sede.id_sede,
-          })),
-        ];
+  // ── Busqueda Subject ──────────────────────────────────────────────
 
-        console.log('🏢 Sedes cargadas:', this.sedesOptions);
+  private configurarBusqueda(): void {
+    const subBusqueda = this.busquedaSubject
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged(),
+        switchMap((query) => {
+          if (query.length < 3) return [];
+          return this.ventasService.listarHistorialVentas({
+            page: 1,
+            limit: 10,
+            search: query,
+            sedeId: this.filtros.sedeSeleccionada ?? undefined,
+          });
+        }),
+      )
+      .subscribe({
+        next: (res: any) => {
+          const data: SalesReceiptSummaryAdmin[] =
+            res?.receipts ?? res?.data ?? res?.items ?? [];
+          const set = new Set<string>();
+          data.forEach((c) => {
+            const nombre = c.clienteNombre?.trim();
+            const doc    = c.clienteDocumento?.trim();
+            if (nombre && doc) set.add(`${nombre} - ${doc}`);
+            else if (nombre)   set.add(nombre);
+            else if (doc)      set.add(doc);
+          });
+          this.sugerenciasBusqueda = Array.from(set).slice(0, 15);
+          this.cdr.markForCheck();
+        },
+        error: () => (this.sugerenciasBusqueda = []),
+      });
+    this.subscriptions.add(subBusqueda);
+  }
+
+  // ── Paginador ─────────────────────────────────────────────────────
+
+  onPageChange(page: number): void {
+    this.paginaActual = page;
+    this.cargarComprobantes();
+  }
+
+  onLimitChange(nuevoLimite: number): void {
+    this.limitePorPagina = nuevoLimite;
+    this.paginaActual    = 1;
+    this.cargarComprobantes();
+  }
+
+  // ── Filtros ───────────────────────────────────────────────────────
+
+  aplicarFiltros(): void {
+    // VENTAS nunca puede cambiar su sede
+    if (!this.esAdmin) {
+      this.filtros.sedeSeleccionada = this.sedePropiaId;
+    }
+    this.paginaActual = 1;
+    this.cargarComprobantes();
+    this.cargarKpis();
+  }
+
+  limpiarFiltros(): void {
+    // Al limpiar, ambos roles vuelven a su propia sede — ADMIN no queda en "Todas"
+    this.filtros = {
+      sedeSeleccionada: this.sedePropiaId,
+      tipoComprobante:  null,
+      estado:           null,
+      fechaInicio:      null,
+      fechaFin:         null,
+      busqueda:         '',
+      tipoPago:         null,
+    };
+    this.aplicarFiltros();
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Filtros limpiados',
+      detail: 'Se restablecieron los filtros',
+      life: 2000,
+    });
+  }
+
+  onSeleccionarSugerencia(event: any): void {
+    const valor: string = event.value ?? '';
+    const partes = valor.split(' - ');
+    this.filtros.busqueda = partes[0].trim();
+    this.aplicarFiltros();
+  }
+
+  onBusquedaKeyUp(event: KeyboardEvent): void {
+    if (event.key === 'Enter') this.aplicarFiltros();
+  }
+
+  buscarSugerencias(event: any): void {
+    const query = (event.query ?? '').trim();
+    if (query.length < 3) {
+      this.sugerenciasBusqueda = this.todasLasSugerencias.slice(0, 10);
+      return;
+    }
+    this.busquedaSubject.next(query);
+  }
+
+  // ── Carga de datos ────────────────────────────────────────────────
+
+  cargarComprobantes(): void {
+    this.loading = true;
+
+    const query: SalesReceiptsQueryAdmin = {
+      page:            this.paginaActual,
+      limit:           this.limitePorPagina,
+      sedeId:          this.filtros.sedeSeleccionada ?? undefined,
+      receiptTypeId:   this.filtros.tipoComprobante  ?? undefined,
+      status:          (this.filtros.estado as any)  ?? undefined,
+      paymentMethodId: this.filtros.tipoPago         ?? undefined,
+      dateFrom:        this.filtros.fechaInicio
+        ? this.filtros.fechaInicio.toISOString().split('T')[0]
+        : undefined,
+      dateTo:          this.filtros.fechaFin
+        ? this.filtros.fechaFin.toISOString().split('T')[0]
+        : undefined,
+      search:          this.filtros.busqueda.trim() || undefined,
+      _t:              Date.now(),
+    };
+
+    const sub = this.ventasService.listarHistorialVentas(query).subscribe({
+      next: (res: any) => {
+        const data = res?.receipts ?? res?.data ?? res?.items ?? [];
+        this.comprobantes          = Array.isArray(data) ? data : [];
+        this.comprobantesFiltrados = [...this.comprobantes];
+        this.cargarSugerenciasBusqueda();
+        this.loading = false;
+        setTimeout(() => {
+          this.totalRegistros = res?.total       ?? this.comprobantes.length;
+          this.totalPaginas   = res?.total_pages ?? 1;
+          this.cdr.markForCheck();
+        });
       },
-      error: (error) => {
-        console.error('Error al cargar sedes:', error);
+      error: () => {
+        this.loading               = false;
+        this.comprobantes          = [];
+        this.comprobantesFiltrados = [];
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
-          detail: 'No se pudieron cargar las sedes',
+          detail: 'No se pudo cargar el historial de ventas',
           life: 3000,
         });
       },
@@ -200,279 +370,306 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
     this.subscriptions.add(sub);
   }
 
-  cargarComprobantes(): void {
-    this.loading = true;
-
-    const todosComprobantes = this.ventasService.getComprobantes();
-
-    this.comprobantes = todosComprobantes.sort(
-      (a, b) => new Date(b.fec_emision).getTime() - new Date(a.fec_emision).getTime(),
-    );
-
-    console.log(`📊 Total de ventas (todas las sedes): ${this.comprobantes.length}`);
-
-    this.comprobantesFiltrados = [...this.comprobantes];
-    this.cargarSugerenciasBusqueda();
-    this.calcularEstadisticas();
-
-    this.loading = false;
-
-    if (this.comprobantes.length === 0) {
-      this.messageService.add({
-        severity: 'info',
-        summary: 'Sin registros',
-        detail: 'No hay ventas registradas en el sistema',
-        life: 3000,
+  cargarKpis(): void {
+    const sub = this.ventasService
+      .getKpiSemanal(this.filtros.sedeSeleccionada ?? undefined)
+      .subscribe({
+        next: (kpi: SalesReceiptKpiDto) => {
+          this.totalVentas   = kpi.total_ventas      ?? 0;
+          this.numeroVentas  = kpi.cantidad_ventas   ?? 0;
+          this.totalBoletas  = kpi.cantidad_boletas  ?? 0;
+          this.totalFacturas = kpi.cantidad_facturas ?? 0;
+          this.cdr.markForCheck();
+        },
+        error: () => console.warn('No se pudieron cargar KPIs'),
       });
-    }
+    this.subscriptions.add(sub);
   }
 
-  cargarSugerenciasBusqueda(): void {
-    const sugerencias = new Set<string>();
+  private cargarSedes(): void {
+    const sub = this.ventasService.obtenerSedes().subscribe({
+      next: (data) => {
+        this.sedes = data.filter((s) => s.activo);
+        this.sedesOptions = [
+          { label: 'Todas las sedes', value: null },
+          ...this.sedes.map((s) => ({ label: s.nombre, value: s.id_sede })),
+        ];
+        // Pre-seleccionar la sede propia del admin al cargar
+        if (this.sedePropiaId) {
+          this.filtros.sedeSeleccionada = this.sedePropiaId;
+        }
+        this.cdr.markForCheck();
+        // Cargar datos ahora que el selector tiene opciones y la sede está lista
+        this.cargarComprobantes();
+        this.cargarKpis();
+      },
+      error: () =>
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudieron cargar las sedes',
+          life: 3000,
+        }),
+    });
+    this.subscriptions.add(sub);
+  }
 
+  private cargarTiposComprobante(): void {
+    const sub = this.ventasService.obtenerTiposComprobante().subscribe({
+      next: (tipos: TipoComprobanteAdmin[]) => {
+        this.tiposComprobante = [
+          { label: 'Todos', value: null },
+          ...tipos.map((t) => ({ label: t.descripcion, value: t.id })),
+        ];
+        this.cdr.markForCheck();
+      },
+      error: () => console.warn('No se pudieron cargar los tipos de comprobante'),
+    });
+    this.subscriptions.add(sub);
+  }
+
+  private cargarMetodosPago(): void {
+    const sub = this.ventasService.obtenerMetodosPago().subscribe({
+      next: (metodos: MetodoPagoAdmin[]) => {
+        this.metodosPago = [
+          { label: 'Todos', value: null },
+          ...metodos.map((m) => ({ label: m.descripcion, value: m.id })),
+        ];
+        this.cdr.markForCheck();
+      },
+      error: () => console.warn('No se pudieron cargar los métodos de pago'),
+    });
+    this.subscriptions.add(sub);
+  }
+
+  private cargarSugerenciasBusqueda(): void {
+    const set = new Set<string>();
     this.comprobantes.forEach((c) => {
-      sugerencias.add(this.getNumeroFormateado(c));
-
-      if (c.cliente_nombre && c.cliente_nombre.trim()) {
-        sugerencias.add(c.cliente_nombre.trim());
-      }
-
-      if (c.cliente_doc && c.cliente_doc.trim()) {
-        sugerencias.add(c.cliente_doc.trim());
-      }
+      const nombre = c.clienteNombre?.trim();
+      const doc    = c.clienteDocumento?.trim();
+      if (nombre && doc) set.add(`${nombre} - ${doc}`);
+      else if (nombre)   set.add(nombre);
+      else if (doc)      set.add(doc);
     });
-
-    this.todasLasSugerencias = Array.from(sugerencias).sort();
+    this.todasLasSugerencias = Array.from(set).sort();
   }
 
-  buscarSugerencias(event: any): void {
-    const query = event.query.toLowerCase().trim();
+  // ── Dialog AccionesComprobanteDialog ──────────────────────────────
 
-    if (!query) {
-      this.sugerenciasBusqueda = this.todasLasSugerencias.slice(0, 10);
-    } else {
-      this.sugerenciasBusqueda = this.todasLasSugerencias
-        .filter((item) => item.toLowerCase().includes(query))
-        .slice(0, 15);
-    }
-  }
-
-  aplicarFiltros(): void {
-    let resultado = [...this.comprobantes];
-
-    // 🔥 FILTRO POR SEDE
-    if (this.filtros.sedeSeleccionada && this.filtros.sedeSeleccionada.trim()) {
-      resultado = resultado.filter((c) => c.id_sede === this.filtros.sedeSeleccionada);
-      console.log(`🏢 Filtrando por sede: ${this.getSede(resultado[0])}`);
-    }
-
-    if (this.filtros.tipoComprobante) {
-      resultado = resultado.filter((c) => c.tipo_comprobante === this.filtros.tipoComprobante);
-    }
-
-    if (this.filtros.estado) {
-      resultado = resultado.filter((c) => this.getEstadoComprobante(c) === this.filtros.estado);
-    }
-
-    if (this.filtros.tipoPago) {
-      resultado = resultado.filter((c) => c.tipo_pago === this.filtros.tipoPago);
-    }
-
-    if (this.filtros.fechaInicio) {
-      resultado = resultado.filter((c) => {
-        const fecha = new Date(c.fec_emision);
-        return fecha >= this.filtros.fechaInicio!;
-      });
-    }
-
-    if (this.filtros.fechaFin) {
-      const fechaFinAjustada = new Date(this.filtros.fechaFin);
-      fechaFinAjustada.setHours(23, 59, 59, 999);
-
-      resultado = resultado.filter((c) => {
-        const fecha = new Date(c.fec_emision);
-        return fecha <= fechaFinAjustada;
-      });
-    }
-
-    if (this.filtros.busqueda && this.filtros.busqueda.trim()) {
-      const busqueda = this.filtros.busqueda.toLowerCase().trim();
-      resultado = resultado.filter((c) => {
-        const serie = c.serie.toLowerCase();
-        const numero = c.numero.toString();
-        const cliente = (c.cliente_nombre || '').toLowerCase();
-        const documento = (c.cliente_doc || '').toLowerCase();
-        const numeroFormateado = this.getNumeroFormateado(c).toLowerCase();
-
-        return (
-          serie.includes(busqueda) ||
-          numero.includes(busqueda) ||
-          cliente.includes(busqueda) ||
-          documento.includes(busqueda) ||
-          numeroFormateado.includes(busqueda)
-        );
-      });
-    }
-
-    resultado.sort((a, b) => new Date(b.fec_emision).getTime() - new Date(a.fec_emision).getTime());
-
-    this.comprobantesFiltrados = resultado;
-    this.calcularEstadisticas();
-  }
-
-  limpiarFiltros(): void {
-    this.filtros = {
-      sedeSeleccionada: null,
-      tipoComprobante: null,
-      estado: null,
-      fechaInicio: null,
-      fechaFin: null,
-      busqueda: '',
-      tipoPago: null,
+  abrirDialogAcciones(comprobante: SalesReceiptSummaryAdmin): void {
+    this.comprobanteDialogActual = comprobante;
+    this.dialogConfig = {
+      titulo:       this.getNumeroFormateado(comprobante),
+      subtitulo:    comprobante.clienteNombre,
+      mostrarWsp:   true,
+      mostrarEmail: true,
+      labelPdf:     'PDF',
+      labelVoucher: 'Voucher',
     };
-    this.aplicarFiltros();
-
-    this.messageService.add({
-      severity: 'info',
-      summary: 'Filtros limpiados',
-      detail: 'Se restablecieron todos los filtros',
-      life: 2000,
-    });
+    this.dialogVisible = true;
+    this.cdr.markForCheck();
   }
 
-  calcularEstadisticas(): void {
-    const ventasSemana = this.comprobantesFiltrados.filter((c) => {
-      const fechaVenta = new Date(c.fec_emision);
-      return fechaVenta >= this.inicioSemana && fechaVenta <= this.finSemana;
-    });
+  onAccionDialog(accion: AccionComprobante): void {
+    const comprobante = this.comprobanteDialogActual;
+    if (!comprobante) return;
 
-    this.totalVentas = ventasSemana.reduce((sum, c) => sum + c.total, 0);
-    this.numeroVentas = ventasSemana.length;
-    this.totalBoletas = ventasSemana.filter((c) => c.tipo_comprobante === '03').length;
-    this.totalFacturas = ventasSemana.filter((c) => c.tipo_comprobante === '01').length;
+    this.dialogAccionCargando = accion;
+    this.cdr.markForCheck();
 
-    console.log('📊 Estadísticas de la semana:', {
-      montoTotal: this.totalVentas,
-      cantidadVentas: this.numeroVentas,
-      boletas: this.totalBoletas,
-      facturas: this.totalFacturas,
-    });
-  }
+    switch (accion) {
+      case 'wsp':
+        this.dialogVisible        = false;
+        this.dialogAccionCargando = null;
+        this.abrirDialogWsp(comprobante);
+        break;
 
-  exportarExcel(): void {
-    if (this.comprobantesFiltrados.length === 0) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Sin datos',
-        detail: 'No hay registros para exportar',
-        life: 3000,
-      });
-      return;
+      case 'email':
+        this.ventasService.enviarComprobantePorEmail(comprobante.idComprobante).subscribe({
+          next: (res) => {
+            this.dialogAccionCargando = null;
+            this.dialogVisible        = false;
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Email enviado',
+              detail: res.message ?? `Comprobante enviado a ${res.sentTo}`,
+              life: 4000,
+            });
+            this.cdr.markForCheck();
+          },
+          error: () => {
+            this.dialogAccionCargando = null;
+            this.messageService.add({
+              severity: 'error', summary: 'Error',
+              detail: 'No se pudo enviar el comprobante por email', life: 3000,
+            });
+            this.cdr.markForCheck();
+          },
+        });
+        break;
+
+      case 'pdf-imprimir':
+        this.ventasService.verComprobantePdfEnPestana(comprobante.idComprobante).subscribe({
+          next: () => { this.dialogAccionCargando = null; this.cdr.markForCheck(); },
+          error: () => {
+            this.dialogAccionCargando = null;
+            this.messageService.add({
+              severity: 'error', summary: 'Error',
+              detail: 'No se pudo abrir el PDF', life: 3000,
+            });
+            this.cdr.markForCheck();
+          },
+        });
+        break;
+
+      case 'pdf-descargar': {
+        const nombre = `comprobante-${comprobante.serie}-${String(comprobante.numero).padStart(8, '0')}.pdf`;
+        this.ventasService.descargarComprobantePdf(comprobante.idComprobante, nombre).subscribe({
+          next: () => { this.dialogAccionCargando = null; this.cdr.markForCheck(); },
+          error: () => {
+            this.dialogAccionCargando = null;
+            this.messageService.add({
+              severity: 'error', summary: 'Error',
+              detail: 'No se pudo descargar el PDF', life: 3000,
+            });
+            this.cdr.markForCheck();
+          },
+        });
+        break;
+      }
+
+      case 'voucher-imprimir':
+        this.dialogAccionCargando = null;
+        this.messageService.add({
+          severity: 'info', summary: 'Próximamente',
+          detail: 'La impresión de voucher térmico estará disponible pronto', life: 3000,
+        });
+        this.cdr.markForCheck();
+        break;
+
+      case 'voucher-descargar':
+        this.dialogAccionCargando = null;
+        this.messageService.add({
+          severity: 'info', summary: 'Próximamente',
+          detail: 'La descarga de voucher térmico estará disponible pronto', life: 3000,
+        });
+        this.cdr.markForCheck();
+        break;
     }
-
-    // Preparar datos para exportar
-    const datosExcel = this.comprobantesFiltrados.map((c) => ({
-      'N° Comprobante': this.getNumeroFormateado(c),
-      Tipo: this.getTipoComprobanteLabel(c.tipo_comprobante),
-      'Fecha Emisión': new Date(c.fec_emision).toLocaleString('es-PE'),
-      Cliente: c.cliente_nombre,
-      Documento: c.cliente_doc,
-      'Tipo Pago': this.getTipoPagoLabel(c.tipo_pago),
-      Sede: this.getSede(c),
-      Responsable: c.responsable,
-      Total: c.total,
-      Estado: this.getEstadoComprobante(c),
-    }));
-
-    // Generar nombre de archivo
-    const nombreArchivo = ExcelUtils.generarNombreConFecha('ventas');
-
-    // Exportar
-    ExcelUtils.exportarAExcel(datosExcel, nombreArchivo, 'Comprobantes');
-
-    // Mensaje de éxito
-    this.messageService.add({
-      severity: 'success',
-      summary: 'Exportación exitosa',
-      detail: `Archivo ${nombreArchivo}.xlsx descargado`,
-      life: 3000,
-    });
   }
 
-  private convertirAHojaCalculo(datos: any[]): any[] {
-    return datos;
+  onDialogCerrar(): void {
+    this.dialogVisible           = false;
+    this.dialogAccionCargando    = null;
+    this.comprobanteDialogActual = null;
+    this.cdr.markForCheck();
   }
 
-  private convertirACSV(datos: any[]): string {
-    if (datos.length === 0) return '';
+  // ── Acciones generales ────────────────────────────────────────────
 
-    const headers = Object.keys(datos[0]);
-    const csvHeaders = headers.join(',');
+  nuevaVenta(): void {
+    this.router.navigate(['/admin/generar-ventas-administracion']);
+  }
 
-    const csvRows = datos.map((row) =>
-      headers
-        .map((header) => {
-          const value = row[header];
-          return typeof value === 'string' && value.includes(',') ? `"${value}"` : value;
-        })
-        .join(','),
+  GenerarVenta(): void {
+    this.router.navigate(['./admin/generar-ventas-administracion']);
+  }
+
+  verDetalleVenta(comprobante: SalesReceiptSummaryAdmin): void {
+    this.router.navigate(
+      ['/admin/detalles-ventas-administracion', comprobante.idComprobante],
+      { state: { rutaRetorno: '/admin/historial-ventas-administracion' } },
     );
-
-    return [csvHeaders, ...csvRows].join('\n');
   }
 
-  getEstadoComprobante(comprobante: ComprobanteVenta): string {
-    return this.comprobantesService.getEstadoComprobante(comprobante);
-  }
+  confirmarEnvioWsp(): void {
+    if (!this.wspComprobanteActual) return;
+    const comprobante = this.wspComprobanteActual;
+    this.wspCargando.set(comprobante.idComprobante);
+    this.wspDialogVisible = false;
+    this.detenerPollingWsp();
 
-  getSeverityEstado(estado: string): 'success' | 'danger' | 'warn' | 'info' {
-    return this.comprobantesService.getSeverityEstado(estado);
-  }
-
-  getTipoComprobanteLabel(tipo: string): string {
-    return this.comprobantesService.getTipoComprobanteLabel(tipo as '01' | '03');
-  }
-
-  getNumeroFormateado(comprobante: ComprobanteVenta): string {
-    return this.comprobantesService.getNumeroFormateado(comprobante.serie, comprobante.numero);
-  }
-
-  getTipoPagoLabel(tipoPago: string): string {
-    return this.posService.getTipoPagoLabel(tipoPago);
-  }
-
-  getSeverityTipoPago(tipoPago: string): 'success' | 'info' | 'warn' | 'secondary' {
-    return this.posService.getSeverityTipoPago(tipoPago);
-  }
-
-  getSede(comprobante: ComprobanteVenta): string {
-    const sede = this.sedes.find((s) => s.id_sede === comprobante.id_sede);
-    return sede ? sede.nombre : 'N/A';
-  }
-
-  cerrarDetalle(): void {
-    this.mostrarDetalle = false;
-    this.comprobanteSeleccionado = null;
-  }
-
-  imprimirComprobante(comprobante: ComprobanteVenta): void {
-    this.router.navigate(['/admin/imprimir-comprobante-administracion'], {
-      state: {
-        comprobante: comprobante,
-        rutaRetorno: '/admin/historial-ventas-administracion',
+    this.ventasService.enviarComprobantePorWhatsApp(comprobante.idComprobante).subscribe({
+      next: (res) => {
+        this.wspCargando.set(null);
+        this.messageService.add({
+          severity: 'success', summary: 'WhatsApp enviado',
+          detail: res.message ?? `Comprobante enviado a ${res.sentTo}`, life: 4000,
+        });
+      },
+      error: () => {
+        this.wspCargando.set(null);
+        this.messageService.add({
+          severity: 'error', summary: 'Error',
+          detail: 'No se pudo enviar el comprobante por WhatsApp', life: 3000,
+        });
       },
     });
   }
 
-  verDetalleVenta(comprobante: ComprobanteVenta): void {
-    this.router.navigate(['/admin/detalles-ventas-administracion', comprobante.id], {
-      state: {
-        rutaRetorno: '/admin/historial-ventas-administracion',
+  abrirDialogWsp(comprobante: SalesReceiptSummaryAdmin): void {
+    this.wspComprobanteActual = comprobante;
+    this.wspDialogVisible     = true;
+    this.wspReady             = false;
+    this.wspQr                = null;
+    this.wspConsultando       = true;
+
+    this.ventasService.obtenerEstadoWhatsApp().subscribe({
+      next: ({ ready, qr }) => {
+        this.wspConsultando = false;
+        this.wspReady       = ready;
+        this.wspQr          = qr;
+        this.cdr.markForCheck();
+        if (!ready) this.iniciarPollingWsp();
+      },
+      error: () => {
+        this.wspConsultando = false;
+        this.messageService.add({
+          severity: 'error', summary: 'Error',
+          detail: 'No se pudo consultar el estado de WhatsApp', life: 3000,
+        });
       },
     });
   }
 
-  anularComprobante(comprobante: ComprobanteVenta): void {
+  private iniciarPollingWsp(): void {
+    this.detenerPollingWsp();
+    this.wspPollingInterval = setInterval(() => {
+      this.ventasService.obtenerEstadoWhatsApp().subscribe({
+        next: ({ ready, qr }) => {
+          this.wspReady = ready;
+          this.wspQr    = qr;
+          this.cdr.markForCheck();
+          if (ready) this.detenerPollingWsp();
+        },
+      });
+    }, 2000);
+  }
+
+  private detenerPollingWsp(): void {
+    if (this.wspPollingInterval) {
+      clearInterval(this.wspPollingInterval);
+      this.wspPollingInterval = null;
+    }
+  }
+
+  cerrarDialogWsp(): void {
+    this.wspDialogVisible     = false;
+    this.wspComprobanteActual = null;
+    this.detenerPollingWsp();
+  }
+
+  crearGuiaRemision(comprobante: any): void {
+    this.router.navigate(['/logistica/remision/nueva'], {
+      queryParams: {
+        ventaId:        comprobante.id,
+        comprobanteRef: this.getNumeroFormateado(comprobante),
+      },
+    });
+  }
+
+  anularComprobante(comprobante: SalesReceiptSummaryAdmin): void {
+    if (comprobante.estado !== 'EMITIDO') return;
     this.confirmationService.confirm({
       message: `¿Está seguro de anular el comprobante ${this.getNumeroFormateado(comprobante)}?`,
       header: 'Confirmar Anulación',
@@ -481,21 +678,83 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
       rejectLabel: 'Cancelar',
       acceptButtonStyleClass: 'p-button-danger',
       accept: () => {
-        comprobante.estado = false;
-
+        comprobante.estado = 'ANULADO';
         this.messageService.add({
           severity: 'success',
           summary: 'Comprobante anulado',
-          detail: `${this.getNumeroFormateado(comprobante)} fue anulado exitosamente`,
+          detail: `${this.getNumeroFormateado(comprobante)} fue anulado`,
           life: 3000,
         });
-
         this.aplicarFiltros();
       },
     });
   }
 
-  nuevaVenta(): void {
-    this.router.navigate(['/admin/generar-ventas-administracion']);
+  exportarExcel(): void {
+    if (this.comprobantesFiltrados.length === 0) {
+      this.messageService.add({
+        severity: 'warn', summary: 'Sin datos',
+        detail: 'No hay registros para exportar', life: 3000,
+      });
+      return;
+    }
+
+    const datosExcel = this.comprobantesFiltrados.map((c) => ({
+      'N° Comprobante': this.getNumeroFormateado(c),
+      Tipo:             this.getTipoComprobanteLabel(c.tipoComprobante),
+      'Fecha Emisión':  new Date(c.fecEmision).toLocaleString('es-PE'),
+      Cliente:          c.clienteNombre,
+      Documento:        c.clienteDocumento,
+      'Tipo Pago':      this.getTipoPagoLabel(c.metodoPago),
+      Sede:             c.sedeNombre,
+      Total:            c.total,
+      Estado:           c.estado,
+    }));
+
+    const nombreArchivo = ExcelUtils.generarNombreConFecha('ventas');
+    ExcelUtils.exportarAExcel(datosExcel, nombreArchivo, 'Comprobantes');
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Exportación exitosa',
+      detail: `Archivo ${nombreArchivo}.xlsx descargado`,
+      life: 3000,
+    });
   }
+
+  // ── Helpers ───────────────────────────────────────────────────────
+
+  getSeverityEstado(estado: string): 'success' | 'danger' | 'warn' | 'info' {
+    switch (estado) {
+      case 'EMITIDO':   return 'success';
+      case 'ANULADO':   return 'danger';
+      case 'RECHAZADO': return 'warn';
+      default:          return 'info';
+    }
+  }
+
+  getTipoComprobanteLabel(tipo: string): string {
+    if (!tipo) return 'N/A';
+    const t = tipo.toUpperCase();
+    if (t.includes('BOLETA')  || tipo === '03') return 'Boleta';
+    if (t.includes('FACTURA') || tipo === '01') return 'Factura';
+    return tipo;
+  }
+
+  getNumeroFormateado(c: SalesReceiptSummaryAdmin): string {
+    return `${c.serie}-${String(c.numero).padStart(8, '0')}`;
+  }
+
+  getTipoPagoLabel(metodo: string): string {
+    return metodo ?? 'N/A';
+  }
+
+  getSeverityTipoPago(metodo: string): 'success' | 'info' | 'warn' | 'secondary' {
+    if (!metodo) return 'secondary';
+    const m = metodo.toLowerCase();
+    if (m.includes('efectivo')) return 'success';
+    if (m.includes('yape') || m.includes('plin')) return 'info';
+    if (m.includes('tarjeta')) return 'warn';
+    return 'secondary';
+  }
+
 }

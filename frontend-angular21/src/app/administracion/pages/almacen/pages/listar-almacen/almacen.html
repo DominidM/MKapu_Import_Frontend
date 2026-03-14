@@ -1,0 +1,320 @@
+<div class="p-2">
+
+  <!-- CABECERA -->
+  <p-card styleClass="sedes-header-card mb-4 ventas-header-bordered">
+    <div class="flex align-items-center justify-content-between flex-wrap gap-2">
+      <div class="flex align-items-center gap-3">
+        <span class="sedes-title-icon"><i class="pi pi-list"></i></span>
+        <div>
+          <p class="sedes-kicker">ADMINISTRADOR - ADMINISTRACION - ALMACÉN</p>
+          <h2 class="sedes-title">GESTIÓN DE ALMACÉN</h2>
+        </div>
+      </div>
+      <div class="flex justify-items-end gap-2">
+        <p-button
+          label="Agregar Almacén"
+          icon="pi pi-plus"
+          styleClass="sedes-pill"
+          [routerLink]="['/admin/almacen/crear-almacen']">
+        </p-button>
+      </div>
+    </div>
+  </p-card>
+
+  <!-- FILTROS -->
+  <div class="filtros-container mb-4">
+    <div class="seccion-filtros">
+      <h3><i class="pi pi-filter"></i> Filtros de búsqueda</h3>
+
+      <div class="filtros-linea-1">
+        <div class="filtro-item filtro-cliente-50">
+          <label>Buscar Almacén</label>
+          <p-autoComplete
+            styleClass="w-full"
+            [ngModel]="searchTerm()"
+            (ngModelChange)="onSearchChange($event)"
+            [suggestions]="almacenSuggestions()"
+            field="nombre"
+            (completeMethod)="onSearch($event)"
+            (onSelect)="onSelectAlmacen($event)"
+            placeholder="Escribe código, nombre, departamento o ciudad...">
+            <ng-template let-item pTemplate="item">
+              <div class="flex flex-column gap-1">
+                <span class="font-medium">{{ item.nombre }}</span>
+                <small class="text-500">{{ item.codigo }}</small>
+              </div>
+            </ng-template>
+          </p-autoComplete>
+        </div>
+      </div>
+
+      <div class="filtros-linea-2">
+        <div class="filtro-item filtro-compacto">
+          <label>Vista</label>
+          <p-select
+            [options]="viewOptions"
+            optionLabel="label"
+            optionValue="value"
+            [ngModel]="viewMode()"
+            (ngModelChange)="onViewModeChange($event)"
+            placeholder="Todos"
+            styleClass="w-full">
+          </p-select>
+        </div>
+
+        <div class="filtro-item filtro-boton-limpiar">
+          <label>&nbsp;</label>
+          <p-button
+            label="Limpiar Filtros"
+            icon="pi pi-filter-slash"
+            severity="danger"
+            styleClass="btn-limpiar-filtros"
+            type="button"
+            (click)="clearSearch()">
+          </p-button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p-toast position="top-right" />
+
+  <!-- ERROR -->
+  <p-message
+    *ngIf="!loading() && error() as e"
+    severity="error" [text]="e"
+    class="mb-3 block">
+  </p-message>
+
+  <!-- TABLA -->
+  <app-shared-table-container
+    titulo="Listado de Almacenes"
+    iconoTitulo="pi pi-warehouse"
+    mensajeCarga="Cargando almacenes..."
+    [loading]="loading()"
+    [paginaActual]="paginaActual()"
+    [totalPaginas]="totalPaginas()"
+    [totalRegistros]="filteredAlmacenes().length"
+    [limitePorPagina]="limitePagina()"
+    [mostrarExportar]="false"
+    (pageChange)="onPageChange($event)"
+    (limitChange)="onLimitChange($event)"
+  >
+
+    <!-- Tag contador en slot de acciones -->
+    <div slot="acciones">
+      <p-tag
+        [value]="filteredAlmacenes().length + ' almacenes'"
+        [severity]="viewMode() === 'activas'   ? 'success'
+                  : viewMode() === 'inactivas'  ? 'danger' : 'info'">
+      </p-tag>
+    </div>
+
+    <!-- Estado vacío -->
+    <div *ngIf="filteredAlmacenes().length === 0" class="mensaje-vacio">
+      <i class="pi pi-inbox"></i>
+      <p>No hay almacenes con ese filtro</p>
+      <p-button
+        label="Limpiar filtros"
+        icon="pi pi-filter-slash"
+        severity="danger"
+        size="small"
+        type="button"
+        (click)="clearSearch()">
+      </p-button>
+    </div>
+
+    <!-- Tabla -->
+    <p-table
+      *ngIf="filteredAlmacenes().length > 0"
+      [value]="almacenesPaginados()"
+      styleClass="p-datatable-striped"
+      [paginator]="false"
+      [tableStyle]="{ 'min-width': '60rem' }">
+
+      <ng-template pTemplate="header">
+        <tr>
+          <th>CODIGO</th>
+          <th>NOMBRE</th>
+          <th>SEDE</th>
+          <th>UBICACIÓN</th>
+          <th>TELÉFONO</th>
+          <th>ESTADO</th>
+          <th class="text-center">ACCIONES</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-almacen>
+        <tr>
+          <td>{{ almacen.codigo }}</td>
+          <td>{{ almacen.nombre }}</td>
+          <td>
+            <span *ngIf="almacen.sede; else sinSede"
+              class="inline-flex align-items-center gap-2">
+              <i class="pi pi-building text-500"></i>{{ almacen.sede.nombre }}
+            </span>
+            <ng-template #sinSede><span class="text-400">—</span></ng-template>
+          </td>
+          <td>
+            <span class="inline-flex align-items-center gap-2">
+              <i class="pi pi-map-marker text-500"></i>
+              {{ (almacen.departamento ? almacen.departamento : '')
+                  + (almacen.provincia ? ' · ' + almacen.provincia : '')
+                  + (almacen.ciudad    ? ' · ' + almacen.ciudad    : '') }}
+            </span>
+          </td>
+          <td>
+            <span class="inline-flex align-items-center gap-2">
+              <i class="pi pi-phone text-500"></i>{{ almacen.telefono }}
+            </span>
+          </td>
+          <td>
+            <p-tag
+              [value]="almacen.activo ? 'Activo' : 'Inactivo'"
+              [severity]="almacen.activo ? 'success' : 'danger'">
+            </p-tag>
+          </td>
+          <td class="text-center">
+            <div class="acciones-tabla">
+              <p-button
+                icon="pi pi-eye"
+                [rounded]="true" [text]="true" severity="secondary"
+                pTooltip="Ver detalle" tooltipPosition="top"
+                (onClick)="verDetalle(almacen)">
+              </p-button>
+              <p-button
+                icon="pi pi-pencil"
+                [rounded]="true" [text]="true" severity="secondary"
+                pTooltip="Editar almacén" tooltipPosition="top"
+                [routerLink]="['/admin/almacen/editar-almacen', (almacen.id_almacen ?? almacen.id)]"
+                [disabled]="!(almacen.id_almacen ?? almacen.id)">
+              </p-button>
+              <p-button
+                [icon]="almacen.activo ? 'pi pi-times' : 'pi pi-check'"
+                [rounded]="true" [text]="true"
+                [severity]="almacen.activo ? 'danger' : 'success'"
+                [pTooltip]="almacen.activo ? 'Desactivar almacén' : 'Activar almacén'"
+                tooltipPosition="top"
+                (onClick)="confirmToggleStatus(almacen)">
+              </p-button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="7" class="text-center">
+            <div class="mensaje-vacio">
+              <i class="pi pi-inbox"></i>
+              <p>No se encontraron almacenes</p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+    </p-table>
+
+    <p-confirmdialog />
+
+  </app-shared-table-container>
+
+  <!-- MODAL DETALLE ALMACÉN -->
+  <p-dialog
+    [(visible)]="dialogVisible"
+    [modal]="true" [draggable]="false"
+    [style]="{ width: '480px', 'border-radius': '16px', overflow: 'hidden' }"
+    [contentStyle]="{ padding: '0' }"
+    (onHide)="dialogVisible = false">
+
+    <ng-template pTemplate="header"><span></span></ng-template>
+
+    <ng-container *ngIf="almacenSeleccionado() as a">
+      <div class="almacen-detail-modal">
+
+        <div class="adm-banner">
+          <div class="adm-banner-icon"><i class="pi pi-warehouse"></i></div>
+          <div class="adm-banner-info">
+            <span class="adm-kicker">ALMACÉN</span>
+            <h3 class="adm-nombre">{{ a.nombre }}</h3>
+          </div>
+          <button class="adm-close-btn" (click)="dialogVisible = false">
+            <i class="pi pi-times"></i>
+          </button>
+        </div>
+
+        <div class="adm-code-row">
+          <span class="adm-code-badge"><i class="pi pi-tag"></i>{{ a.codigo }}</span>
+          <span class="adm-status-badge"
+            [class.adm-status--active]="a.activo"
+            [class.adm-status--inactive]="!a.activo">
+            <span class="adm-status-dot"></span>
+            {{ a.activo ? 'Activo' : 'Inactivo' }}
+          </span>
+        </div>
+
+        <div class="adm-info-grid">
+          <div class="adm-info-item">
+            <span class="adm-info-icon"><i class="pi pi-map"></i></span>
+            <div class="adm-info-content">
+              <span class="adm-info-label">Departamento</span>
+              <span class="adm-info-value">{{ a.departamento ?? '—' }}</span>
+            </div>
+          </div>
+          <div class="adm-info-item">
+            <span class="adm-info-icon"><i class="pi pi-building"></i></span>
+            <div class="adm-info-content">
+              <span class="adm-info-label">Sede asignada</span>
+              <span class="adm-info-value">{{ a.sede?.nombre ?? '—' }}</span>
+            </div>
+          </div>
+          <div class="adm-info-item">
+            <span class="adm-info-icon"><i class="pi pi-map"></i></span>
+            <div class="adm-info-content">
+              <span class="adm-info-label">Provincia</span>
+              <span class="adm-info-value">{{ a.provincia ?? '—' }}</span>
+            </div>
+          </div>
+          <div class="adm-info-item">
+            <span class="adm-info-icon"><i class="pi pi-map-marker"></i></span>
+            <div class="adm-info-content">
+              <span class="adm-info-label">Ciudad</span>
+              <span class="adm-info-value">{{ a.ciudad ?? '—' }}</span>
+            </div>
+          </div>
+          <div class="adm-info-item">
+            <span class="adm-info-icon"><i class="pi pi-phone"></i></span>
+            <div class="adm-info-content">
+              <span class="adm-info-label">Teléfono</span>
+              <span class="adm-info-value">{{ a.telefono ?? '—' }}</span>
+            </div>
+          </div>
+          <div class="adm-info-item adm-info-item--full">
+            <span class="adm-info-icon"><i class="pi pi-home"></i></span>
+            <div class="adm-info-content">
+              <span class="adm-info-label">Dirección</span>
+              <span class="adm-info-value">{{ a.direccion ?? '—' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="adm-footer">
+          <p-button
+            label="Cerrar" icon="pi pi-times"
+            severity="secondary" [outlined]="true"
+            styleClass="adm-btn-close"
+            (onClick)="dialogVisible = false">
+          </p-button>
+          <p-button
+            label="Editar Almacén" icon="pi pi-pencil"
+            styleClass="adm-btn-edit"
+            [routerLink]="['/admin/almacen/editar-almacen', (a.id_almacen ?? a.id)]"
+            (onClick)="dialogVisible = false">
+          </p-button>
+        </div>
+
+      </div>
+    </ng-container>
+  </p-dialog>
+
+</div>

@@ -1,168 +1,173 @@
-import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-
+import { forkJoin, of } from 'rxjs';
+import { catchError, switchMap } from 'rxjs/operators';
+import { DialogModule } from 'primeng/dialog';
+import { AutoCompleteModule } from 'primeng/autocomplete';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
-import { SelectModule } from 'primeng/select';
-import { InputTextModule } from 'primeng/inputtext';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { MessageModule } from 'primeng/message';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
-import { InputNumberModule } from 'primeng/inputnumber';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { ConfirmationService, MessageService } from 'primeng/api';
-import { AutoCompleteModule } from 'primeng/autocomplete';
 import { ToastModule } from 'primeng/toast';
+import { SelectModule } from 'primeng/select';
+import { TooltipModule } from 'primeng/tooltip';
+import { ConfirmationService, MessageService } from 'primeng/api';
+
+import { SedeService } from '../../../../services/sede.service';
+import { Headquarter } from '../../../../interfaces/sedes.interface';
+import { LoadingOverlayComponent } from '../../../../../shared/components/loading-overlay/loading-overlay.component';
+import { PaginadorComponent } from '../../../../../shared/components/paginador/Paginador.component';
+import { SharedTableContainerComponent } from '../../../../../shared/components/table.componente/shared-table-container.component';
+
+type ViewMode = 'todas' | 'activas' | 'inactivas';
 
 @Component({
   selector: 'app-sedes',
+  standalone: true,
   imports: [
-    CommonModule,
-    FormsModule,
-    ButtonModule,
-    CardModule,
-    SelectModule,
-    InputTextModule,
-    TableModule,
-    TagModule,
-    RouterModule,
-    InputNumberModule,
-    ConfirmDialogModule,
-    AutoCompleteModule,
-    ToastModule,
+    CommonModule, FormsModule, RouterModule,
+    DialogModule, CardModule, ButtonModule,
+    AutoCompleteModule, TableModule, TagModule,
+    ToastModule, ConfirmDialogModule, MessageModule,
+    SelectModule, TooltipModule,
+    SharedTableContainerComponent,
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './sedes.html',
   styleUrl: './sedes.css',
 })
 export class Sedes implements OnInit {
-  sedes = [
-    {
-      codigo: 'SJL-FL15',
-      nombre: 'Flores 15',
-      ciudad: 'San Juan de Lurigancho',
-      telefono: '+51 987654324',
-      direccion: 'Av. Las Flores 15-16, Urb. Las Flores',
-    },
-    {
-      codigo: 'LRN-26',
-      nombre: 'Lurin',
-      ciudad: 'Lurin',
-      telefono: '+51 987654325',
-      direccion: 'Av. San Pedro 890',
-    },
-    {
-      codigo: 'CLL-04',
-      nombre: 'Callao',
-      ciudad: 'Callao',
-      telefono: '+51 987654326',
-      direccion: 'Jr. Lima 105',
-    },
-    {
-      codigo: 'ATE-09',
-      nombre: 'Ate',
-      ciudad: 'Ate',
-      telefono: '+51 987654327',
-      direccion: 'Av. Metropolitana 220',
-    },
-  ];
-  filteredSedes = [...this.sedes];
-  sedeSuggestions = [...this.sedes];
-  searchTerm = '';
+  private readonly sedeService         = inject(SedeService);
+  private readonly confirmationService = inject(ConfirmationService);
+  private readonly messageService      = inject(MessageService);
 
-  constructor(
-    private confirmationService: ConfirmationService,
-    private messageService: MessageService
-  ) {}
+  readonly loadingAlmacenes = this.sedeService.loadingAlmacenes;
+  readonly loading          = this.sedeService.loading;
+  readonly error            = this.sedeService.error;
+
+  dialogVisible         = false;
+  readonly sedeSeleccionada = signal<Headquarter | null>(null);
+
+  readonly searchTerm = signal<string>('');
+  readonly sedes      = computed(() => this.sedeService.sedes());
+  readonly viewMode   = signal<ViewMode>('activas');
+
+  readonly paginaActual = signal<number>(1);
+  readonly limitePagina = signal<number>(5);
+
+  readonly viewOptions: { label: string; value: ViewMode }[] = [
+    { label: 'Todos',     value: 'todas'     },
+    { label: 'Activas',   value: 'activas'   },
+    { label: 'Inactivas', value: 'inactivas' },
+  ];
+
+  readonly visibleSedes = computed(() => {
+    const mode = this.viewMode();
+    const all  = this.sedes();
+    if (mode === 'activas')   return all.filter(s => s.activo === true);
+    if (mode === 'inactivas') return all.filter(s => s.activo === false);
+    return all;
+  });
+
+  readonly filteredSedes = computed(() => {
+    const term = this.searchTerm().trim().toLowerCase();
+    const base = this.visibleSedes();
+    if (!term) return base;
+    return base.filter(s =>
+      [s.codigo, s.nombre, s.ciudad].some(f =>
+        String(f ?? '').toLowerCase().includes(term)
+      )
+    );
+  });
+
+  readonly sedesPaginadas = computed(() => {
+    const inicio = (this.paginaActual() - 1) * this.limitePagina();
+    return this.filteredSedes().slice(inicio, inicio + this.limitePagina());
+  });
+
+  readonly totalPaginas = computed(() =>
+    Math.ceil(this.filteredSedes().length / this.limitePagina())
+  );
+
+  readonly sedeSuggestions = computed(() => this.filteredSedes());
 
   ngOnInit(): void {
-    const rawToast = sessionStorage.getItem('sedesToast');
-    if (!rawToast) return;
-    sessionStorage.removeItem('sedesToast');
-    try {
-      const toast = JSON.parse(rawToast);
-      this.messageService.add(toast);
-    } catch {
-      this.messageService.add({
-        severity: 'info',
-        summary: 'Aviso',
-        detail: 'Accion completada.',
-      });
+    this.sedeService.loadSedes('Administrador').pipe(
+      switchMap((res) => {
+        const sedes = res.headquarters ?? [];
+        if (sedes.length === 0) return of([]);
+        return forkJoin(
+          sedes.map(sede =>
+            this.sedeService.loadAlmacenesParaSede(sede.id_sede).pipe(catchError(() => of(null)))
+          )
+        );
+      })
+    ).subscribe();
+  }
+
+  getAlmacenesRestantes(sede: Headquarter): string {
+    if (!sede.almacenes || sede.almacenes.length <= 2) return '';
+    return sede.almacenes.slice(2)
+      .map(a => a.codigo + (a.ciudad ? ' · ' + a.ciudad : ''))
+      .join('\n');
+  }
+
+  verDetalle(sede: Headquarter): void {
+    const enriquecida = this.sedeService.sedes().find(s => s.id_sede === sede.id_sede) ?? sede;
+    this.sedeSeleccionada.set(enriquecida);
+    this.dialogVisible = true;
+  }
+
+  onViewModeChange(mode: ViewMode): void { this.viewMode.set(mode); this.paginaActual.set(1); }
+
+  onSearch(event: { query: string }): void { this.searchTerm.set(event.query); this.paginaActual.set(1); }
+
+  onSearchChange(term: unknown): void {
+    if (typeof term === 'string') { this.searchTerm.set(term); this.paginaActual.set(1); return; }
+    if (term && typeof term === 'object' && 'nombre' in (term as any)) {
+      this.searchTerm.set(String((term as any).nombre ?? '')); this.paginaActual.set(1); return;
     }
+    this.searchTerm.set('');
   }
 
-  onSearch(event: { query: string }): void {
-    this.updateFilteredSedes(event.query);
-  }
+  onSelectSede(event: any): void { this.searchTerm.set(String(event?.value?.nombre ?? '')); this.paginaActual.set(1); }
 
-  onSearchChange(term: string | { nombre?: string } | null): void {
-    this.updateFilteredSedes(this.getSearchValue(term));
-  }
+  clearSearch(): void { this.searchTerm.set(''); this.paginaActual.set(1); }
 
-  onSelectSede(event: { value?: { nombre?: string } } | null): void {
-    const value = this.getSearchValue(event?.value ?? this.searchTerm);
-    this.searchTerm = value;
-    this.updateFilteredSedes(value);
-  }
+  onPageChange(page: number): void   { this.paginaActual.set(page); }
+  onLimitChange(limit: number): void { this.limitePagina.set(limit); this.paginaActual.set(1); }
 
-  clearSearch(): void {
-    this.searchTerm = '';
-    this.updateFilteredSedes('');
-  }
-
-  confirmDelete(sede: { codigo: string; nombre: string }): void {
+  confirmToggleStatus(sede: Headquarter): void {
+    const nextStatus = !sede.activo;
     this.confirmationService.confirm({
-      header: 'Confirmacion',
-      message: `¿Seguro que deseas eliminar la sede ${sede.nombre}?`,
-      icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'Eliminar',
+      header:      'Confirmación',
+      message:     `¿Deseas ${nextStatus ? 'activar' : 'desactivar'} la sede ${sede.nombre} (${sede.codigo})?`,
+      icon:        'pi pi-exclamation-triangle',
+      acceptLabel: nextStatus ? 'Activar' : 'Desactivar',
       rejectLabel: 'Cancelar',
-      acceptButtonProps: {
-        severity: 'danger',
-      },
-      rejectButtonProps: {
-        severity: 'secondary',
-        outlined: true,
-      },
+      acceptButtonProps: { severity: (nextStatus ? 'success' : 'danger') as any },
+      rejectButtonProps: { severity: 'secondary', outlined: true },
       accept: () => {
-        this.sedes = this.sedes.filter(item => item.codigo !== sede.codigo);
-        this.updateFilteredSedes(this.searchTerm);
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Sede eliminada',
-          detail: `Se elimino la sede ${sede.nombre}.`,
+        this.sedeService.updateSedeStatus(sede.id_sede, nextStatus, 'Administrador').subscribe({
+          next: () => {
+            this.messageService.add({
+              severity: 'success',
+              summary:  nextStatus ? 'Sede activada' : 'Sede desactivada',
+              detail:   `Se ${nextStatus ? 'activó' : 'desactivó'} la sede ${sede.nombre}.`,
+            });
+          },
+          error: (err) => {
+            this.messageService.add({
+              severity: 'error', summary: 'Error',
+              detail: err?.error?.message ?? 'No se pudo cambiar el estado de la sede.',
+            });
+          },
         });
       },
     });
-  }
-
-  private updateFilteredSedes(term: string): void {
-    const value = term?.trim().toLowerCase();
-
-    if (!value) {
-      this.filteredSedes = [...this.sedes];
-      this.sedeSuggestions = [...this.sedes];
-      return;
-    }
-
-    this.filteredSedes = this.sedes.filter(sede =>
-      [sede.codigo, sede.nombre, sede.ciudad].some(field =>
-        field.toLowerCase().includes(value)
-      )
-    );
-    this.sedeSuggestions = [...this.filteredSedes];
-  }
-
-  private getSearchValue(term: string | { nombre?: string } | null): string {
-    if (!term) {
-      return '';
-    }
-
-    if (typeof term === 'string') {
-      return term;
-    }
-
-    return term.nombre ?? '';
   }
 }

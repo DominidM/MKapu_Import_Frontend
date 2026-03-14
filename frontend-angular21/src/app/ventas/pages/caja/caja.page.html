@@ -1,0 +1,329 @@
+<p-confirmDialog />
+<app-loading-overlay [visible]="isLoading()" mensaje="Cargando dashboard..." modo="page" />
+
+@if (!isLoading()) {
+
+  <!-- ── HEADER CARD ── -->
+  <div class="p-2">
+    <p-card class="ventas-header-card mb-4 ventas-header-bordered">
+      <div class="flex align-items-center justify-content-between flex-wrap gap-2">
+
+        <div class="flex align-items-center gap-3">
+          <span class="ventas-title-icon">
+            <i class="pi pi-wallet"></i>
+          </span>
+          <div>
+            <p class="ventas-kicker mb-0">VENTAS · ESTADO CAJA</p>
+            <h2 class="ventas-title mb-0">CAJA CHICA</h2>
+          </div>
+        </div>
+
+        <!-- Botones del header -->
+        <div class="flex gap-2">
+          <p-button
+            label="Historial"
+            icon="pi pi-history"
+            severity="secondary"
+            [outlined]="true"
+            (onClick)="verHistorial()">
+          </p-button>
+          @if (caja()) {
+            <p-button
+              label="Imprimir Resumen"
+              icon="pi pi-print"
+              severity="info"
+              [outlined]="true"
+              (onClick)="imprimirResumenActual()">
+            </p-button>
+            <p-button
+              label="Cerrar Caja"
+              icon="pi pi-lock"
+              severity="danger"
+              [loading]="loading()"
+              (onClick)="confirmarCierre()">
+            </p-button>
+          }
+        </div>
+
+      </div>
+    </p-card>
+  </div>
+
+  <!-- ── ESTADÍSTICAS ── -->
+  <div class="p-2">
+    <div class="ventas-header-bordered mb-4">
+
+      @if (caja()) {
+        <div class="seccion-estadisticas seccion-estadisticas--cinco">
+
+          <div class="estadistica-card">
+            <i class="pi pi-hashtag"></i>
+            <div>
+              <span class="estadistica-label">ID Sesión</span>
+              <span class="estadistica-valor mono">
+                {{ (cajaDetalle() ?? caja()).id_caja }}
+              </span>
+            </div>
+          </div>
+
+          <div class="estadistica-card">
+            <i class="pi pi-clock"></i>
+            <div>
+              <span class="estadistica-label">Tiempo abierta</span>
+              <span class="estadistica-valor">{{ tiempoAbierta() ?? '—' }}</span>
+            </div>
+          </div>
+
+          <div class="estadistica-card">
+            <i class="pi pi-calendar"></i>
+            <div>
+              <span class="estadistica-label">Fecha apertura</span>
+              <span class="estadistica-valor fecha">
+                {{ (cajaDetalle() ?? caja()).fec_apertura | date:'dd/MM/yy HH:mm' }}
+              </span>
+            </div>
+          </div>
+
+          <div class="estadistica-card estadistica-card--amarillo">
+            <i class="pi pi-wallet"></i>
+            <div>
+              <span class="estadistica-label">Efectivo en Caja</span>
+              <span class="estadistica-valor">
+                S/ {{ resumen()?.dineroEnCaja ? (resumen().dineroEnCaja | number:'1.2-2') : '—' }}
+              </span>
+            </div>
+          </div>
+
+          <div class="estadistica-card estadistica-card--azul">
+            <i class="pi pi-file"></i>
+            <div>
+              <span class="estadistica-label">Saldo Virtual</span>
+              <span class="estadistica-valor">
+                S/ {{ resumen()?.saldoVirtual ? (resumen().saldoVirtual | number:'1.2-2') : '—' }}
+              </span>
+            </div>
+          </div>
+
+        </div>
+
+      } @else {
+        <div class="seccion-estadisticas">
+
+          <div class="estadistica-card">
+            <i class="pi pi-shopping-cart"></i>
+            <div>
+              <span class="estadistica-label">Ventas del día</span>
+              <span class="estadistica-valor">{{ resumen()?.totalVentas ?? '—' }}</span>
+            </div>
+          </div>
+
+          <div class="estadistica-card">
+            <i class="pi pi-money-bill"></i>
+            <div>
+              <span class="estadistica-label">Total ingresado</span>
+              <span class="estadistica-valor">
+                S/ {{ resumen()?.totalMonto ? (resumen().totalMonto | number:'1.2-2') : '—' }}
+              </span>
+            </div>
+          </div>
+
+          <div class="estadistica-card">
+            <i class="pi pi-chart-line"></i>
+            <div>
+              <span class="estadistica-label">Ticket promedio</span>
+              <span class="estadistica-valor">
+                S/ {{ resumen()?.ticketPromedio ? (resumen().ticketPromedio | number:'1.2-2') : '—' }}
+              </span>
+            </div>
+          </div>
+
+          <div class="estadistica-card">
+            <i class="pi pi-lock"></i>
+            <div>
+              <span class="estadistica-label">Estado</span>
+              <span class="estadistica-valor cerrada">SIN SESIÓN</span>
+            </div>
+          </div>
+
+        </div>
+      }
+
+    </div>
+  </div>
+
+  <!-- ── CAJA ABIERTA — Resumen del día ── -->
+  @if (caja()) {
+    <div class="p-2">
+      <p-card class="tarjeta-principal">
+        <div class="seccion-tabla">
+
+          <div class="tabla-header">
+            <h3><i class="pi pi-chart-bar"></i> Resumen del día</h3>
+          </div>
+
+          <div class="resumen-grid resumen-grid--cinco">
+
+            <div class="resumen-card">
+              <i class="pi pi-shopping-cart resumen-icon ventas"></i>
+              <div>
+                <span class="estadistica-label">Ventas realizadas</span>
+                <span class="resumen-valor">{{ resumen()?.totalVentas ?? 0 }}</span>
+              </div>
+            </div>
+
+            <div class="resumen-card resumen-card--highlight">
+              <i class="pi pi-money-bill resumen-icon ingresos"></i>
+              <div>
+                <span class="estadistica-label">Total ingresado</span>
+                <span class="resumen-valor resumen-valor--verde">
+                  S/ {{ resumen()?.totalMonto ? (resumen().totalMonto | number:'1.2-2') : '0.00' }}
+                </span>
+              </div>
+            </div>
+
+            <div class="resumen-card">
+              <i class="pi pi-chart-line resumen-icon ganancia"></i>
+              <div>
+                <span class="estadistica-label">Ganancia bruta</span>
+                <span class="resumen-valor">
+                  S/ {{ resumen()?.gananciaBruta ? (resumen().gananciaBruta | number:'1.2-2') : '0.00' }}
+                </span>
+              </div>
+            </div>
+
+            <div class="resumen-card">
+              <i class="pi pi-box resumen-icon productos"></i>
+              <div>
+                <span class="estadistica-label">Cant. productos</span>
+                <span class="resumen-valor">{{ resumen()?.cantProductos ?? 0 }}</span>
+              </div>
+            </div>
+
+            <div class="resumen-card">
+              <i class="pi pi-dollar resumen-icon dinero"></i>
+              <div>
+                <span class="estadistica-label">Monto inicial</span>
+                <span class="resumen-valor resumen-valor--amarillo">
+                  S/ {{ (cajaDetalle() ?? caja())?.monto_inicial
+                        ? ((cajaDetalle() ?? caja()).monto_inicial | number:'1.2-2')
+                        : '0.00' }}
+                </span>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Gráfico de barras por hora -->
+          <div class="grafico-container">
+            <canvas id="ventasHoraChart"></canvas>
+          </div>
+
+        </div>
+      </p-card>
+    </div>
+  }
+
+  <!-- ── CAJA CERRADA — Formulario apertura ── -->
+  @if (!caja()) {
+    <div class="p-2">
+      <div class="filtros-container mb-4">
+        <div class="seccion-filtros">
+          <h3><i class="pi pi-unlock"></i> Abrir nueva sesión de caja</h3>
+          <div class="apertura-form">
+            <div class="filtro-item">
+              <label>Monto inicial (S/) <span style="opacity:0.5">— opcional</span></label>
+              <p-inputNumber
+                inputId="monto"
+                [ngModel]="montoInicial()"
+                (ngModelChange)="montoInicial.set($event)"
+                mode="currency"
+                currency="PEN"
+                locale="es-PE"
+                [min]="0"
+                [disabled]="loading()"
+                placeholder="0.00"
+                styleClass="apertura-input">
+              </p-inputNumber>
+            </div>
+            <div class="filtro-item filtro-boton-abrir">
+              <label>&nbsp;</label>
+              <p-button
+                label="Abrir Caja"
+                icon="pi pi-unlock"
+                severity="success"
+                styleClass="btn-abrir-caja"
+                [loading]="loading()"
+                (onClick)="abrirCaja()">
+              </p-button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+}
+
+<!-- ══ DIALOG HISTORIAL DE CAJAS ════════════════════════════════════════════ -->
+<p-dialog
+  [visible]="historialVisible()"
+  (visibleChange)="historialVisible.set($event)"
+  [modal]="true"
+  header="Historial de Cajas"
+  [style]="{ width: '640px' }"
+  [draggable]="false">
+
+  @if (historialLoading()) {
+    <div class="flex justify-content-center align-items-center py-5">
+      <i class="pi pi-spin pi-spinner" style="font-size:2rem; color:var(--gold)"></i>
+    </div>
+
+  } @else if (historial().length === 0) {
+    <div class="text-center py-5">
+      <i class="pi pi-inbox text-3xl text-400 mb-3 block"></i>
+      <p class="text-600">No hay cajas registradas.</p>
+    </div>
+
+  } @else {
+    <p-table
+      [value]="historial()"
+      styleClass="p-datatable-sm p-datatable-striped"
+      [tableStyle]="{ 'min-width': '500px' }">
+
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width:30%">Apertura</th>
+          <th style="width:30%">Cierre</th>
+          <th style="width:15%">Estado</th>
+          <th style="width:15%" class="text-center">Reporte</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-c>
+        <tr>
+          <td>{{ c.fec_apertura | date:'dd/MM/yy HH:mm' }}</td>
+          <td>{{ c.fec_cierre ? (c.fec_cierre | date:'dd/MM/yy HH:mm') : '—' }}</td>
+          <td>
+            <p-tag
+              [value]="c.estado"
+              [severity]="c.estado === 'ABIERTA' ? 'success' : 'secondary'">
+            </p-tag>
+          </td>
+          <td class="text-center">
+            <p-button
+              icon="pi pi-print"
+              [rounded]="true" [text]="true" severity="secondary"
+              pTooltip="Imprimir reporte"
+              tooltipPosition="top"
+              (onClick)="imprimirCajaHistorial(c.id_caja)">
+            </p-button>
+          </td>
+        </tr>
+      </ng-template>
+
+    </p-table>
+  }
+
+</p-dialog>
+
+<p-toast></p-toast>

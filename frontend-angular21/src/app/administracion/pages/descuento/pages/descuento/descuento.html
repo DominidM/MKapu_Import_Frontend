@@ -1,0 +1,195 @@
+<div class="p-2">
+
+  <!-- CABECERA -->
+  <p-card class="ventas-header-card mb-4 ventas-header-bordered">
+    <div class="flex align-items-center justify-content-between flex-wrap gap-2">
+      <div class="flex align-items-center gap-3">
+        <span class="sedes-title-icon"><i class="pi pi-list"></i></span>
+        <div>
+          <p class="sedes-kicker">ADMINISTRADOR - ADMINISTRACION - DESCUENTOS</p>
+          <h2 class="sedes-title">GESTION DE DESCUENTOS</h2>
+        </div>
+      </div>
+      <div class="flex gap-2">
+        <p-button
+          label="Agregar descuento"
+          icon="pi pi-plus"
+          styleClass="sedes-pill"
+          [routerLink]="['/admin/descuentos/agregar-descuento']">
+        </p-button>
+      </div>
+    </div>
+  </p-card>
+
+  <!-- FILTROS -->
+  <div class="filtros-container mb-4">
+    <div class="seccion-filtros">
+      <h3><i class="pi pi-filter"></i> Filtros de búsqueda</h3>
+
+      <div class="filtros-linea-1">
+        <div class="filtro-item filtro-cliente-50">
+          <label>Buscar Descuento</label>
+          <p-autoComplete
+            styleClass="w-full"
+            [ngModel]="searchTerm()"
+            (ngModelChange)="onSearchChange($event)"
+            [suggestions]="descuentoSuggestions()"
+            field="nombre"
+            (completeMethod)="onSearch($event)"
+            (onSelect)="onSelectDescuento($event)"
+            placeholder="Escribe nombre del descuento...">
+            <ng-template let-item pTemplate="item">
+              <div class="flex flex-column gap-1">
+                <span class="font-medium">{{ item.nombre }}</span>
+                <small class="text-500">{{ item.porcentaje }}%</small>
+              </div>
+            </ng-template>
+          </p-autoComplete>
+        </div>
+      </div>
+
+      <div class="filtros-linea-2">
+        <div class="filtro-item filtro-compacto">
+          <label>Vista</label>
+          <p-select
+            [options]="viewOptions"
+            optionLabel="label"
+            optionValue="value"
+            [ngModel]="viewMode()"
+            (ngModelChange)="onViewModeChange($event)"
+            placeholder="Todos"
+            styleClass="w-full">
+          </p-select>
+        </div>
+
+        <div class="filtro-item filtro-boton-limpiar">
+          <label>&nbsp;</label>
+          <p-button
+            label="Limpiar Filtros"
+            icon="pi pi-filter-slash"
+            severity="danger"
+            styleClass="btn-limpiar-filtros"
+            type="button"
+            (click)="clearSearch()">
+          </p-button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p-toast position="top-right" />
+
+  <!-- ERROR -->
+  <p-message
+    *ngIf="!loading() && error() as e"
+    severity="error"
+    [text]="e"
+    class="mb-3 block">
+  </p-message>
+
+  <!-- TABLA -->
+  <app-shared-table-container
+    titulo="Listado de descuentos"
+    iconoTitulo="pi pi-list"
+    mensajeCarga="Cargando descuentos..."
+    [loading]="loading()"
+    [paginaActual]="paginaActual()"
+    [totalPaginas]="totalPaginas()"
+    [totalRegistros]="filteredDescuentos().length"
+    [limitePorPagina]="limitePagina()"
+    [mostrarExportar]="false"
+    (pageChange)="onPageChange($event)"
+    (limitChange)="onLimitChange($event)"
+  >
+
+    <!-- Tag contador en slot de acciones -->
+    <div slot="acciones" class="flex align-items-center gap-2">
+      <p-tag
+        [value]="(viewMode() === 'activas' ? 'Activos' : viewMode() === 'inactivas' ? 'Inactivos' : 'Todos') + ': ' + filteredDescuentos().length"
+        [severity]="viewMode() === 'activas' ? 'success' : viewMode() === 'inactivas' ? 'danger' : 'info'">
+      </p-tag>
+    </div>
+
+    <!-- Estado vacío -->
+    <div *ngIf="filteredDescuentos().length === 0" class="mensaje-vacio">
+      <i class="pi pi-inbox"></i>
+      <p>No se encontraron descuentos</p>
+      <p-button
+        label="Limpiar filtros"
+        icon="pi pi-filter-slash"
+        severity="danger"
+        size="small"
+        type="button"
+        (click)="clearSearch()">
+      </p-button>
+    </div>
+
+    <!-- Tabla -->
+    <p-table
+      *ngIf="filteredDescuentos().length > 0"
+      [value]="descuentosPaginados()"
+      [paginator]="false"
+      styleClass="p-datatable-striped"
+      [tableStyle]="{ 'min-width': '40rem' }"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Nombre</th>
+          <th>Porcentaje</th>
+          <th>Estado</th>
+          <th class="text-center">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-descuento>
+        <tr>
+          <td><strong>{{ descuento.nombre }}</strong></td>
+          <td>{{ descuento.porcentaje }} %</td>
+          <td>
+            <p-tag
+              [value]="descuento.activo ? 'Activo' : 'Inactivo'"
+              [severity]="descuento.activo ? 'success' : 'danger'">
+            </p-tag>
+          </td>
+          <td class="text-center">
+            <div class="acciones-tabla">
+              <p-button
+                icon="pi pi-pencil"
+                [rounded]="true"
+                [text]="true"
+                severity="secondary"
+                pTooltip="Editar descuento"
+                tooltipPosition="top"
+                [routerLink]="['/admin/descuentos/editar-descuento', descuento.idDescuento]">
+              </p-button>
+              <p-button
+                [icon]="descuento.activo ? 'pi pi-times' : 'pi pi-check'"
+                [rounded]="true"
+                [text]="true"
+                [severity]="descuento.activo ? 'danger' : 'success'"
+                [pTooltip]="descuento.activo ? 'Desactivar descuento' : 'Activar descuento'"
+                tooltipPosition="top"
+                (onClick)="confirmToggleStatus(descuento)">
+              </p-button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="4" class="text-center">
+            <div class="mensaje-vacio">
+              <i class="pi pi-inbox"></i>
+              <p>No se encontraron descuentos</p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+
+    <p-confirmdialog />
+
+  </app-shared-table-container>
+
+</div>

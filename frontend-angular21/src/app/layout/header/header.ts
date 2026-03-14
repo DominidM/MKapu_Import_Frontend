@@ -1,23 +1,66 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, OnInit, Output, EventEmitter, inject } from '@angular/core';
+import { Router, NavigationEnd, RouterLink } from '@angular/router';
+import { filter } from 'rxjs/operators';
 import { ButtonModule } from 'primeng/button';
 import { ToolbarModule } from 'primeng/toolbar';
 import { InputTextModule } from 'primeng/inputtext';
-import { FloatLabel } from 'primeng/floatlabel';
+import { RoleService } from '../../core/services/role.service';
+import { CashboxSocketService } from '../../ventas/services/cashbox-socket.service';
 import { ThemeService } from '../../core/services/theme.service';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-header',
-  imports: [ToolbarModule, ButtonModule,InputTextModule ],
+  imports: [CommonModule, ToolbarModule, ButtonModule, InputTextModule, RouterLink],
   templateUrl: './header.html',
   styleUrl: './header.css',
+  standalone: true,
 })
-export class Header {
-  value1: string = "";
+export class Header implements OnInit {
+  private router          = inject(Router);
+  private roleService     = inject(RoleService);
+  protected cashboxSocket = inject(CashboxSocketService);
+  protected themeService  = inject(ThemeService);
 
-  constructor(public themeService: ThemeService) {} // público para usarlo en template
   @Output() toggleSidebar = new EventEmitter<void>();
+
+  // ← Usa permisos en lugar de comparar con UserRole enum
+  private readonly permisos = this.roleService.getPermisos();
+
+  readonly isVentas = this.permisos.includes('PRINCIPAL');      
+  readonly isAdmin  = this.permisos.includes('ADMINISTRACION'); 
+  readonly showCaja = this.isVentas || this.isAdmin;
+
+  notifCount         = this.loadNotifCount();
+  readonly caja      = this.cashboxSocket.caja;
+  sedeNombre: string = this.roleService.getCurrentUser()?.sedeNombre ?? '';
+
+  ngOnInit(): void {
+    this.router.events
+      .pipe(filter((e) => e instanceof NavigationEnd))
+      .subscribe(() => (this.notifCount = this.loadNotifCount()));
+
+    if (this.showCaja) {
+      const user = this.roleService.getCurrentUser();
+      const id_sede = user?.idSede;
+
+      if (id_sede) {
+        this.cashboxSocket.checkActiveSession(id_sede).then(data => {
+          console.log('✅ checkActiveSession response:', data);
+        });
+      } else {
+        console.warn('⚠️ Usuario no tiene idSede asignado');
+      }
+    }
+  }
+
   toggleTheme(): void {
     this.themeService.toggleTheme();
   }
 
+  private loadNotifCount(): number {
+    const raw   = localStorage.getItem('transferencia_notif_count');
+    const count = raw ? Number(raw) : 0;
+    return Number.isFinite(count) && count > 0 ? count : 0;
+  }
 }

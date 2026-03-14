@@ -1,0 +1,102 @@
+<div class="p-2">
+  <p-card styleClass="sedes-header-card">
+    <div class="flex align-items-center justify-content-between flex-wrap gap-3">
+      <div class="flex align-items-center gap-3">
+        <span class="sedes-title-icon">
+          <i class="pi pi-tag"></i>
+        </span>
+        <div>
+          <p class="sedes-kicker">ADMINISTRADOR - ADMINISTRACIÓN - EDICIÓN CATEGORÍA</p>
+          <h2 class="sedes-title">EDITAR CATEGORÍA</h2>
+        </div>
+      </div>
+      <div class="flex align-items-center gap-2">
+        <p-button
+          label="Volver"
+          icon="pi pi-arrow-left"
+          severity="secondary"
+          [outlined]="true"
+          [routerLink]="['/admin/categoria']">
+        </p-button>
+      </div>
+    </div>
+  </p-card>
+
+  <div class="mb-3 mt-3">
+    <p-message *ngIf="loading()" severity="info" text="Cargando..."></p-message>
+    <p-message *ngIf="!loading() && error() as e" severity="error" [text]="e"></p-message>
+  </div>
+
+  <p-card styleClass="sede-card border-none mt-3">
+    <form #categoriaForm="ngForm" novalidate (ngSubmit)="updateCategoria()">
+
+      <div class="sede-section">
+        <div class="sede-section-title">DATOS DE LA CATEGORÍA:</div>
+        <p-divider></p-divider>
+      </div>
+
+      <div class="grid form-grid">
+
+        <div class="col-12 md:col-6">
+          <label class="field-label" for="nombre">NOMBRE:</label>
+          <input
+            id="nombre"
+            pInputText
+            class="w-full"
+            placeholder="Ingrese nombre de la categoría"
+            [(ngModel)]="categoria.nombre"
+            name="nombre"
+            required
+            #nombre="ngModel"
+            (input)="toUpperCase('nombre')"
+            [ngClass]="{ 'p-invalid': (categoriaForm.submitted || nombre.touched) && nombre.invalid }"
+          />
+          <p-message
+            *ngIf="(categoriaForm.submitted || nombre.touched) && nombre.invalid"
+            severity="error"
+            text="El nombre es obligatorio."
+          />
+        </div>
+
+        <div class="col-12 md:col-6">
+          <label class="field-label" for="descripcion">DESCRIPCIÓN:</label>
+          <input
+            id="descripcion"
+            pInputText
+            class="w-full"
+            placeholder="Ingrese una descripción (opcional)"
+            [(ngModel)]="categoria.descripcion"
+            name="descripcion"
+            #descripcion="ngModel"
+          />
+        </div>
+
+      </div>
+
+      <p-divider></p-divider>
+
+      <div class="flex align-items-center justify-content-center gap-3 mt-3">
+        <p-button
+          label="Cancelar"
+          outlined
+          severity="secondary"
+          styleClass="sede-btn-cancel"
+          type="button"
+          (click)="confirmCancel()">
+        </p-button>
+
+        <p-button
+          label="Guardar Cambios"
+          icon="pi pi-check"
+          styleClass="sede-btn-primary"
+          type="submit"
+          [disabled]="categoriaForm.invalid || loading()">
+        </p-button>
+      </div>
+
+    </form>
+  </p-card>
+
+  <p-toast position="top-right" />
+  <p-confirmdialog />
+</div>
