@@ -14,7 +14,6 @@ export const routes: Routes = [
     component: Main,
     canActivate: [authGuard],
     children: [
-      
       {
         path: 'admin',
         loadChildren: () => import('./administracion/admin.routes').then((m) => m.ADMIN_ROUTES),

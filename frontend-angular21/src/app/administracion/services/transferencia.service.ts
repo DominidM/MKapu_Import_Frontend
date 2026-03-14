@@ -23,6 +23,8 @@ import {
   TransferProductDetailWithStockResponse,
   TransferProductsStockQuery,
   TransferProductsStockResponse,
+  TransferNotificationQueryDto,
+  TransferNotificationResponseDto,
   TransferProductStockQuery,
   TransferResponseDto,
   TransferRole,
@@ -134,6 +136,25 @@ export class TransferApiService {
       );
   }
 
+  listNotifications(
+    query: TransferNotificationQueryDto,
+  ): Observable<TransferNotificationResponseDto[]> {
+    let params = new HttpParams();
+    params = this.setParamIfDefined(params, 'headquartersId', query.headquartersId);
+    params = this.setParamIfDefined(params, 'role', query.role);
+
+    return this.http
+      .get<TransferNotificationResponseDto[]>(`${this.transferBase}/notifications`, {
+        params,
+        headers: this.buildHeaders(),
+      })
+      .pipe(
+        catchError((error) =>
+          this.handleHttpError(error, 'No se pudo cargar notificaciones de transferencias'),
+        ),
+      );
+  }
+
   requestTransfer(dto: RequestTransferAggregatedDto): Observable<TransferResponseDto> {
     return this.requestAggregated(dto, 'JEFE DE ALMACEN');
   }
@@ -228,7 +249,8 @@ export class TransferApiService {
   }
 
   private buildProductsStockParams(query: TransferProductsStockQuery): HttpParams {
-    let params = new HttpParams().set('id_sede', query.id_sede);
+    let params = new HttpParams();
+    params = this.setParamIfDefined(params, 'id_sede', query.id_sede);
     params = this.setParamIfDefined(params, 'id_almacen', query.id_almacen);
     params = this.setParamIfDefined(params, 'page', query.page);
     params = this.setParamIfDefined(params, 'size', query.size);
@@ -241,16 +263,16 @@ export class TransferApiService {
   }
 
   private buildProductsAutocompleteParams(query: TransferProductAutocompleteQuery): HttpParams {
-    let params = new HttpParams()
-      .set('search', query.search)
-      .set('id_sede', query.id_sede);
+    let params = new HttpParams().set('search', query.search);
+    params = this.setParamIfDefined(params, 'id_sede', query.id_sede);
     params = this.setParamIfDefined(params, 'id_almacen', query.id_almacen);
     params = this.setParamIfDefined(params, 'id_categoria', query.id_categoria);
     return params;
   }
 
   private buildProductStockParams(query: TransferProductStockQuery): HttpParams {
-    let params = new HttpParams().set('id_sede', query.id_sede);
+    let params = new HttpParams();
+    params = this.setParamIfDefined(params, 'id_sede', query.id_sede);
     params = this.setParamIfDefined(params, 'id_almacen', query.id_almacen);
     return params;
   }

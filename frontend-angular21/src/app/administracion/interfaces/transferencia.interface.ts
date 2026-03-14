@@ -91,6 +91,8 @@ export interface TransferResponseDto {
   id: number;
   creatorUserId?: number;
   approveUserId?: number | null;
+  creatorUserName?: string;
+  creatorUserLastName?: string;
   originHeadquartersId: string;
   originWarehouseId: number;
   destinationHeadquartersId: string;
@@ -115,6 +117,8 @@ export interface TransferListResponseDto {
   id: number;
   creatorUserId?: number;
   approveUserId?: number | null;
+  creatorUserName?: string;
+  creatorUserLastName?: string;
   originHeadquartersId: string;
   originWarehouseId: number;
   destinationHeadquartersId: string;
@@ -178,6 +182,32 @@ export interface TransferSocketEventDto {
   transfer: TransferSocketTransferDto;
   emittedAt: string;
 }
+
+export type TransferNotificationStatus = Extract<
+  TransferStatus,
+  'SOLICITADA' | 'APROBADA' | 'RECHAZADA'
+>;
+
+export interface TransferNotificationQueryDto {
+  headquartersId: string;
+  role: TransferRole;
+}
+
+export interface TransferNotificationResponseDto {
+  transferId: number;
+  title: string;
+  message: string;
+  status: TransferNotificationStatus;
+}
+
+export interface StoredTransferNotification
+  extends TransferNotificationResponseDto {
+  createdAt: string;
+  updatedAt: string;
+  read: boolean;
+  deletedAt: string | null;
+}
+
 
 export interface TransferProductsStockQuery {
   id_sede: number;

@@ -329,8 +329,41 @@
           El botón <i class="pi pi-shopping-cart"></i> permite registrar un pago sobre la cuenta.
         </small>
       </div>
-    </p-card>
+    </ng-container>
+    <ng-container *ngIf="wspReady">
+      <i class="pi pi-check-circle" style="font-size:3rem; color:#25D366"></i>
+      <p style="text-align:center; color:var(--text-muted); font-size:0.9rem; line-height:1.6">
+        WhatsApp conectado ✅<br>
+        <ng-container *ngIf="cuentaWsp">
+          Se enviará la cuenta por cobrar del comprobante
+          <strong>#{{ cuentaWsp.salesReceiptId }}</strong><br>
+          con el PDF adjunto al número del cliente.
+        </ng-container>
+      </p>
+    </ng-container>
   </div>
+  <ng-template pTemplate="footer">
+    <div class="flex justify-content-end gap-2">
+      <p-button
+        label="Cancelar" icon="pi pi-times"
+        severity="secondary" [outlined]="true"
+        [disabled]="enviandoWsp"
+        (onClick)="cerrarDialogWsp()">
+      </p-button>
+      <p-button
+        [label]="enviandoWsp ? 'Enviando...' : 'Enviar por WhatsApp'"
+        [icon]="enviandoWsp ? 'pi pi-spin pi-spinner' : 'pi pi-send'"
+        severity="success"
+        [disabled]="!wspReady || enviandoWsp"
+        (onClick)="enviarPorWsp()">
+      </p-button>
+    </div>
+  </ng-template>
+</p-dialog>
+
+<p-toast></p-toast>
+<p-confirmdialog></p-confirmdialog>
+
 </div>
 
 <app-acciones-comprobante-dialog
