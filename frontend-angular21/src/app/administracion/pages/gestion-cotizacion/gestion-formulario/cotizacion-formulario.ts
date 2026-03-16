@@ -18,6 +18,7 @@ import { DividerModule } from 'primeng/divider';
 import { TooltipModule } from 'primeng/tooltip';
 import { DatePickerModule } from 'primeng/datepicker';
 import { TagModule } from 'primeng/tag';
+import { StepperModule } from 'primeng/stepper';
 import {
   ClienteBusquedaResponse,
   ClienteResponse,
@@ -41,7 +42,6 @@ interface DetalleItem {
   pre_unit:    number;
   pre_may:     number;
   pre_caja:    number;
-  // ── Almacén y stock (solo informativo, no se envía al backend) ──
   almacen:     string;
   stock:       number;
 }
@@ -66,12 +66,15 @@ interface DetalleItem {
     TooltipModule,
     DatePickerModule,
     TagModule,
+    StepperModule,
   ],
   templateUrl: './cotizacion-formulario.html',
   styleUrl: './cotizacion-formulario.css',
 })
 export class CotizacionFormulario implements OnInit {
   public iconoCabecera   = 'pi pi-wallet';
+  public tituloKicker    = 'ADMINISTRACIÓN';
+  public subtituloKicker = 'AGREGAR NUEVA COTIZACIÓN';
   private fb              = inject(FormBuilder);
   private router          = inject(Router);
   private route           = inject(ActivatedRoute);
@@ -106,6 +109,8 @@ export class CotizacionFormulario implements OnInit {
   cargandoProducto      = signal(false);
   detalles              = signal<DetalleItem[]>([]);
   esRuc                 = signal(false);
+  pasoActual       = signal<number>(0);
+  tipoCotizacion   = signal<'VENTA' | 'COMPRA' | null>(null);
 
   // Almacén: se carga internamente para conocer el nombre, pero no se muestra como selector
   almacenSeleccionado = signal<number | null>(null);
@@ -121,6 +126,15 @@ export class CotizacionFormulario implements OnInit {
     { label: 'Aprobada',  value: 'APROBADA'  },
     { label: 'Rechazada', value: 'RECHAZADA' },
   ];
+
+  seleccionarTipo(tipo: 'VENTA' | 'COMPRA') {
+    this.tipoCotizacion.set(tipo);
+    this.pasoActual.set(1);
+  }
+
+  volverAlPaso1() {
+    this.pasoActual.set(0);
+  }
 
   tipoPrecioOpciones = (item: DetalleItem) => {
     const opciones = [];
@@ -696,19 +710,19 @@ export class CotizacionFormulario implements OnInit {
       ? raw.fec_venc.toISOString()
       : new Date(raw.fec_venc).toISOString();
 
-    const payload = {
-      documento_cliente: raw.documento,
-      id_sede:           raw.sede,
-      id_almacen:        this.almacenSeleccionado() ?? raw.id_almacen ?? null,
-      fec_venc:          fecVenc,
-      subtotal:          this.subtotal,
-      igv:               this.igv,
-      total:             this.total,
-      // Excluir campos visuales del payload
-      detalles: this.detalles().map(
-        ({ importe, uni_med, tipoPrecio, pre_unit, pre_may, pre_caja, almacen, stock, ...d }) => d
-      ),
-    };
+  const payload = {
+    documento_cliente: raw.documento,
+    id_sede:           raw.sede,
+    id_almacen:        this.almacenSeleccionado() ?? raw.id_almacen ?? null,
+    fec_venc:          fecVenc,
+    subtotal:          this.subtotal,
+    igv:               this.igv,
+    total:             this.total,
+    tipo:              this.tipoCotizacion() ?? 'VENTA', 
+    detalles: this.detalles().map(
+      ({ importe, uni_med, tipoPrecio, pre_unit, pre_may, pre_caja, almacen, stock, ...d }) => d
+    ),
+  };
 
     const req$ = this.esModoEdicion()
       ? this.quoteService.approveQuote(raw.id_cotizacion)

@@ -52,6 +52,7 @@
   box-shadow: 0 4px 10px rgba(246, 175, 51, 0.35);
 }
 
+
 html.p-dark :host ::ng-deep .app-toolbar.p-toolbar,
 html.p-dark :host ::ng-deep .app-toolbar {
   background: #1f1f1f !important;
@@ -172,4 +173,17 @@ html.p-dark :host ::ng-deep .app-toolbar {
     text-overflow: ellipsis; /* Agrega "..." si el texto es muy largo */
     margin-right: 8px;
   }
+}
+
+/* Fix solapamiento con sidebar */
+:host {
+  display: block;
+  width: 100%;
+}
+
+.app-header-card {
+  border: 0 !important;
+  box-shadow: none !important;
+  background: transparent;
+  width: 100%;
 }
