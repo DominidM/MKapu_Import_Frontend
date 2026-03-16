@@ -12,6 +12,7 @@ import { ToastModule } from 'primeng/toast';
 import { AuthService } from '../../auth/services/auth.service';
 import { RoleService } from '../../core/services/role.service';
 import { CashboxSocketService } from '../../ventas/services/cashbox-socket.service';
+import { EmpresaService } from '../../administracion/services/empresa.service';
 
 interface MenuItem {
   path: string;
@@ -55,6 +56,8 @@ export class Sidebar implements OnInit {
 
   private cashboxSocket = inject(CashboxSocketService);
   private cdr = inject(ChangeDetectorRef);
+  private empresaService = inject(EmpresaService);
+  empresa = this.empresaService.empresaActual;
 
   private readonly SIDEBAR_ROUTES: MenuSection[] = [
     {
