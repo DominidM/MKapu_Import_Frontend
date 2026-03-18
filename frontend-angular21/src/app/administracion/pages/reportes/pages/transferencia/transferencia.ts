@@ -23,6 +23,7 @@ import { TransferStore } from '../../../../services/transfer.store';
 import {
   ApproveTransferDto,
   ConfirmReceiptTransferDto,
+  TransferHeadquarterDto,
   TransferListResponseDto,
   TransferSocketEventDto,
   TransferStatus,
@@ -32,6 +33,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TransferUserContextService } from '../../../../services/transfer-user-context.service';
 import { SedeService } from '../../../../services/sede.service';
 import { TransferSocketService } from '../../../../services/transfer-socket.service';
+import { AuthService } from '../../../../../auth/services/auth.service';
 import { LoadingOverlayComponent } from '../../../../../shared/components/loading-overlay/loading-overlay.component';
 import { PaginadorComponent } from '../../../../../shared/components/paginador/Paginador.component';
 
@@ -82,6 +84,34 @@ export class Transferencia {
   private readonly transferUserContext = inject(TransferUserContextService);
   private readonly sedeService = inject(SedeService);
   private readonly transferSocket = inject(TransferSocketService);
+  private readonly authService = inject(AuthService, { optional: true });
+
+  private readonly headquarterCatalogSig = computed(() => {
+    const nameById = new Map<string, string>();
+    const nameByCode = new Map<string, string>();
+    const codeById = new Map<string, string>();
+
+    for (const sede of this.sedeService.sedes()) {
+      const normalizedId = this.normalizeId(sede.id_sede);
+      const normalizedCode = String(sede.codigo ?? '').trim().toUpperCase();
+      const normalizedName = String(sede.nombre ?? '').trim();
+
+      if (normalizedId && normalizedName) {
+        nameById.set(normalizedId, normalizedName);
+      }
+
+      if (normalizedCode) {
+        if (normalizedName) {
+          nameByCode.set(normalizedCode, normalizedName);
+        }
+        if (normalizedId) {
+          codeById.set(normalizedId, normalizedCode);
+        }
+      }
+    }
+
+    return { nameById, nameByCode, codeById };
+  });
 
   private readonly searchTermSig      = signal('');
   private readonly estadoFilterSig    = signal<TransferStatus | null>(null);
@@ -481,8 +511,14 @@ export class Transferencia {
       destinationHeadquartersId: String(transferencia.destinationHeadquartersId ?? transferencia.destination?.id_sede ?? transferencia.destination?.id ?? ''),
       approveUserId:             this.getApproveUserId(transferencia),
       producto:                  this.getProductName(transferencia),
-      origen:                    transferencia.origin?.nomSede || this.normalizeId(transferencia.originHeadquartersId) || '-',
-      destino:                   transferencia.destination?.nomSede || this.normalizeId(transferencia.destinationHeadquartersId) || '-',
+      origen:                    this.resolveHeadquarterDisplayName(
+        transferencia.origin,
+        transferencia.originHeadquartersId,
+      ),
+      destino:                   this.resolveHeadquarterDisplayName(
+        transferencia.destination,
+        transferencia.destinationHeadquartersId,
+      ),
       cantidad:                  transferencia.totalQuantity ?? this.getTotalQuantityFromItems(transferencia),
       solicitud:                 `${solicitudTipo}: ${transferencia.observation?.trim() || '-'}`,
       responsable:               this.getFullUserName(
@@ -600,20 +636,62 @@ export class Transferencia {
     return null;
   }
 
-  /*
-  private resolveHeadquarterName(
+  private resolveHeadquarterDisplayName(
+    headquarter: TransferHeadquarterDto | null | undefined,
     headquarterId: string | number | null | undefined,
-  ): string | null {
+  ): string {
+    const catalog = this.headquarterCatalogSig();
     const normalizedId = this.normalizeId(headquarterId);
-    if (!normalizedId) {
-      return null;
+    const normalizedCode = String(headquarter?.codigo ?? '').trim().toUpperCase();
+    const currentUser = this.authService?.getCurrentUser();
+    const currentUserHeadquarterId = this.normalizeId(currentUser?.idSede);
+    const currentUserHeadquarterName = String(currentUser?.sedeNombre ?? '').trim();
+    const currentUserHeadquarterCode = currentUserHeadquarterId
+      ? catalog.codeById.get(currentUserHeadquarterId) ?? ''
+      : '';
+
+    if (
+      currentUserHeadquarterName &&
+      normalizedCode &&
+      currentUserHeadquarterCode &&
+      normalizedCode === currentUserHeadquarterCode
+    ) {
+      return currentUserHeadquarterName;
     }
 
-    return this.headquarterNameMapSig().get(normalizedId) ?? null;
-  }
-  */
+    if (normalizedCode) {
+      const mappedByCode = catalog.nameByCode.get(normalizedCode);
+      if (mappedByCode) {
+        return mappedByCode;
+      }
+    }
 
-  
+    if (
+      currentUserHeadquarterName &&
+      normalizedId &&
+      currentUserHeadquarterId &&
+      normalizedId === currentUserHeadquarterId
+    ) {
+      return currentUserHeadquarterName;
+    }
+
+    if (normalizedId) {
+      const mappedById = catalog.nameById.get(normalizedId);
+      if (mappedById) {
+        return mappedById;
+      }
+    }
+
+    return (
+      String(
+        headquarter?.nomSede ??
+          headquarter?.nombre ??
+          normalizedId ??
+          '-',
+      ).trim() || '-'
+    );
+  }
+
   private isUserFromTransferOrigin(originHeadquartersId: string | number | null | undefined): boolean {
     const userHq = this.transferUserContext.getCurrentHeadquarterId();
     if (!userHq || originHeadquartersId === null || originHeadquartersId === undefined) return false;
