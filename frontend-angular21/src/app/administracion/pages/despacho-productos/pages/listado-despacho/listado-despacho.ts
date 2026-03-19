@@ -112,6 +112,13 @@ export class ListadoDespacho {
   modalVisible         = signal(false);
   despachoSeleccionado = signal<Dispatch | null>(null);
   loadingDetalle       = signal(false);
+
+  // Dialog cambio de estado
+  cambioEstadoVisible = signal(false);
+  despachoParaCambio  = signal<Dispatch | null>(null);
+
+  // ── Dialog cambio de estado ────────────────────────────────────
+ 
   productosMap         = signal<Record<string, ProductoMapItem>>({});
   productosCodigoMap   = signal<Record<number, string>>({});
   clienteInfo          = signal<{ nombre: string; documento: string; tipo_documento?: string; telefono: string; direccion?: string; } | null>(null);
@@ -353,23 +360,35 @@ export class ListadoDespacho {
       this.navegarAConfirmacion(despacho, 'EN_TRANSITO');
     };
 
-    const hacerTransito = (despacho: Dispatch) => {
-      this.dispatchService.iniciarTransito(despacho.id_despacho, { fecha_salida: new Date() }).subscribe({
-        next: (u) => guardarYNavegar(u),
-        error: () => {
-          // Si transito falla pero preparacion ok, navegar igual con lo que tenemos
-          guardarYNavegar(despacho);
-        },
+    const iniciarTransito = (despacho: Dispatch) => {
+      this.dispatchService.iniciarTransito(despacho.id_despacho, { fecha_salida: new Date() })
+        .subscribe({ next: (u) => guardarYNavegar(u), error: () => guardarYNavegar(despacho) });
+    };
+
+    // Marca detalles PENDIENTES como preparados antes de transitar
+    const marcarYTransitar = (despacho: Dispatch) => {
+      const pendientes = (despacho.detalles ?? []).filter(det => det.estado === 'PENDIENTE');
+      if (!pendientes.length) { iniciarTransito(despacho); return; }
+
+      let ok = 0;
+      pendientes.forEach(det => {
+        this.dispatchService.marcarDetallePreparado(
+          det.id_detalle_despacho!,
+          { cantidad_despachada: det.cantidad_solicitada }
+        ).subscribe({
+          next: () => { ok++; if (ok === pendientes.length) iniciarTransito(despacho); },
+          error: () => iniciarTransito(despacho) // intenta transito igual si falla marcado
+        });
       });
     };
 
     if (d.estado === 'GENERADO') {
       this.dispatchService.iniciarPreparacion(d.id_despacho).subscribe({
-        next: (u) => hacerTransito(u),
-        error: () => hacerTransito(d),
+        next: (u) => marcarYTransitar(u),
+        error: () => marcarYTransitar(d),
       });
     } else if (d.estado === 'EN_PREPARACION') {
-      hacerTransito(d);
+      marcarYTransitar(d);
     } else {
       guardarYNavegar(d);
     }
@@ -456,6 +475,127 @@ export class ListadoDespacho {
   }
 
   // Desde el modal siempre es copia
+  // ── Cambio de estado desde la tabla (botón lápiz) ───────────
+  abrirCambioEstado(despacho: Dispatch): void {
+    const estadosNoEditables: string[] = ['GENERADO', 'ENTREGADO', 'CANCELADO'];
+    if (estadosNoEditables.includes(despacho.estado)) {
+      const msgs: Record<string, string> = {
+        GENERADO:  'Debes confirmar la salida primero desde el modal de detalle.',
+        ENTREGADO: `El despacho #${despacho.id_despacho} ya fue entregado y no puede modificarse.`,
+        CANCELADO: `El despacho #${despacho.id_despacho} está cancelado y no puede modificarse.`,
+      };
+      this.messageService.add({
+        severity: 'info',
+        summary: 'No permitido',
+        detail: msgs[despacho.estado],
+        life: 3500
+      });
+      return;
+    }
+    this.despachoParaCambio.set(despacho);
+    this.cambioEstadoVisible.set(true);
+  }
+
+  aplicarCambioEstado(nuevoEstado: 'ENTREGADO' | 'CANCELADO'): void {
+    const d = this.despachoParaCambio();
+    if (!d) return;
+
+    const onSuccess = () => {
+      this.cambioEstadoVisible.set(false);
+      this.despachoParaCambio.set(null);
+      this.messageService.add({
+        severity: 'success',
+        summary: nuevoEstado === 'ENTREGADO' ? '¡Entregado!' : 'Cancelado',
+        detail: `Despacho #${d.id_despacho} marcado como ${nuevoEstado === 'ENTREGADO' ? 'entregado' : 'cancelado'}.`,
+        life: 3000
+      });
+      this.dispatchService.loadDispatches().subscribe({
+        next: () => requestAnimationFrame(() => this.enriquecerTabla())
+      });
+    };
+
+    const onError = () => this.messageService.add({
+      severity: 'error', summary: 'Error',
+      detail: 'No se pudo cambiar el estado.', life: 3000
+    });
+
+    if (nuevoEstado === 'CANCELADO') {
+      // Cancelar se puede desde cualquier estado
+      this.dispatchService.cancelarDespacho(d.id_despacho).subscribe({
+        next: onSuccess, error: onError
+      });
+      return;
+    }
+
+    // ENTREGADO requiere encadenar estados según el flujo del backend:
+    // GENERADO → preparacion → EN_PREPARACION → transito → EN_TRANSITO → entrega → ENTREGADO
+    const hacerEntrega = (despacho: Dispatch) => {
+      this.dispatchService.confirmarEntrega(despacho.id_despacho, { fecha_entrega: new Date() })
+        .subscribe({ next: onSuccess, error: onError });
+    };
+
+    // Marca todos los detalles como PREPARADO, luego inicia tránsito
+    const marcarDetallesYTransitar = (despacho: Dispatch) => {
+      const detallesPendientes = (despacho.detalles ?? []).filter(
+        det => det.estado === 'PENDIENTE'
+      );
+
+      if (!detallesPendientes.length) {
+        // Todos ya preparados → ir directo a tránsito
+        this.dispatchService.iniciarTransito(despacho.id_despacho, { fecha_salida: new Date() })
+          .subscribe({ next: (u) => hacerEntrega(u), error: onError });
+        return;
+      }
+
+      // Marcar cada detalle pendiente como preparado en paralelo
+      let completados = 0;
+      detallesPendientes.forEach(det => {
+        this.dispatchService.marcarDetallePreparado(
+          det.id_detalle_despacho!,
+          { cantidad_despachada: det.cantidad_solicitada }
+        ).subscribe({
+          next: () => {
+            completados++;
+            if (completados === detallesPendientes.length) {
+              // Todos marcados → ahora sí iniciar tránsito
+              this.dispatchService.iniciarTransito(despacho.id_despacho, { fecha_salida: new Date() })
+                .subscribe({ next: (u) => hacerEntrega(u), error: onError });
+            }
+          },
+          error: onError
+        });
+      });
+    };
+
+    const hacerTransito = (despacho: Dispatch) => {
+      marcarDetallesYTransitar(despacho);
+    };
+
+    const hacerPreparacion = (despacho: Dispatch) => {
+      this.dispatchService.iniciarPreparacion(despacho.id_despacho)
+        .subscribe({ next: (u) => hacerTransito(u), error: onError });
+    };
+
+    switch (d.estado) {
+      case 'GENERADO':
+        hacerPreparacion(d);
+        break;
+      case 'EN_PREPARACION':
+        hacerTransito(d);
+        break;
+      case 'EN_TRANSITO':
+        hacerEntrega(d);
+        break;
+      default:
+        // Ya está en ENTREGADO o CANCELADO — no hacer nada
+        this.cambioEstadoVisible.set(false);
+        this.messageService.add({
+          severity: 'info', summary: 'Sin cambios',
+          detail: `El despacho ya está en estado ${d.estado}.`, life: 3000
+        });
+    }
+  }
+
   esCopiaDespacho(_id: number): boolean { return true; }
 
   // Imprime boleta/copia DIRECTO desde el modal sin navegar
