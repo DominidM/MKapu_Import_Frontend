@@ -46,7 +46,6 @@
   <div class="filtros-container mb-4">
     <div class="seccion-filtros">
       <h3><i class="pi pi-filter"></i> Filtros de búsqueda</h3>
-
       <div class="filtros-linea-1">
         <div class="filtro-item filtro-cliente-50">
           <label>Buscar Remate</label>
@@ -54,10 +53,16 @@
             class="w-full" [ngModel]="busqueda()" (ngModelChange)="onBusquedaChange($event)">
         </div>
       </div>
-
       <div class="filtros-linea-2">
         <div class="filtro-item filtro-compacto">
           <label>Estado</label>
+          <p-select [ngModel]="estadoFiltro()" (ngModelChange)="onEstadoChange($event)"
+            [options]="estadoOptions" placeholder="Todos"
+            optionLabel="label" optionValue="value"
+            [showClear]="true" styleClass="w-full" />
+        </div>
+        <div class="filtro-item filtro-compacto">
+          <label>SEDE</label>
           <p-select [ngModel]="estadoFiltro()" (ngModelChange)="onEstadoChange($event)"
             [options]="estadoOptions" placeholder="Todos"
             optionLabel="label" optionValue="value"
@@ -98,20 +103,18 @@
       <ng-template pTemplate="header">
         <tr>
           <th style="width:12%">CÓDIGO</th>
-          <th style="width:35%">PRODUCTO</th>
+          <th style="width:33%">PRODUCTO</th>
           <th style="width:10%">CANTIDAD</th>
-          <th style="width:15%">PRECIO REMATE</th>
-          <th style="width:10%">DESCUENTO</th>
+          <th style="width:13%">PRECIO REMATE</th>
+          <th style="width:8%">DESCUENTO</th>
           <th style="width:10%">ESTADO</th>
-          <th style="width:8%" class="text-center">ACCIONES</th>
+          <th style="width:14%" class="text-center">ACCIONES</th>
         </tr>
       </ng-template>
 
       <ng-template pTemplate="body" let-remate>
         <tr>
-          <td>
-            <span class="codigo-producto">{{ remate.codigo }}</span>
-          </td>
+          <td><span class="codigo-producto">{{ remate.codigo }}</span></td>
           <td>
             <div class="producto-info">
               <div class="producto-nombre">{{ remate.nombre }}</div>
@@ -131,19 +134,23 @@
           </td>
           <td class="text-center">
             <div class="acciones-tabla">
+              <!-- Ver detalle — siempre visible -->
               <p-button icon="pi pi-eye" [rounded]="true" [text]="true" severity="info"
                 pTooltip="Ver detalle" tooltipPosition="top" (onClick)="verDetalle(remate)">
               </p-button>
-              <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="secondary"
+
+              <!-- Editar — solo en ACTIVO -->
+              <p-button *ngIf="remate.estado === 'ACTIVO'"
+                icon="pi pi-pencil" [rounded]="true" [text]="true" severity="secondary"
                 pTooltip="Editar remate" tooltipPosition="top" (onClick)="editarRemate(remate)">
               </p-button>
+
+              <!-- Cancelar — ACTIVO → CANCELADO (devuelve stock al almacén) -->
+              <!-- Finalizar es automático cuando el stock llega a 0 -->
               <p-button *ngIf="remate.estado === 'ACTIVO'"
                 icon="pi pi-times" [rounded]="true" [text]="true" severity="danger"
-                pTooltip="Finalizar remate" tooltipPosition="top" (onClick)="confirmarCambioEstado(remate)">
-              </p-button>
-              <p-button *ngIf="remate.estado === 'FINALIZADO'"
-                icon="pi pi-refresh" [rounded]="true" [text]="true" severity="success"
-                pTooltip="Reactivar remate" tooltipPosition="top" (onClick)="confirmarCambioEstado(remate)">
+                pTooltip="Cancelar remate (devuelve stock)" tooltipPosition="top"
+                (onClick)="confirmarCancelar(remate)">
               </p-button>
             </div>
           </td>
@@ -232,16 +239,19 @@
           </div>
         </div>
 
+        <!-- Footer del modal: solo cancelar cuando está ACTIVO -->
         <div class="rdm-footer">
           <p-button label="Cerrar" icon="pi pi-times" severity="secondary" [outlined]="true"
             styleClass="rdm-btn-close" (onClick)="cerrarModalDetalle()">
           </p-button>
+
+          <!-- Solo cancelar manualmente — el FINALIZADO es automático por stock agotado -->
           <p-button *ngIf="r.estado === 'ACTIVO'"
-            label="Finalizar Remate" icon="pi pi-check" severity="danger" [outlined]="true"
-            styleClass="rdm-btn-toggle" (onClick)="confirmarCambioEstado(r)">
-          </p-button>
-          <p-button label="Editar Remate" icon="pi pi-pencil"
-            styleClass="rdm-btn-edit" (onClick)="editarRemate(r)">
+            label="Cancelar Remate" icon="pi pi-ban"
+            severity="danger"
+            pTooltip="Cancela el remate y devuelve el stock al almacén"
+            styleClass="rdm-btn-edit"
+            (onClick)="confirmarCancelar(r)">
           </p-button>
         </div>
 

@@ -200,4 +200,17 @@ export class AuctionService {
         finalize(() => this._loading.set(false)),
       );
   }
+
+  // ── Cancelar (devuelve stock al almacén) ──────────────────────────────────
+  cancelAuction(id: number, role = 'Administrador'): Observable<AuctionResponseDto> {
+    this._loading.set(true);
+    this._error.set(null);
+    return this.http
+      .post<AuctionResponseDto>(`${this.api}/logistics/auctions/${id}/cancel`, {}, { headers: this.buildHeaders(role) })
+      .pipe(
+        tap(updated => this._auctions.update(list => list.map(a => a.id_remate === updated.id_remate ? updated : a))),
+        catchError(err => { this._error.set('No se pudo cancelar el remate.'); return throwError(() => err); }),
+        finalize(() => this._loading.set(false)),
+      );
+  }
 }
