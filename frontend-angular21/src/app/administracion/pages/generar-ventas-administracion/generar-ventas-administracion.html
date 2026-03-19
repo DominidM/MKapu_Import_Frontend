@@ -276,7 +276,9 @@
           icon="pi pi-file-pdf"
           severity="danger"
           [outlined]="true"
-          (onClick)="ventasService.descargarComprobantePdf(comprobanteGenerado()!.idComprobante).subscribe()"
+          (onClick)="
+            ventasService.descargarComprobantePdf(comprobanteGenerado()!.idComprobante).subscribe()
+          "
           styleClass="ventas-pill"
         />
         <p-button
@@ -284,7 +286,11 @@
           icon="pi pi-eye"
           severity="info"
           [outlined]="true"
-          (onClick)="ventasService.verComprobantePdfEnPestana(comprobanteGenerado()!.idComprobante).subscribe()"
+          (onClick)="
+            ventasService
+              .verComprobantePdfEnPestana(comprobanteGenerado()!.idComprobante)
+              .subscribe()
+          "
           styleClass="ventas-pill"
         />
         <p-button
@@ -292,7 +298,9 @@
           icon="pi pi-receipt"
           severity="success"
           [outlined]="true"
-          (onClick)="ventasService.generarVoucher(comprobanteGenerado()!.idComprobante, false).subscribe()"
+          (onClick)="
+            ventasService.generarVoucher(comprobanteGenerado()!.idComprobante, false).subscribe()
+          "
           styleClass="ventas-pill"
         />
         <p-button
@@ -352,9 +360,13 @@
         </thead>
         <tbody>
           <tr *ngFor="let item of productosSeleccionados(); let i = index">
-            <td><span class="pos-codigo">{{ item.codigo }}</span></td>
+            <td>
+              <span class="pos-codigo">{{ item.codigo }}</span>
+            </td>
             <td class="pos-td-nombre">{{ item.description }}</td>
-            <td class="ta-r"><span class="pos-qty-badge">{{ item.quantity }}</span></td>
+            <td class="ta-r">
+              <span class="pos-qty-badge">{{ item.quantity }}</span>
+            </td>
             <td class="ta-r">S/. {{ item.unitPrice | number: '1.2-2' }}</td>
             <td class="ta-r">
               <strong class="pos-subtotal-val">S/. {{ item.total | number: '1.2-2' }}</strong>
@@ -365,7 +377,9 @@
                 value="🎁 Promo"
                 severity="success"
               />
-              <span *ngIf="!promocionAplicada() || !itemCalificaPromocion(item)" class="pos-dash">—</span>
+              <span *ngIf="!promocionAplicada() || !itemCalificaPromocion(item)" class="pos-dash"
+                >—</span
+              >
             </td>
             <td class="ta-c">
               <button class="pos-btn-del" (click)="eliminarProducto(i)">
@@ -524,12 +538,14 @@
                 <span class="pos-promo-applied-name">{{ promocionAplicada()!.concepto }}</span>
                 <span class="pos-promo-applied-val"
                   >-S/. {{ descuentoPromocion() | number: '1.2-2' }}
-                  <small>({{
-                    esPorcentaje(promocionAplicada()!.tipo)
-                      ? promocionAplicada()!.valor + '%'
-                      : 'S/. ' + (promocionAplicada()!.valor | number: '1.2-2')
-                  }})</small>
-                </span>
+                  <small
+                    >({{
+                      esPorcentaje(promocionAplicada()!.tipo)
+                        ? promocionAplicada()!.valor + '%'
+                        : 'S/. ' + (promocionAplicada()!.valor | number: '1.2-2')
+                    }})</small
+                  ></span
+                >
               </div>
               <button class="pos-promo-quitar" (click)="quitarPromocion()">
                 <i class="pi pi-times"></i>
@@ -559,7 +575,9 @@
               </div>
               <div
                 class="pos-promo-results"
-                *ngIf="promocionesFiltradas().length > 0 && codigoPromocionInput().trim().length > 0"
+                *ngIf="
+                  promocionesFiltradas().length > 0 && codigoPromocionInput().trim().length > 0
+                "
               >
                 <div
                   *ngFor="let promo of promocionesFiltradas()"
@@ -582,9 +600,9 @@
                   </span>
                 </div>
               </div>
-              <small *ngIf="promoNoEncontrada()" class="pos-promo-error">
-                <i class="pi pi-times-circle"></i> No se encontró esa promoción
-              </small>
+              <small *ngIf="promoNoEncontrada()" class="pos-promo-error"
+                ><i class="pi pi-times-circle"></i> No se encontró esa promoción</small
+              >
             </div>
           </div>
         </div>
@@ -598,15 +616,15 @@
               <span>IGV (18%)</span><span>S/. {{ igv() | number: '1.2-2' }}</span>
             </div>
             <div class="pos-total-row pos-total-desc" *ngIf="descuentoPromocion() > 0">
-              <span><i class="pi pi-tag"></i> Descuento</span>
-              <span>-S/. {{ descuentoPromocion() | number: '1.2-2' }}</span>
+              <span><i class="pi pi-tag"></i> Descuento</span
+              ><span>-S/. {{ descuentoPromocion() | number: '1.2-2' }}</span>
             </div>
             <div
               class="pos-total-row pos-total-delivery"
               *ngIf="tipoEntrega() === 'delivery' && costoDelivery() > 0"
             >
-              <span><i class="pi pi-truck"></i> Delivery</span>
-              <span>S/. {{ costoDelivery() | number: '1.2-2' }}</span>
+              <span><i class="pi pi-truck"></i> Delivery</span
+              ><span>S/. {{ costoDelivery() | number: '1.2-2' }}</span>
             </div>
             <div class="pos-total-row pos-total-comision" *ngIf="comisionMonto() > 0">
               <span><i class="pi pi-credit-card"></i> Comisión bancaria (5%)</span>
@@ -682,7 +700,9 @@
       </div>
       <small class="pos-sb-hint" *ngIf="clienteDocumento()">
         {{ clienteDocumento().length }} / {{ longitudDocumento() }} dígitos
-        <span class="pos-ok" *ngIf="clienteDocumento().length === longitudDocumento()">✓ Completo</span>
+        <span class="pos-ok" *ngIf="clienteDocumento().length === longitudDocumento()"
+          >✓ Completo</span
+        >
       </small>
       <p-button
         label="Buscar Cliente"
@@ -712,18 +732,37 @@
       <p class="pos-sb-label"><i class="pi pi-user-check"></i> Cliente Seleccionado</p>
       <div class="pos-sb-cliente-card">
         <div class="pos-sb-cliente-name">
-          {{ clienteEncontrado()!.name }}
-          <span class="pos-sb-verified"><i class="pi pi-check-circle"></i> Verificado</span>
+          {{ clienteEncontrado()!.name
+          }}<span class="pos-sb-verified"><i class="pi pi-check-circle"></i> Verificado</span>
         </div>
         <div class="pos-sb-meta">
           <span><i class="pi pi-id-card"></i> {{ formatearDocumentoCompleto() }}</span>
-          <span *ngIf="clienteEncontrado()!.phone"><i class="pi pi-phone"></i> {{ clienteEncontrado()!.phone }}</span>
-          <span *ngIf="clienteEncontrado()!.email"><i class="pi pi-envelope"></i> {{ clienteEncontrado()!.email }}</span>
-          <span *ngIf="clienteEncontrado()!.address"><i class="pi pi-map-marker"></i> {{ clienteEncontrado()!.address }}</span>
+          <span *ngIf="clienteEncontrado()!.phone"
+            ><i class="pi pi-phone"></i> {{ clienteEncontrado()!.phone }}</span
+          >
+          <span *ngIf="clienteEncontrado()!.email"
+            ><i class="pi pi-envelope"></i> {{ clienteEncontrado()!.email }}</span
+          >
+          <span *ngIf="clienteEncontrado()!.address"
+            ><i class="pi pi-map-marker"></i> {{ clienteEncontrado()!.address }}</span
+          >
         </div>
         <div class="pos-sb-actions">
-          <p-button label="Editar" icon="pi pi-pencil" [text]="true" size="small" (onClick)="iniciarEdicionCliente()" />
-          <p-button label="Cambiar" icon="pi pi-times" severity="secondary" [text]="true" size="small" (onClick)="limpiarCliente()" />
+          <p-button
+            label="Editar"
+            icon="pi pi-pencil"
+            [text]="true"
+            size="small"
+            (onClick)="iniciarEdicionCliente()"
+          />
+          <p-button
+            label="Cambiar"
+            icon="pi pi-times"
+            severity="secondary"
+            [text]="true"
+            size="small"
+            (onClick)="limpiarCliente()"
+          />
         </div>
       </div>
     </div>
@@ -732,24 +771,40 @@
       <p class="pos-sb-label"><i class="pi pi-pencil"></i> Editar Cliente</p>
       <div class="pos-sb-form">
         <div class="pos-sb-field">
-          <label>Nombre *</label>
-          <input pInputText [(ngModel)]="editarClienteForm.name" class="w-full" />
+          <label>Nombre *</label
+          ><input pInputText [(ngModel)]="editarClienteForm.name" class="w-full" />
         </div>
         <div class="pos-sb-field">
-          <label>Dirección</label>
-          <input pInputText [(ngModel)]="editarClienteForm.address" class="w-full" />
+          <label>Dirección</label
+          ><input pInputText [(ngModel)]="editarClienteForm.address" class="w-full" />
         </div>
         <div class="pos-sb-field">
-          <label>Teléfono</label>
-          <input pInputText [(ngModel)]="editarClienteForm.phone" class="w-full" maxlength="9" inputmode="numeric" />
+          <label>Teléfono</label
+          ><input
+            pInputText
+            [(ngModel)]="editarClienteForm.phone"
+            class="w-full"
+            maxlength="9"
+            inputmode="numeric"
+          />
         </div>
         <div class="pos-sb-field">
-          <label>Email</label>
-          <input pInputText [(ngModel)]="editarClienteForm.email" class="w-full" type="email" />
+          <label>Email</label
+          ><input pInputText [(ngModel)]="editarClienteForm.email" class="w-full" type="email" />
         </div>
         <div class="pos-sb-form-actions">
-          <p-button label="Cancelar" [outlined]="true" severity="secondary" (onClick)="cancelarEdicionCliente()" />
-          <p-button label="Guardar" icon="pi pi-check" (onClick)="guardarCambiosCliente()" [loading]="guardandoCliente()" />
+          <p-button
+            label="Cancelar"
+            [outlined]="true"
+            severity="secondary"
+            (onClick)="cancelarEdicionCliente()"
+          />
+          <p-button
+            label="Guardar"
+            icon="pi pi-check"
+            (onClick)="guardarCambiosCliente()"
+            [loading]="guardandoCliente()"
+          />
         </div>
       </div>
     </div>
@@ -766,7 +821,11 @@
             optionValue="documentTypeId"
             placeholder="Seleccione tipo"
             styleClass="w-full"
-            (ngModelChange)="nuevoClienteForm.documentValue = ''; nuevoClienteForm.name = ''; nombreDesdeReniec.set(false)"
+            (ngModelChange)="
+              nuevoClienteForm.documentValue = '';
+              nuevoClienteForm.name = '';
+              nombreDesdeReniec.set(false)
+            "
           />
         </div>
         <div class="pos-sb-field">
@@ -786,27 +845,48 @@
         <div class="pos-sb-field">
           <label>Nombre / Razón Social *</label>
           <div class="pos-sb-nombre-row">
-            <input pInputText [(ngModel)]="nuevoClienteForm.name" placeholder="Nombre o razón social" class="w-full" />
-            <span *ngIf="nombreDesdeReniec()" class="pos-reniec-badge">
-              <i class="pi pi-check-circle"></i> RENIEC
-            </span>
+            <input
+              pInputText
+              [(ngModel)]="nuevoClienteForm.name"
+              placeholder="Nombre o razón social"
+              class="w-full"
+            />
+            <span *ngIf="nombreDesdeReniec()" class="pos-reniec-badge"
+              ><i class="pi pi-check-circle"></i> RENIEC</span
+            >
           </div>
         </div>
         <div class="pos-sb-field">
-          <label>Dirección</label>
-          <input pInputText [(ngModel)]="nuevoClienteForm.address" class="w-full" />
+          <label>Dirección</label
+          ><input pInputText [(ngModel)]="nuevoClienteForm.address" class="w-full" />
         </div>
         <div class="pos-sb-field">
-          <label>Teléfono</label>
-          <input pInputText [(ngModel)]="nuevoClienteForm.phone" class="w-full" maxlength="9" inputmode="numeric" />
+          <label>Teléfono</label
+          ><input
+            pInputText
+            [(ngModel)]="nuevoClienteForm.phone"
+            class="w-full"
+            maxlength="9"
+            inputmode="numeric"
+          />
         </div>
         <div class="pos-sb-field">
-          <label>Email (opcional)</label>
-          <input pInputText [(ngModel)]="nuevoClienteForm.email" class="w-full" type="email" />
+          <label>Email (opcional)</label
+          ><input pInputText [(ngModel)]="nuevoClienteForm.email" class="w-full" type="email" />
         </div>
         <div class="pos-sb-form-actions">
-          <p-button label="Cancelar" [outlined]="true" severity="secondary" (onClick)="creandoCliente.set(false); nombreDesdeReniec.set(false)" />
-          <p-button label="Guardar Cliente" icon="pi pi-check" (onClick)="crearNuevoCliente()" [loading]="guardandoCliente()" />
+          <p-button
+            label="Cancelar"
+            [outlined]="true"
+            severity="secondary"
+            (onClick)="creandoCliente.set(false); nombreDesdeReniec.set(false)"
+          />
+          <p-button
+            label="Guardar Cliente"
+            icon="pi pi-check"
+            (onClick)="crearNuevoCliente()"
+            [loading]="guardandoCliente()"
+          />
         </div>
       </div>
     </div>

@@ -31,6 +31,8 @@ import {
   SalesReceiptDetalleCompletoDto,
   WhatsAppStatusResponse,
   SendNotificationResponse,
+  BancoAdmin,
+  TipoServicioAdmin,
 } from '../interfaces/ventas.interface';
 
 @Injectable({ providedIn: 'root' })
@@ -71,41 +73,6 @@ export class VentasAdminService {
     );
   }
 
-  descargarVoucherTermico(id: number, nombreArchivo?: string, esCopia = false): Observable<void> {
-    return this.http
-      .get(`${this.salesUrl}/receipts/${id}/thermal?copia=${esCopia}`, {
-        headers: this.headers,
-        responseType: 'blob',
-      })
-      .pipe(
-        map((blob: Blob) => {
-          const url    = URL.createObjectURL(blob);
-          const anchor = document.createElement('a');
-          anchor.href     = url;
-          anchor.download = nombreArchivo ?? `ticket-${id}.pdf`;
-          anchor.click();
-          URL.revokeObjectURL(url);
-        }),
-        catchError((err) => throwError(() => err)),
-      );
-  }
-
-  verVoucherTermicoEnPestana(id: number, esCopia = false): Observable<void> {
-    return this.http
-      .get(`${this.salesUrl}/receipts/${id}/thermal?copia=${esCopia}`, {
-        headers: this.headers,
-        responseType: 'blob',
-      })
-      .pipe(
-        map((blob: Blob) => {
-          const pdfBlob = new Blob([blob], { type: 'application/pdf' });
-          const url     = URL.createObjectURL(pdfBlob);
-          window.open(url, '_blank');
-          setTimeout(() => URL.revokeObjectURL(url), 10_000);
-        }),
-        catchError((err) => throwError(() => err)),
-      );
-  }
   registrarVenta(request: RegistroVentaAdminRequest): Observable<RegistroVentaAdminResponse> {
     return this.http
       .post<RegistroVentaAdminResponse>(`${this.salesUrl}/receipts`, request, {
@@ -460,8 +427,6 @@ export class VentasAdminService {
       );
   }
 
-  // ─── DETALLE COMPLETO ──────────────────────────────────────────────────────
-
   getDetalleCompleto(id: number, historialPage = 1): Observable<SalesReceiptDetalleCompletoDto> {
     const params = new HttpParams().set('historialPage', String(historialPage));
     return this.http.get<SalesReceiptDetalleCompletoDto>(
@@ -485,5 +450,26 @@ export class VentasAdminService {
         }),
         catchError((err) => throwError(() => err)),
       );
+  }
+
+  // ─── BANCOS ────────────────────────────────────────────────────────────────
+
+  obtenerBancos(): Observable<BancoAdmin[]> {
+    return this.http
+      .get<BancoAdmin[]>(`${this.salesUrl}/banks`, {
+        headers: this.headers,
+      })
+      .pipe(catchError(() => of([])));
+  }
+
+  obtenerTiposServicio(bancoId?: number): Observable<TipoServicioAdmin[]> {
+    let params = new HttpParams();
+    if (bancoId != null) params = params.set('bancoId', String(bancoId));
+    return this.http
+      .get<TipoServicioAdmin[]>(`${this.salesUrl}/banks/service-types`, {
+        headers: this.headers,
+        params,
+      })
+      .pipe(catchError(() => of([])));
   }
 }
