@@ -1,4 +1,6 @@
-import { Component, OnInit, OnDestroy, AfterViewInit, computed, signal } from '@angular/core';
+/* src/app/administracion/pages/proveedores/proveedores-listado/proveedor-listado.ts */
+
+import { Component, OnInit, OnDestroy, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, NavigationEnd, RouterModule, RouterOutlet } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -10,7 +12,6 @@ import { CardModule } from 'primeng/card';
 import { TagModule } from 'primeng/tag';
 import { AutoCompleteModule } from 'primeng/autocomplete';
 import { SelectModule } from 'primeng/select';
-import { ToggleButtonModule } from 'primeng/togglebutton';
 import { InputTextModule } from 'primeng/inputtext';
 import { TooltipModule } from 'primeng/tooltip';
 import { ConfirmDialog } from 'primeng/confirmdialog';
@@ -21,8 +22,13 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { ProveedorService } from '../../../services/proveedor.service';
 import { SupplierResponse } from '../../../interfaces/supplier.interface';
 import { SharedTableContainerComponent } from '../../../../shared/components/table.componente/shared-table-container.component';
-import { LoadingOverlayComponent } from '../../../../shared/components/loading-overlay/loading-overlay.component';
-import { PaginadorComponent } from '../../../../shared/components/paginador/paginador.components';
+
+type EstadoFiltro = 'todos' | 'activos' | 'inactivos';
+
+interface SelectOption {
+  label: string;
+  value: EstadoFiltro;
+}
 
 @Component({
   selector: 'app-proveedor-listado',
@@ -30,53 +36,78 @@ import { PaginadorComponent } from '../../../../shared/components/paginador/pagi
   imports: [
     CommonModule, FormsModule, RouterModule, RouterOutlet,
     ButtonModule, TableModule, CardModule, TagModule,
-    AutoCompleteModule, SelectModule, ToggleButtonModule,
+    AutoCompleteModule, SelectModule,
     InputTextModule, TooltipModule, ConfirmDialog,
     DialogModule, ToastModule,
-    LoadingOverlayComponent,      
-    PaginadorComponent,            
     SharedTableContainerComponent,
   ],
   templateUrl: './proveedor-listado.html',
   styleUrl: './proveedor-listado.css',
   providers: [ConfirmationService, MessageService],
 })
-export class ProveedorListado implements OnInit, OnDestroy, AfterViewInit {
+export class ProveedorListado implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
-  readonly pageSizeOptions = [5, 10, 20, 50];
-
   private currentUrl = signal<string>('');
-  esVistaEliminados  = signal(false);
 
-  proveedores          = signal<SupplierResponse[]>([]);
-  proveedoresFiltrados = signal<SupplierResponse[]>([]);
-  proveedoresPaginados = signal<SupplierResponse[]>([]);
+  // ── Datos ──────────────────────────────────────────────────────────────────
+  private todosLosProveedores = signal<SupplierResponse[]>([]);
 
   loading    = signal(false);
-  vistaLista = signal(true);
-
   buscarValue = signal<string | null>(null);
   items       = signal<SupplierResponse[]>([]);
 
+  filtroEstado = signal<EstadoFiltro>('activos');
+
   paginaActual = signal<number>(1);
   rows         = signal<number>(5);
-  totalRecords = signal<number>(0);
 
-  totalPaginas = computed(() => Math.ceil(this.totalRecords() / this.rows()));
+  readonly estadoOptions: SelectOption[] = [
+    { label: 'Todos',    value: 'todos'    },
+    { label: 'Activos',  value: 'activos'  },
+    { label: 'Inactivos', value: 'inactivos' },
+  ];
+
+  // ── Computed: filtrado local (sin HTTP extra) ──────────────────────────────
+  readonly proveedoresFiltrados = computed(() => {
+    const todos   = this.todosLosProveedores();
+    const estado  = this.filtroEstado();
+    const buscar  = (this.buscarValue() ?? '').trim().toLowerCase();
+
+    let resultado = todos;
+
+    if (estado === 'activos')   resultado = resultado.filter(p => p.estado);
+    if (estado === 'inactivos') resultado = resultado.filter(p => !p.estado);
+
+    if (buscar) {
+      resultado = resultado.filter(p =>
+        p.razon_social?.toLowerCase().includes(buscar) ||
+        p.ruc?.toLowerCase().includes(buscar) ||
+        p.contacto?.toLowerCase().includes(buscar),
+      );
+    }
+
+    return resultado;
+  });
+
+  readonly totalRecords = computed(() => this.proveedoresFiltrados().length);
+  readonly totalPaginas = computed(() => Math.ceil(this.totalRecords() / this.rows()) || 1);
+
+  readonly proveedoresPaginados = computed(() => {
+    const inicio = (this.paginaActual() - 1) * this.rows();
+    return this.proveedoresFiltrados().slice(inicio, inicio + this.rows());
+  });
 
   // ── Computed cabecera ──────────────────────────────────────────────────────
-  tituloKicker = computed(() => {
-    if (this.esVistaEliminados()) return 'ADMINISTRADOR - ADMINISTRACIÓN - PROVEEDORES ELIMINADOS';
+  readonly tituloKicker = computed(() => {
     const url = this.currentUrl();
     if (url.includes('crear'))       return 'ADMINISTRACIÓN - PROVEEDORES CREACIÓN';
     if (url.includes('editar'))      return 'ADMINISTRACIÓN - PROVEEDORES EDICIÓN';
     if (url.includes('ver-detalle')) return 'ADMINISTRACIÓN - PROVEEDORES DETALLE';
-    return 'ADMINISTRACIÓN - LOGISTICA - PROVEEDORES ACTIVOS';
+    return 'ADMINISTRACIÓN - LOGÍSTICA - PROVEEDORES';
   });
 
-  iconoCabecera = computed(() => {
-    if (this.esVistaEliminados()) return 'pi pi-trash';
+  readonly iconoCabecera = computed(() => {
     const url = this.currentUrl();
     if (url.includes('crear'))       return 'pi pi-plus-circle';
     if (url.includes('editar'))      return 'pi pi-pencil';
@@ -84,12 +115,13 @@ export class ProveedorListado implements OnInit, OnDestroy, AfterViewInit {
     return 'pi pi-building';
   });
 
-  subtituloKicker = 'GESTIÓN DE PROVEEDORES';
+  readonly subtituloKicker = 'GESTIÓN DE PROVEEDORES';
 
-  totalProveedoresActivos     = computed(() => this.proveedores().length);
-  totalProveedoresConContacto = computed(() => this.proveedores().filter(p => p.contacto).length);
-  totalProveedoresConEmail    = computed(() => this.proveedores().filter(p => p.email).length);
-  totalProveedoresConTelefono = computed(() => this.proveedores().filter(p => p.telefono).length);
+  // ── Contadores computed ────────────────────────────────────────────────────
+  readonly totalProveedoresActivos     = computed(() => this.todosLosProveedores().filter(p => p.estado).length);
+  readonly totalProveedoresConContacto = computed(() => this.todosLosProveedores().filter(p => p.contacto).length);
+  readonly totalProveedoresConEmail    = computed(() => this.todosLosProveedores().filter(p => p.email).length);
+  readonly totalProveedoresConTelefono = computed(() => this.todosLosProveedores().filter(p => p.telefono).length);
 
   constructor(
     private router: Router,
@@ -103,11 +135,9 @@ export class ProveedorListado implements OnInit, OnDestroy, AfterViewInit {
   ngOnInit(): void {
     this.cargarProveedores();
     this.router.events
-      .pipe(filter(event => event instanceof NavigationEnd), takeUntil(this.destroy$))
+      .pipe(filter(e => e instanceof NavigationEnd), takeUntil(this.destroy$))
       .subscribe(() => this.currentUrl.set(this.router.url));
   }
-
-  ngAfterViewInit(): void {}
 
   ngOnDestroy(): void {
     this.destroy$.next();
@@ -115,54 +145,56 @@ export class ProveedorListado implements OnInit, OnDestroy, AfterViewInit {
     this.confirmationService.close();
   }
 
-  private getEstadoFiltro(): boolean { return !this.esVistaEliminados(); }
-
+  // ── Carga única ────────────────────────────────────────────────────────────
   cargarProveedores(): void {
     this.loading.set(true);
-    this.proveedorService
-      //.listSuppliers({ estado: this.getEstadoFiltro(), search: this.buscarValue() || undefined })
-      .listSuppliers({ search: this.buscarValue() || undefined })
-      .subscribe({
-        next: response => {
-          this.proveedores.set(response.suppliers);
-          this.aplicarTodosLosFiltros();
-          this.loading.set(false);
-        },
-        error: (error: Error) => {
-          this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message, life: 3000 });
-          this.loading.set(false);
-        },
-      });
+    this.proveedorService.listSuppliers({ search: this.buscarValue() || undefined }).subscribe({
+      next: response => {
+        this.todosLosProveedores.set(response.suppliers);
+        this.paginaActual.set(1);
+        this.loading.set(false);
+      },
+      error: (error: Error) => {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message, life: 3000 });
+        this.loading.set(false);
+      },
+    });
   }
 
-  aplicarTodosLosFiltros(): void {
-    const proveedoresActuales = this.proveedores();
-    if (proveedoresActuales.length === 0) {
-      this.proveedoresFiltrados.set([]);
-      this.aplicarPaginacion();
-      return;
-    }
-    this.proveedoresFiltrados.set(proveedoresActuales);
+  // ── Filtros ────────────────────────────────────────────────────────────────
+  onEstadoChange(valor: EstadoFiltro): void {
+    this.filtroEstado.set(valor);
     this.paginaActual.set(1);
-    this.aplicarPaginacion();
   }
 
   searchBuscar(event: any): void {
-    const query = event.query || '';
-    this.buscarValue.set(query);
-    this.proveedorService.listSuppliers({ estado: this.getEstadoFiltro(), search: query }).subscribe({
-      next:  response => this.items.set(response.suppliers.slice(0, 10)),
-      error: ()       => this.items.set([]),
+    const query = (event.query || '').trim();
+    this.proveedorService.listSuppliers({ estado: true, search: query }).subscribe({
+      next:  r  => this.items.set(r.suppliers.slice(0, 10)),
+      error: () => this.items.set([]),
     });
   }
 
   filtrarPorBusqueda(event: any): void {
     if (event?.value) {
       this.buscarValue.set(event.value.razon_social);
-      this.cargarProveedores();
+      this.paginaActual.set(1);
     }
   }
 
+  limpiarFiltros(): void {
+    this.buscarValue.set(null);
+    this.filtroEstado.set('activos');
+    this.items.set([]);
+    this.paginaActual.set(1);
+    this.cargarProveedores();
+  }
+
+  // ── Paginación ─────────────────────────────────────────────────────────────
+  onPageChange(page: number): void   { this.paginaActual.set(page); }
+  onLimitChange(limit: number): void { this.rows.set(limit); this.paginaActual.set(1); }
+
+  // ── Acciones ───────────────────────────────────────────────────────────────
   toggleStatus(proveedor: SupplierResponse): void {
     const nuevoEstado = !proveedor.estado;
     const destino     = nuevoEstado ? 'activos' : 'eliminados';
@@ -184,43 +216,11 @@ export class ProveedorListado implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
-  limpiarFiltros(): void {
-    this.buscarValue.set(null);
-    this.items.set([]);
-    this.cargarProveedores();
-  }
-
-  private aplicarPaginacion(): void {
-    const filtrados = this.proveedoresFiltrados();
-    if (filtrados.length === 0) {
-      this.proveedoresPaginados.set([]);
-      this.totalRecords.set(0);
-      return;
-    }
-    this.totalRecords.set(filtrados.length);
-    const inicio = (this.paginaActual() - 1) * this.rows();
-    this.proveedoresPaginados.set(filtrados.slice(inicio, inicio + this.rows()));
-  }
-
-  onPageChange(page: number): void {
-    this.paginaActual.set(page);
-    this.aplicarPaginacion();
-  }
-
-  onLimitChange(limit: number): void {
-    this.rows.set(limit);
-    this.paginaActual.set(1);
-    this.aplicarPaginacion();
-  }
-
   trackByFn(index: number, item: SupplierResponse): number { return item.id_proveedor; }
 
   irDetalle(id: number): void { this.router.navigate(['/admin/proveedores/ver-detalle', id]); }
   irCrear():             void { this.router.navigate(['/admin/proveedores/crear']); }
   irEditar(id: number):  void { this.router.navigate(['/admin/proveedores/editar', id]); }
-
-  irEliminados(): void { this.esVistaEliminados.set(true);  this.paginaActual.set(1); this.cargarProveedores(); }
-  irActivos():    void { this.esVistaEliminados.set(false); this.paginaActual.set(1); this.cargarProveedores(); }
 
   isRutaHija(): boolean {
     const url = this.currentUrl();

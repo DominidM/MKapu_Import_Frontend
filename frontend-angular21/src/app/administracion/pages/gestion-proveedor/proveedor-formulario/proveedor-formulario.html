@@ -1,8 +1,6 @@
-<!-- src/app/administracion/pages/proveedores/proveedor-formulario/proveedor-formulario.html -->
-
 <div class="p-2 surface-card border-1 border-300 border-round-xl shadow-2">
   <form [formGroup]="proveedorForm" (ngSubmit)="guardar()" class="formgrid grid p-4">
-    
+
     <!-- Header -->
     <div class="col-12 mb-3">
       <div class="flex align-items-center gap-3">
@@ -21,6 +19,39 @@
       </h3>
     </div>
 
+    <!-- RUC con botón buscar -->
+    <div class="field col-12 md:col-6 mb-4">
+      <label for="ruc" class="font-semibold text-900 mb-2 block">RUC *</label>
+      <div class="flex gap-2">
+        <input
+          pInputText
+          id="ruc"
+          formControlName="ruc"
+          class="w-full border-1 border-300"
+          placeholder="Ej: 20123456789"
+          maxlength="11"
+        />
+        <p-button
+          type="button"
+          icon="pi pi-search"
+          pTooltip="Consultar RUC en SUNAT"
+          tooltipPosition="top"
+          severity="warn"
+          [loading]="buscandoRuc()"
+          [disabled]="buscandoRuc() || loading()"
+          (onClick)="buscarRuc()">
+        </p-button>
+      </div>
+      <small class="text-red-500 block mt-2" *ngIf="rucInvalido">
+        El RUC debe tener exactamente 11 dígitos
+      </small>
+      <small class="text-500 block mt-1">
+        <i class="pi pi-info-circle mr-1"></i>
+        Ingresa el RUC y presiona <i class="pi pi-search"></i> para autocompletar desde SUNAT
+      </small>
+    </div>
+
+    <!-- Razón Social -->
     <div class="field col-12 md:col-6 mb-4">
       <label for="razon_social" class="font-semibold text-900 mb-2 block">Razón Social *</label>
       <input
@@ -28,28 +59,12 @@
         id="razon_social"
         formControlName="razon_social"
         class="w-full border-1 border-300"
-        placeholder="Ej: Distribuidora ABC S.A.C."
+        placeholder="Se completa automáticamente con SUNAT"
       />
       <small
         class="text-red-500 block mt-2"
-        *ngIf="proveedorForm.get('razon_social')?.invalid && proveedorForm.get('razon_social')?.touched"
-      >
+        *ngIf="proveedorForm.get('razon_social')?.invalid && proveedorForm.get('razon_social')?.touched">
         La razón social es requerida (mínimo 3 caracteres)
-      </small>
-    </div>
-
-    <div class="field col-12 md:col-6 mb-4">
-      <label for="ruc" class="font-semibold text-900 mb-2 block">RUC *</label>
-      <input
-        pInputText
-        id="ruc"
-        formControlName="ruc"
-        class="w-full border-1 border-300"
-        placeholder="Ej: 20123456789"
-        maxlength="11"
-      />
-      <small class="text-red-500 block mt-2" *ngIf="rucInvalido">
-        El RUC debe tener exactamente 11 dígitos
       </small>
     </div>
 
@@ -126,8 +141,8 @@
         rows="3"
         class="w-full border-1 border-300 p-3 border-round"
         style="resize: vertical; font-family: inherit"
-        placeholder="Ej: Av. Los Olivos 123, Lima, Perú"
-      ></textarea>
+        placeholder="Se completa automáticamente con SUNAT o ingresa manualmente">
+      </textarea>
     </div>
 
     <div class="col-12 mb-3">
@@ -166,8 +181,7 @@
         icon="pi pi-times"
         styleClass="w-10rem"
         (onClick)="volver()"
-        [disabled]="loading()"
-      >
+        [disabled]="loading()">
       </p-button>
 
       <p-button
@@ -176,10 +190,10 @@
         [icon]="iconoBotonGuardar()"
         styleClass="proveedores-pill proveedores-pill-warning w-10rem"
         [disabled]="!proveedorForm.valid || loading()"
-        [loading]="loading()"
-      >
+        [loading]="loading()">
       </p-button>
     </div>
+
   </form>
 </div>
 
