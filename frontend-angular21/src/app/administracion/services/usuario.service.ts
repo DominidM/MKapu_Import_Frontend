@@ -3,41 +3,36 @@ import { Observable } from 'rxjs';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { environment } from '../../../enviroments/enviroment';
 import {
+  AccountCredentialsResponse,
+  ChangeCredentialsRequest,
   CuentaUsuarioRequest,
   CuentaUsuarioResponse,
   UsuarioInterfaceResponse,
   UsuarioRequest,
   UsuarioResponse,
   UsuarioStatusUpdateRequest,
-  UsuarioUpdateRequest
+  UsuarioUpdateRequest,
 } from '../interfaces/usuario.interface';
 
 @Injectable({
   providedIn: 'root',
 })
 export class UsuarioService {
-
   private api = environment.apiUrl;
 
   constructor(private http: HttpClient) {}
 
-  // Para AdministracionCrearUsuario (paginado)
   getUsuarios(page: number = 1, pageSize: number = 1000): Observable<UsuarioResponse> {
-    const params = new HttpParams()
-      .set('page', page)
-      .set('pageSize', pageSize);
+    const params = new HttpParams().set('page', page).set('pageSize', pageSize);
     return this.http.get<UsuarioResponse>(`${this.api}/admin/users`, { params });
   }
 
-  // Para Administracion (todos de una vez)
   getAllUsuarios(): Observable<UsuarioInterfaceResponse[]> {
     return this.http.get<UsuarioInterfaceResponse[]>(`${this.api}/admin/users/all`);
   }
 
   getUsuariosPorEstado(activo: boolean): Observable<UsuarioResponse> {
-    const params = new HttpParams()
-      .set('activo', String(activo))
-      .set('pageSize', '1000');   
+    const params = new HttpParams().set('activo', String(activo)).set('pageSize', '1000');
     return this.http.get<UsuarioResponse>(`${this.api}/admin/users`, { params });
   }
 
@@ -60,5 +55,16 @@ export class UsuarioService {
 
   updateUsuario(id: number, body: UsuarioUpdateRequest): Observable<UsuarioInterfaceResponse> {
     return this.http.put<UsuarioInterfaceResponse>(`${this.api}/admin/users/${id}`, body);
+  }
+
+  getAccountByUserId(id: number): Observable<AccountCredentialsResponse> {
+    return this.http.get<AccountCredentialsResponse>(`${this.api}/admin/users/${id}/account`);
+  }
+
+  changeCredentials(id: number, body: ChangeCredentialsRequest): Observable<AccountCredentialsResponse> {
+    return this.http.patch<AccountCredentialsResponse>(
+      `${this.api}/admin/users/${id}/account/credentials`,
+      body,
+    );
   }
 }

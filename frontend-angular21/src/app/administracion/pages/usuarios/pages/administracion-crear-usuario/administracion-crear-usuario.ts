@@ -1,4 +1,6 @@
-import { Component, AfterViewInit, ChangeDetectorRef, signal, OnInit, computed } from '@angular/core';
+/* apps/frontend/src/app/admin/usuarios/administracion-crear-usuario/administracion-crear-usuario.ts */
+
+import { Component, ChangeDetectorRef, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -9,6 +11,7 @@ import { TagModule } from 'primeng/tag';
 import { CardModule } from 'primeng/card';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
+import { PasswordModule } from 'primeng/password';
 import { UsuarioService } from '../../../../services/usuario.service';
 import { UsuarioInterfaceResponse } from '../../../../interfaces/usuario.interface';
 import { AuthService } from '../../../../../auth/services/auth.service';
@@ -39,56 +42,58 @@ interface SelectOption {
     CardModule,
     InputTextModule,
     SelectModule,
+    PasswordModule,
     RouterModule,
     ToastModule,
     MessageModule,
     ConfirmDialogModule,
     DialogModule,
     TooltipModule,
-    SharedTableContainerComponent 
+    SharedTableContainerComponent,
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './administracion-crear-usuario.html',
-  styleUrls: ['./administracion-crear-usuario.css']
+  styleUrls: ['./administracion-crear-usuario.css'],
 })
-export class AdministracionCrearUsuario implements AfterViewInit, OnInit {
-
+export class AdministracionCrearUsuario implements OnInit {
   private allUsers: UsuarioInterfaceResponse[] = [];
   cargandoUsuarios = false;
-  errorUsuarios    = '';
-  filtroDni        = '';
-  filtroEstado     : boolean | null = true;
-  filtroSede       : number | null  = null;
-  filtroRol        : string | null  = null;
+  errorUsuarios = '';
+  filtroDni = '';
+  filtroEstado: boolean | null = true;
+  filtroSede: number | null = null;
+  filtroRol: string | null = null;
 
   paginaActual = signal<number>(1);
   limitePagina = signal<number>(5);
 
   estados: SelectOption[] = [
-    { label: 'Todos',    value: null  },
-    { label: 'Activo',   value: true  },
+    { label: 'Todos', value: null },
+    { label: 'Activo', value: true },
     { label: 'Inactivo', value: false },
   ];
 
   Sede: SelectOption[] = [];
-  Rol: SelectOption[]  = [
-    { label: 'Todos',         value: null            },
-    { label: 'ADMINISTRADOR', value: 'ADMINISTRADOR' },
-    { label: 'ALMACEN',       value: 'ALMACEN'       },
-    { label: 'VENTAS',        value: 'VENTAS'        },
-  ];
+  Rol: SelectOption[] = [];
 
-  dialogVisible       = false;
+  dialogVisible = false;
   usuarioSeleccionado = signal<UsuarioInterfaceResponse | null>(null);
+
+  showCredModal = false;
+  credLoading = false;
+  credUsuarioId = 0;
+  credUsuarioNombre = '';
+  credNomUsu = '';
+  credPassword = '';
+  credConfirm = '';
 
   get usuariosFiltrados(): UsuarioInterfaceResponse[] {
     let result = [...this.allUsers];
     if (this.filtroDni.trim())
-      result = result.filter(u => (u.dni || '').includes(this.filtroDni.trim()));
-    if (this.filtroSede !== null)
-      result = result.filter(u => u.id_sede === this.filtroSede);
+      result = result.filter((u) => (u.dni || '').includes(this.filtroDni.trim()));
+    if (this.filtroSede !== null) result = result.filter((u) => u.id_sede === this.filtroSede);
     if (this.filtroRol !== null) {
-      result = result.filter(u => {
+      result = result.filter((u) => {
         const rol = (u.rolNombre || u.rol_nombre || u.rol || u.role || '').toUpperCase();
         return rol === this.filtroRol;
       });
@@ -101,14 +106,20 @@ export class AdministracionCrearUsuario implements AfterViewInit, OnInit {
     return this.usuariosFiltrados.slice(inicio, inicio + this.limitePagina());
   }
 
-  get totalusers(): number { return this.usuariosFiltrados.length; }
-
+  get totalusers(): number {
+    return this.usuariosFiltrados.length;
+  }
   get totalPaginas(): number {
     return Math.ceil(this.usuariosFiltrados.length / this.limitePagina());
   }
 
-  onPageChange(page: number): void   { this.paginaActual.set(page); }
-  onLimitChange(limit: number): void { this.limitePagina.set(limit); this.paginaActual.set(1); }
+  onPageChange(page: number): void {
+    this.paginaActual.set(page);
+  }
+  onLimitChange(limit: number): void {
+    this.limitePagina.set(limit);
+    this.paginaActual.set(1);
+  }
 
   constructor(
     private router: Router,
@@ -124,29 +135,26 @@ export class AdministracionCrearUsuario implements AfterViewInit, OnInit {
   ngOnInit(): void {
     this.cargandoUsuarios = true;
     const currentUser = this.authService.getCurrentUser();
-    if (currentUser?.idSede) {
-      this.filtroSede = currentUser.idSede;
-    } else {
-      this.filtroSede = null;
-    }
-    this.cdr.detectChanges();
+    this.filtroSede = currentUser?.idSede ?? null;
 
     forkJoin({
-      sedes    : this.sedeService.getSedes(),
-      usuarios : this.usuarioService.getUsuariosPorEstado(true),
-      roles    : this.roleService.loadRoles(),
+      sedes: this.sedeService.getSedes(),
+      usuarios: this.usuarioService.getUsuariosPorEstado(true),
+      roles: this.roleService.loadRoles(),
     }).subscribe({
       next: ({ sedes, usuarios, roles }) => {
         this.Sede = [
           { label: 'Todas', value: null },
-          ...sedes.headquarters.map(s => ({ label: s.nombre, value: s.id_sede })),
+          ...sedes.headquarters.map((s) => ({ label: s.nombre, value: s.id_sede })),
         ];
         this.Rol = [
           { label: 'Todos', value: null },
-          ...roles.filter(r => r.activo).map(r => ({
-            label: r.nombre.toUpperCase(),
-            value: r.nombre.toUpperCase(),
-          })),
+          ...roles
+            .filter((r) => r.activo)
+            .map((r) => ({
+              label: r.nombre.toUpperCase(),
+              value: r.nombre.toUpperCase(),
+            })),
         ];
         this.allUsers = usuarios.users;
         this.cargandoUsuarios = false;
@@ -159,52 +167,13 @@ export class AdministracionCrearUsuario implements AfterViewInit, OnInit {
     });
   }
 
-  ngAfterViewInit(): void {
-    setTimeout(() => this.inicializar());
-  }
-
-  private inicializar(): void {
-    this.cargandoUsuarios = true;
-    setTimeout(() => {
-      const currentUser = this.authService.getCurrentUser();
-      if (currentUser?.idSede) this.filtroSede = currentUser.idSede;
-      else this.filtroSede = null;
-
-      forkJoin({
-        sedes    : this.sedeService.getSedes(),
-        usuarios : this.usuarioService.getUsuariosPorEstado(true),
-        roles    : this.roleService.loadRoles(),
-      }).subscribe({
-        next: ({ sedes, usuarios, roles }) => {
-          this.Sede = [
-            { label: 'Todas', value: null },
-            ...sedes.headquarters.map(s => ({ label: s.nombre, value: s.id_sede })),
-          ];
-          this.Rol = [
-            { label: 'Todos', value: null },
-            ...roles.filter(r => r.activo).map(r => ({
-              label: r.nombre.toUpperCase(),
-              value: r.nombre.toUpperCase(),
-            })),
-          ];
-          this.allUsers = usuarios.users;
-          this.cargandoUsuarios = false;
-          this.cdr.detectChanges();
-        },
-        error: () => {
-          this.cargandoUsuarios = false;
-          this.errorUsuarios = 'Error al cargar datos';
-        },
-      });
-    }, 2000);
-  }
-
   onEstadoChange(): void {
     this.cargandoUsuarios = true;
-    this.paginaActual.set(1); 
-    const request$ = this.filtroEstado === null
-      ? this.usuarioService.getUsuarios()
-      : this.usuarioService.getUsuariosPorEstado(this.filtroEstado);
+    this.paginaActual.set(1);
+    const request$ =
+      this.filtroEstado === null
+        ? this.usuarioService.getUsuarios()
+        : this.usuarioService.getUsuariosPorEstado(this.filtroEstado);
 
     request$.subscribe({
       next: (resp) => {
@@ -219,21 +188,28 @@ export class AdministracionCrearUsuario implements AfterViewInit, OnInit {
     });
   }
 
-  onSedeChange(): void  { this.paginaActual.set(1); }
-  onRolChange(): void   { this.paginaActual.set(1); }
-  aplicarFiltros(): void { this.paginaActual.set(1); }
+  onSedeChange(): void {
+    this.paginaActual.set(1);
+  }
+  onRolChange(): void {
+    this.paginaActual.set(1);
+  }
+  aplicarFiltros(): void {
+    this.paginaActual.set(1);
+  }
 
   limpiarFiltro(): void {
-    const currentUser = this.authService.getCurrentUser();
-    this.filtroDni    = '';
+    this.filtroDni = '';
     this.filtroEstado = null;
-    this.filtroSede   = null;
-    this.filtroRol    = null;
+    this.filtroSede = null;
+    this.filtroRol = null;
     this.paginaActual.set(1);
     this.onEstadoChange();
   }
 
-  nuevoUsuario(): void { this.router.navigate(['/admin/usuarios/crear-usuario']); }
+  nuevoUsuario(): void {
+    this.router.navigate(['/admin/usuarios/crear-usuario']);
+  }
 
   verDetalle(usuario: UsuarioInterfaceResponse): void {
     this.usuarioSeleccionado.set(usuario);
@@ -252,25 +228,107 @@ export class AdministracionCrearUsuario implements AfterViewInit, OnInit {
       acceptButtonProps: { severity: (nextStatus ? 'success' : 'danger') as any },
       rejectButtonProps: { severity: 'secondary', outlined: true },
       accept: () => {
-        this.usuarioService.updateUsuarioStatus(usuario.id_usuario, { activo: nextStatus }).subscribe({
-          next: () => {
-            usuario.activo = nextStatus;
-            this.messageService.add({
-              severity: 'success',
-              summary: nextStatus ? 'Usuario activado' : 'Usuario desactivado',
-              detail: nextStatus
-                ? `Se activó el usuario ${usuario.usu_nom}.`
-                : `Se desactivó el usuario ${usuario.usu_nom}.`,
-            });
-            this.onEstadoChange();
-          },
-          error: (err) => {
-            this.messageService.add({
-              severity: 'error',
-              summary: 'Error',
-              detail: err?.error?.message ?? 'No se pudo cambiar el estado del usuario.',
-            });
-          },
+        this.usuarioService
+          .updateUsuarioStatus(usuario.id_usuario, { activo: nextStatus })
+          .subscribe({
+            next: () => {
+              usuario.activo = nextStatus;
+              this.messageService.add({
+                severity: 'success',
+                summary: nextStatus ? 'Usuario activado' : 'Usuario desactivado',
+                detail: nextStatus
+                  ? `Se activó el usuario ${usuario.usu_nom}.`
+                  : `Se desactivó el usuario ${usuario.usu_nom}.`,
+              });
+              this.onEstadoChange();
+            },
+            error: (err) => {
+              this.messageService.add({
+                severity: 'error',
+                summary: 'Error',
+                detail: err?.error?.message ?? 'No se pudo cambiar el estado del usuario.',
+              });
+            },
+          });
+      },
+    });
+  }
+
+  openCredModal(usuario: UsuarioInterfaceResponse): void {
+    this.credUsuarioId = usuario.id_usuario;
+    this.credUsuarioNombre = `${usuario.usu_nom} ${usuario.ape_pat} ${usuario.ape_mat}`.trim();
+    this.credNomUsu = '';
+    this.credPassword = '';
+    this.credConfirm = '';
+    this.credLoading = true;
+    this.showCredModal = true;
+
+    this.usuarioService.getAccountByUserId(usuario.id_usuario).subscribe({
+      next: (res) => {
+        this.credNomUsu = res.nom_usu;
+        this.credLoading = false;
+      },
+      error: () => {
+        this.credLoading = false;
+      },
+    });
+  }
+
+  closeCredModal(): void {
+    this.showCredModal = false;
+    this.credNomUsu = '';
+    this.credPassword = '';
+    this.credConfirm = '';
+  }
+
+  saveCredentials(): void {
+    const nom_usu = this.credNomUsu.trim();
+    const nueva_contraseña = this.credPassword.trim();
+    const confirmar = this.credConfirm.trim();
+
+    if (!nom_usu && !nueva_contraseña) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Atención',
+        detail: 'Debes completar al menos el nombre de usuario o la contraseña.',
+        life: 4000,
+      });
+      return;
+    }
+
+    if (nueva_contraseña && nueva_contraseña !== confirmar) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Las contraseñas no coinciden.',
+        life: 4000,
+      });
+      return;
+    }
+
+    const body: { nom_usu?: string; nueva_contraseña?: string } = {};
+    if (nom_usu) body.nom_usu = nom_usu;
+    if (nueva_contraseña) body.nueva_contraseña = nueva_contraseña;
+
+    this.credLoading = true;
+    this.usuarioService.changeCredentials(this.credUsuarioId, body).subscribe({
+      next: () => {
+        this.credLoading = false;
+        this.closeCredModal();
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Credenciales actualizadas',
+          detail: `Las credenciales de ${this.credUsuarioNombre} fueron actualizadas.`,
+          life: 3500,
+        });
+      },
+      error: (err) => {
+        this.credLoading = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: err?.error?.message ?? 'No se pudieron actualizar las credenciales.',
+          life: 4000,
         });
       },
     });
