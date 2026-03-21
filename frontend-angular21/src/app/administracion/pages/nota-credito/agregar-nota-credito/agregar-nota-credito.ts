@@ -15,8 +15,12 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { CheckboxModule } from 'primeng/checkbox';
 import { MessageService, ConfirmationService } from 'primeng/api';
+
 import { VentasApiService } from '../../../../ventas/services/ventas-api.service';
 import { CreditNoteService, RegisterCreditNoteDto } from '../../../services/nota-credito.service';
+import { StockSocketService } from '../../../../ventas/services/stock-socket.service';
+
+// 👇 Importa aquí tu nuevo servicio de Sockets
 
 interface VentaItemUI {
   id_detalle: number;
@@ -55,6 +59,8 @@ export class AgregarNotaCreditoComponent implements OnInit, OnDestroy {
   private readonly messageService = inject(MessageService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly cdr = inject(ChangeDetectorRef);
+  
+  private readonly stockSocket = inject(StockSocketService);
 
   private subscriptions = new Subscription();
 
@@ -87,10 +93,23 @@ export class AgregarNotaCreditoComponent implements OnInit, OnDestroy {
 
   guardandoNota = false;
 
-  ngOnInit(): void {}
+  private stockListener = (data: any) => {
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Inventario Actualizado',
+      detail: `Se devolvieron ${data.quantity} unidades del producto ID: ${data.productId} al almacén.`,
+      life: 6000
+    });
+    this.cdr.markForCheck();
+  };
+
+  ngOnInit(): void {
+    this.stockSocket.onStockActualizado(this.stockListener);
+  }
 
   ngOnDestroy(): void {
     this.subscriptions.unsubscribe();
+    this.stockSocket.offStockActualizado(this.stockListener);
   }
 
   buscarComprobante(): void {
@@ -110,11 +129,9 @@ export class AgregarNotaCreditoComponent implements OnInit, OnDestroy {
 
     const sub = this.ventasService.getSaleReceiptByCorrelative(correlativoLimpio).subscribe({
       next: (res: any) => {
-        // Tu backend devuelve la data directa, sin envolturas de "comprobante" o "data" en este endpoint
         const cabecera = res;
         const listaProductos = res.detalles || [];
 
-        // Validar coherencia con la serie ingresada por el usuario (ya que el backend no devuelve la serie suelta)
         const esFactura = correlativoLimpio.startsWith('F');
         if (
           (this.tipoComprobanteRef === '01' && !esFactura) ||
@@ -129,31 +146,25 @@ export class AgregarNotaCreditoComponent implements OnInit, OnDestroy {
           return;
         }
 
-        // 1. CÁLCULO DE TOTALES (Como el backend no devuelve subtotal ni IGV en este endpoint, los calculamos asumiendo IGV 18%)
         const totalComprobante = Number(cabecera.total || 0);
-        // Si el total es 118, el subtotal es 100 y el IGV es 18.
         const subtotalCalculado = totalComprobante / 1.18; 
         const igvCalculado = totalComprobante - subtotalCalculado;
 
-        // 2. NORMALIZACIÓN DE CABECERA PARA EL HTML
         this.ventaReferenciaCabecera = {
           id: cabecera.id,
           clienteNombre: cabecera.nombre_cliente || 'Cliente sin nombre',
           clienteDocumento: cabecera.cliente_documento || '—',
           fechaEmision: cabecera.fec_emision,
           total: totalComprobante,
-          subtotal: subtotalCalculado, // Asignamos el calculado
-          igv: igvCalculado            // Asignamos el calculado
+          subtotal: subtotalCalculado,
+          igv: igvCalculado            
         };
 
-        // 3. NORMALIZACIÓN DE ÍTEMS PARA LA TABLA
         this.itemsVenta = listaProductos.map((p: any) => {
-          // El backend devuelve 'peso_unitario' pero el frontend asume que es el precio
           const precio = Number(p.peso_unitario || p.precio_unitario || 0);
           
           return {
             id_detalle: p.id_producto,
-            // Tu backend devuelve cod_prod, lo usamos como descripción para que no salga vacío
             descripcion: p.descripcion || p.cod_prod || 'Producto Desconocido',
             cantidadOriginal: Number(p.cantidad || 0),
             precioUnitario: precio,
@@ -172,8 +183,6 @@ export class AgregarNotaCreditoComponent implements OnInit, OnDestroy {
             detail: 'Comprobante y productos cargados.',
           });
         } else {
-          // Eliminé el return aquí para que la cabecera sí se muestre aunque no tenga ítems, 
-          // ya que dejaba el flujo cortado
           this.messageService.add({
             severity: 'warn',
             summary: 'Atención',
@@ -297,7 +306,7 @@ export class AgregarNotaCreditoComponent implements OnInit, OnDestroy {
           detail: 'Nota de Crédito emitida correctamente',
           life: 4000,
         });
-        setTimeout(() => this.volverListado(), 1500);
+        setTimeout(() => this.volverListado(), 2000); 
       },
       error: (err) => {
         this.guardandoNota = false;
