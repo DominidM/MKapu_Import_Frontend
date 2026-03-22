@@ -158,9 +158,9 @@ export class ComisionReportes implements OnInit {
   limpiarFiltros() {
     this.filtroBusqueda.set('');
     this.filtroEstado.set(null);
-    this.filtroSede.set(String(this.authService.getCurrentUser()?.idSede ?? ''));
-    this.fechaInicio.set(getLunesSemanaActualPeru());
-    this.fechaFin.set(getDomingoSemanaActualPeru());
+    this.filtroSede.set(String(''));
+    this.fechaInicio.set(null);
+    this.fechaFin.set(null);
     this.paginaActual.set(1);
     this.cargar();
   }
