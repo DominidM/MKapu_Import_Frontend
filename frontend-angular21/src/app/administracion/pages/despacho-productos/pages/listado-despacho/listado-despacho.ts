@@ -2,7 +2,6 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
 
@@ -76,7 +75,6 @@ export class ListadoDespacho {
   private readonly confirmationService = inject(ConfirmationService);
   private readonly productoService     = inject(ProductoService);
   private readonly authService         = inject(AuthService);
-  private readonly http                = inject(HttpClient);
   private readonly router              = inject(Router);
   private readonly confirmacionState   = inject(ConfirmacionDespachoStateService);
   private readonly sanitizer           = inject(DomSanitizer);
@@ -103,17 +101,20 @@ export class ListadoDespacho {
   fechaHasta    = signal<Date | null>((() => { const d = new Date(); d.setHours(23,59,59,999); return d; })());
   empleados     = signal<Empleado[]>([]);
 
-  ventaCache = signal<Record<number, VentaCacheItem>>({});
-  loadingCache = signal(false);
+  // Datos enriquecidos vienen del backend — sin cache local
+  private readonly _emptyCache: Record<number, any> = {};
 
+  // ── Modal ──────────────────────────────────────────────────────
   modalVisible         = signal(false);
   despachoSeleccionado = signal<Dispatch | null>(null);
   loadingDetalle       = signal(false);
 
+  // Dialog cambio de estado
   cambioEstadoVisible = signal(false);
   despachoParaCambio  = signal<Dispatch | null>(null);
 
- 
+  // ── Dialog cambio de estado ────────────────────────────────────
+
   productosMap         = signal<Record<string, ProductoMapItem>>({});
   productosCodigoMap   = signal<Record<number, string>>({});
   clienteInfo          = signal<{ nombre: string; documento: string; tipo_documento?: string; telefono: string; direccion?: string; } | null>(null);
@@ -130,18 +131,16 @@ export class ListadoDespacho {
     { label: 'Cancelado',      value: 'CANCELADO'     },
   ];
 
-  dispatches = this.dispatchService.dispatches;
-  loading    = this.dispatchService.loading;
-  error      = this.dispatchService.error;
+  dispatches  = this.dispatchService.dispatches;
+  loading     = this.dispatchService.loading;
+  error       = this.dispatchService.error;
+  totalItems  = this.dispatchService.totalItems;
+  totalPages  = this.dispatchService.totalPages;
+  paginaActual = signal(1);
+  limitePorPagina = signal(10);
 
   constructor() {
-    this.dispatchService.loadDispatches().subscribe({
-      next: () => requestAnimationFrame(() => this.enriquecerTabla()),
-      error: () => this.messageService.add({
-        severity: 'error', summary: 'Error',
-        detail: 'No se pudieron cargar los despachos.', life: 4000
-      })
-    });
+    this.cargarDespachos();
 
     this.empleadosService.getEmpleados().subscribe({
       next: (lista) => this.empleados.set(lista),
@@ -149,50 +148,50 @@ export class ListadoDespacho {
     });
   }
 
-  private enriquecerTabla(): void {
-    const lista = this.dispatches();
-    if (!lista.length) return;
-
-    const idsUnicos = [...new Set(
-      [...lista].sort((a, b) => b.id_despacho - a.id_despacho).map(d => d.id_venta_ref)
-    )].filter(id => !this.ventaCache()[id]);
-
-    if (!idsUnicos.length) return;
-
-    idsUnicos.forEach(id => {
-      this.http.get<ReceiptDetalle>(
-        `${environment.apiUrl}/sales/receipts/${id}/detalle`
-      ).toPromise()
-        .then(res => {
-          if (!res) return;
-          this.ventaCache.update(c => ({
-            ...c,
-            [id]: {
-              numeroCompleto: res.numero_completo ?? '—',
-              clienteNombre:  res.cliente?.nombre   ?? '—',
-              clienteDoc:     res.cliente?.documento ?? '—',
-              sedeNombre:     res.responsable?.nombreSede ?? '—',
-            }
-          }));
-        }).catch(() => {});
+  // Carga despachos pasando las fechas al backend → solo trae los del período
+  cargarDespachos(resetPage = true): void {
+    if (resetPage) this.paginaActual.set(1);
+    const desde = this.fechaDesde();
+    const hasta = this.fechaHasta();
+    this.dispatchService.loadDispatches('Administrador', {
+      page:       this.paginaActual(),
+      limit:      this.limitePorPagina(),
+      fechaDesde: desde ? desde.toISOString().split('T')[0] : undefined,
+      fechaHasta: hasta ? hasta.toISOString().split('T')[0] : undefined,
+    }).subscribe({
+      next: () => requestAnimationFrame(() => this.enriquecerTabla()),
+      error: () => this.messageService.add({
+        severity: 'error', summary: 'Error',
+        detail: 'No se pudieron cargar los despachos.', life: 4000
+      })
     });
   }
 
-  // ── Helpers para la tabla ─────────────────────────────────────
-  getNumeroComprobante(id_venta_ref: number): string {
-    return this.ventaCache()[id_venta_ref]?.numeroCompleto ?? `Venta #${id_venta_ref}`;
+  cambiarPagina(nuevaPagina: number): void {
+    this.paginaActual.set(nuevaPagina);
+    this.cargarDespachos(false);
   }
 
-  getClienteNombre(id_venta_ref: number): string {
-    return this.ventaCache()[id_venta_ref]?.clienteNombre ?? '—';
+  // Enriquece la tabla usando el endpoint unificado de logistics (TCP a sales internamente)
+  // Backend devuelve datos enriquecidos en loadDispatches — no hay nada que hacer aquí
+  private enriquecerTabla(): void { }
+
+  // ── Helpers para la tabla — datos vienen del backend enriquecido ──
+  getNumeroComprobante(d: any): string {
+    const ventaRef = d.id_venta_ref ?? d.idVentaRef ?? d.id_venta ?? '?';
+    return d.comprobante ?? d.numeroComprobante ?? `Venta #${ventaRef}`;
   }
 
-  getClienteDoc(id_venta_ref: number): string {
-    return this.ventaCache()[id_venta_ref]?.clienteDoc ?? '';
+  getClienteNombre(d: any): string {
+    return d.clienteNombre ?? d.cliente_nombre ?? '—';
   }
 
-  getSede(id_venta_ref: number): string {
-    return this.ventaCache()[id_venta_ref]?.sedeNombre ?? '—';
+  getClienteDoc(d: any): string {
+    return d.clienteDoc ?? d.cliente_doc ?? '';
+  }
+
+  getSede(d: any): string {
+    return d.sedeNombre ?? d.sede_nombre ?? '—';
   }
 
   // ── Computeds de totales ──────────────────────────────────────
@@ -202,18 +201,21 @@ export class ListadoDespacho {
   readonly numeroVentaModal = computed(() => {
     const d = this.despachoSeleccionado();
     if (!d) return '—';
-    return this.ventaCache()[d.id_venta_ref]?.numeroCompleto ?? `#${d.id_venta_ref}`;
+    return (d as any).comprobante ?? `#${d.id_venta_ref}`;
   });
 
   despachador = computed(() => this.obtenerNombreEmpleado('ALMACENERO'));
   asesor      = computed(() => this.obtenerNombreEmpleado('VENTAS'));
 
-  totalGenerados     = computed(() => this.dispatches().filter(d => d.estado === 'GENERADO').length);
-  totalEnPreparacion = computed(() => this.dispatches().filter(d => d.estado === 'EN_PREPARACION').length);
-  totalEnTransito    = computed(() => this.dispatches().filter(d => d.estado === 'EN_TRANSITO').length);
-  totalEntregados    = computed(() => this.dispatches().filter(d => d.estado === 'ENTREGADO').length);
+  // Contadores basados en filasFiltradas → se actualizan según fecha/estado seleccionado
+  totalGenerados     = computed(() => this.filasFiltradas().filter(d => d.estado === 'GENERADO').length);
+  totalEnPreparacion = computed(() => this.filasFiltradas().filter(d => d.estado === 'EN_PREPARACION').length);
+  totalEnTransito    = computed(() => this.filasFiltradas().filter(d => d.estado === 'EN_TRANSITO').length);
+  totalEntregados    = computed(() => this.filasFiltradas().filter(d => d.estado === 'ENTREGADO').length);
+  totalCancelados    = computed(() => this.filasFiltradas().filter(d => d.estado === 'CANCELADO').length);
   totalPendientes    = computed(() => this.totalGenerados() + this.totalEnPreparacion());
   totalEnviados      = computed(() => this.totalEnTransito());
+  totalFiltrados     = computed(() => this.filasFiltradas().length);
 
   filasFiltradas = computed(() => {
     let data = this.dispatches();
@@ -222,20 +224,7 @@ export class ListadoDespacho {
     if (this.estadoFiltro() !== 'TODOS')
       data = data.filter(d => d.estado === this.estadoFiltro());
 
-    // Filtro fecha desde
-    const desde = this.fechaDesde();
-    if (desde) {
-      const inicio = new Date(desde); inicio.setHours(0, 0, 0, 0);
-      data = data.filter(d => new Date(d.fecha_creacion) >= inicio);
-    }
-
-    // Filtro fecha hasta
-    const hasta = this.fechaHasta();
-    if (hasta) {
-      const fin = new Date(hasta); fin.setHours(23, 59, 59, 999);
-      data = data.filter(d => new Date(d.fecha_creacion) <= fin);
-    }
-
+    // Fecha ya filtrada en el backend — aquí solo aplica estado y búsqueda
     const term = this.searchTerm()?.trim().toLowerCase();
     if (term) {
       data = data.filter(d =>
@@ -256,6 +245,7 @@ export class ListadoDespacho {
     hoy.setHours(0, 0, 0, 0);
     this.fechaDesde.set(new Date(hoy));
     this.fechaHasta.set(new Date());
+    this.cargarDespachos();
   }
 
   // ── Helpers modal: nombre y código del producto ───────────────
@@ -269,58 +259,65 @@ export class ListadoDespacho {
       ?? '—';
   }
 
-  // ── Abrir modal ───────────────────────────────────────────────
-  verDetalle(despacho: Dispatch): void {
+  // ── Abrir modal — datos ya vienen enriquecidos del backend ────
+  verDetalle(despacho: any): void {
     this.loadingDetalle.set(true);
     this.despachoSeleccionado.set(despacho);
-    this.productosMap.set({});
-    this.clienteInfo.set(null);
-    this.sedeNombreModal.set('—');
-    this.receiptDetalleActual.set(null);
     this.modalVisible.set(true);
 
-    // Carga SKUs la primera vez que se abre el modal (lazy)
-    if (!Object.keys(this.productosCodigoMap()).length) {
-      this.productoService.getProductos(1, 500).subscribe({
-        next: (res) => {
-          const map: Record<number, string> = {};
-          res.products.forEach(p => { map[p.id_producto] = p.codigo; });
-          this.productosCodigoMap.set(map);
-        },
-        error: () => {}
-      });
-    }
+    // Poblar modal desde los campos enriquecidos (sin llamadas extra)
+    this.clienteInfo.set(despacho.clienteNombre ? {
+      nombre:        despacho.clienteNombre    ?? '—',
+      documento:     despacho.clienteDoc       ?? '—',
+      telefono:      despacho.clienteTelefono  ?? '—',
+      direccion:     despacho.clienteDireccion ?? '—',
+    } : null);
+    this.sedeNombreModal.set(despacho.sedeNombre ?? '—');
 
-    // 1. Detalles frescos del despacho
-    this.dispatchService.getDispatchById(despacho.id_despacho).subscribe({
-      next: (d) => {
-        this.despachoSeleccionado.set(d);
-        this.loadingDetalle.set(false);
+    // Mapa productos desde productosDetalle enriquecido
+    const map: Record<string, ProductoMapItem> = {};
+    (despacho.productosDetalle ?? []).forEach((p: any) => {
+      map[String(p.id_prod_ref)] = { nombre: p.descripcion ?? `#${p.id_prod_ref}`, codigo: p.cod_prod ?? '—' };
+    });
+    this.productosMap.set(map);
+
+    // Receipt para impresión
+    this.receiptDetalleActual.set({
+      id_comprobante:   despacho.id_venta_ref,
+      numero_completo:  despacho.comprobante     ?? '',
+      serie:            '',  numero: 0,
+      tipo_comprobante: despacho.tipoComprobante  ?? '',
+      fec_emision:      despacho.fechaEmision      ?? '',
+      subtotal:         despacho.subtotal           ?? 0,
+      igv:              despacho.igv                ?? 0,
+      total:            despacho.total              ?? 0,
+      descuento:        despacho.descuento           ?? 0,
+      metodo_pago:      despacho.metodoPago          ?? '—',
+      cliente: {
+        nombre:    despacho.clienteNombre     ?? '—',
+        documento: despacho.clienteDoc        ?? '—',
+        telefono:  despacho.clienteTelefono   ?? '—',
+        direccion: despacho.clienteDireccion  ?? '—',
       },
-      error: () => { this.loadingDetalle.set(false); },
+      responsable: {
+        nombre: despacho.responsableNombre ?? '—', sede: 0,
+        nombreSede: despacho.sedeNombre   ?? '—',
+      },
+      productos: (despacho.productosDetalle ?? []).map((p: any) => ({
+        id_prod_ref: p.id_prod_ref, cod_prod: p.cod_prod,
+        descripcion: p.descripcion, cantidad: p.cantidad,
+        pre_uni: p.precio_unit,    total: p.total,
+      })),
     });
 
-    // 2. Datos de la venta (cliente + sede + productos)
-    this.loadingVenta.set(true);
-    this.http.get<ReceiptDetalle>(`${environment.apiUrl}/sales/receipts/${despacho.id_venta_ref}/detalle`)
-      .subscribe({
-        next: (detalle) => {
-          this.receiptDetalleActual.set(detalle);
-          this.clienteInfo.set(detalle.cliente ?? null);
-          this.sedeNombreModal.set(detalle.responsable?.nombreSede ?? '—');
-          const map: Record<string, ProductoMapItem> = {};
-          (detalle.productos ?? []).forEach((p: any) => {
-            const id = String(p.id_prod_ref ?? p.productId ?? '');
-            if (id) map[id] = {
-              nombre: p.descripcion ?? p.productName ?? `Producto #${id}`,
-              codigo: p.cod_prod ?? p.codigoProducto ?? '—'
-            };
-          });
-          this.productosMap.set(map);
-          this.loadingVenta.set(false);
-        },
-        error: () => { this.loadingVenta.set(false); }
-      });
+    // Refresca solo los detalles del despacho (estados actualizados)
+    this.dispatchService.getDispatchById(despacho.id_despacho).subscribe({
+      next: (d) => {
+        this.despachoSeleccionado.set({ ...despacho, ...d });
+        this.loadingDetalle.set(false);
+      },
+      error: () => { this.loadingDetalle.set(false); }
+    });
   }
 
   cerrarModal(): void {
@@ -330,6 +327,7 @@ export class ListadoDespacho {
     this.productosMap.set({});
   }
 
+  // ── Acciones de estado ────────────────────────────────────────
   iniciarPreparacion(): void {
     const d = this.despachoSeleccionado();
     if (!d) return;
@@ -357,6 +355,7 @@ export class ListadoDespacho {
         .subscribe({ next: (u) => guardarYNavegar(u), error: () => guardarYNavegar(despacho) });
     };
 
+    // Marca detalles PENDIENTES como preparados antes de transitar
     const marcarYTransitar = (despacho: Dispatch) => {
       const pendientes = (despacho.detalles ?? []).filter(det => det.estado === 'PENDIENTE');
       if (!pendientes.length) { iniciarTransito(despacho); return; }
@@ -402,16 +401,18 @@ export class ListadoDespacho {
   private navegarAConfirmacion(despacho: Dispatch, estadoForzado: string, esCopia = false): void {
     const cliente       = this.clienteInfo();
     const sedeNombre    = this.sedeNombreModal();
-    const cache         = this.ventaCache()[despacho.id_venta_ref];
+    const cache         = despacho as any; // enriquecido del backend
     const prodMap       = { ...this.productosMap() };
     const prodCodigoMap = { ...this.productosCodigoMap() };
     const receipt       = this.receiptDetalleActual();
 
+    // Tipo de entrega: si la dirección contiene "tienda" o "recojo" es tienda
     const dirLower = (despacho.direccion_entrega ?? '').toLowerCase();
     const tipoEntrega: 'tienda' | 'delivery' =
       dirLower.includes('tienda') || dirLower.includes('recojo') ? 'tienda' : 'delivery';
 
-    const numComp = cache?.numeroCompleto ?? '';
+    // Tipo comprobante legible
+    const numComp = cache?.comprobante ?? '';
     let tipoComprobante = 'Comprobante';
     if (numComp.startsWith('F')) tipoComprobante = 'Factura Electrónica';
     else if (numComp.startsWith('B')) tipoComprobante = 'Boleta Electrónica';
@@ -463,6 +464,8 @@ export class ListadoDespacho {
     });
   }
 
+  // Desde el modal siempre es copia
+  // ── Cambio de estado desde la tabla (botón lápiz) ───────────
   abrirCambioEstado(despacho: Dispatch): void {
     const estadosNoEditables: string[] = ['GENERADO', 'ENTREGADO', 'CANCELADO'];
     if (estadosNoEditables.includes(despacho.estado)) {
@@ -514,22 +517,27 @@ export class ListadoDespacho {
       return;
     }
 
+    // ENTREGADO requiere encadenar estados según el flujo del backend:
+    // GENERADO → preparacion → EN_PREPARACION → transito → EN_TRANSITO → entrega → ENTREGADO
     const hacerEntrega = (despacho: Dispatch) => {
       this.dispatchService.confirmarEntrega(despacho.id_despacho, { fecha_entrega: new Date() })
         .subscribe({ next: onSuccess, error: onError });
     };
 
+    // Marca todos los detalles como PREPARADO, luego inicia tránsito
     const marcarDetallesYTransitar = (despacho: Dispatch) => {
       const detallesPendientes = (despacho.detalles ?? []).filter(
         det => det.estado === 'PENDIENTE'
       );
 
       if (!detallesPendientes.length) {
+        // Todos ya preparados → ir directo a tránsito
         this.dispatchService.iniciarTransito(despacho.id_despacho, { fecha_salida: new Date() })
           .subscribe({ next: (u) => hacerEntrega(u), error: onError });
         return;
       }
 
+      // Marcar cada detalle pendiente como preparado en paralelo
       let completados = 0;
       detallesPendientes.forEach(det => {
         this.dispatchService.marcarDetallePreparado(
@@ -539,6 +547,7 @@ export class ListadoDespacho {
           next: () => {
             completados++;
             if (completados === detallesPendientes.length) {
+              // Todos marcados → ahora sí iniciar tránsito
               this.dispatchService.iniciarTransito(despacho.id_despacho, { fecha_salida: new Date() })
                 .subscribe({ next: (u) => hacerEntrega(u), error: onError });
             }
@@ -568,6 +577,7 @@ export class ListadoDespacho {
         hacerEntrega(d);
         break;
       default:
+        // Ya está en ENTREGADO o CANCELADO — no hacer nada
         this.cambioEstadoVisible.set(false);
         this.messageService.add({
           severity: 'info', summary: 'Sin cambios',
@@ -578,13 +588,14 @@ export class ListadoDespacho {
 
   esCopiaDespacho(_id: number): boolean { return true; }
 
+  // Imprime boleta/copia DIRECTO desde el modal sin navegar
   imprimirCopia(): void {
     const d = this.despachoSeleccionado();
     if (!d) return;
 
     const cliente       = this.clienteInfo();
     const sedeNombre    = this.sedeNombreModal();
-    const cache         = this.ventaCache()[d.id_venta_ref];
+    const cache         = d as any; // enriquecido del backend
     const prodMap       = { ...this.productosMap() };
     const prodCodigoMap = { ...this.productosCodigoMap() };
     const receipt       = this.receiptDetalleActual();
@@ -593,7 +604,7 @@ export class ListadoDespacho {
     const tipoEntrega: 'tienda' | 'delivery' =
       dirLower.includes('tienda') || dirLower.includes('recojo') ? 'tienda' : 'delivery';
 
-    const numComp = cache?.numeroCompleto ?? '';
+    const numComp = cache?.comprobante ?? '';
     let tipoComprobante = 'Comprobante';
     if      (numComp.startsWith('F')) tipoComprobante = 'Factura Electrónica';
     else if (numComp.startsWith('B')) tipoComprobante = 'Boleta Electrónica';
@@ -640,10 +651,12 @@ export class ListadoDespacho {
       }),
     } as any;
 
+    // Marcar como impresa y generar ticket
     localStorage.setItem(`guia_impresa_${d.id_despacho}`, '1');
     this.generarTicketDirecto(data);
   }
 
+  // Genera e imprime el ticket 80mm sin navegar
   generarTicketDirecto(s: any): void {
     const fecha = s.fechaEmision
       ? new Date(s.fechaEmision).toLocaleString('es-PE', {
@@ -656,6 +669,7 @@ export class ListadoDespacho {
     const totalStr = Number(s.total ?? 0).toFixed(2);
     const descStr  = Number(s.descuento ?? 0).toFixed(2);
 
+    // Filas productos — usando concat en lugar de template literal anidado
     const filasProd = (s.productos ?? []).map((p: any) => {
       const pu  = Number(p.precio_unit ?? 0) > 0 ? 'S/ ' + Number(p.precio_unit).toFixed(2) : '';
       const tot = Number(p.total_item  ?? 0) > 0 ? 'S/ ' + Number(p.total_item).toFixed(2)  : '';
@@ -791,12 +805,14 @@ export class ListadoDespacho {
   }
 
   encodeURIComponent = encodeURIComponent;
+  minVal = (a: number, b: number) => Math.min(a, b);
 
   limpiarFiltros(): void {
     this.searchTerm.set(null);
     this.estadoFiltro.set('TODOS');
     this.fechaDesde.set(null);
     this.fechaHasta.set(null);
+    this.cargarDespachos(); 
   }
 
   getEstadoSeverity(estado: DispatchStatus): 'success' | 'warn' | 'danger' | 'secondary' | 'info' {

@@ -28,14 +28,14 @@
       (onClick)="dispatchService.loadDispatches().subscribe()"></p-button>
   </div>
 
-  <!-- CONTADORES -->
+  <!-- CONTADORES — se actualizan según el filtro de fecha activo -->
   <div class="contadores-despacho mb-4">
     <div class="contador-card">
       <i class="pi pi-truck"></i>
       <div>
-        <span class="contador-label">Total Despachos</span>
-        <span class="contador-valor">{{ dispatches().length }}</span>
-        <span class="contador-detalle"><i class="pi pi-list"></i> Registrados</span>
+        <span class="contador-label">Total</span>
+        <span class="contador-valor">{{ totalFiltrados() }}</span>
+        <span class="contador-detalle"><i class="pi pi-list"></i> En el período</span>
       </div>
     </div>
     <div class="contador-card">
@@ -49,7 +49,7 @@
     <div class="contador-card">
       <i class="pi pi-send"></i>
       <div>
-        <span class="contador-label">Enviados</span>
+        <span class="contador-label">En tránsito</span>
         <span class="contador-valor">{{ totalEnviados() }}</span>
         <span class="contador-detalle"><i class="pi pi-arrow-right"></i> En camino</span>
       </div>
@@ -86,7 +86,7 @@
         <!-- Fecha Desde -->
         <div class="flex flex-column" style="min-width: 160px;">
           <label class="font-medium mb-2 block">Desde</label>
-          <p-datepicker [ngModel]="fechaDesde()" (ngModelChange)="fechaDesde.set($event)"
+          <p-datepicker [ngModel]="fechaDesde()" (ngModelChange)="fechaDesde.set($event); cargarDespachos()"
             dateFormat="dd/mm/yy" [showClear]="true" placeholder="Fecha inicio"
             styleClass="w-full" appendTo="body"></p-datepicker>
         </div>
@@ -94,7 +94,7 @@
         <!-- Fecha Hasta -->
         <div class="flex flex-column" style="min-width: 160px;">
           <label class="font-medium mb-2 block">Hasta</label>
-          <p-datepicker [ngModel]="fechaHasta()" (ngModelChange)="fechaHasta.set($event)"
+          <p-datepicker [ngModel]="fechaHasta()" (ngModelChange)="fechaHasta.set($event); cargarDespachos()"
             dateFormat="dd/mm/yy" [showClear]="true" placeholder="Fecha fin"
             styleClass="w-full" appendTo="body"></p-datepicker>
         </div>
@@ -134,8 +134,8 @@
   <!-- TABLA -->
   <div class="mb-6">
     <div class="surface-card border-round-xl shadow-1 overflow-hidden">
-      <p-table [value]="filasFiltradas()" [loading]="loading()" [paginator]="true" [rows]="10"
-        [rowsPerPageOptions]="[5,10,25,50]" styleClass="despacho-table-nativa despacho-table-hover" [rowHover]="true">
+      <p-table [value]="filasFiltradas()" [loading]="loading()"
+        styleClass="despacho-table-nativa despacho-table-hover" [rowHover]="true">
         <ng-template pTemplate="header">
           <tr>
             <th style="width:18%">Comprobante</th>
@@ -150,38 +150,22 @@
           <tr>
             <!-- Comprobante -->
             <td>
-              <ng-container *ngIf="getNumeroComprobante(d.id_venta_ref) !== '#' + d.id_venta_ref; else skelComp">
-                <span class="font-semibold text-primary block">{{ getNumeroComprobante(d.id_venta_ref) }}</span>
-              </ng-container>
-              <ng-template #skelComp>
-                <span class="dm-skel dm-skel-comp"></span>
-              </ng-template>
+              <span class="font-semibold text-primary block">{{ d.comprobante || ('Venta #' + d.id_venta_ref) }}</span>
               <span class="text-xs text-500">#Despacho {{ d.id_despacho }}</span>
             </td>
             <!-- Cliente -->
             <td>
-              <ng-container *ngIf="getClienteNombre(d.id_venta_ref) !== '—'; else skelCliente">
-                <span class="font-semibold block">{{ getClienteNombre(d.id_venta_ref) }}</span>
-                <span class="text-xs text-500" *ngIf="getClienteDoc(d.id_venta_ref)">
-                  <i class="pi pi-id-card mr-1"></i>{{ getClienteDoc(d.id_venta_ref) }}
-                </span>
-              </ng-container>
-              <ng-template #skelCliente>
-                <span class="dm-skel dm-skel-nombre"></span>
-                <span class="dm-skel dm-skel-doc"></span>
-              </ng-template>
+              <span class="font-semibold block">{{ d.clienteNombre || '—' }}</span>
+              <span class="text-xs text-500" *ngIf="d.clienteDoc">
+                <i class="pi pi-id-card mr-1"></i>{{ d.clienteDoc }}
+              </span>
             </td>
             <!-- Sede -->
             <td>
-              <ng-container *ngIf="getSede(d.id_venta_ref) !== '—'; else skelSede">
-                <span class="flex align-items-center gap-1">
-                  <i class="pi pi-building text-400 text-xs"></i>
-                  {{ getSede(d.id_venta_ref) }}
-                </span>
-              </ng-container>
-              <ng-template #skelSede>
-                <span class="dm-skel dm-skel-sede"></span>
-              </ng-template>
+              <span class="flex align-items-center gap-1">
+                <i class="pi pi-building text-400 text-xs"></i>
+                {{ d.sedeNombre || '—' }}
+              </span>
             </td>
             <!-- Dirección -->
             <td>
@@ -224,6 +208,37 @@
           </tr>
         </ng-template>
       </p-table>
+
+      <!-- PAGINACIÓN SERVER-SIDE -->
+      <div class="despacho-paginacion" *ngIf="totalItems() > 0">
+        <span class="pag-info">
+          Mostrando {{ (paginaActual() - 1) * limitePorPagina() + 1 }}–{{ minVal(paginaActual() * limitePorPagina(), totalItems()) }} de {{ totalItems() }} despachos
+        </span>
+        <div class="pag-controles">
+          <button class="pag-btn" [disabled]="paginaActual() === 1" (click)="cambiarPagina(1)">
+            <i class="pi pi-angle-double-left"></i>
+          </button>
+          <button class="pag-btn" [disabled]="paginaActual() === 1" (click)="cambiarPagina(paginaActual() - 1)">
+            <i class="pi pi-angle-left"></i>
+          </button>
+          <span class="pag-paginas">
+            Página {{ paginaActual() }} de {{ totalPages() }}
+          </span>
+          <button class="pag-btn" [disabled]="paginaActual() >= totalPages()" (click)="cambiarPagina(paginaActual() + 1)">
+            <i class="pi pi-angle-right"></i>
+          </button>
+          <button class="pag-btn" [disabled]="paginaActual() >= totalPages()" (click)="cambiarPagina(totalPages())">
+            <i class="pi pi-angle-double-right"></i>
+          </button>
+          <p-select
+            [ngModel]="limitePorPagina()"
+            (ngModelChange)="limitePorPagina.set($event); cargarDespachos()"
+            [options]="[{label:'5',value:5},{label:'10',value:10},{label:'25',value:25},{label:'50',value:50}]"
+            optionLabel="label" optionValue="value"
+            styleClass="pag-limit-select">
+          </p-select>
+        </div>
+      </div>
     </div>
   </div>
 </div>
