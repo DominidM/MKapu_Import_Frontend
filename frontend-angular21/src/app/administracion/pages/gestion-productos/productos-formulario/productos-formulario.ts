@@ -1,8 +1,9 @@
-import { Component, OnInit, signal, inject, computed } from '@angular/core';
+import { Component, OnInit, signal, inject, computed, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
-import { Router, ActivatedRoute } from '@angular/router'; 
+import { Router, ActivatedRoute } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { of, forkJoin } from 'rxjs'; 
+import { of, forkJoin } from 'rxjs';
 import { concatMap, catchError, finalize } from 'rxjs/operators';
 
 // PrimeNG
@@ -14,13 +15,19 @@ import { ConfirmDialog } from 'primeng/confirmdialog';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
+import { SkeletonModule } from 'primeng/skeleton';
 
 // Servicios e Interfaces
 import { Categoria } from '../../../interfaces/categoria.interface';
 import { ProductoService } from '../../../services/producto.service';
 import { CategoriaService } from '../../../services/categoria.service';
 import { SedeService } from '../../../services/sede.service';
-import { CreateProductoDto, MovimientoInventarioDto, UpdateProductoDto, UpdateProductoPreciosDto } from '../../../interfaces/producto.interface';
+import {
+  CreateProductoDto,
+  MovimientoInventarioDto,
+  UpdateProductoDto,
+  UpdateProductoPreciosDto,
+} from '../../../interfaces/producto.interface';
 import { AlmacenService } from '../../../services/almacen.service';
 
 @Component({
@@ -35,188 +42,221 @@ import { AlmacenService } from '../../../services/almacen.service';
     SelectModule,
     CardModule,
     ConfirmDialog,
-    ToastModule
+    ToastModule,
+    SkeletonModule,
   ],
   templateUrl: './productos-formulario.html',
   styleUrl: './productos-formulario.css',
   providers: [ConfirmationService, MessageService],
 })
 export class ProductosFormulario implements OnInit {
-  private fb = inject(FormBuilder);
-  private router = inject(Router);
-  private route = inject(ActivatedRoute); 
+  private fb             = inject(FormBuilder);
+  private router         = inject(Router);
+  private route          = inject(ActivatedRoute);
+  private destroyRef     = inject(DestroyRef);
   private almacenService = inject(AlmacenService);
-  private productoService = inject(ProductoService);
+  private productoService  = inject(ProductoService);
   private categoriaService = inject(CategoriaService);
-  private sedeService = inject(SedeService);
-  private messageService = inject(MessageService);
+  private sedeService      = inject(SedeService);
+  private messageService   = inject(MessageService);
 
-  categorias = signal<Categoria[]>([]);
-  isSubmitting = signal<boolean>(false);
-  sedes = this.sedeService.sedes;
-  almacenes = this.almacenService.sedes;
-  
-  // SIGNAL PARA ALMACENCES FILTRADOS POR SEDE
+  categorias         = signal<Categoria[]>([]);
+  isSubmitting       = signal<boolean>(false);
+  cargandoFormulario = signal<boolean>(false); // skeleton mientras carga en edición
+  sedes              = this.sedeService.sedes;
+  almacenes          = this.almacenService.sedes;
   almacenesFiltrados = signal<any[]>([]);
 
-  // SIGNALS MODO EDICIÓN
-  esModoEdicion = signal<boolean>(false);
+  // Modo edición
+  esModoEdicion    = signal<boolean>(false);
   idProductoActual = signal<number | null>(null);
 
-  // NUEVOS SIGNALS PARA EL CÁLCULO DE STOCK EN VIVO
-  stockActual = signal<number>(0);
-  stockAgregado = signal<number>(0);
-  // El stock total se calcula solo sumando el actual + lo que escriba el usuario
-  stockTotal = computed(() => this.stockActual() + this.stockAgregado());
+  // Almacén y sede guardados como signals (campos disabled no son confiables en getRawValue)
+  almacenCargado = signal<number | null>(null);
+  sedeCargada    = signal<number | null>(null);
 
-  // SIGNALS CABECERA
-  tituloKicker = signal<string>('ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS CREACIÓN');
+  // Stock en vivo
+  stockActual   = signal<number>(0);
+  stockAgregado = signal<number>(0);
+  stockTotal    = computed(() => this.stockActual() + this.stockAgregado());
+
+  // Cabecera dinámica
+  tituloKicker    = signal<string>('ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS CREACIÓN');
   tituloPrincipal = signal<string>('CREAR PRODUCTO');
-  iconoCabecera = signal<string>('pi pi-plus-circle');
+  iconoCabecera   = signal<string>('pi pi-plus-circle');
 
   productoForm: FormGroup = this.fb.group({
-    codigo: ['', Validators.required],
-    anexo: ['', Validators.required],
-    descripcion: ['', Validators.required],
-    familia: [null, Validators.required],
-    precioCompra: [0, [Validators.required, Validators.min(0)]],
-    precioVenta: [0, [Validators.required, Validators.min(0)]],
-    precioUnidad: [0, [Validators.required, Validators.min(0)]],
-    precioCaja: [0, [Validators.required, Validators.min(0)]],
+    codigo:          ['', Validators.required],
+    anexo:           ['', Validators.required],
+    descripcion:     ['', Validators.required],
+    familia:         [null, Validators.required],
+    precioCompra:    [0, [Validators.required, Validators.min(0)]],
+    precioVenta:     [0, [Validators.required, Validators.min(0)]],
+    precioUnidad:    [0, [Validators.required, Validators.min(0)]],
+    precioCaja:      [0, [Validators.required, Validators.min(0)]],
     precioMayorista: [0, [Validators.required, Validators.min(0)]],
-    unidadMedida: ['UNIDAD', Validators.required],
-    almacen: [null, Validators.required],
-    sede: [null, Validators.required],
-    stockInicial: [0, [Validators.required, Validators.min(0)]] // Funciona como "Agregar Stock" en edición
+    unidadMedida:    ['UNIDAD', Validators.required],
+    almacen:         [null, Validators.required],
+    sede:            [null, Validators.required],
+    stockInicial:    [0, [Validators.required, Validators.min(0)]],
   });
 
   ngOnInit() {
+    // Escucha cambios de stock en tiempo real
+    this.productoForm.get('stockInicial')?.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(valor => this.stockAgregado.set(valor || 0));
+
+    // Carga almacenes al cambiar sede (solo en modo creación — en edición está disabled)
+    this.productoForm.get('sede')?.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(idSede => {
+        if (!idSede || this.esModoEdicion()) return;
+        this.sedeService.loadAlmacenesParaSede(idSede)
+          .pipe(takeUntilDestroyed(this.destroyRef))
+          .subscribe({
+            next: (rel) => {
+              this.almacenesFiltrados.set(rel.almacenes.map(a => a.almacen));
+              this.productoForm.patchValue({ almacen: null });
+            },
+            error: (err) => console.error('Error cargando almacenes', err),
+          });
+      });
+
+    // Carga datos iniciales y luego verifica modo edición
     this.cargarDatosIniciales();
-    this.setSedePorDefecto();
-    this.verificarModoEdicion();
-
-    // Escuchamos lo que el usuario teclea en "stockInicial" para actualizar el Stock Total visualmente
-    this.productoForm.get('stockInicial')?.valueChanges.subscribe(valor => {
-      this.stockAgregado.set(valor || 0);
-    });
-
-    this.productoForm.get('sede')?.valueChanges.subscribe((idSede) => {
-  if (!idSede) return;
-
-  this.sedeService.loadAlmacenesParaSede(idSede).subscribe({
-    next: (rel) => {
-      const almacenes = rel.almacenes.map(a => a.almacen);
-      this.almacenesFiltrados.set(almacenes);
-
-      // limpiar selección anterior
-      this.productoForm.patchValue({ almacen: null });
-    },
-    error: (err) => console.error('Error cargando almacenes', err)
-  });
-});
-
-    this.productoForm.get('almacen')?.valueChanges.subscribe(v => {
-  console.log('ALMACEN VALUE:', v, typeof v);
-
-  console.log("almacenes", this.almacenes)
-
-});
-
   }
 
   private cargarDatosIniciales() {
-    this.categoriaService.getCategorias().subscribe({
-      next: (res) => this.categorias.set(res.categories),
-      error: (err) => console.error('Error cargando categorías', err)
-    });
-
-    this.sedeService.loadSedes().subscribe({
-      error: (err) => console.error('Error cargando sedes', err)
-    });
-
-    this.almacenService.loadAlmacen().subscribe({
-  next: () => {
-    console.log('ALMACENES CARGADOS:', this.almacenes());
-  },
-  error: (err) => console.error(err)
-});
-
-  }
-
-private setSedePorDefecto() {
-  const userStorage = localStorage.getItem('user');
-  if (userStorage) {
-    try {
-      const user = JSON.parse(userStorage);
-      if (user && user.idSede) {
-        this.productoForm.patchValue({ sede: user.idSede });
-
-        // 🔥 CARGAR ALMACENES INMEDIATAMENTE
-        this.sedeService.loadAlmacenesParaSede(user.idSede).subscribe({
-          next: (rel) => {
-            const almacenes = rel.almacenes.map(a => a.almacen);
-            this.almacenesFiltrados.set(almacenes);
-          },
-          error: (err) => console.error(err)
-        });
-      }
-    } catch (error) {
-      console.error('Error parseando usuario', error);
-    }
-  }
-}
-
-  private verificarModoEdicion() {
-    const idParam = this.route.snapshot.paramMap.get('id');
+    const idParam   = this.route.snapshot.paramMap.get('id');
     const sedeParam = this.route.snapshot.queryParamMap.get('idSede');
+    const esModo    = !!idParam;
 
-    if (idParam) {
+    if (esModo) {
+      // En edición mostramos skeleton y cargamos TODO en paralelo
+      this.cargandoFormulario.set(true);
       this.esModoEdicion.set(true);
-      const id = Number(idParam);
-      this.idProductoActual.set(id);
-
+      this.idProductoActual.set(Number(idParam));
       this.tituloKicker.set('ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS EDICIÓN');
       this.tituloPrincipal.set('EDITAR PRODUCTO');
       this.iconoCabecera.set('pi pi-pencil');
 
-      const idSedeBackend = sedeParam ? Number(sedeParam) : (this.productoForm.get('sede')?.value || 1);
-      this.cargarDatosDelProducto(id, idSedeBackend);
+      const idSede = sedeParam ? Number(sedeParam) : this.resolverSedeLocalStorage();
+
+      // Cargamos categorías, sedes y datos del producto EN PARALELO
+      forkJoin({
+        categorias: this.categoriaService.getCategorias(),
+        sedes:      this.sedeService.loadSedes(),
+        producto:   this.productoService.getProductoDetalleStock(Number(idParam), idSede),
+      }).pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => this.cargandoFormulario.set(false)),
+      ).subscribe({
+        next: ({ categorias, producto }) => {
+          this.categorias.set(categorias.categories);
+
+          const prod  = producto.producto;
+          const stock = producto.stock;
+
+          this.stockActual.set(stock?.cantidad || 0);
+          this.almacenCargado.set(Number(stock?.id_almacen) || null);
+          this.sedeCargada.set(Number(stock?.id_sede) || null);
+
+          // Cargar almacenes de la sede del producto
+          if (stock?.id_sede) {
+            this.sedeService.loadAlmacenesParaSede(stock.id_sede)
+              .pipe(takeUntilDestroyed(this.destroyRef))
+              .subscribe({
+                next: (rel) => {
+                  this.almacenesFiltrados.set(rel.almacenes.map(a => a.almacen));
+                  // Patchear el form DESPUÉS de tener los almacenes (evita el "salto")
+                  this.productoForm.patchValue({
+                    codigo:          prod.codigo,
+                    anexo:           prod.nombre,
+                    descripcion:     prod.descripcion || '',
+                    familia:         prod.categoria.id_categoria,
+                    precioCompra:    prod.precio_compra,
+                    precioVenta:     prod.precio_unitario,
+                    precioUnidad:    prod.precio_unitario,
+                    precioCaja:      prod.precio_caja,
+                    precioMayorista: prod.precio_mayor,
+                    unidadMedida:    prod.unidad_medida?.nombre || 'UNIDAD',
+                    sede:            stock?.id_sede,
+                    almacen:         stock?.id_almacen,
+                    stockInicial:    0,
+                  });
+                  this.productoForm.get('sede')?.disable();
+                  this.productoForm.get('almacen')?.disable();
+                },
+                error: () => {
+                  // Si falla carga de almacenes igual parchamos el form
+                  this.productoForm.patchValue({
+                    codigo:          prod.codigo,
+                    anexo:           prod.nombre,
+                    descripcion:     prod.descripcion || '',
+                    familia:         prod.categoria.id_categoria,
+                    precioCompra:    prod.precio_compra,
+                    precioVenta:     prod.precio_unitario,
+                    precioUnidad:    prod.precio_unitario,
+                    precioCaja:      prod.precio_caja,
+                    precioMayorista: prod.precio_mayor,
+                    unidadMedida:    prod.unidad_medida?.nombre || 'UNIDAD',
+                    sede:            stock?.id_sede,
+                    almacen:         stock?.id_almacen,
+                    stockInicial:    0,
+                  });
+                  this.productoForm.get('sede')?.disable();
+                  this.productoForm.get('almacen')?.disable();
+                },
+              });
+          }
+        },
+        error: (err) => {
+          console.error('Error cargando datos de edición:', err);
+          this.messageService.add({
+            severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los datos del producto.',
+          });
+        },
+      });
+
+    } else {
+      // Modo creación — carga categorías y sedes en paralelo, sede por defecto
+      forkJoin({
+        categorias: this.categoriaService.getCategorias(),
+        sedes:      this.sedeService.loadSedes(),
+      }).pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: ({ categorias }) => {
+            this.categorias.set(categorias.categories);
+            this.setSedePorDefecto();
+          },
+          error: (err) => console.error('Error cargando datos iniciales', err),
+        });
     }
   }
 
-  private cargarDatosDelProducto(id: number, idSede: number) {
-    this.productoService.getProductoDetalleStock(id, idSede).subscribe({
-      next: (res) => {
-        const prod = res.producto;
-        
-        // Guardamos el stock que viene de la BD
-        this.stockActual.set(res.stock?.cantidad || 0);
+  private resolverSedeLocalStorage(): number {
+    try {
+      const user = JSON.parse(localStorage.getItem('user') ?? '{}');
+      return user.idSede ?? 1;
+    } catch { return 1; }
+  }
 
-        this.productoForm.patchValue({
-          codigo: prod.codigo,
-          anexo: prod.nombre,
-          descripcion: prod.descripcion || '',
-          familia: prod.categoria.id_categoria,
-          precioCompra: prod.precio_compra,
-          precioVenta: prod.precio_unitario,
-          precioUnidad: prod.precio_unitario,
-          precioCaja: prod.precio_caja,
-          precioMayorista: prod.precio_mayor,
-          unidadMedida: prod.unidad_medida?.nombre || 'UNIDAD',
-          sede: res.stock?.id_sede,
-          almacen: res.stock?.id_almacen,
-          stockInicial: 0 // Lo ponemos en 0 porque ahora es "Stock a agregar"
-        });
-
-        // NOTA: NO deshabilitamos stockInicial para que puedan añadir stock
-        this.productoForm.get('sede')?.disable();
-        this.productoForm.get('almacen')?.disable();
-      },
-      error: (err) => {
-        console.error('Error trayendo datos del backend:', err);
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se encontraron los datos.' });
+  private setSedePorDefecto() {
+    try {
+      const user = JSON.parse(localStorage.getItem('user') ?? '{}');
+      if (user?.idSede) {
+        this.productoForm.patchValue({ sede: user.idSede });
+        this.sedeService.loadAlmacenesParaSede(user.idSede)
+          .pipe(takeUntilDestroyed(this.destroyRef))
+          .subscribe({
+            next: (rel) => this.almacenesFiltrados.set(rel.almacenes.map(a => a.almacen)),
+            error: (err) => console.error(err),
+          });
       }
-    });
+    } catch (e) {
+      console.error('Error parseando usuario', e);
+    }
   }
 
   cancelar() {
@@ -226,124 +266,128 @@ private setSedePorDefecto() {
   guardarProducto() {
     if (this.productoForm.invalid) {
       this.productoForm.markAllAsTouched();
-      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Complete los campos obligatorios.' });
+      this.messageService.add({
+        severity: 'error', summary: 'Error', detail: 'Complete los campos obligatorios.',
+      });
       return;
     }
 
     this.isSubmitting.set(true);
-    // getRawValue obtiene también los campos disabled (como sede y almacen en edición)
-    const formValue = this.productoForm.getRawValue(); 
+    const fv = this.productoForm.getRawValue();
 
-    const codigoLimpio = formValue.codigo?.trim().toUpperCase() || '';
-    const anexoLimpio = formValue.anexo?.trim().toUpperCase() || ''; 
-    const descripcionLimpia = formValue.descripcion?.trim().toUpperCase() || '';
+    const codigo      = fv.codigo?.trim().toUpperCase()      || '';
+    const anexo       = fv.anexo?.trim().toUpperCase()       || '';
+    const descripcion = fv.descripcion?.trim().toUpperCase() || '';
 
     if (this.esModoEdicion() && this.idProductoActual()) {
-      // ===== LÓGICA DE ACTUALIZAR (PUTs) =====
       const idProd = this.idProductoActual()!;
 
       const updateInfo: UpdateProductoDto = {
-        id_producto: idProd,
-        id_categoria: formValue.familia,
-        codigo: codigoLimpio,
-        anexo: anexoLimpio,
-        descripcion: descripcionLimpia,
-        uni_med: formValue.unidadMedida
+        id_producto:  idProd,
+        id_categoria: fv.familia,
+        codigo, anexo, descripcion,
+        uni_med: fv.unidadMedida,
       };
 
       const updatePrecios: UpdateProductoPreciosDto = {
         id_producto: idProd,
-        pre_compra: formValue.precioCompra,
-        pre_venta: formValue.precioVenta,
-        pre_unit: formValue.precioUnidad,
-        pre_may: formValue.precioMayorista,
-        pre_caja: formValue.precioCaja
+        pre_compra:  fv.precioCompra,
+        pre_venta:   fv.precioVenta,
+        pre_unit:    fv.precioUnidad,
+        pre_may:     fv.precioMayorista,
+        pre_caja:    fv.precioCaja,
       };
 
-      // Lanzamos ambas peticiones al mismo tiempo
       forkJoin([
         this.productoService.actualizarProductoInfo(updateInfo),
-        this.productoService.actualizarProductoPrecios(updatePrecios)
+        this.productoService.actualizarProductoPrecios(updatePrecios),
       ]).pipe(
         concatMap(() => {
-          // Si el usuario puso un número mayor a 0, agregamos el inventario
-          if (formValue.stockInicial > 0) {
-            const movDto: MovimientoInventarioDto = {
-              originType: 'COMPRA', // o 'COMPRA', 'AJUSTE', según requiera tu BD
-              refId: 101,
-              refTable: 'ordenes_compra',
-              observation: "Ingreso por orden de compra #101",
-              items: [{
-                productId: idProd,
-                warehouseId: formValue.almacen, 
-                sedeId: formValue.sede,         
-                quantity: formValue.stockInicial, // Cantidad a sumar
-                type: 'INGRESO'
-              }]
-            };
-            return this.productoService.registrarIngresoInventario(movDto);
+          if (fv.stockInicial > 0) {
+            let userId = 1;
+            try {
+              const user = JSON.parse(localStorage.getItem('user') ?? '{}');
+              userId = Number(user.id ?? user.userId ?? user.id_usuario ?? 1);
+            } catch { userId = 1; }
+
+            const warehouseId = Number(fv.almacen) || this.almacenCargado() || 0;
+            const idSede      = Number(fv.sede)    || this.sedeCargada()    || 0;
+            const quantity    = Number(fv.stockInicial);
+
+            if (!warehouseId || !idSede || !quantity) {
+              this.messageService.add({
+                severity: 'warn', summary: 'Advertencia',
+                detail: 'No se pudo determinar almacén o sede para el ajuste.',
+              });
+              return of(null);
+            }
+
+            return this.productoService.registrarAjusteInventario({
+              productId: idProd, warehouseId, idSede, quantity,
+              reason: `Ajuste de stock - ${codigo}`, userId,
+            });
           }
-          return of(null); // Si es 0, no hace petición de stock
+          return of(null);
         }),
-        catchError(error => {
-          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Hubo un problema al actualizar.' });
-          throw error;
+        catchError(err => {
+          const detalle = err?.error?.message || 'Hubo un problema al actualizar.';
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: detalle });
+          throw err;
         }),
-        finalize(() => this.isSubmitting.set(false))
+        finalize(() => this.isSubmitting.set(false)),
+        takeUntilDestroyed(this.destroyRef),
       ).subscribe({
         next: () => {
-          this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Producto actualizado correctamente.' });
+          this.messageService.add({
+            severity: 'success', summary: 'Éxito', detail: 'Producto actualizado correctamente.',
+          });
           setTimeout(() => this.router.navigate(['/admin/gestion-productos']), 1500);
-        }
+        },
       });
 
     } else {
-      // ===== LÓGICA DE CREAR (POST) =====
       const productoDto: CreateProductoDto = {
-        id_categoria: formValue.familia,
-        codigo: codigoLimpio,
-        anexo: anexoLimpio,
-        descripcion: descripcionLimpia,
-        pre_compra: formValue.precioCompra,
-        pre_venta: formValue.precioVenta,
-        pre_unit: formValue.precioUnidad,
-        pre_may: formValue.precioMayorista,
-        pre_caja: formValue.precioCaja,
-        uni_med: formValue.unidadMedida
+        id_categoria: fv.familia,
+        codigo, anexo, descripcion,
+        pre_compra:  fv.precioCompra,
+        pre_venta:   fv.precioVenta,
+        pre_unit:    fv.precioUnidad,
+        pre_may:     fv.precioMayorista,
+        pre_caja:    fv.precioCaja,
+        uni_med:     fv.unidadMedida,
       };
 
       this.productoService.crearProducto(productoDto).pipe(
         concatMap(productoCreado => {
-          if (formValue.stockInicial <= 0) {
-            return of(productoCreado);
-          }
-
+          if (fv.stockInicial <= 0) return of(productoCreado);
           const movDto: MovimientoInventarioDto = {
-            originType: 'COMPRA',
-            refId: 101,
+            originType: 'COMPRA', refId: 101,
             refTable: 'ordenes_compra',
-            observation: "Ingreso inicial de producto",
+            observation: 'Ingreso inicial de producto',
             items: [{
-              productId: productoCreado.id_producto,
-              warehouseId: formValue.almacen,
-              sedeId: formValue.sede,
-              quantity: formValue.stockInicial,
-              type: 'INGRESO'
-            }]
+              productId:   productoCreado.id_producto,
+              warehouseId: fv.almacen,
+              sedeId:      fv.sede,
+              quantity:    fv.stockInicial,
+              type:        'INGRESO',
+            }],
           };
-
           return this.productoService.registrarIngresoInventario(movDto);
         }),
-        catchError(error => {
-          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Hubo un error al crear.' });
-          throw error;
+        catchError(err => {
+          const detalle = err?.error?.message || 'Hubo un error al crear.';
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: detalle });
+          throw err;
         }),
-        finalize(() => this.isSubmitting.set(false))
+        finalize(() => this.isSubmitting.set(false)),
+        takeUntilDestroyed(this.destroyRef),
       ).subscribe({
         next: () => {
-          this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Producto creado correctamente.' });
+          this.messageService.add({
+            severity: 'success', summary: 'Éxito', detail: 'Producto creado correctamente.',
+          });
           setTimeout(() => this.router.navigate(['/admin/gestion-productos']), 1500);
-        }
+        },
       });
     }
   }
