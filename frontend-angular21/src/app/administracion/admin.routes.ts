@@ -15,7 +15,6 @@ export const ADMIN_ROUTES: Routes = [
       import('./pages/empresa/empresa-configuracion')
         .then(m => m.EmpresaConfiguracion),
     canActivate: [roleGuard],
-    data: { permiso: 'ADMINISTRACION' }, 
   },
   {
     path: 'empleados/:id/seguimiento',
@@ -265,6 +264,7 @@ export const ADMIN_ROUTES: Routes = [
       { path: '', loadComponent: () => import('./pages/comision/comision').then((m) => m.Comision) },
       { path: 'regla', loadComponent: () => import('./pages/comision/comision-regla/comisionregla').then((m) => m.ComisionRegla) },
       { path: 'reportes', loadComponent: () => import('./pages/comision/comision-reportes/comisionreportes').then((m) => m.ComisionReportes) },
+      { path: 'regla/:id', loadComponent: () => import('./pages/comision/editar-comision/comisionregla').then((m) => m.ComisionRegla) },
     ],
   },
   { path: 'comision-regla', redirectTo: 'comision/regla', pathMatch: 'full' },
@@ -357,7 +357,5 @@ export const ADMIN_ROUTES: Routes = [
   {
     path: 'terminos-condiciones',
     loadComponent: () => import('./pages/reportes/pages/terminos-condiciones/terminos-condiciones').then((m) => m.TerminosCondicionesComponent),
-    canActivate: [roleGuard],
-    data: { permiso: 'ADMINISTRACION' }
   },
 ];

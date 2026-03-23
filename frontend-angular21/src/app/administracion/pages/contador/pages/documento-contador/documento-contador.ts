@@ -25,7 +25,7 @@ import { LoadingOverlayComponent } from '../../../../../shared/components/loadin
 import { PaginadorComponent } from '../../../../../shared/components/paginador/paginador.components';
 import { getDomingoSemanaActualPeru, getLunesSemanaActualPeru } from '../../../../../shared/utils/date-peru.utils';
 
-// ─── Tipos locales ────────────────────────────────────────────────────────────
+// ─── Tipos locales ────────────────────────────────────────────────────────────r
 
 type TipoComprobante = 'Boleta' | 'Factura' | 'Nota de Crédito';
 type EstadoComprobante = 'EMITIDO' | 'ANULADO' | 'PENDIENTE' | 'RECHAZADO';
@@ -182,12 +182,14 @@ export class DocumentoContador implements OnInit {
   cantidadNotasCredito = 0;
 
   // ── Paginación ───────────────────────────────────────────────────
+  //comentario
   paginaActual    = 1;
   limitePorPagina = 5;
   totalRegistros  = 0;
   totalPaginas    = 1;
 
   readonly opcionesLimite = [
+    { label: '5', value: 5 },
     { label: '10', value: 10 },
     { label: '20', value: 20 },
     { label: '50', value: 50 },
