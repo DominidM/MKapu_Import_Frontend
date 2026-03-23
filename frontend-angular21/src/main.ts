@@ -6,7 +6,7 @@ import { providePrimeNG } from 'primeng/config';
 import 'primeflex/primeflex.css';
 import { App } from './app/app';
 import { routes } from './app/app.routes';
-import MyPreset from './app/core/mypreset';
+import MyPreset from './app/shared/mypreset';
 
 bootstrapApplication(App, {
   providers: [

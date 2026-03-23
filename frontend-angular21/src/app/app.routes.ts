@@ -4,7 +4,7 @@ import { Main } from './layout/main/main';
 import { authGuard } from './core/guards/auth.guard';
 import { NotFoundComponent } from './shared/components/not-found/not-found.component';
 import { roleGuard } from './core/guards/role.guard';
-import { EmpresaConfiguracion } from './administracion/pages/empresa/empresa-configuracion';
+import { EmpresaConfiguracion } from './core/pages/empresa/empresa-configuracion';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -17,17 +17,7 @@ export const routes: Routes = [
     children: [
       {
         path: 'admin',
-        loadChildren: () => import('./administracion/admin.routes').then((m) => m.ADMIN_ROUTES),
-      },
-
-      {
-        path: 'logistica',
-        loadChildren: () => import('./logistica/logistica.routes').then((m) => m.LOGISTICA_ROUTES),
-      },
-
-      {
-        path: 'ventas',
-        loadChildren: () => import('./ventas/ventas.routes').then((m) => m.VENTAS_ROUTES),
+        loadChildren: () => import('./core/admin.routes').then((m) => m.ADMIN_ROUTES),
       },
 
       { path: '**', component: NotFoundComponent },

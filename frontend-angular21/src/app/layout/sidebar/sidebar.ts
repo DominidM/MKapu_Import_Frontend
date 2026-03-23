@@ -11,8 +11,8 @@ import { ToastModule } from 'primeng/toast';
 
 import { AuthService } from '../../auth/services/auth.service';
 import { RoleService } from '../../core/services/role.service';
-import { CashboxSocketService } from '../../ventas/services/cashbox-socket.service';
-import { EmpresaService } from '../../administracion/services/empresa.service';
+import { CashboxSocketService } from '../../core/services/cashbox-socket.service';
+import { EmpresaService } from '../../core/services/empresa.service';
 
 interface MenuItem {
   path: string;

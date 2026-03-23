@@ -6,12 +6,12 @@ import { ToolbarModule } from 'primeng/toolbar';
 import { InputTextModule } from 'primeng/inputtext';
 import { ToastModule } from 'primeng/toast';
 import { RoleService } from '../../core/services/role.service';
-import { CashboxSocketService } from '../../ventas/services/cashbox-socket.service';
 import { ThemeService } from '../../core/services/theme.service';
 import { CommonModule } from '@angular/common';
-import { TransferNotificationRuntimeService } from '../../administracion/services/transfer-notification-runtime.service';
 
 import { TooltipModule } from 'primeng/tooltip';
+import { CashboxSocketService } from '../../core/services/cashbox-socket.service';
+import { TransferNotificationRuntimeService } from '../../core/services/transfer-notification-runtime.service';
 
 @Component({
   selector: 'app-header',

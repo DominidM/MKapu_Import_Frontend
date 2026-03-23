@@ -4,12 +4,12 @@ import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { environment } from '../../../enviroments/enviroment';
 import { User } from '../../core/interfaces/user.interface';
-import { EmpleadosService } from '../../core/services/empleados.service';
 import {
   AuthInterface,
   AuthInterfaceResponse,
   AuthAccountBackend,
 } from '../interfaces/auth.interface';
+import { EmpleadosService } from '../../core/services/empleados.service';
 
 @Injectable({
   providedIn: 'root',

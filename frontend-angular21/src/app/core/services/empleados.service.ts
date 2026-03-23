@@ -58,7 +58,7 @@ export class EmpleadosService {
       try {
         this.empleadoActual = JSON.parse(sesionGuardada);
       } catch (error) {
-        console.error('Error al recuperar sesión de empleado:', error);
+        console.error('Error al recuperar sesiÃ³n de empleado:', error);
         localStorage.removeItem('empleado_sesion');
       }
     }
