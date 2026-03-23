@@ -34,7 +34,7 @@ export class DetalleMovimientoInventario implements OnInit {
   cargarDetalle(id: string) {
     const listado = this.movimientosService.movimientosListado();
     const movEnMemoria = listado.find(m => m.id === Number(id));
-    
+
     if (movEnMemoria) {
       this.movimiento.set(movEnMemoria);
     } else {

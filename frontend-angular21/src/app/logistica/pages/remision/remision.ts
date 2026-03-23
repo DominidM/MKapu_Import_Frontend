@@ -21,6 +21,9 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { LoadingOverlayComponent } from '../../../shared/components/loading-overlay/loading-overlay.component';
 import { PaginadorComponent } from '../../../shared/components/paginador/paginador.components';
 
+// 👇 Importamos las utilidades de fecha
+import { getLunesSemanaActualPeru, getDomingoSemanaActualPeru } from '../../../shared/utils/date-peru.utils';
+
 @Component({
   selector: 'app-remision',
   standalone: true,
@@ -64,7 +67,9 @@ export class Remision implements OnInit {
 
   filtroTexto  = signal<string>('');
   filtroEstado = signal<string | null>(null);
-  filtroFechas = signal<Date[] | null>(null);
+  
+  // 👇 Inicializado con la semana actual por defecto
+  filtroFechas = signal<Date[] | null>([getLunesSemanaActualPeru(), getDomingoSemanaActualPeru()]);
 
   resumen = signal<RemissionSummaryResponse>({
     totalMes: 0, enTransito: 0, entregadas: 0, observadas: 0,
@@ -127,12 +132,19 @@ export class Remision implements OnInit {
     this.cargarDatos();
   }
 
+  // 👇 Limpiar filtros devuelve la fecha a la semana actual en lugar de null
   limpiarFiltros() {
     this.filtroTexto.set('');
     this.filtroEstado.set(null);
-    this.filtroFechas.set(null);
+    this.filtroFechas.set([getLunesSemanaActualPeru(), getDomingoSemanaActualPeru()]);
     this.paginaActual.set(1);
     this.cargarDatos();
+  }
+
+  // 👇 Método para cuando se limpie explícitamente el calendario desde la 'X'
+  limpiarFechas(): void {
+    this.filtroFechas.set([getLunesSemanaActualPeru(), getDomingoSemanaActualPeru()]);
+    this.aplicarFiltros();
   }
 
   cargarResumen() {

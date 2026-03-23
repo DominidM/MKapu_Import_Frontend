@@ -91,7 +91,7 @@ export const ADMIN_ROUTES: Routes = [
   {
     path: 'roles-permisos',
     canActivate: [roleGuard],
-    data: { permiso: 'ADMINISTRACION' },
+    data: { permiso: 'CREAR_PERMISOS' },
     children: [
       { path: '', loadComponent: () => import('./pages/roles-permisos/pages/roles-permisos-listado/role-permission-listado.component').then((m) => m.RolePermissionListadoComponent) },
       { path: 'roles', loadComponent: () => import('./pages/roles-permisos/roles/pages/roles-listado/roles-listado.component').then((m) => m.RolesListadoComponent) },
@@ -186,11 +186,11 @@ export const ADMIN_ROUTES: Routes = [
     //data: { permiso: 'CREAR_NOTA_CREDITO' },
     children: [
       {
-      path: '', // 👇 Ruta por defecto: Renderiza el listado (Ej: /admin/nota-credito)
+      path: '',
       loadComponent: () => import('./pages/nota-credito/nota-credito').then((m) => m.NotasCreditoComponent)
     },
     {
-      path: 'crear', // 👇 Renderiza el formulario (Ej: /admin/nota-credito/crear)
+      path: 'crear',
       loadComponent: () => import('./pages/nota-credito/agregar-nota-credito/agregar-nota-credito').then((m) => m.AgregarNotaCreditoComponent)
     }
     ]
@@ -359,7 +359,5 @@ export const ADMIN_ROUTES: Routes = [
   {
     path: 'terminos-condiciones',
     loadComponent: () => import('./pages/reportes/pages/terminos-condiciones/terminos-condiciones').then((m) => m.TerminosCondicionesComponent),
-    canActivate: [roleGuard],
-    data: { permiso: 'ADMINISTRACION' }
   },
 ];

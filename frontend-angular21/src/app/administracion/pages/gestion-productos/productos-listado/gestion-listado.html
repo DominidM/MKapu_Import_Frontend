@@ -11,205 +11,224 @@
         </div>
       </div>
       <div class="flex gap-2">
-        <p-button *ngIf="!esVistaEliminados" icon="pi pi-trash" [outlined]="true" severity="danger"
-          styleClass="productos-pill productos-pill-danger-outlined" [pTooltip]="6 + ' productos eliminados'">
+        <p-button
+          label="Agregar Producto"
+          icon="pi pi-plus"
+          styleClass="productos-pill productos-pill-warning"
+          (onClick)="irCrear()">
         </p-button>
-
-        <p-button *ngIf="esVistaEliminados" icon="pi pi-arrow-left" [outlined]="true" severity="secondary"
-          styleClass="productos-pill productos-pill-secondary" pTooltip="Volver a productos activos">
-        </p-button>
-
-        <p-button label="Agregar Producto" icon="pi pi-plus" styleClass="productos-pill productos-pill-warning"
-          (onClick)="irCrear()"> </p-button>
       </div>
     </div>
   </p-card>
 </div>
 
-
 <div class="p-2">
-  <div>
-    <div class="contadores-productos mb-4">
-      <div class="contador-card">
-        <i class="pi pi-box"></i>
-        <div>
-          <span class="contador-label">Total Productos</span>
-          <span class="contador-valor">{{ totalRecords() }}</span>
-          <span class="contador-detalle"><i class="pi pi-check-circle"></i> En esta sede</span>
-        </div>
-      </div>
 
-      <div class="contador-card">
-        <i class="pi pi-tags"></i>
-        <div>
-          <span class="contador-label">Familias</span>
-          <span class="contador-valor">{{ categorias().length }}</span>
-          <span class="contador-detalle"><i class="pi pi-sitemap"></i> Categorías</span>
-        </div>
-      </div>
-
-      <div class="contador-card">
-        <i class="pi pi-building"></i>
-        <div>
-          <span class="contador-label">Sedes Activas</span>
-          <span class="contador-valor">{{ sedesOptions().length }}</span>
-          <span class="contador-detalle"><i class="pi pi-map-marker"></i> Ubicaciones</span>
-        </div>
-      </div>
-
-      <div class="contador-card">
-        <i class="pi pi-database"></i>
-        <div>
-          <span class="contador-label">Stock en Página</span>
-          <span class="contador-valor">{{ stockTotalVisible() }}</span>
-          <span class="contador-detalle"><i class="pi pi-arrow-up"></i> Unidades visibles</span>
-        </div>
+  <!-- CONTADORES -->
+  <div class="contadores-productos mb-4">
+    <div class="contador-card">
+      <i class="pi pi-box"></i>
+      <div>
+        <span class="contador-label">Total Productos</span>
+        <span class="contador-valor">{{ totalRecords() }}</span>
+        <span class="contador-detalle"><i class="pi pi-check-circle"></i> En esta sede</span>
       </div>
     </div>
+    <div class="contador-card">
+      <i class="pi pi-tags"></i>
+      <div>
+        <span class="contador-label">Familias</span>
+        <span class="contador-valor">{{ categorias().length }}</span>
+        <span class="contador-detalle"><i class="pi pi-sitemap"></i> Categorías</span>
+      </div>
+    </div>
+    <div class="contador-card">
+      <i class="pi pi-building"></i>
+      <div>
+        <span class="contador-label">Sedes Activas</span>
+        <span class="contador-valor">{{ sedesOptions().length }}</span>
+        <span class="contador-detalle"><i class="pi pi-map-marker"></i> Ubicaciones</span>
+      </div>
+    </div>
+    <div class="contador-card">
+      <i class="pi pi-database"></i>
+      <div>
+        <span class="contador-label">Stock en Página</span>
+        <span class="contador-valor">{{ stockTotalVisible() }}</span>
+        <span class="contador-detalle"><i class="pi pi-arrow-up"></i> Unidades visibles</span>
+      </div>
+    </div>
+  </div>
 
-    <div class="surface-card border-round-xl shadow-1 mb-4">
-      <div class="p-3">
-        <div class="flex flex-wrap gap-6 align-items-end h-full">
-          <div class="flex-1 p-fluid h-full">
-            <label class="font-medium mb-2 block">Buscar Producto</label>
+  <!-- FILTROS -->
+  <div class="filtros-container mb-4">
+    <div class="seccion-filtros">
+      <h3><i class="pi pi-filter"></i> Filtros de búsqueda</h3>
 
-            <p-autocomplete 
-              [ngModel]="buscarValue()" 
-              (ngModelChange)="buscarValue.set($event)"
-              [suggestions]="sugerencias()" 
-              (completeMethod)="searchBuscar($event)"
-              (onSelect)="seleccionarProductoBusqueda($event)" 
-              (onClear)="limpiarBusqueda()"
-              placeholder="Nombre o código del producto..." 
-              field="nombre" 
-              optionLabel="nombre" 
-              fluid [showClear]="true"
-              styleClass="autocomplete-productos">
-              
-              
-              
-              <ng-template let-item pTemplate="item">
-                <div class="autocomplete-item-custom p-2">
-                  <div class="flex flex-column gap-1">
-                    <span class="font-bold text-900">{{ item.nombre }}</span>
-                    <small class="text-600 flex align-items-center gap-2">
-                      <span><i class="pi pi-tag mr-1 text-primary"></i>{{ item.codigo }}</span>
-                      <span><i class="pi pi-box mr-1 text-primary"></i>Stock: {{ item.stock }} unid.</span>
-                    </small>
-                  </div>
+      <div class="filtros-linea-1">
+        <div class="filtro-item filtro-cliente-50">
+          <label>Buscar Producto</label>
+          <p-autocomplete
+            [ngModel]="buscarValue()"
+            (ngModelChange)="buscarValue.set($event)"
+            [suggestions]="sugerencias()"
+            (completeMethod)="searchBuscar($event)"
+            (onSelect)="seleccionarProductoBusqueda($event)"
+            (onClear)="limpiarBusqueda()"
+            placeholder="Nombre o código del producto..."
+            field="nombre"
+            optionLabel="nombre"
+            [showClear]="true"
+            styleClass="w-full autocomplete-productos">
+            <ng-template let-item pTemplate="item">
+              <div class="autocomplete-item-custom p-2">
+                <div class="flex flex-column gap-1">
+                  <span class="font-bold text-900">{{ item.nombre }}</span>
+                  <small class="text-600 flex align-items-center gap-2">
+                    <span><i class="pi pi-tag mr-1 text-primary"></i>{{ item.codigo }}</span>
+                    <span><i class="pi pi-box mr-1 text-primary"></i>Stock: {{ item.stock }} unid.</span>
+                  </small>
                 </div>
-              </ng-template>
-            </p-autocomplete>
+              </div>
+            </ng-template>
+          </p-autocomplete>
+        </div>
+      </div>
 
-            <input *ngIf="esVistaEliminados" type="text" pInputText name="buscarEliminados"
-              placeholder="Nombre o código del producto..." class="w-full" />
-          </div>
+      <div class="filtros-linea-2">
+        <div class="filtro-item filtro-compacto">
+          <label>Familias</label>
+          <p-select
+            [options]="categorias()"
+            [ngModel]="categoriaSeleccionada()"
+            (ngModelChange)="onCategoriaChange($event)"
+            placeholder="Filtrar por categoría"
+            [showClear]="true"
+            styleClass="w-full">
+          </p-select>
+        </div>
 
-          <div *ngIf="!esVistaEliminados" class="flex flex-column w-16rem h-full">
-            <label class="font-medium mb-2 block">Familias</label>
-            <p-select [options]="categorias()" [ngModel]="categoriaSeleccionada()"
-              (ngModelChange)="onCategoriaChange($event)" placeholder="Filtrar por categoría" [showClear]="true"
-              class="w-full">
-            </p-select>
-          </div>
-
-          <div *ngIf="esVistaEliminados" class="flex flex-column w-16rem h-full">
-            <label class="font-medium mb-2 block">Familiasss</label>
-            <p-select [options]="categorias()" [ngModel]="categoriaSeleccionada()"
-              (ngModelChange)="onCategoriaChange($event)" placeholder="Filtrar por categoría" [showClear]="true"
-              class="w-full">
-            </p-select>
-          </div>
-
-          <div class="flex flex-column w-16rem h-full">
-            <label class="font-medium mb-2 block">Filtrar por Sede</label>
-            <p-select 
-            name="sedeSelect" 
-            [options]="sedesOptions()" 
+        <div class="filtro-item filtro-compacto">
+          <label>Sede</label>
+          <p-select
+            [options]="sedesOptions()"
             [ngModel]="idSedeActual()"
-            (ngModelChange)="onSedeChange($event)" 
-            optionLabel="label" 
+            (ngModelChange)="onSedeChange($event)"
+            optionLabel="label"
             optionValue="value"
             placeholder="Seleccione una sede"
-            class="w-full" 
-            [showClear]="true">
-            </p-select>
-          </div>
+            [showClear]="true"
+            styleClass="w-full">
+          </p-select>
+        </div>
 
-          <div class="flex gap-3 align-items-center">
-            <p-toggleButton name="vistaToggleActivos" [onLabel]="'Lista'" [offLabel]="'Tarjetas'"
-              [onIcon]="'pi pi-table'" [offIcon]="'pi pi-list'" />
-
-            <p-toggleButton *ngIf="esVistaEliminados" name="vistaToggleEliminados" [onLabel]="'Lista'"
-              [offLabel]="'Tarjetas'" [onIcon]="'pi pi-table'" [offIcon]="'pi pi-list'" />
-
-            <p-button icon="pi pi-filter-slash" label="Limpiar" severity="danger" size="small">
-            </p-button>
-          </div>
+        <div class="filtro-item filtro-boton-limpiar">
+          <label>&nbsp;</label>
+          <p-button
+            label="Limpiar Filtros"
+            icon="pi pi-filter-slash"
+            severity="danger"
+            styleClass="btn-limpiar-filtros"
+            (onClick)="limpiarFiltros()">
+          </p-button>
         </div>
       </div>
     </div>
+  </div>
 
-      <div class="mb-6">
-        <div class="surface-card border-round-xl shadow-1 overflow-hidden">
-          <p-table [value]="productos()" [lazy]="true" (onLazyLoad)="onPageChange($event)" [rows]="5"
-            [totalRecords]="totalRecords()" [loading]="loading()" [paginator]="true"
-            [rowsPerPageOptions]="[5, 10, 25, 50]" styleClass="productos-table-nativa productos-table-hover">
-            <ng-template pTemplate="header">
-              <tr>
-                <th style="width: 15%">Código</th>
-                <th style="width: 35%">Producto</th>
-                <th style="width: 15%">Familia</th>
-                <th style="width: 12%">Sedes</th>
-                <th style="width: 12%">Stock Total</th>
-                <th style="width: 11%">Acciones</th>
-              </tr>
-            </ng-template>
-            <ng-template pTemplate="body" let-p>
-              <tr>
-                <td class="font-semibold">{{ p.codigo }}</td>
-                <td>{{ p.nombre }}</td>
-                <td>{{ p.familia }}</td>
-                <td>
-                  <p-tag [value]="p.sede" severity="info" styleClass="font-bold"></p-tag>
-                </td>
-                <td>
-                  <p-tag [value]="p.stock + ' unid.'" styleClass="font-bold">
-                  </p-tag>
-                </td>
-                <td>
-                  <div class="flex align-items-center gap-2">
-                    <p-button icon="pi pi-eye" text severity="secondary"
-                      styleClass="productos-icon-btn productos-icon-soft" pTooltip="Ver Detalles"
-                      (onClick)="irDetalle(p.id_producto)">
-                    </p-button>
+  <!-- TABLA -->
+  <app-shared-table-container
+    titulo="Gestión de Productos"
+    iconoTitulo="pi pi-box"
+    mensajeCarga="Cargando productos..."
+    [loading]="loading()"
+    [paginaActual]="currentPage()"
+    [totalPaginas]="totalPages()"
+    [totalRegistros]="totalRecords()"
+    [limitePorPagina]="rows()"
+    [mostrarExportar]="false"
+    (pageChange)="onPageChange($event)"
+    (limitChange)="onLimitChange($event)">
 
-                    <p-button icon="pi pi-pencil" text severity="secondary"
-                      styleClass="productos-icon-btn productos-icon-warn" pTooltip="Editar Producto"
-                      (onClick)="irEditar(p.id_producto)">
-                    </p-button>
+    <div slot="acciones">
+      <p-tag
+        [value]="totalRecords() + ' productos'"
+        severity="info">
+      </p-tag>
+    </div>
 
-                    <p-button icon="pi pi-trash" text severity="danger"
-                      styleClass="productos-icon-btn productos-icon-danger" pTooltip="Eliminar Producto" (onClick)="confirmarEliminar(p.id_producto)">
-                    </p-button>
-                  </div>
-                </td>
-              </tr>
-            </ng-template>
-            <ng-template pTemplate="emptymessage">
-              <tr>
-                <td colspan="6" class="text-center py-6">
-                  <i class="pi pi-inbox text-4xl text-400 mb-3 block"></i>
-                  <p class="text-900 font-medium mb-0">No se encontraron productos</p>
-                  <p class="text-600 mt-2">Ajusta los filtros arriba</p>
-                </td>
-              </tr>
-            </ng-template>
-          </p-table>
-        </div>
-      </div>
+    <p-table
+      [value]="productos()"
+      [paginator]="false"
+      styleClass="p-datatable-striped productos-table-hover"
+      [tableStyle]="{ 'min-width': '50rem' }">
+
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width:15%">CÓDIGO</th>
+          <th style="width:35%">PRODUCTO</th>
+          <th style="width:15%">FAMILIA</th>
+          <th style="width:12%">SEDE</th>
+          <th style="width:12%">STOCK</th>
+          <th style="width:11%" class="text-center">ACCIONES</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-p>
+        <tr>
+          <td class="font-semibold">{{ p.codigo }}</td>
+          <td>{{ p.nombre }}</td>
+          <td>{{ p.familia }}</td>
+          <td>
+            <p-tag [value]="p.sede" severity="info" styleClass="font-bold" />
+          </td>
+          <td>
+            <p-tag
+              [value]="p.stock + ' unid.'"
+              [severity]="p.stock === 0 ? 'danger' : p.stock < 10 ? 'warn' : 'success'"
+              styleClass="font-bold" />
+          </td>
+          <td class="text-center">
+            <div class="acciones-tabla">
+              <p-button
+                icon="pi pi-eye"
+                [rounded]="true" [text]="true" severity="secondary"
+                pTooltip="Ver Detalles" tooltipPosition="top"
+                (onClick)="irDetalle(p.id_producto, p.sede)">
+              </p-button>
+              <p-button
+                icon="pi pi-pencil"
+                [rounded]="true" [text]="true" severity="secondary"
+                pTooltip="Editar Producto" tooltipPosition="top"
+                (onClick)="irEditar(p.id_producto)">
+              </p-button>
+              <p-button
+                icon="pi pi-trash"
+                [rounded]="true" [text]="true" severity="danger"
+                pTooltip="Eliminar Producto" tooltipPosition="top"
+                (onClick)="confirmarEliminar(p.id_producto)">
+              </p-button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="6" class="text-center">
+            <div class="mensaje-vacio">
+              <i class="pi pi-inbox"></i>
+              <p>No se encontraron productos</p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+    </p-table>
+
+  </app-shared-table-container>
+
 </div>
 
-
-  <p-toast></p-toast>
-  <p-confirmdialog></p-confirmdialog>
+<p-toast></p-toast>
+<p-confirmdialog></p-confirmdialog>

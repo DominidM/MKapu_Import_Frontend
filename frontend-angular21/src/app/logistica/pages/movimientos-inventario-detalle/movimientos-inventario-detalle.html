@@ -85,6 +85,7 @@
             <strong class="summary-value">{{ items.length }}</strong>
           </article>
         </div>
+        <p-tag [value]="(detalleActivo.detalles?.length || 0) + ' ítems'" severity="info" [rounded]="true"></p-tag>
       </div>
 
       <div class="section-block">
@@ -135,10 +136,10 @@
       >
         <ng-template pTemplate="header">
           <tr>
-            <th class="w-3rem text-center">#</th>
+            <th class="w-4rem text-center">#</th>
             <th>Producto</th>
-            <th class="text-center w-32">Unidad</th>
-            <th class="text-right w-40">Cantidad</th>
+            <th class="w-10rem text-center">Unidad</th>
+            <th class="w-10rem text-right">Cantidad</th>
           </tr>
         </ng-template>
 
@@ -151,6 +152,7 @@
                 <span class="product-code">{{ item.codigo || 'Sin codigo' }}</span>
               </div>
             </td>
+
             <td class="text-center">
               <span class="unidad-badge">{{ item.unidadMedida || 'N/A' }}</span>
             </td>
@@ -171,6 +173,7 @@
                 {{ item.cantidad }}
               </span>
             </td>
+
           </tr>
         </ng-template>
 
@@ -181,6 +184,7 @@
             </td>
           </tr>
         </ng-template>
+
       </p-table>
     </p-card>
   } @else {

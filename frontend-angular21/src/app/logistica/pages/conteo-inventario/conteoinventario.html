@@ -64,6 +64,13 @@
         placeholder="Familia"
         [dropdown]="true">
       </p-autoComplete>
+      <p-button 
+        icon="pi pi-filter-slash" 
+        pTooltip="Limpiar todos los filtros"
+        tooltipPosition="top"
+        styleClass="p-button-outlined p-button-secondary" 
+        (onClick)="limpiarTodosLosFiltros()">
+      </p-button>
     </div>
   </p-card>
 
