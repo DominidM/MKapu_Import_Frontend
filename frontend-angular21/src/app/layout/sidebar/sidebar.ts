@@ -81,7 +81,7 @@ export class Sidebar implements OnInit {
     CREAR_REMATES:           { path: '/admin/remates',                         label: 'Remates',           icon: 'pi pi-tag' },
     CREAR_PROVEEDORES:       { path: '/admin/proveedores',                     label: 'Proveedores',       icon: 'pi pi-truck' },
     AGREGAR_DOCUMENTO:       { path: '/admin/documento-contador',              label: 'Documentos',        icon: 'pi pi-file' },
-    ADMINISTRACION:          { path: '/admin/roles-permisos',                  label: 'Permisos',          icon: 'pi pi-key' },
+    CREAR_PERMISOS:          { path: '/admin/roles-permisos',                  label: 'Permisos',          icon: 'pi pi-key' },
     // Ventas usuario — mismas rutas /admin/, el permiso limita el acceso
     //borrarVER_DASHBOARD_VENTAS:    { path: '/admin/dashboard-admin',                 label: 'Dashboard',         icon: 'pi pi-chart-line' },
     //borrarCREAR_VENTA:             { path: '/admin/generar-ventas-administracion',   label: 'Generar Venta',     icon: 'pi pi-plus-circle' },
@@ -104,7 +104,7 @@ export class Sidebar implements OnInit {
     },
     {
       label: 'ADMINISTRADOR', icon: 'pi pi-cog', permisoSeccion: 'ADMINISTRACION',
-      permisos: ['CREAR_TRANSFERENCIA','CREAR_DESPACHO','CREAR_PRODUCTOS',
+      permisos: [ 'CREAR_PERMISOS','CREAR_TRANSFERENCIA','CREAR_DESPACHO','CREAR_PRODUCTOS',
                  'CREAR_CATEGORIAS','CREAR_SEDES','CREAR_MERMAS',
                  'CREAR_REMATES','CREAR_PROVEEDORES','ADMINISTRACION'],
     },

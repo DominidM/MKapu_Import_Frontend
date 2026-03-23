@@ -90,7 +90,7 @@ export const ADMIN_ROUTES: Routes = [
   {
     path: 'roles-permisos',
     canActivate: [roleGuard],
-    data: { permiso: 'ADMINISTRACION' },
+    data: { permiso: 'CREAR_PERMISOS' },
     children: [
       { path: '', loadComponent: () => import('./pages/roles-permisos/pages/roles-permisos-listado/role-permission-listado.component').then((m) => m.RolePermissionListadoComponent) },
       { path: 'roles', loadComponent: () => import('./pages/roles-permisos/roles/pages/roles-listado/roles-listado.component').then((m) => m.RolesListadoComponent) },
