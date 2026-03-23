@@ -212,6 +212,14 @@ export class ConteoInventarios implements OnInit {
       this.familias().filter((f) => f.nombre.toLowerCase().includes(query)),
     );
   }
+  limpiarTodosLosFiltros(): void {
+    this.filtroBusqueda.set('');
+    this.estadoSeleccionado.set(null);
+    this.familiaSeleccionada.set(null);
+    this.fechaSeleccionada.set([getLunesSemanaActualPeru(), getDomingoSemanaActualPeru()]);
+    
+    this.alCambiarFiltro();
+  }
 
   verDetalle(row: any): void {
     this.router.navigate(['/admin/conteo-inventario/detalle', row.idConteo]);

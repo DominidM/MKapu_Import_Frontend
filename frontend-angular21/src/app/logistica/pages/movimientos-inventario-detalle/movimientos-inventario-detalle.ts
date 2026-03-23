@@ -6,12 +6,14 @@ import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
 import { TableModule } from 'primeng/table';
 import { MovimientosInventarioService } from '../../services/movimientos-inventario.service';
+import { DividerModule } from 'primeng/divider';
 
 @Component({
   selector: 'app-detalle-movimiento-inventario',
   standalone: true,
-  imports: [CommonModule, CardModule, ButtonModule, TagModule, TableModule],
-  templateUrl: './movimientos-inventario-detalle.html'
+  imports: [CommonModule, CardModule, ButtonModule, TagModule, TableModule, DividerModule],
+  templateUrl: './movimientos-inventario-detalle.html',
+  styleUrl: './movimientos-inventario-detalle.css',
 })
 export class DetalleMovimientoInventario implements OnInit {
   private route = inject(ActivatedRoute);
