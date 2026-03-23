@@ -1,5 +1,4 @@
 <div class="p-2">
-  <!-- CABECERA -->
   <p-card class="productos-header-card mb-4 productos-header-bordered">
     <div class="flex align-items-center justify-content-between flex-wrap gap-2">
       <div class="flex align-items-center gap-3">
@@ -25,7 +24,6 @@
 </div>
 
 <div class="p-2">
-  <!-- CONTADORES -->
   <div class="contadores-productos mb-4">
     <div class="contador-card">
       <i class="pi pi-file-export"></i>
@@ -57,7 +55,6 @@
     </div>
   </div>
   
-  <!-- FILTROS -->
   <div class="filtros-container mb-4">
     <div class="seccion-filtros">
       <h3><i class="pi pi-filter"></i> Filtros de búsqueda</h3>
@@ -96,7 +93,8 @@
             placeholder="Seleccionar fechas"
             styleClass="w-full"
             [ngModel]="filtroFechas()"
-            (ngModelChange)="filtroFechas.set($event); aplicarFiltros()">
+            (ngModelChange)="filtroFechas.set($event); aplicarFiltros()"
+            (onClear)="limpiarFechas()">
           </p-datepicker>
         </div>
         <div class="filtro-item filtro-boton-limpiar">
@@ -111,7 +109,6 @@
     </div>
   </div>
 
-  <!-- TABLA con overlay -->
   <div class="mb-6">
     <div class="surface-card border-round-xl shadow-1 overflow-hidden" style="position: relative">
       <app-loading-overlay

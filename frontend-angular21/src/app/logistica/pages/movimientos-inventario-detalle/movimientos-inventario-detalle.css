@@ -1,0 +1,121 @@
+.sedes-kicker {
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.sedes-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+:host ::ng-deep .almacen-card .p-card-body {
+  padding: 1.5rem;
+}
+
+.almacen-section-title {
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: 0.02em;
+}
+
+.info-card {
+  padding: 1.25rem;
+  border-radius: 0.75rem;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s ease;
+}
+
+.info-card:hover {
+  border-color: #cbd5e1;
+}
+
+.info-label {
+  display: flex;
+  align-items: center;
+  font-size: 0.75rem;
+  margin-bottom: 0.4rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.info-value {
+  font-weight: 700;
+  word-break: break-word;
+}
+
+.warehouse {
+  border: 1px solid #e2e8f0;
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+}
+
+.warehouse.origin {
+  border-left: 4px solid #f97316;
+}
+
+.warehouse.destination {
+  border-left: 4px solid #22c55e;
+}
+
+.transfer-arrow {
+  font-size: 2rem;
+  color: #cbd5e1;
+  background: #f8fafc;
+  padding: 0.5rem;
+  border-radius: 50%;
+  border: 1px solid #e2e8f0;
+}
+
+.observation {
+  border: 1px solid #e2e8f0;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  min-height: 3rem;
+  line-height: 1.5;
+}
+
+:host ::ng-deep .custom-table .p-datatable-thead > tr > th {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  border-bottom: 2px solid #e2e8f0;
+  padding: 1rem;
+}
+
+:host ::ng-deep .custom-table .p-datatable-tbody > tr > td {
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.unit-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border: 1px solid #e2e8f0;
+}
+
+.quantity {
+  font-weight: 900;
+}
+
+.quantity.in {
+  color: #16a34a;
+}
+
+.quantity.out {
+  color: #dc2626;
+}
+
+:host ::ng-deep .custom-table .p-paginator {
+  background: transparent;
+  border: none;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 1rem;
+  justify-content: flex-end;
+}
