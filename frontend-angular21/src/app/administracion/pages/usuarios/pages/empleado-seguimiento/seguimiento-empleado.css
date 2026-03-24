@@ -1,69 +1,223 @@
-/* ── Cabecera ─────────────────────────────────────────────── */
+:host {
+  display: block;
+  --seg-gold: #f6af33;
+  --seg-gold-deep: #e09520;
+  --seg-blue: #3a424f;
+  --seg-neutral-rgb: 58, 66, 79;
+  --seg-blue-deep: #2d333c;
+  --seg-green: #48bb78;
+  --seg-orange: #ed8936;
+  --seg-page-bg: #f4f6fb;
+  --seg-card-bg: var(--surface-card, #ffffff);
+  --seg-soft-bg: var(--surface-ground, #f8fafc);
+  --seg-border: var(--surface-border, rgba(15, 23, 42, 0.08));
+  --seg-border-strong: var(--surface-border, rgba(15, 23, 42, 0.12));
+  --seg-text: #253247;
+  --seg-muted: #67758d;
+  --seg-shadow: 0 14px 30px rgba(15, 23, 42, 0.08);
+  --seg-shadow-soft: 0 8px 18px rgba(15, 23, 42, 0.06);
+}
+
+:host-context(.app-dark) {
+  --seg-blue: #c8ccd3;
+  --seg-neutral-rgb: 112, 118, 128;
+  --seg-page-bg: #141417;
+  --seg-card-bg: #18181b;
+  --seg-soft-bg: #101114;
+  --seg-border: #27272a;
+  --seg-border-strong: #323238;
+  --seg-text: #f5f5f7;
+  --seg-muted: #a3a6b0;
+  --seg-shadow: 0 10px 20px rgba(0, 0, 0, 0.18);
+  --seg-shadow-soft: 0 4px 10px rgba(0, 0, 0, 0.14);
+}
+
+.seg-page {
+  position: relative;
+  padding: 0.15rem;
+}
+
+.seg-shell {
+  position: relative;
+  z-index: 1;
+}
+
+:host ::ng-deep .seg-header-card.p-card,
+:host ::ng-deep .seg-profile-card.p-card,
+:host ::ng-deep .seg-filtros-card.p-card,
+:host ::ng-deep .seg-card.p-card {
+  background: var(--seg-card-bg) !important;
+  border: 1px solid var(--seg-border) !important;
+  border-radius: 22px !important;
+  box-shadow: var(--seg-shadow) !important;
+}
+
+:host ::ng-deep .seg-header-card .p-card-body,
+:host ::ng-deep .seg-profile-card .p-card-body,
+:host ::ng-deep .seg-filtros-card .p-card-body,
+:host ::ng-deep .seg-card .p-card-body {
+  padding: 1rem 1.2rem !important;
+}
+
+.seg-header-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.seg-header-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
 .seg-avatar {
-  width: 52px;
-  height: 52px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #f6af33, #e09520);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--seg-gold), var(--seg-gold-deep));
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.1rem;
-  font-weight: 700;
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
   color: #111;
-  letter-spacing: 0.05em;
   flex-shrink: 0;
-  box-shadow: 0 4px 14px rgba(246,175,51,0.3);
+  box-shadow: 0 8px 14px rgba(246, 175, 51, 0.16);
+}
+
+.seg-header-copy {
+  min-width: 0;
 }
 
 .seg-kicker {
-  font-size: 0.66rem;
+  margin: 0 0 0.12rem;
+  color: #7b8190;
+  font-size: 0.54rem;
   font-weight: 700;
-  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--text-color-secondary);
-  margin: 0 0 2px;
+  letter-spacing: 0.16em;
+}
+
+:host-context(.app-dark) .seg-kicker {
+  color: #9aa0ab;
 }
 
 .seg-title {
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: var(--text-color);
-  margin: 0 0 4px;
+  margin: 0;
+  color: var(--seg-text);
+  font-size: clamp(1rem, 0.9rem + 0.28vw, 1.18rem);
+  font-weight: 800;
+  line-height: 1.05;
 }
 
-.seg-meta {
+.seg-header-actions {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 0.75rem;
-  color: var(--text-color-secondary);
+  gap: 0.55rem;
+  flex-wrap: wrap;
 }
 
-.seg-meta-item {
-  display: flex;
-  align-items: center;
-  gap: 4px;
+.seg-pill {
+  border-radius: 12px !important;
+  transition: transform 0.18s ease, box-shadow 0.18s ease !important;
 }
 
-.seg-meta-item i { font-size: 0.65rem; }
-.seg-meta-sep { opacity: 0.4; }
-
-.seg-pill { border-radius: 20px !important; }
+.seg-pill:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--seg-shadow-soft);
+}
 
 .seg-pill-gold {
-  background: linear-gradient(135deg, #f6af33, #e09520) !important;
+  background: linear-gradient(135deg, var(--seg-gold), var(--seg-gold-deep)) !important;
   border: none !important;
   color: #111 !important;
-  font-weight: 600 !important;
+  font-weight: 700 !important;
 }
 
-/* ── Filtros ──────────────────────────────────────────────── */
-:host ::ng-deep .seg-filtros-card.p-card {
-  border-radius: 12px !important;
+:host ::ng-deep .seg-header-btn.p-button {
+  min-height: 2.1rem;
 }
 
-:host ::ng-deep .seg-filtros-card .p-card-body {
-  padding: 1rem 1.25rem !important;
+.seg-profile-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.seg-profile-block {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.seg-profile-label {
+  color: var(--seg-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.seg-profile-badges,
+.seg-profile-meta,
+.seg-header-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.seg-profile-chip,
+.seg-summary-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2.1rem;
+  padding: 0.45rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid var(--seg-border);
+  background: var(--seg-soft-bg);
+  color: var(--seg-text);
+  font-size: 0.8rem;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+:host-context(.app-dark) .seg-profile-chip,
+:host-context(.app-dark) .seg-summary-pill {
+  box-shadow: none;
+}
+
+.seg-profile-chip i,
+.seg-summary-pill i {
+  color: var(--seg-gold);
+  font-size: 0.78rem;
+}
+
+.seg-summary-pill--accent {
+  background: rgba(246, 175, 51, 0.12);
+  border-color: rgba(246, 175, 51, 0.2);
+}
+
+:host ::ng-deep .seg-role-tag .p-tag {
+  background: rgba(var(--seg-neutral-rgb), 0.12) !important;
+  color: var(--seg-blue) !important;
+  border: 1px solid rgba(var(--seg-neutral-rgb), 0.18) !important;
+  font-weight: 700;
+}
+
+:host-context(.app-dark) :host ::ng-deep .seg-role-tag .p-tag,
+:host-context(.app-dark) ::ng-deep .seg-role-tag .p-tag {
+  background: rgba(var(--seg-neutral-rgb), 0.14) !important;
+  color: #d5d8de !important;
+  border-color: rgba(var(--seg-neutral-rgb), 0.22) !important;
+}
+
+:host ::ng-deep .seg-status-tag .p-tag {
+  font-weight: 700;
 }
 
 .seg-filtros-row {
@@ -74,248 +228,676 @@
 }
 
 .seg-filtros-label {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
-  font-size: 0.78rem;
+  gap: 0.5rem;
+  color: #3b414c;
+  font-size: 0.8rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.07em;
-  color: var(--text-color-secondary);
+  letter-spacing: 0.12em;
   white-space: nowrap;
 }
 
-.seg-filtros-label i { color: #f6af33; }
+:host-context(.app-dark) .seg-filtros-label {
+  color: var(--seg-muted);
+}
+
+.seg-filtros-label i,
+.seg-filtros-rango i,
+.seg-periodo-badge i,
+.seg-section-title-row i,
+.seg-tabla-info i {
+  color: var(--seg-gold);
+}
+
+.seg-filtros-panel {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 1rem;
+  flex: 1 1 auto;
+  min-width: 0;
+}
 
 .seg-filtros-controles {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  flex: 1;
-}
-
-.seg-filtros-sep {
-  color: var(--text-color-secondary);
-  font-size: 0.9rem;
-}
-
-:host ::ng-deep .seg-date-input {
-  width: 160px !important;
-}
-
-.seg-filtros-rango {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.75rem;
-  color: var(--text-color-secondary);
-  padding: 4px 10px;
-  border-radius: 20px;
-  background: var(--surface-ground);
-  border: 1px solid var(--surface-border);
-  white-space: nowrap;
+  gap: 0.65rem;
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
   margin-left: auto;
 }
 
-.seg-filtros-rango i { font-size: 0.65rem; color: #f6af33; }
-
-/* ── KPIs ─────────────────────────────────────────────────── */
-.seg-kpis {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 0.875rem;
-}
-
-@media (max-width: 900px) { .seg-kpis { grid-template-columns: repeat(2,1fr); } }
-@media (max-width: 500px) { .seg-kpis { grid-template-columns: 1fr; } }
-
-.seg-kpi-card {
-  display: flex;
+.seg-filtros-actions {
+  display: inline-flex;
   align-items: center;
-  gap: 0.875rem;
-  padding: 1rem 1.1rem;
-  border-radius: 12px;
-  background: var(--surface-card);
-  border: 1px solid var(--surface-border);
-  transition: transform 0.15s, box-shadow 0.15s;
+  gap: 0.55rem;
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 
-.seg-kpi-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+:host ::ng-deep .seg-date-input {
+  display: inline-flex;
+  align-items: stretch;
+  flex: 0 0 260px;
+  width: 260px !important;
+  min-width: 260px;
+  max-width: 260px;
 }
 
-.seg-kpi-card--highlight {
-  border-color: rgba(246,175,51,0.3);
-  background: rgba(246,175,51,0.04);
+:host ::ng-deep .seg-date-input .p-inputwrapper {
+  display: inline-flex;
+  width: 100%;
 }
 
-.seg-kpi-icono {
-  width: 42px;
-  height: 42px;
-  border-radius: 10px;
-  display: flex;
+:host ::ng-deep .seg-date-input .p-datepicker-input-icon-container {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.1rem;
+  min-width: 2.65rem;
+  width: 2.65rem;
+  height: 2.3rem;
+  border: 1px solid var(--seg-border-strong) !important;
+  border-left: none !important;
+  border-radius: 0 12px 12px 0 !important;
+  background: var(--seg-soft-bg) !important;
+  color: var(--seg-muted) !important;
+}
+
+:host ::ng-deep .seg-date-input .p-inputtext,
+:host ::ng-deep .seg-date-input .p-datepicker-input,
+:host ::ng-deep .seg-date-input .p-inputwrapper input,
+:host ::ng-deep .seg-date-input .p-inputwrapper,
+:host ::ng-deep .seg-filtros-card .p-inputtext,
+:host ::ng-deep .seg-filtros-card .p-datepicker-input-icon-container,
+:host ::ng-deep .seg-filtros-card .p-button {
+  border-radius: 12px !important;
+}
+
+:host ::ng-deep .seg-date-input .p-inputtext,
+:host ::ng-deep .seg-date-input .p-datepicker-input,
+:host ::ng-deep .seg-date-input .p-inputwrapper input,
+:host ::ng-deep .seg-filtros-card .p-inputtext,
+:host ::ng-deep .seg-filtros-card .p-select,
+:host ::ng-deep .seg-filtros-card .p-datepicker-input-icon-container {
+  background: var(--seg-soft-bg) !important;
+  border-color: var(--seg-border-strong) !important;
+  color: var(--seg-text) !important;
+  height: 2.3rem;
+  border-radius: 12px 0 0 12px !important;
+}
+
+:host ::ng-deep .seg-date-input .p-inputtext::placeholder,
+:host ::ng-deep .seg-filtros-card .p-inputtext::placeholder {
+  color: var(--seg-muted);
+  opacity: 0.9;
+}
+
+:host ::ng-deep .seg-date-input .p-inputtext:hover,
+:host ::ng-deep .seg-date-input .p-inputtext:focus,
+:host ::ng-deep .seg-date-input .p-inputtext:focus-visible {
+  border-color: rgba(246, 175, 51, 0.45) !important;
+  box-shadow: 0 0 0 1px rgba(246, 175, 51, 0.12) !important;
+}
+
+:host ::ng-deep .seg-filter-btn.p-button {
+  min-width: 5.4rem;
+  min-height: 2.3rem;
   flex-shrink: 0;
 }
 
-.seg-kpi-icono--ventas { background: rgba(246,175,51,0.15); color: #f6af33; }
-.seg-kpi-icono--cot    { background: rgba(99,179,237,0.15);  color: #63b3ed; }
-.seg-kpi-icono--com    { background: rgba(72,187,120,0.15);  color: #48bb78; }
-.seg-kpi-icono--tasa   { background: rgba(237,137,54,0.15);  color: #ed8936; }
+:host ::ng-deep .seg-filter-clear.p-button {
+  min-width: 2.45rem;
+  min-height: 2.3rem;
+  flex-shrink: 0;
+}
 
-.seg-kpi-info {
+.seg-filtros-rango {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2.1rem;
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  background: var(--seg-soft-bg);
+  border: 1px solid var(--seg-border);
+  color: var(--seg-muted);
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.seg-insights {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.seg-insights--loading {
+  opacity: 0.8;
+}
+
+.seg-insight-card {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  padding: 1rem 1.05rem;
+  border-radius: 18px;
+  background: var(--seg-card-bg);
+  border: 1px solid var(--seg-border);
+  box-shadow: var(--seg-shadow-soft);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.seg-kpi-card {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 1px;
-  min-width: 0;
+  align-items: flex-start;
+  gap: 0.72rem;
+  min-height: 124px;
+  padding: 0.95rem 1.05rem;
+  border-radius: 18px;
+  background: var(--seg-card-bg);
+  border: 1px solid var(--seg-border);
+  box-shadow: var(--seg-shadow-soft);
+  overflow: hidden;
+  transition: transform 0.22s ease, box-shadow 0.22s ease, background-color 0.22s ease, border-color 0.22s ease;
 }
 
-.seg-kpi-num {
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: var(--text-color);
-  line-height: 1;
+.seg-insight-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--seg-shadow);
 }
 
-.seg-kpi-num--gold { color: #f6af33; }
+.seg-kpi-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--seg-shadow);
+}
 
+.seg-kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.22s ease;
+}
+
+.seg-kpi-card:hover::before {
+  transform: scaleX(1);
+}
+
+.seg-insight-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 1.1rem;
+}
+
+.seg-kpi-icono {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 1rem;
+  transition: transform 0.22s ease, color 0.22s ease, background-color 0.22s ease;
+}
+
+.seg-kpi-card:hover .seg-kpi-icono {
+  transform: scale(1.06);
+}
+
+.seg-insight-icon--movimientos,
+.seg-kpi-icono--ventas {
+  background: rgba(246, 175, 51, 0.14);
+  color: var(--seg-gold);
+}
+
+.seg-insight-icon--ticket,
+.seg-kpi-icono--cot {
+  background: rgba(var(--seg-neutral-rgb), 0.12);
+  color: var(--seg-blue);
+}
+
+.seg-insight-icon--comision,
+.seg-kpi-icono--com {
+  background: rgba(72, 187, 120, 0.14);
+  color: var(--seg-green);
+}
+
+.seg-kpi-icono--tasa {
+  background: rgba(237, 137, 54, 0.14);
+  color: var(--seg-orange);
+}
+
+.seg-insight-copy,
+.seg-kpi-info {
+  display: grid;
+  gap: 0.18rem;
+}
+
+.seg-insight-label,
 .seg-kpi-label {
+  color: var(--seg-muted);
   font-size: 0.7rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.07em;
-  color: var(--text-color-secondary);
+  letter-spacing: 0.06em;
 }
 
-.seg-kpi-sub {
-  font-size: 0.72rem;
-  color: var(--text-color-secondary);
-  opacity: 0.75;
+.seg-insight-value,
+.seg-kpi-num {
+  color: var(--seg-text);
+  font-weight: 800;
+  line-height: 1.05;
 }
 
-/* ── Cards ────────────────────────────────────────────────── */
-:host ::ng-deep .seg-card.p-card {
-  border-radius: 14px !important;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
+.seg-insight-value {
+  font-size: clamp(1.2rem, 1rem + 0.45vw, 1.55rem);
 }
 
-:host ::ng-deep .seg-card .p-card-body {
-  padding: 1.25rem !important;
+.seg-kpi-num {
+  font-size: 1.25rem;
+}
+
+.seg-kpi-num--gold {
+  color: var(--seg-gold);
+}
+
+.seg-insight-sub,
+.seg-kpi-sub,
+.seg-section-copy,
+.seg-legend-item,
+.seg-tabla-info,
+.mensaje-vacio {
+  color: var(--seg-muted);
+}
+
+.seg-insight-sub,
+.seg-kpi-sub,
+.seg-section-copy {
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.seg-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.seg-kpi-card--ventas::before { background: linear-gradient(90deg, var(--seg-gold), var(--seg-gold-deep)); }
+.seg-kpi-card--cotizaciones::before { background: linear-gradient(90deg, #7f8691, #5f6670); }
+.seg-kpi-card--comisiones::before { background: linear-gradient(90deg, var(--seg-green), #2f9d63); }
+.seg-kpi-card--highlight::before { background: linear-gradient(90deg, var(--seg-orange), #d97706); }
+
+.seg-kpi-card--ventas:hover {
+  background: #fff8ea;
+  border-color: rgba(246, 175, 51, 0.18);
+}
+
+.seg-kpi-card--cotizaciones:hover {
+  background: rgba(var(--seg-neutral-rgb), 0.06);
+  border-color: rgba(var(--seg-neutral-rgb), 0.2);
+}
+
+.seg-kpi-card--comisiones:hover {
+  background: rgba(72, 187, 120, 0.08);
+  border-color: rgba(72, 187, 120, 0.18);
+}
+
+.seg-kpi-card--highlight {
+  border-color: rgba(237, 137, 54, 0.16);
+}
+
+.seg-kpi-card--highlight:hover {
+  background: rgba(237, 137, 54, 0.08);
+  border-color: rgba(237, 137, 54, 0.22);
+}
+
+:host-context(.app-dark) .seg-kpi-card--ventas:hover {
+  background: #232017;
+}
+
+:host-context(.app-dark) .seg-kpi-card--cotizaciones:hover {
+  background: #202126;
+}
+
+:host-context(.app-dark) .seg-kpi-card--comisiones:hover {
+  background: #18241d;
+}
+
+:host-context(.app-dark) .seg-kpi-card--highlight:hover {
+  background: #251d17;
 }
 
 .seg-section-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-bottom: 0.875rem;
-  border-bottom: 1px solid var(--surface-border);
+  gap: 1rem;
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid var(--seg-border);
+}
+
+.seg-section-header--rich {
+  align-items: flex-start;
+}
+
+.seg-section-title-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: #3b414c;
   font-size: 0.82rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.07em;
-  color: var(--text-color-secondary);
+  letter-spacing: 0.12em;
 }
 
-.seg-section-header i { color: #f6af33; }
+:host-context(.app-dark) .seg-section-title-row {
+  color: var(--seg-muted);
+}
 
-/* ── Leyenda gráfica ──────────────────────────────────────── */
+.seg-chart-badges,
 .seg-legend {
   display: flex;
-  gap: 1rem;
   align-items: center;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+}
+
+.seg-chart-badge,
+.seg-periodo-badge,
+.seg-tab-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border-radius: 999px;
+}
+
+.seg-chart-badge,
+.seg-periodo-badge {
+  min-height: 2.1rem;
+  padding: 0.45rem 0.85rem;
+  border: 1px solid var(--seg-border);
+  background: var(--seg-soft-bg);
+  color: var(--seg-text);
+  font-size: 0.78rem;
+}
+
+.seg-chart-badge--alt {
+  background: rgba(var(--seg-neutral-rgb), 0.12);
+  border-color: rgba(var(--seg-neutral-rgb), 0.18);
+}
+
+.seg-chart-badge i {
+  color: var(--seg-gold);
+}
+
+.seg-chart-badge--alt i {
+  color: var(--seg-blue);
+}
+
+.seg-legend {
+  margin-top: 0.95rem;
 }
 
 .seg-legend-item {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 5px;
-  font-size: 0.75rem;
-  font-weight: 400;
-  color: var(--text-color-secondary);
-  text-transform: none;
-  letter-spacing: 0;
+  gap: 0.45rem;
+  font-size: 0.78rem;
 }
 
 .seg-legend-dot {
   width: 10px;
   height: 10px;
-  border-radius: 2px;
-  flex-shrink: 0;
+  border-radius: 4px;
 }
 
-/* ── Período badge ────────────────────────────────────────── */
-.seg-periodo-badge {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 0.72rem;
-  font-weight: 400;
-  text-transform: none;
-  letter-spacing: 0;
-  color: var(--text-color-secondary);
-  background: var(--surface-ground);
-  padding: 3px 10px;
-  border-radius: 20px;
-  border: 1px solid var(--surface-border);
+.seg-chart-shell {
+  height: 260px;
+  margin-top: 0.75rem;
 }
 
-.seg-periodo-badge i { font-size: 0.65rem; color: #f6af33; }
+:host ::ng-deep .seg-card .p-tablist-tab-list {
+  gap: 0.35rem;
+  background: transparent !important;
+  border: none !important;
+}
 
-/* ── Tabs ─────────────────────────────────────────────────── */
+:host ::ng-deep .seg-card .p-tab {
+  border-radius: 14px 14px 0 0;
+  background: transparent;
+  border: 1px solid transparent;
+}
+
+:host ::ng-deep .seg-card .p-tab-active {
+  background: rgba(246, 175, 51, 0.08);
+  border-color: rgba(246, 175, 51, 0.16);
+}
+
+:host ::ng-deep .seg-card .p-tabpanels {
+  background: transparent !important;
+  padding: 0.65rem 0 0 !important;
+}
+
+:host ::ng-deep .seg-card .p-tablist-active-bar {
+  background: linear-gradient(135deg, var(--seg-gold), var(--seg-gold-deep));
+  height: 3px;
+}
+
 .seg-tab-header {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 0.45rem;
   font-size: 0.82rem;
+  font-weight: 600;
 }
 
 .seg-tab-count {
-  display: inline-flex;
-  align-items: center;
   justify-content: center;
   min-width: 20px;
   height: 18px;
-  padding: 0 5px;
-  border-radius: 9px;
-  background: rgba(246,175,51,0.18);
-  color: #f6af33;
-  font-size: 0.68rem;
+  padding-inline: 0.35rem;
+  background: rgba(246, 175, 51, 0.16);
+  color: var(--seg-gold);
+  font-size: 0.6rem;
   font-weight: 700;
 }
 
-/* ── Info tabla ───────────────────────────────────────────── */
 .seg-tabla-info {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 0.76rem;
-  color: var(--text-color-secondary);
-  padding: 6px 10px;
-  border-radius: 8px;
-  background: var(--surface-ground);
-  border-left: 3px solid #f6af33;
+  gap: 0.45rem;
+  padding: 0.7rem 0.85rem;
+  border-radius: 14px;
+  border: 1px solid var(--seg-border);
+  background: var(--seg-soft-bg);
+  font-size: 0.79rem;
 }
 
-.seg-tabla-info i { color: #f6af33; font-size: 0.7rem; }
-.seg-tabla-info strong { color: var(--text-color); }
+.seg-tabla-info strong {
+  color: var(--seg-text);
+}
 
-/* ── Tabla celdas ─────────────────────────────────────────── */
+.seg-tabla-info--ventas { border-left: 4px solid var(--seg-gold); }
+.seg-tabla-info--cot { border-left: 4px solid var(--seg-blue); }
+.seg-tabla-info--com { border-left: 4px solid var(--seg-green); }
+
+:host ::ng-deep .seg-data-table .p-datatable-thead > tr > th {
+  color: var(--seg-muted);
+  font-size: 0.73rem;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  background: var(--seg-soft-bg);
+  border-color: var(--seg-border);
+}
+
+:host ::ng-deep .seg-data-table .p-datatable-tbody > tr {
+  transition: background-color 0.16s ease;
+}
+
+:host ::ng-deep .seg-data-table .p-datatable-tbody > tr:hover {
+  background: rgba(246, 175, 51, 0.05);
+}
+
+:host-context(.app-dark) .seg-data-table .p-datatable-tbody > tr:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+:host ::ng-deep .seg-data-table .p-datatable-tbody > tr > td {
+  border-color: var(--seg-border);
+  vertical-align: middle;
+}
+
+:host ::ng-deep .seg-data-table .p-paginator {
+  background: transparent;
+  border: none;
+  padding: 0.8rem 0 0;
+}
+
 .seg-codigo {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.9rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 8px;
+  border: 1px solid rgba(246, 175, 51, 0.16);
+  background: rgba(246, 175, 51, 0.1);
+  color: var(--seg-gold);
   font-family: monospace;
   font-size: 0.8rem;
-  background: var(--surface-ground);
-  padding: 2px 7px;
-  border-radius: 5px;
-  color: #f6af33;
 }
 
 .seg-monto {
+  color: var(--seg-text);
   font-weight: 700;
-  color: var(--text-color);
 }
 
-.seg-monto--com { color: #48bb78; }
+.seg-monto--com {
+  color: var(--seg-green);
+}
+
+.mensaje-vacio {
+  display: grid;
+  place-items: center;
+  gap: 0.45rem;
+  padding: 1.4rem 0;
+}
+
+.mensaje-vacio i {
+  color: var(--seg-gold);
+  font-size: 1.2rem;
+}
+
+.mensaje-vacio p {
+  margin: 0;
+}
+
+@media (max-width: 1100px) {
+  .seg-profile-grid,
+  .seg-insights,
+  .seg-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .seg-header-main,
+  .seg-section-header,
+  .seg-section-header--rich,
+  .seg-filtros-panel {
+    align-items: flex-start;
+  }
+
+  .seg-header-actions,
+  .seg-chart-badges,
+  .seg-filtros-panel {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .seg-filtros-panel {
+    flex-wrap: wrap;
+  }
+
+  .seg-filtros-controles {
+    width: 100%;
+    margin-left: 0;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  :host ::ng-deep .seg-date-input {
+    flex: 0 0 220px;
+    width: 220px !important;
+    min-width: 220px;
+    max-width: 220px;
+  }
+
+  .seg-filtros-actions {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 640px) {
+  .seg-profile-grid,
+  .seg-insights,
+  .seg-kpis {
+    grid-template-columns: 1fr;
+  }
+
+  .seg-header-brand {
+    align-items: flex-start;
+  }
+
+  .seg-header-actions,
+  .seg-filtros-controles,
+  .seg-filtros-panel,
+  .seg-filtros-actions {
+    width: 100%;
+  }
+
+  .seg-filtros-controles,
+  .seg-filtros-actions {
+    justify-content: flex-start;
+  }
+
+  :host ::ng-deep .seg-date-input {
+    flex: 1 1 100%;
+    width: 100% !important;
+    min-width: 0;
+    max-width: none;
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

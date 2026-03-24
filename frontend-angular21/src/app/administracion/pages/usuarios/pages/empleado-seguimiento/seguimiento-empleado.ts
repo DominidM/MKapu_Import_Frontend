@@ -77,6 +77,28 @@ export class SeguimientoEmpleado implements OnInit {
     this.comisiones().reduce((sum, commission) => sum + commission.monto, 0),
   );
 
+  readonly totalMovimientosRegistrados = computed(
+    () =>
+      this.ventas().length +
+      this.cotizaciones().length +
+      this.comisiones().length,
+  );
+
+  readonly ticketPromedioVentas = computed(() => {
+    const { totalVentas, montoVentas } = this.kpis();
+    return totalVentas > 0 ? montoVentas / totalVentas : 0;
+  });
+
+  readonly comisionPromedio = computed(() => {
+    const { totalComisiones, montoComisiones } = this.kpis();
+    return totalComisiones > 0 ? montoComisiones / totalComisiones : 0;
+  });
+
+  readonly relacionComisionVenta = computed(() => {
+    const { montoVentas, montoComisiones } = this.kpis();
+    return montoVentas > 0 ? (montoComisiones / montoVentas) * 100 : 0;
+  });
+
   readonly tasaAprobacion = computed(() => {
     const kpis = this.kpis();
     if (!kpis.totalCotizaciones) return 0;
@@ -382,12 +404,12 @@ export class SeguimientoEmpleado implements OnInit {
         {
           label: 'Comisiones (S/)',
           data: commissionSeries,
-          backgroundColor: 'rgba(99,179,237,0.08)',
-          borderColor: '#63b3ed',
+          backgroundColor: 'rgba(143, 152, 165, 0.12)',
+          borderColor: '#8f98a5',
           borderWidth: 2,
           tension: 0.4,
           fill: true,
-          pointBackgroundColor: '#63b3ed',
+          pointBackgroundColor: '#8f98a5',
           pointRadius: 4,
         },
       ],
@@ -412,3 +434,4 @@ export class SeguimientoEmpleado implements OnInit {
     };
   }
 }
+
