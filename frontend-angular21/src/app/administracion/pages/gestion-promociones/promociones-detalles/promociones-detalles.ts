@@ -10,7 +10,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { TooltipModule }       from 'primeng/tooltip';
 import { MessageService, ConfirmationService } from 'primeng/api';
 
-import { PromotionsService, Promotion } from '../../../services/promotions.service';
+import { PromotionsService, PromotionDetail } from '../../../services/promotions.service';
 import { ProgressBarModule } from 'primeng/progressbar';
 
 @Component({
@@ -39,7 +39,7 @@ export class PromocionesDetalles implements OnInit {
   private confirmationService = inject(ConfirmationService);
 
   cargando  = signal<boolean>(true);
-  promocion = signal<Promotion | null>(null);
+  promocion = signal<PromotionDetail | null>(null);
 
   // ─── Computed ────────────────────────────────────────────────────────────────
 
@@ -71,7 +71,7 @@ export class PromocionesDetalles implements OnInit {
       return;
     }
 
-    this.promotionsService.getPromotionById(id).subscribe({
+    this.promotionsService.getPromotionDetailById(id).subscribe({
       next: promo => {
         this.promocion.set(promo);
         this.cargando.set(false);

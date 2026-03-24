@@ -49,7 +49,7 @@ export class Sidebar implements OnInit {
   // ── Mapa permiso → datos del item (única fuente de verdad) ────────────────
   private readonly ITEM: Record<string, Omit<MenuItem, 'permiso'>> = {
     // Ventas Admin
-    
+
     VER_DASHBOARD_ADMIN:     { path: '/admin/dashboard-admin',                 label: 'Dashboard',         icon: 'pi pi-home' },
     VER_CAJA:                { path: '/admin/caja',                            label: 'Caja',              icon: 'pi pi-money-bill' },
     CREAR_VENTA_ADMIN:       { path: '/admin/generar-ventas-administracion',   label: 'Crear Venta',       icon: 'pi pi-plus-circle' },
@@ -106,7 +106,7 @@ export class Sidebar implements OnInit {
       label: 'ADMINISTRADOR', icon: 'pi pi-cog', permisoSeccion: 'ADMINISTRACION',
       permisos: [ 'CREAR_PERMISOS','CREAR_TRANSFERENCIA','CREAR_DESPACHO','CREAR_PRODUCTOS',
                  'CREAR_CATEGORIAS','CREAR_SEDES','CREAR_MERMAS',
-                 'CREAR_REMATES','CREAR_PROVEEDORES','ADMINISTRACION'],
+                 'CREAR_REMATES','SEGUIMIENTO_EMPLEADO','CREAR_PROVEEDORES','ADMINISTRACION'],
     },
     {
       label: 'DELIVERY', icon: 'pi pi-truck', permisoSeccion: 'ADMINISTRACION',
