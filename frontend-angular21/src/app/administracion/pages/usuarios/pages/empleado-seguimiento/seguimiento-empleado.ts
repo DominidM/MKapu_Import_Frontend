@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+﻿import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
@@ -15,7 +15,13 @@ import { TabsModule } from 'primeng/tabs';
 import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
-import { EmployeeTrackedSale, EmployeeTrackingData, EmployeeTrackingEmployee, EmployeeTrackingService } from '../../../../services/employee-tracking.service';
+import {
+  EmployeeTrackedQuote,
+  EmployeeTrackedSale,
+  EmployeeTrackingData,
+  EmployeeTrackingEmployee,
+  EmployeeTrackingService,
+} from '../../../../services/employee-tracking.service';
 import { LoadingOverlayComponent } from '../../../../../shared/components/loading-overlay/loading-overlay.component';
 
 interface KpiEmpleado {
@@ -25,15 +31,6 @@ interface KpiEmpleado {
   cotizacionesAprobadas: number;
   totalComisiones: number;
   montoComisiones: number;
-}
-
-interface CotizacionEmpleado {
-  id: number;
-  codigo: string;
-  cliente: string;
-  fecha: Date;
-  total: number;
-  estado: string;
 }
 
 interface ComisionEmpleado {
@@ -161,7 +158,7 @@ export class SeguimientoEmpleado implements OnInit {
   });
 
   ventas = signal<EmployeeTrackedSale[]>([]);
-  cotizaciones = signal<CotizacionEmpleado[]>([]);
+  cotizaciones = signal<EmployeeTrackedQuote[]>([]);
   comisiones = signal<ComisionEmpleado[]>([]);
 
   chartData = signal(this.buildChartData([]));
@@ -308,13 +305,13 @@ export class SeguimientoEmpleado implements OnInit {
   private applyTrackingData(data: EmployeeTrackingData): void {
     this.empleado.set(data.employee);
     this.ventas.set(data.sales);
-    this.cotizaciones.set([]);
+    this.cotizaciones.set(data.quotes);
     this.comisiones.set([]);
     this.kpis.set({
       totalVentas: data.totalSales,
       montoVentas: data.salesAmount,
-      totalCotizaciones: 0,
-      cotizacionesAprobadas: 0,
+      totalCotizaciones: data.totalQuotes,
+      cotizacionesAprobadas: data.approvedQuotes,
       totalComisiones: 0,
       montoComisiones: 0,
     });
