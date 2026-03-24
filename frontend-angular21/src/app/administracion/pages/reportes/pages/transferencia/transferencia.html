@@ -7,7 +7,7 @@
           <i class="pi pi-sync"></i>
         </span>
         <div>
-          <p class="productos-kicker mb-0">ADMINISTRACION · LOGISTICA -REPORTES</p>
+          <p class="productos-kicker mb-0">ADMINISTRACION · LOGISTICA - REPORTES</p>
           <h2 class="productos-title mb-0">GESTION DE TRANSFERENCIAS</h2>
         </div>
       </div>
@@ -57,13 +57,15 @@
     </div>
   </div>
 
-  <!-- FILTROS -->
-  <div class="surface-card border-round-xl shadow-1 mb-4">
-    <div class="p-3">
-      <div class="flex flex-wrap gap-6 align-items-end h-full">
+  <!-- FILTROS — misma estructura que ventas-por-cobrar -->
+  <div class="filtros-container mb-4">
+    <div class="seccion-filtros">
+      <h3><i class="pi pi-filter"></i> Filtros de búsqueda</h3>
 
-        <div class="flex-1 p-fluid h-full">
-          <label class="font-medium mb-2 block">Buscar Transferencia</label>
+      <!-- Línea 1: buscador -->
+      <div class="filtros-linea-1">
+        <div class="filtro-item filtro-cliente-50">
+          <label>Buscar Transferencia</label>
           <p-autocomplete
             [(ngModel)]="searchTerm"
             [suggestions]="transferenciaSuggestions"
@@ -72,9 +74,8 @@
             (ngModelChange)="onSearchChange($event)"
             (onSelect)="onSelectTransferencia($event)"
             placeholder="Código, producto o sede..."
-            fluid
             [showClear]="true"
-            styleClass="autocomplete-productos">
+            styleClass="w-full autocomplete-productos">
             <ng-template let-item pTemplate="item">
               <div class="autocomplete-item-custom p-2">
                 <div class="flex flex-column gap-1">
@@ -87,53 +88,56 @@
             </ng-template>
           </p-autocomplete>
         </div>
+      </div>
 
-        <div class="flex flex-column w-16rem h-full">
-          <label class="font-medium mb-2 block">Estado</label>
+      <!-- Línea 2: selectores + limpiar -->
+      <div class="filtros-linea-2">
+        <div class="filtro-item filtro-compacto">
+          <label>Estado</label>
           <p-select
             [options]="estadoOptions"
             optionLabel="label"
             optionValue="value"
             placeholder="Todos"
             [showClear]="true"
-            class="w-full"
+            styleClass="w-full"
             [(ngModel)]="estadoFilter"
             (onChange)="filtrar(searchTerm)">
           </p-select>
         </div>
 
-        <div class="flex flex-column w-16rem h-full">
-          <label class="font-medium mb-2 block">Observación</label>
+        <div class="filtro-item filtro-compacto">
+          <label>Observación</label>
           <p-select
             [options]="solicitudOptions"
             optionLabel="label"
             optionValue="value"
             placeholder="Todas"
             [showClear]="true"
-            class="w-full"
+            styleClass="w-full"
             [(ngModel)]="solicitudFilter"
             (onChange)="filtrar(searchTerm)">
           </p-select>
         </div>
 
-        <div class="flex gap-3 align-items-center">
+        <div class="filtro-item filtro-boton-limpiar">
+          <label>&nbsp;</label>
           <p-button
+            label="Limpiar Filtros"
             icon="pi pi-filter-slash"
-            label="Limpiar"
             severity="danger"
-            size="small"
-            styleClass="productos-pill"
+            styleClass="btn-limpiar-filtros"
             (onClick)="clearSearch()">
           </p-button>
         </div>
-
       </div>
+
     </div>
   </div>
 
-  <!-- TABLA con overlay -->
-  <div class="mb-6">
-    <div class="surface-card border-round-xl shadow-1 overflow-hidden" style="position: relative;">
+  <!-- TABLA -->
+  <div style="position: relative">
+    <div class="surface-card border-round-xl shadow-1 overflow-hidden mb-6">
 
       <app-loading-overlay
         [visible]="loading"
@@ -141,7 +145,14 @@
         modo="inline">
       </app-loading-overlay>
 
-      <div [style.opacity]="loading ? '0.3' : '1'" style="transition: opacity 0.2s ease;">
+      <div
+        class="seccion-tabla"
+        [style.opacity]="loading ? '0.3' : '1'"
+        style="transition: opacity 0.2s ease;">
+
+        <div class="tabla-header">
+          <h3><i class="pi pi-sync"></i> Listado de transferencias</h3>
+        </div>
 
         <p-table
           [value]="filteredTransferencias"
@@ -241,17 +252,15 @@
 
         </p-table>
 
-        @if (!hasActiveFilters) {
-          <app-paginador
-            [page]="currentPage"
-            [totalPages]="totalPagesComputed()"
-            [total]="totalRecords"
-            [limit]="rowsPerPage"
-            [limitOpciones]="[5, 10, 20, 50]"
-            (pageChange)="onPaginadorPageChange($event)"
-            (limitChange)="onPaginadorLimitChange($event)">
-          </app-paginador>
-        }
+        <app-paginador
+          [page]="currentPage"
+          [totalPages]="totalPagesComputed()"
+          [total]="totalRecords"
+          [limit]="rowsPerPage"
+          [limitOpciones]="[5, 10, 20, 50]"
+          (pageChange)="onPaginadorPageChange($event)"
+          (limitChange)="onPaginadorLimitChange($event)">
+        </app-paginador>
 
       </div>
     </div>

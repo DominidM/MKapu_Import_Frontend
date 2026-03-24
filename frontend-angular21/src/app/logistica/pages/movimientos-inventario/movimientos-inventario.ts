@@ -40,33 +40,32 @@ import { getLunesSemanaActualPeru, getDomingoSemanaActualPeru } from '../../../s
   styleUrl: './movimientos-inventario.css',
 })
 export class MovimientosInventario implements OnInit {
-  private router = inject(Router);
-  private movimientosService = inject(MovimientosInventarioService);
+  private router                 = inject(Router);
+  private movimientosService     = inject(MovimientosInventarioService);
   private transferContextService = inject(TransferUserContextService);
 
-  movimientos = signal<MovimientoInventario[]>([]);
-  cargando = signal<boolean>(false);
-  totalItems = signal<number>(0);
+  movimientos  = signal<MovimientoInventario[]>([]);
+  cargando     = signal<boolean>(false);
+  totalItems   = signal<number>(0);
   paginaActual = signal<number>(1);
   limitePagina = signal<number>(10);
 
   totalPaginas = computed(() => Math.ceil(this.totalItems() / this.limitePagina()) || 1);
 
   filtroEstado = signal<number>(0);
-  filtroTexto = signal<string>('');
-  
+  filtroTexto  = signal<string>('');
   filtroFechas = signal<Date[] | undefined>([
-    getLunesSemanaActualPeru(), 
-    getDomingoSemanaActualPeru()
+    getLunesSemanaActualPeru(),
+    getDomingoSemanaActualPeru(),
   ]);
-  
+
   sedeId = signal<string>('');
 
   opcionesEstado = [
-    { label: 'Todos', value: 0 },
-    { label: 'Ingresos', value: 1 },
-    { label: 'Salidas', value: 2 },
-    { label: 'Transferencias', value: 3 },
+    { label: 'Todos',           value: 0 },
+    { label: 'Ingresos',        value: 1 },
+    { label: 'Salidas',         value: 2 },
+    { label: 'Transferencias',  value: 3 },
   ];
 
   ngOnInit() {
@@ -77,15 +76,15 @@ export class MovimientosInventario implements OnInit {
   cargarMovimientos() {
     this.cargando.set(true);
 
-    const fechas = this.filtroFechas();
+    const fechas  = this.filtroFechas();
     const filtros = {
-      texto: this.filtroTexto(),
-      estado: this.filtroEstado() === 0 ? null : this.filtroEstado(),
+      texto:       this.filtroTexto(),
+      estado:      this.filtroEstado() === 0 ? null : this.filtroEstado(),
       fechaInicio: fechas?.[0] ? this.formatearFechaInicio(fechas[0]) : null,
-      fechaFin: fechas?.[1] ? this.formatearFechaFin(fechas[1]) : null,
-      sedeId: this.sedeId(),
-      page: this.paginaActual(),
-      limit: this.limitePagina(),
+      fechaFin:    fechas?.[1] ? this.formatearFechaFin(fechas[1])    : null,
+      sedeId:      this.sedeId(),
+      page:        this.paginaActual(),
+      limit:       this.limitePagina(),
     };
 
     this.movimientosService.getMovimientos(filtros).subscribe({
@@ -119,6 +118,19 @@ export class MovimientosInventario implements OnInit {
     this.cargarMovimientos();
   }
 
+  // ── Manejo independiente de cada datepicker ───────────────────────
+  onFechaInicioChange(fecha: Date | null): void {
+    const actual = this.filtroFechas() ?? [];
+    this.filtroFechas.set([fecha ?? actual[0], actual[1]]);
+    this.aplicarFiltros();
+  }
+
+  onFechaFinChange(fecha: Date | null): void {
+    const actual = this.filtroFechas() ?? [];
+    this.filtroFechas.set([actual[0], fecha ?? actual[1]]);
+    this.aplicarFiltros();
+  }
+
   onPageChange(page: number) {
     this.paginaActual.set(page);
     this.cargarMovimientos();
@@ -134,24 +146,16 @@ export class MovimientosInventario implements OnInit {
     const moduloBase = this.obtenerModuloBase();
     this.router.navigate(
       [moduloBase, 'movimiento-inventario', 'detalle', movimiento.id],
-      {
-        state: {
-          rutaRetorno: this.router.url,
-        },
-      },
+      { state: { rutaRetorno: this.router.url } },
     );
   }
 
   getSeverity(tipo: string): 'success' | 'danger' | 'info' | 'warn' {
     switch (tipo?.toUpperCase()) {
-      case 'INGRESO':
-        return 'success';
-      case 'SALIDA':
-        return 'danger';
-      case 'TRANSFERENCIA':
-        return 'info';
-      default:
-        return 'warn';
+      case 'INGRESO':       return 'success';
+      case 'SALIDA':        return 'danger';
+      case 'TRANSFERENCIA': return 'info';
+      default:              return 'warn';
     }
   }
 
