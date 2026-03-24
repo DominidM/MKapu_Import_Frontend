@@ -1518,16 +1518,16 @@
    REMATES — estilos nuevos para agregar al archivo .css existente
    ════════════════════════════════════════════════════════════════════════════ */
 
-/* ── Toggle modo búsqueda ───────────────────────────────────────────────── */
 .pos-search-mode-toggle {
   display: flex;
   gap: 0;
-  border: 1px solid var(--surface-300);
-  border-radius: 6px;
+  border: 1.5px solid var(--bdr);
+  border-radius: 8px;
   overflow: hidden;
   flex-shrink: 0;
-  height: 36px;
+  height: 44px;           /* igual que los demás controles de la fila */
   align-self: center;
+  background: #f8fafc;
 }
 
 .pos-mode-btn {
@@ -1535,30 +1535,38 @@
   align-items: center;
   gap: 6px;
   padding: 0 14px;
-  font-size: 13px;
-  font-weight: 500;
-  background: var(--surface-0);
+  font-size: 0.82rem;
+  font-weight: 600;
+  background: transparent;
   border: none;
   cursor: pointer;
-  color: var(--text-color-secondary);
+  color: var(--muted);
   transition: background 0.15s, color 0.15s;
   white-space: nowrap;
+  height: 100%;
 }
 
 .pos-mode-btn:hover {
-  background: var(--surface-100);
+  background: rgba(0,0,0,0.04);
+  color: var(--txt);
 }
 
+.pos-mode-btn:not(:last-child) {
+  border-right: 1.5px solid var(--bdr);
+}
+
+/* activo — Producto */
 .pos-mode-btn.active {
-  background: var(--primary-color);
-  color: #fff;
+  background: var(--acc);
+  color: #1e293b;
+  font-weight: 700;
 }
 
 .pos-mode-btn-remate.active {
   background: #e65100;
   color: #fff;
+  font-weight: 700;
 }
-
 /* separador entre botones del toggle */
 .pos-mode-btn:not(:last-child) {
   border-right: 1px solid var(--surface-300);
@@ -1752,11 +1760,10 @@
   white-space: nowrap;
 }
 
-/* ── Fila del carrito con remate — resalte sutil ────────────────────────── */
 .pos-row-remate {
-  background: #fffde7;
+  background-color: rgba(180, 120, 20, 0.12);
 }
 
 .pos-row-remate:hover {
-  background: #fff9c4 !important;
+  background-color: rgba(180, 120, 20, 0.20);
 }

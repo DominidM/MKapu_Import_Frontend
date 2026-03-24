@@ -449,7 +449,6 @@ export interface TipoServicioAdmin {
   nombre_servicio: string;
   descripcion?: string;
 }
-
 export interface AuctionAutocompleteItemAdmin {
   id_detalle_remate: number;
   id_remate: number;
@@ -457,6 +456,7 @@ export interface AuctionAutocompleteItemAdmin {
   id_producto: number;
   codigo_producto: string;
   nombre_producto: string;
+  descripcion_producto: string;
   descripcion_remate: string;
   id_categoria: number;
   familia: string;
