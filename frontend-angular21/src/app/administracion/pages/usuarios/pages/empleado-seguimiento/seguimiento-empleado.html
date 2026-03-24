@@ -1,4 +1,4 @@
-<div class="p-2">
+﻿<div class="p-2">
   <p-card styleClass="seg-header-card mb-3 ventas-header-bordered">
     <div class="flex align-items-center justify-content-between flex-wrap gap-2">
       <div class="flex align-items-center gap-3">
@@ -313,30 +313,27 @@
               [rowsPerPageOptions]="[5,10,20]">
               <ng-template pTemplate="header">
                 <tr>
-                  <th style="width:35%">Producto</th>
-                  <th style="width:12%">Cant.</th>
-                  <th style="width:15%">Tipo</th>
-                  <th style="width:20%">Monto</th>
-                  <th style="width:18%">Fecha</th>
+                  <th style="width:18%">Comprobante</th>
+                  <th style="width:22%">Sede</th>
+                  <th style="width:12%">%</th>
+                  <th style="width:16%">Monto</th>
+                  <th style="width:16%">Fecha</th>
+                  <th style="width:16%">Estado</th>
                 </tr>
               </ng-template>
               <ng-template pTemplate="body" let-com>
                 <tr>
-                  <td>{{ com.producto }}</td>
-                  <td>{{ com.cantidad }}</td>
-                  <td>
-                    <p-tag
-                      [value]="com.tipo === 'PORCENTAJE' ? 'Porcentaje' : 'Fijo'"
-                      [severity]="com.tipo === 'PORCENTAJE' ? 'info' : 'success'">
-                    </p-tag>
-                  </td>
+                  <td><span class="seg-codigo">{{ com.comprobante }}</span></td>
+                  <td>{{ com.sede }}</td>
+                  <td>{{ com.porcentaje | number:'1.0-2' }}%</td>
                   <td class="seg-monto seg-monto--com">S/ {{ com.monto | number:'1.2-2' }}</td>
                   <td>{{ com.fecha | date:'dd/MM/yyyy' }}</td>
+                  <td><p-tag [value]="com.estado" [severity]="getComisionSeverity(com.estado)"></p-tag></td>
                 </tr>
               </ng-template>
               <ng-template pTemplate="emptymessage">
                 <tr>
-                  <td colspan="5" class="text-center">
+                  <td colspan="6" class="text-center">
                     <div class="mensaje-vacio"><i class="pi pi-inbox"></i><p>Sin comisiones en el periodo</p></div>
                   </td>
                 </tr>
