@@ -355,10 +355,39 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
   }
 
   cargarKpis(): void {
+    const f = this.filtros;
+
+    let dateFrom: string | undefined;
+    let dateTo: string | undefined;
+
+    if (f.fechaInicio && f.fechaFin) {
+      dateFrom = f.fechaInicio.toISOString().split('T')[0];
+      dateTo = f.fechaFin.toISOString().split('T')[0];
+    } else if (f.fechaInicio && !f.fechaFin) {
+      const d = f.fechaInicio.toISOString().split('T')[0];
+      dateFrom = d;
+      dateTo = d;
+    } else if (!f.fechaInicio && f.fechaFin) {
+      const d = f.fechaFin.toISOString().split('T')[0];
+      dateFrom = d;
+      dateTo = d;
+    } else {
+      dateFrom = undefined;
+      dateTo = undefined;
+    }
+
     const sub = this.ventasService
-      .getKpiSemanal(this.filtros.sedeSeleccionada ?? undefined)
+      .getKpiPorFiltros({
+        sedeId: f.sedeSeleccionada ?? undefined,
+        dateFrom,
+        dateTo,
+        status: f.estado ?? undefined,
+        paymentMethodId: f.tipoPago ?? undefined,
+        receiptTypeId: f.tipoComprobante ?? undefined,
+        search: f.busqueda.trim() || undefined,
+      })
       .subscribe({
-        next: (kpi: SalesReceiptKpiDto) => {
+        next: (kpi) => {
           this.totalVentas = kpi.total_ventas ?? 0;
           this.numeroVentas = kpi.cantidad_ventas ?? 0;
           this.totalBoletas = kpi.cantidad_boletas ?? 0;
@@ -367,6 +396,7 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
         },
         error: () => console.warn('No se pudieron cargar KPIs'),
       });
+
     this.subscriptions.add(sub);
   }
 
@@ -449,6 +479,8 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
       mostrarEmail: true,
       labelPdf: 'PDF',
       labelVoucher: 'Voucher',
+      mostrarNotaVenta: true, // <- propiedad nueva en el config
+      labelNotaVenta: 'Nota de Venta',
     };
     this.dialogVisible = true;
     this.cdr.markForCheck();
@@ -535,7 +567,6 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
       }
 
       case 'voucher-imprimir':
-
         this.ventasService.generarVoucher(comprobante.idComprobante, true).subscribe({
           next: () => {
             this.dialogAccionCargando = null;
@@ -572,6 +603,46 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
           },
         });
         break;
+
+      case 'nota-venta-imprimir':
+        this.ventasService.verNotaVentaPdfEnPestana(comprobante.idComprobante).subscribe({
+          next: () => {
+            this.dialogAccionCargando = null;
+            this.cdr.markForCheck();
+          },
+          error: () => {
+            this.dialogAccionCargando = null;
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error',
+              detail: 'No se pudo abrir la Nota de Venta',
+              life: 3000,
+            });
+            this.cdr.markForCheck();
+          },
+        });
+        break;
+
+      case 'nota-venta-descargar': {
+        const nombre = `NOTA_VENTA-${comprobante.serie}-${String(comprobante.numero).padStart(8, '0')}.pdf`;
+        this.ventasService.descargarNotaVentaPdf(comprobante.idComprobante, nombre).subscribe({
+          next: () => {
+            this.dialogAccionCargando = null;
+            this.cdr.markForCheck();
+          },
+          error: () => {
+            this.dialogAccionCargando = null;
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error',
+              detail: 'No se pudo descargar la Nota de Venta',
+              life: 3000,
+            });
+            this.cdr.markForCheck();
+          },
+        });
+        break;
+      }
     }
   }
 
@@ -581,8 +652,6 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
     this.comprobanteDialogActual = null;
     this.cdr.markForCheck();
   }
-
-  // ── Acciones generales ────────────────────────────────────────────
 
   nuevaVenta(): void {
     this.router.navigate(['/admin/generar-ventas-administracion']);
@@ -765,6 +834,7 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
     const t = tipo.toUpperCase();
     if (t.includes('BOLETA') || tipo === '03') return 'Boleta';
     if (t.includes('FACTURA') || tipo === '01') return 'Factura';
+    if (t.includes('NOTA DE VENTA')) return 'Nota de Venta';
     return tipo;
   }
 
