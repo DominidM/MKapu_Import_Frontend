@@ -16,6 +16,7 @@ import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
 import {
+  EmployeeTrackedCommission,
   EmployeeTrackedQuote,
   EmployeeTrackedSale,
   EmployeeTrackingData,
@@ -31,15 +32,6 @@ interface KpiEmpleado {
   cotizacionesAprobadas: number;
   totalComisiones: number;
   montoComisiones: number;
-}
-
-interface ComisionEmpleado {
-  id: number;
-  producto: string;
-  cantidad: number;
-  monto: number;
-  fecha: Date;
-  tipo: string;
 }
 
 @Component({
@@ -84,6 +76,28 @@ export class SeguimientoEmpleado implements OnInit {
   readonly totalMontoComisiones = computed(() =>
     this.comisiones().reduce((sum, commission) => sum + commission.monto, 0),
   );
+
+  readonly totalMovimientosRegistrados = computed(
+    () =>
+      this.ventas().length +
+      this.cotizaciones().length +
+      this.comisiones().length,
+  );
+
+  readonly ticketPromedioVentas = computed(() => {
+    const { totalVentas, montoVentas } = this.kpis();
+    return totalVentas > 0 ? montoVentas / totalVentas : 0;
+  });
+
+  readonly comisionPromedio = computed(() => {
+    const { totalComisiones, montoComisiones } = this.kpis();
+    return totalComisiones > 0 ? montoComisiones / totalComisiones : 0;
+  });
+
+  readonly relacionComisionVenta = computed(() => {
+    const { montoVentas, montoComisiones } = this.kpis();
+    return montoVentas > 0 ? (montoComisiones / montoVentas) * 100 : 0;
+  });
 
   readonly tasaAprobacion = computed(() => {
     const kpis = this.kpis();
@@ -159,7 +173,7 @@ export class SeguimientoEmpleado implements OnInit {
 
   ventas = signal<EmployeeTrackedSale[]>([]);
   cotizaciones = signal<EmployeeTrackedQuote[]>([]);
-  comisiones = signal<ComisionEmpleado[]>([]);
+  comisiones = signal<EmployeeTrackedCommission[]>([]);
 
   chartData = signal(this.buildChartData([]));
   chartOptions = signal(this.buildChartOptions());
@@ -255,6 +269,23 @@ export class SeguimientoEmpleado implements OnInit {
     }
   }
 
+  getComisionSeverity(estado: string): 'success' | 'warn' | 'danger' | 'secondary' {
+    const normalizedStatus = (estado ?? '').toUpperCase();
+
+    switch (normalizedStatus) {
+      case 'LIQUIDADA':
+      case 'PAGADA':
+        return 'success';
+      case 'PENDIENTE':
+        return 'warn';
+      case 'ANULADA':
+      case 'CANCELADA':
+        return 'danger';
+      default:
+        return 'secondary';
+    }
+  }
+
   volver(): void {
     this.router.navigate(['/admin/usuarios']);
   }
@@ -306,22 +337,20 @@ export class SeguimientoEmpleado implements OnInit {
     this.empleado.set(data.employee);
     this.ventas.set(data.sales);
     this.cotizaciones.set(data.quotes);
-    this.comisiones.set([]);
+    this.comisiones.set(data.commissions);
     this.kpis.set({
       totalVentas: data.totalSales,
       montoVentas: data.salesAmount,
       totalCotizaciones: data.totalQuotes,
       cotizacionesAprobadas: data.approvedQuotes,
-      totalComisiones: 0,
-      montoComisiones: 0,
+      totalComisiones: data.totalCommissions,
+      montoComisiones: data.commissionsAmount,
     });
-    this.chartData.set(this.buildChartData(data.monthlySales));
+    this.chartData.set(this.buildChartData(data.monthlyTrend));
   }
 
   private handleLoadError(error: unknown): void {
-    const detail =
-      (error as any)?.error?.message ??
-      'No se pudo cargar el seguimiento del empleado.';
+    const detail = this.resolveErrorMessage(error);
 
     this.messageService.add({
       severity: 'error',
@@ -331,12 +360,32 @@ export class SeguimientoEmpleado implements OnInit {
     });
   }
 
+  private resolveErrorMessage(error: unknown): string {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'error' in error &&
+      typeof error.error === 'object' &&
+      error.error !== null &&
+      'message' in error.error &&
+      typeof error.error.message === 'string'
+    ) {
+      return error.error.message;
+    }
+
+    return 'No se pudo cargar el seguimiento del empleado.';
+  }
+
   private buildChartData(
-    monthlySales: Array<{ label: string; total: number }>,
+    monthlyTrend: Array<{
+      label: string;
+      salesTotal: number;
+      commissionsTotal: number;
+    }>,
   ) {
-    const labels = monthlySales.map((item) => item.label);
-    const salesSeries = monthlySales.map((item) => item.total);
-    const commissionSeries = monthlySales.map(() => 0);
+    const labels = monthlyTrend.map((item) => item.label);
+    const salesSeries = monthlyTrend.map((item) => item.salesTotal);
+    const commissionSeries = monthlyTrend.map((item) => item.commissionsTotal);
 
     return {
       labels,
@@ -355,12 +404,12 @@ export class SeguimientoEmpleado implements OnInit {
         {
           label: 'Comisiones (S/)',
           data: commissionSeries,
-          backgroundColor: 'rgba(99,179,237,0.08)',
-          borderColor: '#63b3ed',
+          backgroundColor: 'rgba(143, 152, 165, 0.12)',
+          borderColor: '#8f98a5',
           borderWidth: 2,
           tension: 0.4,
           fill: true,
-          pointBackgroundColor: '#63b3ed',
+          pointBackgroundColor: '#8f98a5',
           pointRadius: 4,
         },
       ],
@@ -385,3 +434,4 @@ export class SeguimientoEmpleado implements OnInit {
     };
   }
 }
+

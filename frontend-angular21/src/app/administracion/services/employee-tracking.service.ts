@@ -40,6 +40,14 @@ interface EmployeeQuotesPageResponse {
   totalPages: number;
 }
 
+interface EmployeeCommissionsPageResponse {
+  comisiones: EmployeeCommissionResponse[];
+  totalComisiones: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
 interface EmployeeSaleResponse {
   nroComprobante: string;
   cliente: string;
@@ -53,6 +61,16 @@ interface EmployeeQuoteResponse {
   cliente: string;
   fecha: string;
   total: number;
+  estado: string;
+}
+
+interface EmployeeCommissionResponse {
+  idComision: number;
+  comprobante: string;
+  sede: string;
+  monto: number;
+  porcentaje: number;
+  fecha: string;
   estado: string;
 }
 
@@ -72,6 +90,16 @@ export interface EmployeeTrackedQuote {
   estado: string;
 }
 
+export interface EmployeeTrackedCommission {
+  idComision: number;
+  comprobante: string;
+  sede: string;
+  monto: number;
+  porcentaje: number;
+  fecha: Date;
+  estado: string;
+}
+
 export interface EmployeeTrackingEmployee {
   nombre: string;
   apellidos: string;
@@ -81,20 +109,24 @@ export interface EmployeeTrackingEmployee {
   activo: boolean;
 }
 
-export interface EmployeeMonthlySales {
+export interface EmployeeMonthlyTrend {
   label: string;
-  total: number;
+  salesTotal: number;
+  commissionsTotal: number;
 }
 
 export interface EmployeeTrackingData {
   employee: EmployeeTrackingEmployee;
   sales: EmployeeTrackedSale[];
   quotes: EmployeeTrackedQuote[];
+  commissions: EmployeeTrackedCommission[];
   totalSales: number;
   totalQuotes: number;
   approvedQuotes: number;
+  totalCommissions: number;
   salesAmount: number;
-  monthlySales: EmployeeMonthlySales[];
+  commissionsAmount: number;
+  monthlyTrend: EmployeeMonthlyTrend[];
 }
 
 @Injectable({ providedIn: 'root' })
@@ -111,26 +143,38 @@ export class EmployeeTrackingService {
       user: this.getUserWithAccount(userId),
       firstSalesPage: this.getUserSales(userId, filters, 1),
       firstQuotesPage: this.getUserQuotes(userId, filters, 1),
+      firstCommissionsPage: this.getUserCommissions(userId, filters, 1),
     }).pipe(
-      switchMap(({ user, firstSalesPage, firstQuotesPage }) =>
-        forkJoin({
-          remainingSalesPages: this.getRemainingPages(
-            firstSalesPage.totalPages,
-            (page) => this.getUserSales(userId, filters, page),
-          ),
-          remainingQuotesPages: this.getRemainingPages(
-            firstQuotesPage.totalPages,
-            (page) => this.getUserQuotes(userId, filters, page),
-          ),
-        }).pipe(
-          map(({ remainingSalesPages, remainingQuotesPages }) =>
-            this.buildTrackingData(
-              user,
-              [firstSalesPage, ...remainingSalesPages],
-              [firstQuotesPage, ...remainingQuotesPages],
+      switchMap(
+        ({ user, firstSalesPage, firstQuotesPage, firstCommissionsPage }) =>
+          forkJoin({
+            remainingSalesPages: this.getRemainingPages(
+              firstSalesPage.totalPages,
+              (page) => this.getUserSales(userId, filters, page),
+            ),
+            remainingQuotesPages: this.getRemainingPages(
+              firstQuotesPage.totalPages,
+              (page) => this.getUserQuotes(userId, filters, page),
+            ),
+            remainingCommissionsPages: this.getRemainingPages(
+              firstCommissionsPage.totalPages,
+              (page) => this.getUserCommissions(userId, filters, page),
+            ),
+          }).pipe(
+            map(
+              ({
+                remainingSalesPages,
+                remainingQuotesPages,
+                remainingCommissionsPages,
+              }) =>
+                this.buildTrackingData(
+                  user,
+                  [firstSalesPage, ...remainingSalesPages],
+                  [firstQuotesPage, ...remainingQuotesPages],
+                  [firstCommissionsPage, ...remainingCommissionsPages],
+                ),
             ),
           ),
-        ),
       ),
     );
   }
@@ -163,6 +207,19 @@ export class EmployeeTrackingService {
   ): Observable<EmployeeQuotesPageResponse> {
     return this.http.get<EmployeeQuotesPageResponse>(
       `${this.usersUrl}/${userId}/quotes`,
+      {
+        params: this.buildTrackingParams(filters, page),
+      },
+    );
+  }
+
+  private getUserCommissions(
+    userId: number,
+    filters: EmployeeTrackingFilters,
+    page: number,
+  ): Observable<EmployeeCommissionsPageResponse> {
+    return this.http.get<EmployeeCommissionsPageResponse>(
+      `${this.usersUrl}/${userId}/commissions`,
       {
         params: this.buildTrackingParams(filters, page),
       },
@@ -207,15 +264,16 @@ export class EmployeeTrackingService {
     userResponse: UserWithAccountResponse,
     salesPages: EmployeeSalesPageResponse[],
     quotePages: EmployeeQuotesPageResponse[],
+    commissionPages: EmployeeCommissionsPageResponse[],
   ): EmployeeTrackingData {
-    const sales = salesPages
-      .flatMap((page) => page.ventas)
-      .map((sale) => this.mapSale(sale));
-    const quotes = quotePages
-      .flatMap((page) => page.cotizaciones)
-      .map((quote) => this.mapQuote(quote));
+    const sales = salesPages.flatMap((page) => page.ventas).map((sale) => this.mapSale(sale));
+    const quotes = quotePages.flatMap((page) => page.cotizaciones).map((quote) => this.mapQuote(quote));
+    const commissions = commissionPages
+      .flatMap((page) => page.comisiones)
+      .map((commission) => this.mapCommission(commission));
 
     const salesAmount = sales.reduce((sum, sale) => sum + sale.total, 0);
+    const commissionsAmount = commissions.reduce((sum, commission) => sum + commission.monto, 0);
     const approvedQuotes = quotes.filter(
       (quote) => quote.estado.toUpperCase() === 'APROBADA',
     ).length;
@@ -224,11 +282,14 @@ export class EmployeeTrackingService {
       employee: this.mapEmployee(userResponse),
       sales,
       quotes,
+      commissions,
       totalSales: salesPages[0]?.totalVentas ?? 0,
       totalQuotes: quotePages[0]?.totalCotizaciones ?? 0,
       approvedQuotes,
+      totalCommissions: commissionPages[0]?.totalComisiones ?? 0,
       salesAmount,
-      monthlySales: this.buildMonthlySales(sales),
+      commissionsAmount,
+      monthlyTrend: this.buildMonthlyTrend(sales, commissions),
     };
   }
 
@@ -267,20 +328,54 @@ export class EmployeeTrackingService {
     };
   }
 
-  private buildMonthlySales(
+  private mapCommission(
+    commission: EmployeeCommissionResponse,
+  ): EmployeeTrackedCommission {
+    return {
+      idComision: Number(commission.idComision),
+      comprobante: commission.comprobante,
+      sede: commission.sede,
+      monto: Number(commission.monto ?? 0),
+      porcentaje: Number(commission.porcentaje ?? 0),
+      fecha: new Date(commission.fecha),
+      estado: commission.estado,
+    };
+  }
+
+  private buildMonthlyTrend(
     sales: EmployeeTrackedSale[],
-  ): EmployeeMonthlySales[] {
-    const buckets = new Map<string, { date: Date; total: number }>();
+    commissions: EmployeeTrackedCommission[],
+  ): EmployeeMonthlyTrend[] {
+    const buckets = new Map<
+      string,
+      { date: Date; salesTotal: number; commissionsTotal: number }
+    >();
 
     for (const sale of sales) {
+      const bucketDate = new Date(sale.fecha.getFullYear(), sale.fecha.getMonth(), 1);
+      const key = this.buildMonthKey(bucketDate);
+      const current = buckets.get(key) ?? {
+        date: bucketDate,
+        salesTotal: 0,
+        commissionsTotal: 0,
+      };
+      current.salesTotal += sale.total;
+      buckets.set(key, current);
+    }
+
+    for (const commission of commissions) {
       const bucketDate = new Date(
-        sale.fecha.getFullYear(),
-        sale.fecha.getMonth(),
+        commission.fecha.getFullYear(),
+        commission.fecha.getMonth(),
         1,
       );
-      const key = `${bucketDate.getFullYear()}-${String(bucketDate.getMonth() + 1).padStart(2, '0')}`;
-      const current = buckets.get(key) ?? { date: bucketDate, total: 0 };
-      current.total += sale.total;
+      const key = this.buildMonthKey(bucketDate);
+      const current = buckets.get(key) ?? {
+        date: bucketDate,
+        salesTotal: 0,
+        commissionsTotal: 0,
+      };
+      current.commissionsTotal += commission.monto;
       buckets.set(key, current);
     }
 
@@ -288,8 +383,13 @@ export class EmployeeTrackingService {
       .sort((a, b) => a[1].date.getTime() - b[1].date.getTime())
       .map(([, value]) => ({
         label: this.formatMonthLabel(value.date),
-        total: value.total,
+        salesTotal: value.salesTotal,
+        commissionsTotal: value.commissionsTotal,
       }));
+  }
+
+  private buildMonthKey(date: Date): string {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
   }
 
   private formatMonthLabel(date: Date): string {

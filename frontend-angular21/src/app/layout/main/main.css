@@ -1,64 +1,78 @@
-.prueba{
-    background-color: aqua;
-}
-
-/* Contenedor principal: sidebar + derecha */
+/* Contenedor principal: sidebar + sección derecha */
 .main-container {
   display: flex;
-  height: 100vh; /* Ocupa toda la altura de la ventana */
+  height: 100vh;          /* Ocupa toda la altura de la ventana */
   width: 100%;
   overflow: hidden;
+  
 }
 
-/* Sidebar izquierdo */
+/* Sidebar (columna izquierda) */
 .sidebar {
-  width: 250px; /* ancho fijo */
-  background-color: #1f1f1f; /* gris oscuro tipo tu captura */
-  color: white;
+  width: 260px;           /* Debe coincidir con .sidebar-root */
+  min-width: 260px;
 }
 
-/* Sección derecha */
+/* Versión desktop del sidebar */
+.sidebar-desktop {
+  width: 260px;
+}
+
+/* Sección derecha: header + contenido */
 .right-section {
   display: flex;
   flex-direction: column;
-  flex: 1; /* ocupa todo el espacio restante */
+  flex: 1;                /* Ocupa el espacio restante */
   height: 100%;
   min-width: 0;
 }
 
-/* Header arriba */
+/* Header superior */
 .header {
-  /* CAMBIO CLAVE: Usar min-height en lugar de height fijo */
-  min-height: 64px; 
-  height: auto; /* Permite que el header crezca si los elementos bajan de línea */
-  
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  min-height: 64px;       /* Altura mínima cómoda */
+  height: auto;           /* Permite que crezca si el toolbar hace wrap */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.25);
   flex-shrink: 0;
-  
-  /* Agregamos esto para asegurar que siempre esté por encima del contenido principal */
-  position: relative; 
+  position: relative;
   z-index: 10;
-  
-  /* Opcional: ponerle un fondo por si el toolbar se vuelve transparente */
-  background-color: var(--sb-surface, #18181c); 
+  background-color: #18181c;
 }
 
-/* Contenido dinámico debajo */
+/* Toolbar dentro del header (PrimeNG): solo quitamos bordes/sombra */
+:host ::ng-deep .app-toolbar.p-toolbar,
+:host ::ng-deep .app-toolbar {
+  border: 0 !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+/* Card contenedor del header (si usas p-card) */
+.app-header-card {
+  border: 0 !important;
+  box-shadow: none !important;
+  background: transparent;
+  width: 100%;
+}
+
+/* Contenido dinámico debajo del header */
 .content {
-  flex: 1; /* ocupa todo el espacio restante */
-  overflow-y: auto; /* scroll si el contenido es largo */
-  
+  flex: 1;                /* Ocupa todo el espacio restante */
+  overflow-y: auto;       /* Scroll si el contenido es largo */
   padding: 16px;
   min-width: 0;
 }
 
-/* Sidebar desktop */
-.sidebar-desktop {
-  width: 250px;
+/* Botón de menú (para mobile) */
+.menu-button {
+  display: none;
 }
 
-/* Mobile */
 @media (max-width: 768px) {
+  .menu-button {
+    display: inline-flex;
+  }
+
+  /* Ocultar sidebar fijo en mobile */
   .sidebar-desktop {
     display: none;
   }
@@ -68,7 +82,12 @@
   }
 }
 
-/* Drawer mobile */
+/* Sidebar en drawer (mobile) */
 .sidebar-mobile {
-  width: 250px;
+  width: 260px;
+}
+
+/* Ejemplo clase de prueba (si la usas) */
+.prueba {
+  background-color: aqua;
 }
