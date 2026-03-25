@@ -215,9 +215,9 @@ export class Remision implements OnInit {
   limpiarFiltros(): void {
     this.filtroTexto.set('');
     this.filtroEstado.set(null);
-    this.filtroFechaInicio.set(getLunesSemanaActualPeru());
-    this.filtroFechaFin.set(getDomingoSemanaActualPeru());
-    this.filtroSede.set(this.sedePropiaId);
+    this.filtroFechaInicio.set(null);
+    this.filtroFechaFin.set(null);
+    this.filtroSede.set(null);
     this.paginaActual.set(1);
     this.cargarDatos();
   }

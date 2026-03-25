@@ -15,7 +15,7 @@ export const ADMIN_ROUTES: Routes = [
       import('./pages/empresa/empresa-configuracion')
         .then(m => m.EmpresaConfiguracion),
     canActivate: [roleGuard],
-    data: { permiso: 'ADMINISTRACION' },
+    data: { permiso: 'MODIFICAR_EMPRESA' },
   },
   {
     path: 'empleados/:id/seguimiento',
