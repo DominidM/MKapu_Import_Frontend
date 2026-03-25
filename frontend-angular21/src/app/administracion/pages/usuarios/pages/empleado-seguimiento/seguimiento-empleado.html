@@ -97,8 +97,8 @@
               (ngModelChange)="fechaInicio.set($event)"
               dateFormat="dd/mm/yy"
               placeholder="Fecha inicio"
-              [showClear]="true"
-              [showIcon]="true"
+              [showClear]="false"
+              [showIcon]="true" iconDisplay="input"
               styleClass="seg-date-input">
             </p-datepicker>
             <p-datepicker
@@ -106,8 +106,8 @@
               (ngModelChange)="fechaFin.set($event)"
               dateFormat="dd/mm/yy"
               placeholder="Fecha fin"
-              [showClear]="true"
-              [showIcon]="true"
+              [showClear]="false"
+              [showIcon]="true" iconDisplay="input"
               styleClass="seg-date-input">
             </p-datepicker>
             <p-button
@@ -439,3 +439,5 @@
     <p-toast></p-toast>
   </div>
 </div>
+
+
