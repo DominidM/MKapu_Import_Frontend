@@ -1,5 +1,5 @@
-import { Injectable, signal, computed } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+﻿import { Injectable, signal, computed } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { finalize, tap, map, catchError } from 'rxjs/operators';
 import { Observable, throwError } from 'rxjs';
 import { environment } from '../../../enviroments/enviroment';
@@ -56,7 +56,7 @@ export class PromotionsService {
 
   constructor(private http: HttpClient) {}
 
-  // ─── Helpers ─────────────────────────────────────────────────────────────────
+  // â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   private normalizeActivo(field: unknown): boolean {
     if (typeof field === 'boolean') return field;
@@ -70,8 +70,8 @@ export class PromotionsService {
   private mapPromo(p: any): Promotion {
     return {
       idPromocion: p.idPromocion,
-      concepto:    p.concepto ?? '—',
-      tipo:        p.tipo     ?? '—',
+      concepto:    p.concepto ?? 'â€”',
+      tipo:        p.tipo     ?? 'â€”',
       valor:       Number(p.valor) || 0,
       activo:      this.normalizeActivo(p.activo),
       reglas: (p.reglas ?? []).map((r: any) => ({
@@ -104,9 +104,9 @@ export class PromotionsService {
     return this._response();
   }
 
-  // ─── CRUD ────────────────────────────────────────────────────────────────────
+  // â”€â”€â”€ CRUD â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-  loadPromotions(page = 1, limit = 10): Observable<any> {
+  loadPromotions(page = 1, limit = 10, search = ''): Observable<any> {
     this._loading.set(true);
     this._error.set(null);
 
@@ -141,7 +141,7 @@ export class PromotionsService {
       .pipe(
         map(p => this.mapPromo(p)),
         catchError(err => {
-          this._error.set('No se pudo cargar la promoción.');
+          this._error.set('No se pudo cargar la promociÃ³n.');
           return throwError(() => err);
         }),
         finalize(() => this._loading.set(false))
@@ -184,7 +184,7 @@ export class PromotionsService {
         }),
         catchError(err => {
           this._response.set(prev);
-          this._error.set('No se pudo registrar la promoción.');
+          this._error.set('No se pudo registrar la promociÃ³n.');
           return throwError(() => err);
         }),
         finalize(() => this._loading.set(false))
@@ -202,7 +202,7 @@ export class PromotionsService {
         tap(updated => this.patchCached(id, this.mapPromo(updated))),
         catchError(err => {
           this._response.set(prev);
-          this._error.set('No se pudo actualizar la promoción.');
+          this._error.set('No se pudo actualizar la promociÃ³n.');
           return throwError(() => err);
         }),
         finalize(() => this._loading.set(false))
@@ -228,7 +228,7 @@ export class PromotionsService {
       );
   }
 
-  // Borrado físico — solo para promociones inactivas
+  // Borrado fÃ­sico â€” solo para promociones inactivas
   hardDeletePromotion(id: number): Observable<any> {
     this._loading.set(true);
     this._error.set(null);
@@ -249,14 +249,14 @@ export class PromotionsService {
         }),
         catchError(err => {
           this._response.set(prev);
-          this._error.set('No se pudo eliminar la promoción.');
+          this._error.set('No se pudo eliminar la promociÃ³n.');
           return throwError(() => err);
         }),
         finalize(() => this._loading.set(false))
       );
   }
 
-  // Soft delete (desactiva) — mantener por compatibilidad
+  // Soft delete (desactiva) â€” mantener por compatibilidad
   deletePromotion(id: number): Observable<any> {
     this._loading.set(true);
     this._error.set(null);
@@ -268,7 +268,7 @@ export class PromotionsService {
         tap(()  => this.loadPromotions(prev?.page ?? 1, prev?.limit ?? 10).subscribe()),
         catchError(err => {
           this._response.set(prev);
-          this._error.set('No se pudo eliminar la promoción.');
+          this._error.set('No se pudo eliminar la promociÃ³n.');
           return throwError(() => err);
         }),
         finalize(() => this._loading.set(false))

@@ -1,4 +1,4 @@
-<div class="seg-page p-2">
+﻿<div class="seg-page p-2">
   <div class="seg-shell">
     <p-card styleClass="seg-header-card mb-3">
       <div class="seg-header-main">
@@ -13,7 +13,7 @@
         </div>
 
         <div class="seg-header-actions">
-          <p-button
+          <!-- <p-button
             icon="pi pi-file-pdf"
             label="Exportar PDF"
             severity="secondary"
@@ -23,7 +23,7 @@
             pTooltip="Exportar reporte completo"
             tooltipPosition="bottom"
             (onClick)="exportarPDF()">
-          </p-button>
+          </p-button> -->
           <p-button
             label="Volver"
             icon="pi pi-arrow-left"
@@ -40,39 +40,45 @@
       <div class="seg-profile-grid">
         <div class="seg-profile-block">
           <span class="seg-profile-label">Estado y rol</span>
-          <div class="seg-profile-badges" *ngIf="!loading()">
-            <p-tag
-              [value]="empleado().rol || 'SIN ROL'"
-              styleClass="seg-role-tag">
-            </p-tag>
-            <p-tag
-              [value]="estadoEmpleadoLabel()"
-              [severity]="estadoEmpleadoSeverity()"
-              styleClass="seg-status-tag">
-            </p-tag>
-          </div>
+          @if (!loading()) {
+            <div class="seg-profile-badges">
+              <p-tag
+                [value]="empleado().rol || 'SIN ROL'"
+                styleClass="seg-role-tag">
+              </p-tag>
+              <p-tag
+                [value]="estadoEmpleadoLabel()"
+                [severity]="estadoEmpleadoSeverity()"
+                styleClass="seg-status-tag">
+              </p-tag>
+            </div>
+          }
         </div>
 
         <div class="seg-profile-block">
           <span class="seg-profile-label">Datos del empleado</span>
-          <div class="seg-profile-meta" *ngIf="!loading()">
-            <span class="seg-profile-chip"><i class="pi pi-id-card"></i>{{ empleado().dni }}</span>
-            <span class="seg-profile-chip"><i class="pi pi-map-marker"></i>{{ empleado().sede }}</span>
-          </div>
+          @if (!loading()) {
+            <div class="seg-profile-meta">
+              <span class="seg-profile-chip"><i class="pi pi-id-card"></i>{{ empleado().dni }}</span>
+              <span class="seg-profile-chip"><i class="pi pi-map-marker"></i>{{ empleado().sede }}</span>
+            </div>
+          }
         </div>
 
         <div class="seg-profile-block">
           <span class="seg-profile-label">Resumen rapido</span>
-          <div class="seg-header-summary" *ngIf="!loading()">
-            <span class="seg-summary-pill">
-              <i class="pi pi-history"></i>
-              {{ totalMovimientosRegistrados() }} registros analizados
-            </span>
-            <span class="seg-summary-pill seg-summary-pill--accent">
-              <i class="pi pi-chart-line"></i>
-              S/ {{ kpis().montoVentas | number:'1.2-2' }} en ventas
-            </span>
-          </div>
+          @if (!loading()) {
+            <div class="seg-header-summary">
+              <span class="seg-summary-pill">
+                <i class="pi pi-history"></i>
+                {{ totalMovimientosRegistrados() }} registros analizados
+              </span>
+              <span class="seg-summary-pill seg-summary-pill--accent">
+                <i class="pi pi-chart-line"></i>
+                S/ {{ kpis().montoVentas | number:'1.2-2' }} en ventas
+              </span>
+            </div>
+          }
         </div>
       </div>
     </p-card>
@@ -250,13 +256,14 @@
             </span>
           </div>
           <div class="seg-chart-shell">
-            <p-chart
-              *ngIf="chartData()"
-              type="line"
-              [data]="chartData()"
-              [options]="chartOptions()"
-              height="240px">
-            </p-chart>
+            @if (chartData(); as chart) {
+              <p-chart
+                type="line"
+                [data]="chart"
+                [options]="chartOptions()"
+                height="240px">
+              </p-chart>
+            }
           </div>
         </p-card>
 
@@ -432,5 +439,3 @@
     <p-toast></p-toast>
   </div>
 </div>
-
-

@@ -1,4 +1,4 @@
-﻿import { CommonModule } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
@@ -223,19 +223,19 @@ export class SeguimientoEmpleado implements OnInit {
     this.reload$.next();
   }
 
-  exportarPDF(): void {
-    this.exportando.set(true);
+  // exportarPDF(): void {
+  //   this.exportando.set(true);
 
-    setTimeout(() => {
-      this.exportando.set(false);
-      this.messageService.add({
-        severity: 'info',
-        summary: 'PDF generado',
-        detail: `Reporte de ${this.nombreCompleto()} listo para descargar.`,
-        life: 3000,
-      });
-    }, 1200);
-  }
+  //   setTimeout(() => {
+  //     this.exportando.set(false);
+  //     this.messageService.add({
+  //       severity: 'info',
+  //       summary: 'PDF generado',
+  //       detail: `Reporte de ${this.nombreCompleto()} listo para descargar.`,
+  //       life: 3000,
+  //     });
+  //   }, 1200);
+  // }
 
   getVentasSeverity(estado: string): 'success' | 'warn' | 'danger' | 'secondary' {
     const normalizedStatus = (estado ?? '').toUpperCase();
