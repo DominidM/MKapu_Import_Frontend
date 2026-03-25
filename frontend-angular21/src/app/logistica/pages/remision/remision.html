@@ -23,7 +23,6 @@
 </div>
 
 <div class="p-2">
-  <!-- Contadores -->
   <div class="contadores-productos mb-4">
     <div class="contador-card">
       <i class="pi pi-file-export"></i>
@@ -55,20 +54,18 @@
     </div>
   </div>
 
-  <!-- Filtros -->
   <div class="filtros-container mb-4">
     <div class="seccion-filtros">
       <h3><i class="pi pi-filter"></i> Filtros de búsqueda</h3>
 
-      <!-- Fila 1: Búsqueda (ancho) + Rango de Fechas -->
       <div class="filtros-linea-1">
         <div class="filtro-item filtro-cliente-50">
-          <label>BUSCAR GUÍA</label>
+          <label>BUSCAR (SERIE / NÚMERO / MOTIVO)</label>
           <input
             type="text"
             pInputText
-            placeholder="Nro. guía o cliente..."
-            class="w-full"
+            placeholder="Ej: T001, 000123, VENTA..."
+            class="w-full font-bold"
             [ngModel]="filtroTexto()"
             (ngModelChange)="filtroTexto.set($event)"
             (keyup.enter)="aplicarFiltros()"
@@ -99,10 +96,7 @@
         </div>
       </div>
 
-      <!-- Fila 2: Sede | Estado | Limpiar -->
       <div class="filtros-linea-2">
-
-        <!-- SEDE: admin ve selector, no-admin ve badge fijo -->
         <div class="filtro-item filtro-compacto">
           <label>SEDE</label>
           <p-select
@@ -148,12 +142,10 @@
             (click)="limpiarFiltros()"
           ></p-button>
         </div>
-
       </div>
     </div>
   </div>
 
-  <!-- Tabla -->
   <div class="mb-6">
     <div class="surface-card border-round-xl shadow-1 overflow-hidden" style="position: relative">
       <app-loading-overlay
@@ -171,20 +163,27 @@
         >
           <ng-template pTemplate="header">
             <tr>
-              <th style="width: 12%">Ref. Comprobante</th>
+              <th style="width: 14%">Guía</th>
+              <th style="width: 12%">Ref. Venta</th>
               <th style="width: 14%">Tipo de Guía</th>
-              <th style="width: 13%">Fecha Traslado</th>
+              <th style="width: 12%">Fecha Traslado</th>
               <th style="width: 18%">Motivo</th>
-              <th style="width: 12%">Modalidad</th>
-              <th style="width: 13%">Peso Total</th>
-              <th style="width: 10%">N° Productos</th>
+              <th style="width: 12%">Peso Total</th>
+              <th style="width: 10%">N° Prod.</th>
               <th style="width: 8%">Acciones</th>
             </tr>
           </ng-template>
 
           <ng-template pTemplate="body" let-remision>
             <tr>
-              <td class="font-semibold">#{{ remision.id_comprobante_ref || 'N/A' }}</td>
+              <td class="font-bold text-primary">
+                {{ remision.serie }}-{{ remision.numero }}
+              </td>
+              
+              <td class="font-semibold text-600">
+                #{{ remision.id_comprobante_ref || 'N/A' }}
+              </td>
+              
               <td>
                 <p-tag
                   [severity]="remision.tipo_guia === 0 ? 'success' : 'warn'"
@@ -194,13 +193,6 @@
               </td>
               <td>{{ remision.fecha_inicio | date: 'dd/MM/yyyy' }}</td>
               <td>{{ remision.motivo_traslado }}</td>
-              <td>
-                <p-tag
-                  [severity]="remision.modalidad === 0 ? 'success' : 'secondary'"
-                  [value]="remision.modalidad === 0 ? 'PÚBLICO' : 'PRIVADO'"
-                  styleClass="font-bold"
-                ></p-tag>
-              </td>
               <td>{{ remision.peso_total }} {{ remision.unidad_peso }}</td>
               <td>
                 <p-tag [value]="remision.cantidad + ' ítems'" styleClass="font-bold"></p-tag>
@@ -214,6 +206,36 @@
                     styleClass="productos-icon-btn productos-icon-soft"
                     pTooltip="Ver Detalles"
                     (onClick)="verDetalles(remision.id_guia)"
+                  ></p-button>
+
+                  <p-button
+                    *ngIf="remision.estado === 'EMITIDO'"
+                    icon="pi pi-truck"
+                    text
+                    severity="info"
+                    styleClass="productos-icon-btn productos-icon-soft"
+                    pTooltip="Iniciar Traslado"
+                    (onClick)="actualizarEstado(remision, 'EN_CAMINO')"
+                  ></p-button>
+
+                  <p-button
+                    *ngIf="remision.estado === 'EN_CAMINO'"
+                    icon="pi pi-check-circle"
+                    text
+                    severity="success"
+                    styleClass="productos-icon-btn productos-icon-soft"
+                    pTooltip="Confirmar Entrega"
+                    (onClick)="actualizarEstado(remision, 'ENTREGADO')"
+                  ></p-button>
+
+                  <p-button
+                    *ngIf="remision.estado === 'EN_CAMINO'"
+                    icon="pi pi-times-circle"
+                    text
+                    severity="danger"
+                    styleClass="productos-icon-btn productos-icon-soft"
+                    pTooltip="Rechazar Envío"
+                    (onClick)="actualizarEstado(remision, 'RECHAZADO')"
                   ></p-button>
                 </div>
               </td>

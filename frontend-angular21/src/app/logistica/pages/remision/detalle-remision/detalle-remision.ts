@@ -9,7 +9,8 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { TooltipModule } from 'primeng/tooltip';
 import { DividerModule } from 'primeng/divider';
 import { ToastModule } from 'primeng/toast';
-import { MessageService } from 'primeng/api';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import { RemissionService } from '../../../services/remission.service';
 
 @Component({
@@ -24,15 +25,17 @@ import { RemissionService } from '../../../services/remission.service';
     ProgressSpinnerModule,
     TooltipModule,
     DividerModule,
-    ToastModule
+    ToastModule,
+    ConfirmDialogModule
   ],
-  providers: [MessageService],
+  providers: [MessageService, ConfirmationService],
   templateUrl: './detalle-remision.html',
   styleUrl: './detalle-remision.css'
 })
 export class DetalleRemision implements OnInit {
   private remissionService = inject(RemissionService);
   private messageService = inject(MessageService);
+  private confirmationService = inject(ConfirmationService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
 
@@ -56,6 +59,38 @@ export class DetalleRemision implements OnInit {
       error: () => {
         this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo cargar el detalle' });
         this.loading.set(false);
+      }
+    });
+  }
+
+  actualizarEstado(nuevoEstado: string) {
+    const currentData = this.remision();
+    if (!currentData) return;
+
+    let accionTexto = '';
+    if (nuevoEstado === 'EN_CAMINO') accionTexto = 'iniciar el traslado';
+    if (nuevoEstado === 'ENTREGADO') accionTexto = 'confirmar la entrega';
+    if (nuevoEstado === 'RECHAZADO') accionTexto = 'rechazar';
+
+    this.confirmationService.confirm({
+      message: `¿Estás seguro de ${accionTexto} de esta guía?`,
+      header: 'Confirmar Acción',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Sí, continuar',
+      rejectLabel: 'Cancelar',
+      accept: () => {
+        this.loading.set(true);
+        this.remissionService.cambiarEstado(currentData.id_guia, nuevoEstado).subscribe({
+          next: () => {
+            this.messageService.add({ severity: 'success', summary: 'Éxito', detail: `Estado actualizado a ${nuevoEstado}` });
+            this.cargarDetalle(currentData.id_guia);
+          },
+          error: (err) => {
+            console.error('Error actualizando estado:', err);
+            this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo actualizar el estado' });
+            this.loading.set(false);
+          }
+        });
       }
     });
   }
@@ -104,5 +139,17 @@ export class DetalleRemision implements OnInit {
 
   volver() {
     this.router.navigate(['/logistica/remision']);
+  }
+
+  getSeverity(estado: any): 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast' {
+    switch (estado) {
+      case 'ENTREGADO': return 'success';
+      case 'EN_CAMINO': return 'warn';
+      case 'EMITIDO': 
+      case 0: return 'info';
+      case 'ANULADO': 
+      case 'RECHAZADO': return 'danger';
+      default: return 'info';
+    }
   }
 }
