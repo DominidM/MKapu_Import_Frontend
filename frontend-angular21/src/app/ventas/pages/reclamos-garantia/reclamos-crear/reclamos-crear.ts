@@ -1,15 +1,15 @@
-import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { firstValueFrom, Subscription } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 
 import { Card } from 'primeng/card';
 import { Button } from 'primeng/button';
 import { Textarea } from 'primeng/textarea';
 import { Select } from 'primeng/select';
 import { SelectButton } from 'primeng/selectbutton';
-import { AutoComplete, AutoCompleteSelectEvent } from 'primeng/autocomplete';
+import { AutoCompleteSelectEvent } from 'primeng/autocomplete';
 import { Toast } from 'primeng/toast';
 import { Tag } from 'primeng/tag';
 import { Divider } from 'primeng/divider';

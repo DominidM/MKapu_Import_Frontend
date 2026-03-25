@@ -539,8 +539,11 @@
               <div class="comprobante-header">
                 <div class="comprobante-numero">
                   <span class="numero-label">RECLAMO N°:</span>
-                  <h3 class="numero-valor">{{ $any(reclamoGenerado()).claimId || $any(reclamoGenerado()).id || 'S/N' }}</h3>
-                </div>
+                    <h3 class="numero-valor">
+                      {{ $any(reclamoGenerado()).codigoReclamo || 
+                        $any(reclamoGenerado()).claimId || 'S/N' }}
+                    </h3>              
+                  </div>
                 <p-tag [value]="$any(reclamoGenerado()).status || 'REGISTRADO'" severity="warn" />
               </div>
 

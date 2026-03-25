@@ -13,6 +13,7 @@ export enum ClaimStatus {
 
 export interface ClaimResponseDto {
   id: string;
+  codigoReclamo?: string;   
   saleReceiptId: string;
   customerId: string;
   reason: string;
@@ -146,19 +147,33 @@ export class ClaimService {
   }
 
   async register(payload: RegisterClaimPayload): Promise<ClaimResponseDto | null> {
-    this.loading.set(true);
-    try {
-      const res = await firstValueFrom(
-        this.http.post<ClaimResponseDto>(this.baseUrl, payload)
-      );
-      this.claims.update(list => [res, ...list]);
-      return res;
-    } catch (err: any) {
-      this.error.set(err?.error?.message ?? 'Error al registrar el reclamo');
-      return null;
-    } finally {
-      this.loading.set(false);
-    }
+  this.loading.set(true);
+  try {
+    const res: any = await firstValueFrom(
+      this.http.post(this.baseUrl, payload)
+    );
+    // El backend devuelve claimId, codigo_reclamo, etc.
+    const mapped: ClaimResponseDto = {
+      id: String(res.claimId || res.id || ''),
+      codigoReclamo: res.codigoReclamo || res.codigo_reclamo || null,
+      saleReceiptId: String(res.receiptId || res.id_comprobante || ''),
+      customerId: res.sellerId || res.id_vendedor_ref || '',
+      reason: res.reason || res.motivo || '',
+      description: res.description || res.descripcion || '',
+      status: res.status || res.estado || 'REGISTRADO',
+      createdAt: res.registeredAt || res.fec_creacion || new Date().toISOString(),
+      registerDate: new Date(res.registeredAt || res.fec_creacion || new Date()),
+      customerName: '',
+      productDescription: '',
+    };
+    this.claims.update(list => [mapped, ...list]);
+    return mapped;
+  } catch (err: any) {
+    this.error.set(err?.error?.message ?? 'Error al registrar el reclamo');
+    return null;
+  } finally {
+    this.loading.set(false);
+  }
   }
 
   async changeStatus(id: string, status: ClaimStatus): Promise<ClaimResponseDto | null> {

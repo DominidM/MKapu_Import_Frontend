@@ -13,14 +13,17 @@ import { Injectable, inject } from '@angular/core';
   providedIn: 'root',
 })
 export class RemissionService {
-  private readonly http = inject(HttpClient);
+  private readonly http   = inject(HttpClient);
   private readonly apiUrl = `${environment.apiUrl}/logistics/remission`;
+
   create(dto: CreateRemissionDto): Observable<any> {
     return this.http.post<any>(this.apiUrl, dto);
   }
+
   findAll(): Observable<any[]> {
     return this.http.get<any[]>(this.apiUrl);
   }
+
   findById(id: string): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/${id}`);
   }
@@ -32,6 +35,7 @@ export class RemissionService {
   findSaleForRemission(correlativo: string): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/sale/${correlativo}`);
   }
+
   getRemisiones(
     page: number = 1,
     limit: number = 10,
@@ -39,16 +43,17 @@ export class RemissionService {
     estado?: string | number | null,
     startDate?: string,
     endDate?: string,
+    sedeId?: number | null,   // ← NUEVO
   ): Observable<RemisionPaginatedResponse> {
-    let params = new HttpParams().set('page', page.toString()).set('limit', limit.toString());
-    if (search) params = params.set('search', search);
-    if (estado !== null && estado !== undefined) params = params.set('estado', estado.toString());
-    if (startDate) params = params.set('startDate', startDate);
-    if (endDate) params = params.set('endDate', endDate);
+    let params = new HttpParams()
+      .set('page',  page.toString())
+      .set('limit', limit.toString());
 
-    if (search) {
-      params = params.set('search', search);
-    }
+    if (search)                          params = params.set('search',    search);
+    if (estado !== null && estado !== undefined) params = params.set('estado', estado.toString());
+    if (startDate)                       params = params.set('startDate', startDate);
+    if (endDate)                         params = params.set('endDate',   endDate);
+    if (sedeId != null)                  params = params.set('sedeId',    sedeId.toString()); // ← NUEVO
 
     return this.http.get<RemisionPaginatedResponse>(this.apiUrl, { params });
   }
@@ -56,9 +61,11 @@ export class RemissionService {
   getRemisionById(id: string): Observable<RemissionResponse> {
     return this.http.get<RemissionResponse>(`${this.apiUrl}/${id}`);
   }
+
   getRemissionSummary(): Observable<RemissionSummaryResponse> {
     return this.http.get<RemissionSummaryResponse>(`${this.apiUrl}/summary`);
   }
+
   exportPdf(id: string) {
     return this.http.get(`${this.apiUrl}/${id}/export/pdf`, { responseType: 'blob' });
   }
