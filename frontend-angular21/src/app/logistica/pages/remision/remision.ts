@@ -234,13 +234,12 @@ export class Remision implements OnInit {
     this.filtroEstado.set(null);
     this.filtroFechaInicio.set(getLunesSemanaActualPeru());
     this.filtroFechaFin.set(getDomingoSemanaActualPeru());
-
     if (this.esAdmin) {
       this.filtroSede.set(null);
     } else {
       this.filtroSede.set(this.sedePropiaId);
     }
-
+    this.filtroSede.set(null);
     this.paginaActual.set(1);
     this.cargarDatos();
     this.cargarResumen();

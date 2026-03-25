@@ -234,9 +234,9 @@ export class NotasCreditoComponent implements OnInit, OnDestroy {
     this.filtroEstado      = null;
     this.filtroSerie       = '';
     this.filtroDoc         = '';
-    this.filtroFechaInicio = getLunesSemanaActualPeru();   // ← resetea al lunes de esta semana
-    this.filtroFechaFin    = getDomingoSemanaActualPeru(); // ← resetea al domingo de esta semana
-    this.filtroSede        = this.sedePropiaId;
+    this.filtroFechaInicio = null;  
+    this.filtroFechaFin    = null; 
+    this.filtroSede        = null;
     this.aplicarFiltros();
   }
 
