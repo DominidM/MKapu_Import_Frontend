@@ -225,7 +225,7 @@
           type="submit"
           [label]="esModoEdicion() ? 'Actualizar Promoción' : 'Guardar Promoción'"
           [icon]="isSubmitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"
-          [disabled]="form.invalid || isSubmitting()"
+          [disabled]="form.invalid || isSubmitting() || (esModoEdicion() && !hasMeaningfulChanges())"
           styleClass="ventas-pill ventas-pill-warning"
         ></p-button>
       </div>
@@ -236,3 +236,4 @@
 
 <p-toast />
 <p-confirmDialog />
+

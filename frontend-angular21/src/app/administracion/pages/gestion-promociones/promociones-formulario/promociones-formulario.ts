@@ -39,6 +39,22 @@ const PROMOTION_CONCEPT_TOAST_DETAIL =
   'El campo concepto no acepta caracteres especiales ni invisibles';
 const PROMOTION_CONCEPT_TOAST_COOLDOWN_MS = 1200;
 
+interface PromotionPayload {
+  concepto: string;
+  tipo: string;
+  valor: number;
+  activo: boolean;
+  reglas: Array<{
+    idRegla?: number;
+    tipoCondicion: string;
+    valorCondicion: string;
+  }>;
+  descuentosAplicados: Array<{
+    idDescuento?: number;
+    monto: number;
+  }>;
+}
+
 function promotionConceptValidator(
   control: AbstractControl,
 ): ValidationErrors | null {
@@ -110,11 +126,13 @@ export class PromocionesFormulario implements OnInit {
   private messageService = inject(MessageService);
   private destroyRef = inject(DestroyRef);
   private lastConceptWarningAt = 0;
+  private initialPayloadSnapshot: string | null = null;
 
   isSubmitting = signal(false);
   esModoEdicion = signal(false);
   idPromocion = signal<number | null>(null);
   mostrarInputValor = signal(true);
+  hasMeaningfulChanges = signal(false);
 
   tiposPromocion = [
     { label: 'Porcentaje (%)', value: 'PORCENTAJE' },
@@ -150,9 +168,11 @@ export class PromocionesFormulario implements OnInit {
   tituloPrincipal = computed(() =>
     this.esModoEdicion() ? 'Editar Promoción' : 'Crear Promoción',
   );
+
   iconoCabecera = computed(() =>
     this.esModoEdicion() ? 'pi pi-pencil' : 'pi pi-plus',
   );
+
   esModoMonto = signal(false);
 
   ngOnInit(): void {
@@ -171,7 +191,12 @@ export class PromocionesFormulario implements OnInit {
       .subscribe((tipo) => {
         this.esModoMonto.set(tipo === 'MONTO');
         this.reconstruirControlValor(tipo);
+        this.actualizarEstadoCambios();
       });
+
+    this.form.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.actualizarEstadoCambios());
   }
 
   onConceptoBeforeInput(event: InputEvent): void {
@@ -225,6 +250,7 @@ export class PromocionesFormulario implements OnInit {
     }
 
     control.setValue(sanitizedValue, { emitEvent: false });
+    this.actualizarEstadoCambios();
     this.mostrarToastConceptoInvalido();
   }
 
@@ -270,8 +296,10 @@ export class PromocionesFormulario implements OnInit {
           },
           { emitEvent: false },
         );
+
         this.reglas.clear();
         this.descuentos.clear();
+
         promo.reglas.forEach((regla) =>
           this.agregarRegla(
             regla.tipoCondicion,
@@ -279,9 +307,12 @@ export class PromocionesFormulario implements OnInit {
             regla.idRegla,
           ),
         );
+
         promo.descuentosAplicados.forEach((descuento) =>
           this.agregarDescuento(descuento.monto, descuento.idDescuento),
         );
+
+        this.sincronizarEstadoEdicion(this.construirPayload());
       },
       error: () => {
         this.messageService.add({
@@ -306,10 +337,12 @@ export class PromocionesFormulario implements OnInit {
         valorCondicion: [valorCondicion],
       }),
     );
+    this.actualizarEstadoCambios();
   }
 
   eliminarRegla(i: number): void {
     this.reglas.removeAt(i);
+    this.actualizarEstadoCambios();
   }
 
   tipoRegla(i: number): string {
@@ -318,6 +351,7 @@ export class PromocionesFormulario implements OnInit {
 
   onTipoCondicionChange(i: number): void {
     this.reglas.at(i).patchValue({ valorCondicion: '' });
+    this.actualizarEstadoCambios();
   }
 
   agregarDescuento(monto: number | null = null, idDescuento?: number): void {
@@ -327,10 +361,12 @@ export class PromocionesFormulario implements OnInit {
         monto: [monto, [Validators.required, Validators.min(0.01)]],
       }),
     );
+    this.actualizarEstadoCambios();
   }
 
   eliminarDescuento(i: number): void {
     this.descuentos.removeAt(i);
+    this.actualizarEstadoCambios();
   }
 
   private validarReglas(): boolean {
@@ -374,33 +410,18 @@ export class PromocionesFormulario implements OnInit {
       return;
     }
 
-    this.isSubmitting.set(true);
+    const payload = this.construirPayload();
 
-    const value = this.form.value;
-    const payload = {
-      concepto: String(value.concepto ?? '').trim().replace(/ {2,}/g, ' '),
-      tipo: value.tipo,
-      valor: Number(value.valor),
-      activo: value.activo,
-      reglas: value.reglas
-        .filter((regla: any) => regla.tipoCondicion)
-        .map((regla: any) => ({
-          ...(regla.idRegla ? { idRegla: Number(regla.idRegla) } : {}),
-          tipoCondicion: regla.tipoCondicion,
-          valorCondicion:
-            regla.tipoCondicion === 'CLIENTE_NUEVO'
-              ? 'true'
-              : String(regla.valorCondicion ?? ''),
-        })),
-      descuentosAplicados: value.descuentosAplicados
-        .filter((descuento: any) => descuento.monto > 0)
-        .map((descuento: any) => ({
-          ...(descuento.idDescuento
-            ? { idDescuento: descuento.idDescuento }
-            : {}),
-          monto: Number(descuento.monto),
-        })),
-    };
+    if (this.esModoEdicion() && !this.hasMeaningfulChanges()) {
+      this.messageService.add({
+        severity: 'info',
+        summary: 'Sin cambios',
+        detail: 'Realiza al menos un cambio antes de actualizar la promoción',
+      });
+      return;
+    }
+
+    this.isSubmitting.set(true);
 
     const request$ = this.esModoEdicion()
       ? this.promotionsService.updatePromotion(this.idPromocion()!, payload)
@@ -408,6 +429,10 @@ export class PromocionesFormulario implements OnInit {
 
     request$.subscribe({
       next: () => {
+        if (this.esModoEdicion()) {
+          this.sincronizarEstadoEdicion(payload);
+        }
+
         this.messageService.add({
           severity: 'success',
           summary: 'Éxito',
@@ -431,6 +456,55 @@ export class PromocionesFormulario implements OnInit {
 
   cancelar(): void {
     this.router.navigate(['/admin/promociones']);
+  }
+
+  private construirPayload(): PromotionPayload {
+    const value = this.form.getRawValue();
+
+    return {
+      concepto: String(value.concepto ?? '').trim().replace(/ {2,}/g, ' '),
+      tipo: value.tipo,
+      valor: Number(value.valor),
+      activo: Boolean(value.activo),
+      reglas: (value.reglas ?? [])
+        .filter((regla: any) => regla.tipoCondicion)
+        .map((regla: any) => ({
+          ...(regla.idRegla ? { idRegla: Number(regla.idRegla) } : {}),
+          tipoCondicion: regla.tipoCondicion,
+          valorCondicion:
+            regla.tipoCondicion === 'CLIENTE_NUEVO'
+              ? 'true'
+              : String(regla.valorCondicion ?? ''),
+        })),
+      descuentosAplicados: (value.descuentosAplicados ?? [])
+        .filter((descuento: any) => descuento.monto > 0)
+        .map((descuento: any) => ({
+          ...(descuento.idDescuento
+            ? { idDescuento: descuento.idDescuento }
+            : {}),
+          monto: Number(descuento.monto),
+        })),
+    };
+  }
+
+  private sincronizarEstadoEdicion(payload: PromotionPayload): void {
+    this.initialPayloadSnapshot = this.serializarPayload(payload);
+    this.hasMeaningfulChanges.set(false);
+    this.form.markAsPristine();
+    this.form.markAsUntouched();
+  }
+
+  private actualizarEstadoCambios(): void {
+    if (!this.esModoEdicion() || !this.initialPayloadSnapshot) {
+      return;
+    }
+
+    const currentSnapshot = this.serializarPayload(this.construirPayload());
+    this.hasMeaningfulChanges.set(currentSnapshot !== this.initialPayloadSnapshot);
+  }
+
+  private serializarPayload(payload: PromotionPayload): string {
+    return JSON.stringify(payload);
   }
 
   private esTextoConceptoValido(texto: string): boolean {

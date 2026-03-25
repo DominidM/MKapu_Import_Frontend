@@ -15,7 +15,7 @@ export interface Promotion {
 }
 
 export interface ReglaPromo {
-  idRegla: number;
+  idRegla?: number;
   tipoCondicion: string;
   valorCondicion: string;
 }
@@ -25,7 +25,7 @@ export interface ReglaPromoDetalle extends ReglaPromo {
 }
 
 export interface DescuentoAplicado {
-  idDescuento: number;
+  idDescuento?: number;
   monto: number;
 }
 
@@ -284,3 +284,4 @@ export class PromotionsService {
     });
   }
 }
+
