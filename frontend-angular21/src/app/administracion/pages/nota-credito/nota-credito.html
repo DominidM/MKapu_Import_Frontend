@@ -20,36 +20,24 @@
   </p-card>
 </div>
 
-
-
 <div class="filtros-container mb-4">
   <h3 class="seccion-filtros">
     <i class="pi pi-filter"></i> Filtros de búsqueda
   </h3>
+
+  <!-- Fila 1: Cliente (ancho) + Rango de Fechas -->
   <div class="filtros-flex-row">
-    <!-- Serie / Correlativo -->
-    <div class="filtro-item filtro-correlativo">
-      <label>SERIE / CORRELATIVO</label>
-      <input
-        pInputText
-        [(ngModel)]="filtroSerie"
-        placeholder="Ej: FN01-0001"
-        (keyup.enter)="aplicarFiltros()"
-        class="w-full"
-      />
-    </div>
-    <!-- Doc. Cliente -->
-    <div class="filtro-item filtro-doc">
-      <label>DOC. CLIENTE</label>
+    <div class="filtro-item filtro-cliente">
+      <label>CLIENTE (NOMBRE / DNI / RUC)</label>
       <input
         pInputText
         [(ngModel)]="filtroDoc"
-        placeholder="DNI / RUC"
+        placeholder="Buscar por nombre, DNI o RUC..."
         (keyup.enter)="aplicarFiltros()"
         class="w-full"
       />
     </div>
-    <!-- Rango Fechas Emisión -->
+
     <div class="filtro-item filtro-fechas">
       <label>RANGO DE FECHAS (EMISIÓN)</label>
       <div class="filtro-fechas-contenedor">
@@ -60,8 +48,9 @@
           (onSelect)="aplicarFiltros()"
           (onClear)="aplicarFiltros()"
           [showClear]="true"
+          [showIcon]="true"
         ></p-datepicker>
-        <span style="color: var(--text-color-secondary);margin: 0 8px;">—</span>
+        <span class="filtro-fechas-separador">—</span>
         <p-datepicker
           [(ngModel)]="filtroFechaFin"
           dateFormat="dd/mm/yy"
@@ -69,10 +58,47 @@
           (onSelect)="aplicarFiltros()"
           (onClear)="aplicarFiltros()"
           [showClear]="true"
+          [showIcon]="true"
         ></p-datepicker>
       </div>
     </div>
-    <!-- Estado -->
+  </div>
+
+  <!-- Fila 2: Serie | Sede | Estado | Limpiar -->
+  <div class="filtros-flex-row filtros-segunda-linea">
+
+    <div class="filtro-item filtro-correlativo">
+      <label>SERIE / CORRELATIVO</label>
+      <input
+        pInputText
+        [(ngModel)]="filtroSerie"
+        placeholder="Ej: FN01-0001"
+        (keyup.enter)="aplicarFiltros()"
+        class="w-full"
+      />
+    </div>
+
+    <!-- SEDE: admin ve selector, no-admin ve badge fijo -->
+    <div class="filtro-item filtro-sede">
+      <label>SEDE</label>
+      <p-select
+        *ngIf="esAdmin"
+        [(ngModel)]="filtroSede"
+        [options]="sedesOpciones"
+        placeholder="Todas las sedes"
+        optionLabel="label"
+        optionValue="value"
+        (onChange)="aplicarFiltros()"
+        [showClear]="true"
+        styleClass="w-full"
+      ></p-select>
+
+      <div *ngIf="!esAdmin" class="sede-fija-badge">
+        <i class="pi pi-map-marker"></i>
+        <span>{{ sedeNombre }}</span>
+      </div>
+    </div>
+
     <div class="filtro-item filtro-estado">
       <label>ESTADO</label>
       <p-select
@@ -83,9 +109,10 @@
         optionValue="value"
         (onChange)="aplicarFiltros()"
         [showClear]="true"
+        styleClass="w-full"
       ></p-select>
     </div>
-    <!-- Botón limpiar -->
+
     <div class="filtro-item filtro-limpiar">
       <p-button
         label="Limpiar Filtros"
@@ -96,10 +123,9 @@
         class="btn-limpiar"
       ></p-button>
     </div>
+
   </div>
 </div>
-
-
 
 <div class="p-2">
   <app-shared-table-container
@@ -157,13 +183,11 @@
             <span class="text-sm font-semibold">{{ nota.currency }}</span>
           </td>
           <td>
-            <div class="flex flex-column gap-1">
-              <div class="flex align-items-center gap-1">
-                <i class="pi pi-calendar-plus" style="font-size:0.7rem; color:var(--text-muted)"></i>
-                <span style="font-size:0.8rem; color:var(--text-color-secondary)">
-                  {{ nota.emissionDate | date: 'dd/MM/yyyy HH:mm' }}
-                </span>
-              </div>
+            <div class="flex align-items-center gap-1">
+              <i class="pi pi-calendar-plus" style="font-size:0.7rem; color:var(--text-muted)"></i>
+              <span style="font-size:0.8rem; color:var(--text-color-secondary)">
+                {{ nota.emissionDate | date: 'dd/MM/yyyy HH:mm' }}
+              </span>
             </div>
           </td>
           <td class="text-right font-bold text-primary">
@@ -186,7 +210,6 @@
                 pTooltip="Ver detalle completo"
                 tooltipPosition="top"
               ></p-button>
-
               <p-button
                 icon="pi pi-ban"
                 (onClick)="abrirAnular(nota)"
@@ -216,6 +239,7 @@
   </app-shared-table-container>
 </div>
 
+<!-- ── Dialog Detalle ─────────────────────────────────────────────── -->
 <p-dialog
   header="Detalle de Nota de Crédito"
   [(visible)]="detalleVisible"
@@ -236,15 +260,13 @@
       <div class="col-12 md:col-6 p-2">
         <div class="surface-ground border-round p-3 h-full">
           <h4 class="mt-0 mb-3 text-lg"><i class="pi pi-file-edit text-primary mr-2"></i> Información General</h4>
-
           <div class="flex justify-content-between mb-2">
             <span class="text-color-secondary text-sm">Correlativo</span>
             <strong class="text-color text-sm">{{ detalleActual.correlative }}</strong>
           </div>
           <div class="flex justify-content-between mb-2">
             <span class="text-color-secondary text-sm">Comprobante Ref.</span>
-            <span class="text-color text-sm">{{ detalleActual.serieRef }}-{{ detalleActual.numberDocRef }}
-</span>
+            <span class="text-color text-sm">{{ detalleActual.serieRef }}-{{ detalleActual.numberDocRef }}</span>
           </div>
           <div class="flex justify-content-between mb-2">
             <span class="text-color-secondary text-sm">Fecha Emisión</span>
@@ -274,7 +296,6 @@
       <div class="col-12 md:col-6 p-2">
         <div class="surface-ground border-round p-3 h-full flex flex-column">
           <h4 class="mt-0 mb-3 text-lg"><i class="pi pi-calculator text-primary mr-2"></i> Desglose de Montos</h4>
-
           <div class="flex justify-content-between mb-2">
             <span class="text-color-secondary text-sm">Valor Venta</span>
             <span class="text-color text-sm">{{ detalleActual.currency }} {{ detalleActual.saleValue | number: '1.2-2' }}</span>
@@ -343,6 +364,7 @@
   </ng-template>
 </p-dialog>
 
+<!-- ── Dialog Anular ──────────────────────────────────────────────── -->
 <p-dialog
   header="Anular Nota de Crédito"
   [(visible)]="anularVisible"
@@ -355,10 +377,10 @@
     <div class="flex align-items-start gap-3 p-3 mb-4 surface-ground border-round">
       <i class="pi pi-exclamation-triangle text-red-500 text-2xl mt-1"></i>
       <p class="m-0 text-sm line-height-3 text-color-secondary">
-        Esta acción <strong>no se puede deshacer</strong> y cambiará el estado del comprobante ante el sistema y SUNAT. Ingrese el motivo detallado.
+        Esta acción <strong>no se puede deshacer</strong> y cambiará el estado del comprobante
+        ante el sistema y SUNAT. Ingrese el motivo detallado.
       </p>
     </div>
-
     <div class="flex flex-column gap-2">
       <label class="font-semibold text-sm">Motivo de anulación <span class="text-red-500">*</span></label>
       <input

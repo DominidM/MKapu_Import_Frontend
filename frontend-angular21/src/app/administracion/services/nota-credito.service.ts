@@ -11,6 +11,7 @@ export interface CreditNoteFilter {
   customerDocument?: string;
   serie?: string;
   status?: string;
+  sedeId?: number;  // ← NUEVO
 }
 
 export interface CreditNoteSummary {
@@ -59,9 +60,10 @@ export interface CreditNoteDetail {
 }
 
 export interface RegisterCreditNoteItemDto {
-  itemId: number; 
+  itemId: number;
   quantity: number;
 }
+
 export interface RegisterCreditNoteDto {
   salesReceiptId: number;
   reasonCode: string;
@@ -72,25 +74,25 @@ export interface RegisterCreditNoteDto {
 export interface AnnulCreditNoteDto {
   reason: string;
 }
+
 @Injectable({
   providedIn: 'root'
 })
 export class CreditNoteService {
-  private readonly http = inject(HttpClient);
-
+  private readonly http   = inject(HttpClient);
   private readonly apiUrl = `${environment.apiUrl}/sales/credit-note`;
 
   listar(filtros: CreditNoteFilter): Observable<CreditNoteListResponse> {
     let params = new HttpParams();
 
-    if (filtros.page) params = params.set('page', filtros.page.toString());
-    if (filtros.limit) params = params.set('limit', filtros.limit.toString());
-    if (filtros.startDate) params = params.set('startDate', filtros.startDate);
-    if (filtros.endDate) params = params.set('endDate', filtros.endDate);
-    if (filtros.customerDocument) params = params.set('customerDocument', filtros.customerDocument);
-    if (filtros.serie) params = params.set('serie', filtros.serie);
-    if (filtros.status) params = params.set('status', filtros.status);
-
+    if (filtros.page)              params = params.set('page',             filtros.page.toString());
+    if (filtros.limit)             params = params.set('limit',            filtros.limit.toString());
+    if (filtros.startDate)         params = params.set('startDate',        filtros.startDate);
+    if (filtros.endDate)           params = params.set('endDate',          filtros.endDate);
+    if (filtros.customerDocument)  params = params.set('customerDocument', filtros.customerDocument);
+    if (filtros.serie)             params = params.set('serie',            filtros.serie);
+    if (filtros.status)            params = params.set('status',           filtros.status);
+    if (filtros.sedeId != null)    params = params.set('sedeId',           filtros.sedeId.toString()); 
     return this.http.get<CreditNoteListResponse>(this.apiUrl, { params });
   }
 
@@ -107,7 +109,15 @@ export class CreditNoteService {
   }
 
   exportarExcel(filtros: CreditNoteFilter): Observable<Blob> {
-     let params = new HttpParams();
-     return this.http.get(`${this.apiUrl}/export`, { params, responseType: 'blob' });
+    let params = new HttpParams();
+
+    if (filtros.startDate)         params = params.set('startDate',        filtros.startDate);
+    if (filtros.endDate)           params = params.set('endDate',          filtros.endDate);
+    if (filtros.customerDocument)  params = params.set('customerDocument', filtros.customerDocument);
+    if (filtros.serie)             params = params.set('serie',            filtros.serie);
+    if (filtros.status)            params = params.set('status',           filtros.status);
+    if (filtros.sedeId != null)    params = params.set('sedeId',           filtros.sedeId.toString()); 
+
+    return this.http.get(`${this.apiUrl}/export`, { params, responseType: 'blob' });
   }
 }

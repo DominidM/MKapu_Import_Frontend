@@ -142,9 +142,39 @@ export class VentasAdminService {
     });
   }
 
-  getKpiSemanal(sedeId?: number): Observable<SalesReceiptKpiDto> {
+  getKpiPorFiltros(filters: {
+    sedeId?: number;
+    dateFrom?: string;
+    dateTo?: string;
+    status?: string;
+    paymentMethodId?: number;
+    receiptTypeId?: number;
+    search?: string;
+  }): Observable<SalesReceiptKpiDto> {
     let params = new HttpParams();
-    if (sedeId != null) params = params.set('sedeId', String(sedeId));
+
+    if (filters.sedeId != null) {
+      params = params.set('sedeId', String(filters.sedeId));
+    }
+    if (filters.dateFrom) {
+      params = params.set('dateFrom', filters.dateFrom);
+    }
+    if (filters.dateTo) {
+      params = params.set('dateTo', filters.dateTo);
+    }
+    if (filters.status) {
+      params = params.set('status', filters.status);
+    }
+    if (filters.paymentMethodId != null) {
+      params = params.set('paymentMethodId', String(filters.paymentMethodId));
+    }
+    if (filters.receiptTypeId != null) {
+      params = params.set('receiptTypeId', String(filters.receiptTypeId));
+    }
+    if (filters.search) {
+      params = params.set('search', filters.search);
+    }
+
     return this.http.get<SalesReceiptKpiDto>(`${this.salesUrl}/receipts/kpi/semanal`, {
       headers: this.headers,
       params,
@@ -298,7 +328,8 @@ export class VentasAdminService {
       .pipe(
         map((res) => {
           if (Array.isArray(res)) return res as AuctionAutocompleteItemAdmin[];
-          if (res?.data && Array.isArray(res.data)) return res.data as AuctionAutocompleteItemAdmin[];
+          if (res?.data && Array.isArray(res.data))
+            return res.data as AuctionAutocompleteItemAdmin[];
           return [];
         }),
         catchError(() => of([])),
@@ -466,6 +497,36 @@ export class VentasAdminService {
           const url = URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }));
           window.open(url, '_blank');
           setTimeout(() => URL.revokeObjectURL(url), 10_000);
+        }),
+        catchError((err) => throwError(() => err)),
+      );
+  }
+
+  verNotaVentaPdfEnPestana(idComprobante: number): Observable<void> {
+    const url = `${this.salesUrl}/receipts/${idComprobante}/nota-venta`;
+    const win = window.open('', '_blank');
+    if (!win) {
+      return throwError(() => new Error('No se pudo abrir ventana'));
+    }
+    win.location.href = url;
+    return of(void 0);
+  }
+
+  descargarNotaVentaPdf(idComprobante: number, nombre: string): Observable<void> {
+    const url = `${this.salesUrl}/receipts/${idComprobante}/nota-venta`;
+    return this.http
+      .get(url, {
+        responseType: 'blob',
+        headers: this.headers,
+      })
+      .pipe(
+        map((blob: Blob) => {
+          const objectUrl = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = objectUrl;
+          link.download = nombre;
+          link.click();
+          URL.revokeObjectURL(objectUrl);
         }),
         catchError((err) => throwError(() => err)),
       );

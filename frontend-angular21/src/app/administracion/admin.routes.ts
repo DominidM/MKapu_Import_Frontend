@@ -15,14 +15,15 @@ export const ADMIN_ROUTES: Routes = [
       import('./pages/empresa/empresa-configuracion')
         .then(m => m.EmpresaConfiguracion),
     canActivate: [roleGuard],
+    data: { permiso: 'ADMINISTRACION' },
   },
   {
     path: 'empleados/:id/seguimiento',
     loadComponent: () =>
-      import('./pages/usuarios/pages/empleado-seguimiento/seguimiento-empleado') 
+      import('./pages/usuarios/pages/empleado-seguimiento/seguimiento-empleado')
         .then(m => m.SeguimientoEmpleado),
     canActivate: [roleGuard],
-    data: { permiso: 'ADMINISTRACION' },
+    data: { permiso: 'SEGUIMIENTO_EMPLEADO' },
   },
   {
     path: 'dashboard-admin',
@@ -90,7 +91,7 @@ export const ADMIN_ROUTES: Routes = [
   {
     path: 'roles-permisos',
     canActivate: [roleGuard],
-    data: { permiso: 'ADMINISTRACION' },
+    data: { permiso: 'CREAR_PERMISOS' },
     children: [
       { path: '', loadComponent: () => import('./pages/roles-permisos/pages/roles-permisos-listado/role-permission-listado.component').then((m) => m.RolePermissionListadoComponent) },
       { path: 'roles', loadComponent: () => import('./pages/roles-permisos/roles/pages/roles-listado/roles-listado.component').then((m) => m.RolesListadoComponent) },
@@ -112,6 +113,7 @@ export const ADMIN_ROUTES: Routes = [
       { path: '', loadComponent: () => import('./pages/clientes/pages/clientes/clientes').then((m) => m.Clientes) },
       { path: 'agregar-cliente', loadComponent: () => import('./pages/clientes/pages/agregar-cliente/agregar-cliente').then((m) => m.AgregarCliente) },
       { path: 'editar-cliente/:id', loadComponent: () => import('./pages/clientes/pages/editar-cliente/editar-cliente').then((m) => m.EditarCliente) },
+      { path: 'seguimiento-cliente/:id', loadComponent: () => import('./pages/clientes/pages/cliente-seguimiento/cliente-seguimiento').then((m) => m.ClienteSeguimiento) },
     ],
   },
 
@@ -183,13 +185,13 @@ export const ADMIN_ROUTES: Routes = [
     //canActivate: [roleGuard],
     //data: { permiso: 'CREAR_NOTA_CREDITO' },
     children: [
-      { 
+      {
       path: '',
-      loadComponent: () => import('./pages/nota-credito/nota-credito').then((m) => m.NotasCreditoComponent) 
+      loadComponent: () => import('./pages/nota-credito/nota-credito').then((m) => m.NotasCreditoComponent)
     },
-    { 
+    {
       path: 'crear',
-      loadComponent: () => import('./pages/nota-credito/agregar-nota-credito/agregar-nota-credito').then((m) => m.AgregarNotaCreditoComponent) 
+      loadComponent: () => import('./pages/nota-credito/agregar-nota-credito/agregar-nota-credito').then((m) => m.AgregarNotaCreditoComponent)
     }
     ]
   },

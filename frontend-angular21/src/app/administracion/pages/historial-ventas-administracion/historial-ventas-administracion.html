@@ -103,7 +103,6 @@
       </div>
 
       <div class="filtros-linea-2">
-
         <div class="filtro-item filtro-compacto">
           <label>Sede</label>
 
@@ -173,7 +172,6 @@
             styleClass="btn-limpiar-filtros"
           ></p-button>
         </div>
-
       </div>
     </div>
   </div>
@@ -216,31 +214,17 @@
         >
           <ng-template pTemplate="header">
             <tr>
-              <th pSortableColumn="numero">
-                N° Comprobante <p-sortIcon field="numero" />
-              </th>
-              <th pSortableColumn="tipoComprobante">
-                Tipo <p-sortIcon field="tipoComprobante" />
-              </th>
-              <th pSortableColumn="fecEmision">
-                Fecha Emisión <p-sortIcon field="fecEmision" />
-              </th>
+              <th pSortableColumn="numero">N° Comprobante <p-sortIcon field="numero" /></th>
+              <th pSortableColumn="tipoComprobante">Tipo <p-sortIcon field="tipoComprobante" /></th>
+              <th pSortableColumn="fecEmision">Fecha Emisión <p-sortIcon field="fecEmision" /></th>
               <th>Cliente</th>
               <th>Documento</th>
-              <th pSortableColumn="sedeNombre">
-                Sede <p-sortIcon field="sedeNombre" />
-              </th>
-              <th pSortableColumn="metodoPago">
-                Tipo Pago <p-sortIcon field="metodoPago" />
-              </th>
+              <th pSortableColumn="sedeNombre">Sede <p-sortIcon field="sedeNombre" /></th>
+              <th pSortableColumn="metodoPago">Tipo Pago <p-sortIcon field="metodoPago" /></th>
               <th pSortableColumn="responsableNombre">
                 Responsable <p-sortIcon field="responsableNombre" />
               </th>
-              <th
-                pSortableColumn="total"
-                class="text-right"
-                style="min-width: 125px; width: 125px"
-              >
+              <th pSortableColumn="total" class="text-right" style="min-width: 125px; width: 125px">
                 Total <p-sortIcon field="total" />
               </th>
               <th pSortableColumn="estado">Estado</th>
@@ -286,7 +270,6 @@
               </td>
               <td class="text-center">
                 <div class="acciones-tabla">
-
                   <p-button
                     icon="pi pi-eye"
                     (onClick)="verDetalleVenta(comprobante)"
@@ -328,7 +311,7 @@
                     [disabled]="comprobante.estado !== 'EMITIDO'"
                     pTooltip="Generar Nota de Crédito"
                     tooltipPosition="top"
-                  />
+                  />                  
                 </div>
               </td>
             </tr>
@@ -422,12 +405,7 @@
   </ng-container>
 
   <ng-template pTemplate="footer">
-    <p-button
-      label="Cancelar"
-      severity="secondary"
-      [text]="true"
-      (onClick)="cerrarDialogWsp()"
-    />
+    <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="cerrarDialogWsp()" />
     <p-button
       label="Enviar"
       icon="pi pi-whatsapp"

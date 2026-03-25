@@ -17,7 +17,6 @@ import { CategoriaService } from '../../../administracion/services/categoria.ser
 import { LoadingOverlayComponent } from '../../../shared/components/loading-overlay/loading-overlay.component';
 import { PaginadorComponent } from '../../../shared/components/paginador/paginador.components';
 
-// 👇 Importamos las utilidades de fecha
 import { getLunesSemanaActualPeru, getDomingoSemanaActualPeru } from '../../../shared/utils/date-peru.utils';
 
 @Component({
@@ -51,9 +50,12 @@ export class ConteoInventarios implements OnInit {
   totalRegistros = this.conteoService.totalRegistros;
 
   idSedeSeleccionada = signal<number | null>(null);
-  
-  fechaSeleccionada = signal<Date[] | null>([getLunesSemanaActualPeru(), getDomingoSemanaActualPeru()]);
-  
+
+  fechaSeleccionada = signal<Date[] | null>([
+    getLunesSemanaActualPeru(),
+    getDomingoSemanaActualPeru(),
+  ]);
+
   filtroBusqueda = signal<string>('');
   estadoSeleccionado = signal<any>(null);
   familiaSeleccionada = signal<any>(null);
@@ -81,12 +83,18 @@ export class ConteoInventarios implements OnInit {
 
     const busqueda = this.filtroBusqueda()?.toLowerCase().trim() || '';
     const estadoObj = this.estadoSeleccionado();
-    const estadoFiltro = !estadoObj || estadoObj.nombre?.toUpperCase() === 'TODOS' ? null : estadoObj.nombre || estadoObj;
+    const estadoFiltro =
+      !estadoObj || estadoObj.nombre?.toUpperCase() === 'TODOS'
+        ? null
+        : estadoObj.nombre || estadoObj;
 
     const familiaObj = this.familiaSeleccionada();
-    const familiaFiltro = !familiaObj || familiaObj.nombre?.toUpperCase() === 'TODAS' ? null : familiaObj.nombre || familiaObj;
+    const familiaFiltro =
+      !familiaObj || familiaObj.nombre?.toUpperCase() === 'TODAS'
+        ? null
+        : familiaObj.nombre || familiaObj;
 
-    let fechas = this.fechaSeleccionada();
+    const fechas = this.fechaSeleccionada();
 
     return listado.filter((c: any) => {
       const textoSede = c.nomSede?.toLowerCase() || '';
@@ -97,15 +105,16 @@ export class ConteoInventarios implements OnInit {
       const textoDetalleCompleto = `conteo en ${textoSede} ${cantidadItems} ítems ${textoProductos}`;
 
       const coincideBusqueda =
-        !busqueda || textoDetalleCompleto.includes(busqueda) || String(c.idConteo).includes(busqueda);
+        !busqueda ||
+        textoDetalleCompleto.includes(busqueda) ||
+        String(c.idConteo).includes(busqueda);
 
       const coincideEstado = !estadoFiltro || c.estado === estadoFiltro;
       const nombreFamBd = c.nomCategoria || 'General';
       const coincideFamilia = !familiaFiltro || nombreFamBd === familiaFiltro;
 
       let coincideFecha = true;
-      
-      // 👇 Filtro local para rango de fechas
+
       if (fechas && fechas.length > 0 && fechas[0]) {
         const fechaConteo = new Date(c.fechaIni);
         if (!isNaN(fechaConteo.getTime())) {
@@ -132,6 +141,19 @@ export class ConteoInventarios implements OnInit {
     this.cargarHistorialBackend(1, this.rows());
   }
 
+  // ── Manejo independiente de cada datepicker ───────────────────────
+  onFechaInicioChange(fecha: Date | null): void {
+    const actual = this.fechaSeleccionada() ?? [];
+    this.fechaSeleccionada.set([fecha ?? actual[0], actual[1]]);
+    this.alCambiarFiltro();
+  }
+
+  onFechaFinChange(fecha: Date | null): void {
+    const actual = this.fechaSeleccionada() ?? [];
+    this.fechaSeleccionada.set([actual[0], fecha ?? actual[1]]);
+    this.alCambiarFiltro();
+  }
+
   onPageChange(page: number): void {
     this.paginaActual.set(page);
     this.cargarHistorialBackend(page, this.rows());
@@ -148,21 +170,14 @@ export class ConteoInventarios implements OnInit {
     this.cargarHistorialBackend(1, this.rows());
   }
 
-  // 👇 Limpiar fechas devuelve a la semana actual
-  limpiarFechas(): void {
-    this.fechaSeleccionada.set([getLunesSemanaActualPeru(), getDomingoSemanaActualPeru()]);
-    this.alCambiarFiltro();
-  }
-
   cargarHistorialBackend(page = 1, limit = 10): void {
     const payload: any = { id_sede: this.idSedeSeleccionada(), page, limit };
 
-    // 👇 Envío de rango de fechas al backend
-    let fechas = this.fechaSeleccionada();
+    const fechas = this.fechaSeleccionada();
     if (fechas && fechas.length > 0 && fechas[0]) {
       const f1 = new Date(fechas[0]);
       payload.fecha_inicio = `${f1.getFullYear()}-${String(f1.getMonth() + 1).padStart(2, '0')}-${String(f1.getDate()).padStart(2, '0')}`;
-      
+
       const f2 = fechas[1] ? new Date(fechas[1]) : f1;
       payload.fecha_fin = `${f2.getFullYear()}-${String(f2.getMonth() + 1).padStart(2, '0')}-${String(f2.getDate()).padStart(2, '0')}`;
     }
@@ -203,7 +218,9 @@ export class ConteoInventarios implements OnInit {
 
   filtrarEstados(event: any): void {
     const query = event.query?.toLowerCase() || '';
-    this.estadosFiltrados.set(this.estados.filter((e) => e.nombre.toLowerCase().includes(query)));
+    this.estadosFiltrados.set(
+      this.estados.filter((e) => e.nombre.toLowerCase().includes(query)),
+    );
   }
 
   filtrarFamilias(event: any): void {
@@ -212,19 +229,19 @@ export class ConteoInventarios implements OnInit {
       this.familias().filter((f) => f.nombre.toLowerCase().includes(query)),
     );
   }
+
   limpiarTodosLosFiltros(): void {
     this.filtroBusqueda.set('');
     this.estadoSeleccionado.set(null);
     this.familiaSeleccionada.set(null);
     this.fechaSeleccionada.set([getLunesSemanaActualPeru(), getDomingoSemanaActualPeru()]);
-    
     this.alCambiarFiltro();
   }
 
   verDetalle(row: any): void {
     this.router.navigate(['/admin/conteo-inventario/detalle', row.idConteo]);
   }
-  
+
   crearConteo(): void {
     this.router.navigate(['/admin/conteo-inventario/crear']);
   }

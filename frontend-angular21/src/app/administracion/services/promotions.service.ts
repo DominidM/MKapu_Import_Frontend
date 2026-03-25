@@ -20,9 +20,17 @@ export interface ReglaPromo {
   valorCondicion: string;
 }
 
+export interface ReglaPromoDetalle extends ReglaPromo {
+  nombreCondicion: string;
+}
+
 export interface DescuentoAplicado {
   idDescuento: number;
   monto: number;
+}
+
+export interface PromotionDetail extends Omit<Promotion, 'reglas'> {
+  reglas: ReglaPromoDetalle[];
 }
 
 export interface PromotionResponse {
@@ -78,6 +86,20 @@ export class PromotionsService {
     };
   }
 
+  private mapPromoDetail(p: any): PromotionDetail {
+    const promotion = this.mapPromo(p);
+
+    return {
+      ...promotion,
+      reglas: (p.reglas ?? []).map((r: any) => ({
+        idRegla: r.idRegla,
+        tipoCondicion: r.tipoCondicion,
+        valorCondicion: r.valorCondicion,
+        nombreCondicion: r.nombreCondicion ?? r.valorCondicion ?? '-',
+      })),
+    };
+  }
+
   private snapshot(): PromotionResponse | null {
     return this._response();
   }
@@ -120,6 +142,22 @@ export class PromotionsService {
         map(p => this.mapPromo(p)),
         catchError(err => {
           this._error.set('No se pudo cargar la promoción.');
+          return throwError(() => err);
+        }),
+        finalize(() => this._loading.set(false))
+      );
+  }
+
+  getPromotionDetailById(id: number): Observable<PromotionDetail> {
+    this._loading.set(true);
+    this._error.set(null);
+
+    return this.http
+      .get<any>(`${this.api}/sales/promotions/${id}/resolved`)
+      .pipe(
+        map(p => this.mapPromoDetail(p)),
+        catchError(err => {
+          this._error.set('No se pudo cargar el detalle de la promoci?n.');
           return throwError(() => err);
         }),
         finalize(() => this._loading.set(false))

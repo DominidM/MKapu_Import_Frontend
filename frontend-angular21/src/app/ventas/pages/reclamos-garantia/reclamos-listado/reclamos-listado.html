@@ -65,9 +65,10 @@
     <div class="seccion-filtros">
       <h3><i class="pi pi-filter"></i> Filtros de búsqueda</h3>
 
+      <!-- Línea 1: buscador + fechas -->
       <div class="filtros-linea-1">
         <div class="filtro-item filtro-busqueda-65">
-          <label>Buscar por ID Comprobante, Motivo o Descripción</label>
+          <label>Buscar por ID Comprobante o Descripción</label>
           <input
             pInputText
             type="text"
@@ -99,7 +100,47 @@
         </div>
       </div>
 
+      <!-- Línea 2: sede + motivo + estado + limpiar -->
       <div class="filtros-linea-2">
+
+        <!-- Sede (solo admin) -->
+        <div class="filtro-item filtro-compacto" *ngIf="esAdmin">
+          <label>Sede</label>
+          <p-select
+            [(ngModel)]="filtroSede"
+            [options]="sedesOptions"
+            placeholder="Todas las sedes"
+            optionLabel="label"
+            optionValue="value"
+            (ngModelChange)="paginaActual.set(1); onCambiarSede()"
+            styleClass="w-full">
+          </p-select>
+        </div>
+
+        <!-- Sede fija (no admin) -->
+        <div class="filtro-item filtro-compacto" *ngIf="!esAdmin">
+          <label>Sede</label>
+          <div class="sede-fija-badge">
+            <i class="pi pi-map-marker"></i>
+            <span>{{ sedeNombre }}</span>
+          </div>
+        </div>
+
+        <!-- Motivo -->
+        <div class="filtro-item filtro-compacto">
+          <label>Motivo</label>
+          <p-select
+            [(ngModel)]="filtroMotivo"
+            [options]="motivosOptions"
+            placeholder="Todos"
+            optionLabel="label"
+            optionValue="value"
+            (ngModelChange)="paginaActual.set(1)"
+            styleClass="w-full">
+          </p-select>
+        </div>
+
+        <!-- Estado -->
         <div class="filtro-item filtro-compacto">
           <label>Estado</label>
           <p-select
@@ -144,7 +185,6 @@
     (limitChange)="onLimitChange($event)"
   >
 
-    <!-- Tag contador en slot de acciones -->
     <div slot="acciones">
       <p-tag
         [value]="totalFiltrados + ' reclamos'"
@@ -154,7 +194,6 @@
       </p-tag>
     </div>
 
-    <!-- Tabla -->
     <p-table
       [value]="reclamosPaginados"
       [paginator]="false"
@@ -166,11 +205,9 @@
           <th style="width:8%"># Reclamo</th>
           <th style="width:10%">Comprobante</th>
           <th style="width:13%">Motivo</th>
-          <th style="width:19%">Descripción</th>
           <th style="width:10%">Estado</th>
-          <th style="width:10%">Registrado</th>
+          <th style="width:12%">Registrado</th>
           <th style="width:7%">Días</th>
-          <th style="width:9%">Resuelto</th>
           <th class="text-center" style="width:14%">Acciones</th>
         </tr>
       </ng-template>
@@ -183,11 +220,6 @@
           </td>
           <td>{{ reclamo.reason }}</td>
           <td>
-            <span class="text-sm text-600" style="white-space:pre-wrap;">
-              {{ reclamo.description | slice:0:80 }}{{ reclamo.description?.length > 80 ? '...' : '' }}
-            </span>
-          </td>
-          <td>
             <p-tag
               [value]="getStatusLabel(reclamo.status)"
               [severity]="getStatusSeverity(reclamo.status)">
@@ -197,15 +229,7 @@
           <td>
             <span class="dias-transcurridos">{{ diasDesde(reclamo.registerDate) }} días</span>
           </td>
-          <td>
-            <span *ngIf="reclamo.resolveDate; else sinResolver"
-              class="text-green-500 text-sm font-semibold">
-              {{ formatDate(reclamo.resolveDate) }}
-            </span>
-            <ng-template #sinResolver>
-              <span class="text-400 text-sm">—</span>
-            </ng-template>
-          </td>
+            
           <td class="text-center">
             <div class="acciones-tabla">
               <p-button
@@ -244,7 +268,7 @@
 
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="9" class="text-center">
+          <td colspan="7" class="text-center">
             <div class="mensaje-vacio">
               <i class="pi pi-inbox"></i>
               <p>No se encontraron reclamos</p>

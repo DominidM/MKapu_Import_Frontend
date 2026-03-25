@@ -1,3 +1,6 @@
+/* ══════════════════════════════════════════════════
+   HEADER CARD
+   ══════════════════════════════════════════════════ */
 .nota-credito-header-card .p-card-body {
   padding: 1rem 1.25rem;
 }
@@ -51,7 +54,6 @@
   transition: all 0.2s;
 }
 
-
 .nota-credito-pill-danger-outlined {
   background: transparent !important;
   border: 3px solid #ef4444 !important;
@@ -80,10 +82,13 @@
   box-shadow: 0 8px 20px #00000033 !important;
 }
 
+/* ══════════════════════════════════════════════════
+   FILTROS CONTAINER
+   ══════════════════════════════════════════════════ */
 .filtros-container {
   background: #ffffff;
   border-radius: 10px;
-  padding: 1rem 1.25rem;
+  padding: 1rem 1.25rem 1.25rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
@@ -92,9 +97,9 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
 }
 
-/* Título de sección filtros */
+/* Título sección filtros */
 .seccion-filtros {
-  margin: 0 0 1.5rem 0;
+  margin: 0 0 1rem 0;
   font-size: 0.95rem;
   font-weight: 600;
   color: #1f2937;
@@ -115,21 +120,30 @@
   border-bottom-color: #27272a;
 }
 
-/* ROW FLEX - Alineación Horizontal */
+/* ══════════════════════════════════════════════════
+   FILAS DE FILTROS
+   ══════════════════════════════════════════════════ */
+
+/* Fila 1: cliente (flex-grow) + fechas (ancho fijo) */
 .filtros-flex-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1.5rem;
+  display: flex;
   align-items: flex-end;
+  gap: 0.75rem;
   width: 100%;
 }
 
-/* Item individual de filtro */
+/* Fila 2 */
+.filtros-segunda-linea {
+  margin-top: 0.75rem;
+}
+
+/* ══════════════════════════════════════════════════
+   ITEMS INDIVIDUALES
+   ══════════════════════════════════════════════════ */
 .filtro-item {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  width: 100%;
+  gap: 0.35rem;
 }
 
 .filtro-item label {
@@ -149,11 +163,27 @@
   color: #a1a1aa;
 }
 
-/* Contenedor de fechas */
+/* ── Fila 1 ──────────────────────────────────────── */
+
+/* Cliente ocupa todo el espacio libre */
+.filtro-cliente {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.filtro-cliente input {
+  width: 100%;
+}
+
+/* Fechas — ancho fijo para que quepan los dos datepickers */
+.filtro-fechas {
+  flex: 0 0 420px;
+}
+
 .filtro-fechas-contenedor {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0;
   width: 100%;
 }
 
@@ -162,53 +192,135 @@
   min-width: 0;
 }
 
-.filtro-fechas-contenedor span {
+.filtro-fechas-separador {
+  color: var(--text-color-secondary);
+  padding: 0 8px;
+  font-size: 0.9rem;
   flex-shrink: 0;
 }
 
-/* Inputs y select dentro de filtros */
-.filtro-item input,
-.filtro-item p-select,
-.filtro-item p-datepicker {
-  width: 100%;
-  height: 38px !important;
-  min-height: 38px !important;
+/* ── Fila 2 ──────────────────────────────────────── */
+
+/* Serie/Correlativo */
+.filtro-correlativo {
+  flex: 1 1 0;
+  min-width: 0;
 }
 
-/* Botón limpiar - alineado con los campos */
+.filtro-correlativo input {
+  width: 100%;
+}
+
+/* Sede */
+.filtro-sede {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.filtro-sede p-select {
+  width: 100%;
+}
+
+/* Estado */
+.filtro-estado {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.filtro-estado p-select {
+  width: 100%;
+}
+
+/* Limpiar */
 .filtro-limpiar {
+  flex: 0 0 auto;
   align-self: flex-end;
 }
 
 .filtro-limpiar p-button,
 .filtro-limpiar .btn-limpiar {
-  width: 100%;
+  white-space: nowrap;
   height: 38px !important;
   min-height: 38px !important;
 }
 
-/* Responsive - Mobile */
+/* ══════════════════════════════════════════════════
+   ALTURA UNIFORME DE INPUTS / SELECTS
+   ══════════════════════════════════════════════════ */
+.filtro-item input.p-inputtext,
+.filtro-item .p-select,
+.filtro-item .p-datepicker .p-inputtext {
+  height: 38px !important;
+  min-height: 38px !important;
+}
+
+/* ══════════════════════════════════════════════════
+   BADGE SEDE FIJA (no-admin)
+   ══════════════════════════════════════════════════ */
+.sede-fija-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--surface-ground);
+  border: 1px solid var(--surface-border);
+  border-radius: 6px;
+  padding: 0 0.75rem;
+  color: var(--text-color);
+  font-size: 0.875rem;
+  height: 38px;
+}
+
+.sede-fija-badge i {
+  color: #F6AF33;
+  font-size: 0.85rem;
+}
+
+/* ══════════════════════════════════════════════════
+   RESPONSIVE
+   ══════════════════════════════════════════════════ */
 @media (max-width: 768px) {
   .filtros-flex-row {
-    grid-template-columns: 1fr;
-    gap: 1rem;
+    flex-wrap: wrap;
   }
 
-  .filtro-item label {
-    font-size: 0.75rem;
+  .filtro-cliente,
+  .filtro-fechas,
+  .filtro-correlativo,
+  .filtro-sede,
+  .filtro-estado {
+    flex: 1 1 100%;
+  }
+
+  .filtro-fechas {
+    flex: 0 0 100%;
+  }
+
+  .filtro-limpiar {
+    flex: 1 1 100%;
+  }
+
+  .filtro-limpiar p-button,
+  .filtro-limpiar .btn-limpiar {
+    width: 100%;
   }
 }
 
-/* Responsive - Tablets */
-@media (min-width: 769px) and (max-width: 1024px) {
+@media (min-width: 769px) and (max-width: 1200px) {
   .filtros-flex-row {
-    grid-template-columns: repeat(2, 1fr);
+    flex-wrap: wrap;
   }
-}
 
-/* Desktop Grande */
-@media (min-width: 1025px) {
-  .filtros-flex-row {
-    grid-template-columns: 0.9fr 0.9fr 1.2fr 0.8fr 0.7fr;
+  .filtro-cliente {
+    flex: 1 1 55%;
+  }
+
+  .filtro-fechas {
+    flex: 1 1 40%;
+  }
+
+  .filtro-correlativo,
+  .filtro-sede,
+  .filtro-estado {
+    flex: 1 1 28%;
   }
 }

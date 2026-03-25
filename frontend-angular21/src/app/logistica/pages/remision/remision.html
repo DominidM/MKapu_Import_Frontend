@@ -16,14 +16,14 @@
           icon="pi pi-plus"
           styleClass="productos-pill productos-pill-warning"
           (onClick)="abrirFormulario()"
-        >
-        </p-button>
+        ></p-button>
       </div>
     </div>
   </p-card>
 </div>
 
 <div class="p-2">
+  <!-- Contadores -->
   <div class="contadores-productos mb-4">
     <div class="contador-card">
       <i class="pi pi-file-export"></i>
@@ -54,13 +54,16 @@
       </div>
     </div>
   </div>
-  
+
+  <!-- Filtros -->
   <div class="filtros-container mb-4">
     <div class="seccion-filtros">
       <h3><i class="pi pi-filter"></i> Filtros de búsqueda</h3>
+
+      <!-- Fila 1: Búsqueda (ancho) + Rango de Fechas -->
       <div class="filtros-linea-1">
         <div class="filtro-item filtro-cliente-50">
-          <label>Buscar Guía</label>
+          <label>BUSCAR GUÍA</label>
           <input
             type="text"
             pInputText
@@ -68,55 +71,96 @@
             class="w-full"
             [ngModel]="filtroTexto()"
             (ngModelChange)="filtroTexto.set($event)"
-            (keyup.enter)="aplicarFiltros()">
+            (keyup.enter)="aplicarFiltros()"
+          />
+        </div>
+
+        <div class="filtro-item filtro-grupo-fechas">
+          <label>RANGO DE FECHAS</label>
+          <div class="fechas-con-guion">
+            <p-datepicker
+              [ngModel]="filtroFechaInicio()"
+              (ngModelChange)="filtroFechaInicio.set($event); aplicarFiltros()"
+              dateFormat="dd/mm/yy"
+              placeholder="Inicio"
+              [showClear]="true"
+              [showIcon]="true"
+            ></p-datepicker>
+            <span class="fecha-separador">—</span>
+            <p-datepicker
+              [ngModel]="filtroFechaFin()"
+              (ngModelChange)="filtroFechaFin.set($event); aplicarFiltros()"
+              dateFormat="dd/mm/yy"
+              placeholder="Fin"
+              [showClear]="true"
+              [showIcon]="true"
+            ></p-datepicker>
+          </div>
         </div>
       </div>
+
+      <!-- Fila 2: Sede | Estado | Limpiar -->
       <div class="filtros-linea-2">
+
+        <!-- SEDE: admin ve selector, no-admin ve badge fijo -->
         <div class="filtro-item filtro-compacto">
-          <label>Estado de Envío</label>
+          <label>SEDE</label>
+          <p-select
+            *ngIf="esAdmin"
+            [options]="sedesOpciones"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Todas las sedes"
+            [showClear]="true"
+            styleClass="w-full"
+            [ngModel]="filtroSede()"
+            (ngModelChange)="filtroSede.set($event); aplicarFiltros()"
+          ></p-select>
+
+          <div *ngIf="!esAdmin" class="sede-fija-badge">
+            <i class="pi pi-map-marker"></i>
+            <span>{{ sedeNombre }}</span>
+          </div>
+        </div>
+
+        <div class="filtro-item filtro-compacto">
+          <label>ESTADO DE ENVÍO</label>
           <p-select
             [options]="opcionesEstado"
             optionLabel="label"
             optionValue="value"
-            placeholder="Filtrar por estado"
+            placeholder="Todos"
             [showClear]="true"
             styleClass="w-full"
             [ngModel]="filtroEstado()"
-            (ngModelChange)="filtroEstado.set($event); aplicarFiltros()">
-          </p-select>
+            (ngModelChange)="filtroEstado.set($event); aplicarFiltros()"
+          ></p-select>
         </div>
-        <div class="filtro-item filtro-compacto">
-          <label>Rango de Fechas</label>
-          <p-datepicker
-            selectionMode="range"
-            [showIcon]="true"
-            placeholder="Seleccionar fechas"
-            styleClass="w-full"
-            [ngModel]="filtroFechas()"
-            (ngModelChange)="filtroFechas.set($event); aplicarFiltros()"
-            (onClear)="limpiarFechas()">
-          </p-datepicker>
-        </div>
+
         <div class="filtro-item filtro-boton-limpiar">
           <label>&nbsp;</label>
           <p-button
-            label="Limpiar Filtros" icon="pi pi-filter-slash"
-            severity="danger" styleClass="btn-limpiar-filtros"
-            type="button" (click)="limpiarFiltros()">
-          </p-button>
+            label="Limpiar Filtros"
+            icon="pi pi-filter-slash"
+            severity="danger"
+            styleClass="btn-limpiar-filtros"
+            type="button"
+            (click)="limpiarFiltros()"
+          ></p-button>
         </div>
+
       </div>
     </div>
   </div>
 
+  <!-- Tabla -->
   <div class="mb-6">
     <div class="surface-card border-round-xl shadow-1 overflow-hidden" style="position: relative">
       <app-loading-overlay
         [visible]="loading()"
         mensaje="Cargando guías de remisión..."
         modo="inline"
-      >
-      </app-loading-overlay>
+      ></app-loading-overlay>
 
       <div [style.opacity]="loading() ? '0.3' : '1'" style="transition: opacity 0.2s ease">
         <p-table
@@ -146,8 +190,7 @@
                   [severity]="remision.tipo_guia === 0 ? 'success' : 'warn'"
                   [value]="remision.tipo_guia === 0 ? 'REMITENTE' : 'TRANSPORTISTA'"
                   styleClass="font-bold"
-                >
-                </p-tag>
+                ></p-tag>
               </td>
               <td>{{ remision.fecha_inicio | date: 'dd/MM/yyyy' }}</td>
               <td>{{ remision.motivo_traslado }}</td>
@@ -156,8 +199,7 @@
                   [severity]="remision.modalidad === 0 ? 'success' : 'secondary'"
                   [value]="remision.modalidad === 0 ? 'PÚBLICO' : 'PRIVADO'"
                   styleClass="font-bold"
-                >
-                </p-tag>
+                ></p-tag>
               </td>
               <td>{{ remision.peso_total }} {{ remision.unidad_peso }}</td>
               <td>
@@ -172,8 +214,7 @@
                     styleClass="productos-icon-btn productos-icon-soft"
                     pTooltip="Ver Detalles"
                     (onClick)="verDetalles(remision.id_guia)"
-                  >
-                  </p-button>
+                  ></p-button>
                 </div>
               </td>
             </tr>
@@ -198,8 +239,7 @@
           [limitOpciones]="[10, 25, 50]"
           (pageChange)="onPageChange($event)"
           (limitChange)="onLimitChange($event)"
-        >
-        </app-paginador>
+        ></app-paginador>
       </div>
     </div>
   </div>

@@ -1,150 +1,139 @@
-<div class="p-2 md:p-3 fadein animation-duration-300">
+<div class="detalle-wrap p-2">
+  @if (movimiento(); as detalleActivo) {
+    @let items = detalleActivo.detalles || [];
+    @let currentMovimientoId = movimientoId();
 
-  <p-card styleClass="sedes-header-card mb-4 ventas-header-bordered shadow-sm">
-    <div class="flex align-items-center gap-3">
-      
-      <p-button 
-        icon="pi pi-arrow-left" 
-        [rounded]="true" 
-        [text]="true" 
-        severity="secondary" 
-        (onClick)="volver()"
-        pTooltip="Volver al historial">
-      </p-button>
+    <p-card styleClass="sedes-header-card ventas-header-bordered mb-3">
+      <div class="flex align-items-center justify-content-between flex-wrap gap-2 detalle-header-shell">
+        <div class="flex align-items-center gap-3">
+          <span class="sedes-title-icon">
+            <i class="pi pi-arrow-right-arrow-left"></i>
+          </span>
 
-      <div>
-        <p class="sedes-kicker m-0 mb-1">LOGÍSTICA - MOVIMIENTOS</p>
-        <h2 class="sedes-title m-0">DETALLE DE MOVIMIENTO</h2>
-      </div>
-
-    </div>
-  </p-card>
-
-  <ng-container *ngIf="movimiento() as detalleActivo; else loadingTpl">
-
-    <p-card styleClass="almacen-card border-none shadow-sm mb-4">
-
-      <div class="almacen-section">
-        <div class="almacen-section-title flex align-items-center gap-2">
-          <i class="pi pi-info-circle text-blue-500"></i> RESUMEN
-        </div>
-        <p-divider styleClass="mt-2 mb-4"></p-divider>
-      </div>
-
-      <div class="grid form-grid mb-5">
-        <div class="col-12 md:col-4">
-          <div class="info-card h-full">
-            <span class="info-label">
-              <i class="pi pi-building text-blue-500 mr-1"></i> Sede
-            </span>
-            <div class="info-value text-lg">
-              {{ detalleActivo.sedeNombre }}
-            </div>
-          </div>
-        </div>
-
-        <div class="col-12 md:col-4">
-          <div class="info-card h-full">
-            <span class="info-label">
-              <i class="pi pi-calendar text-teal-500 mr-1"></i> Fecha
-            </span>
-            <div class="info-value text-lg">
-              {{ detalleActivo.fechaMovimiento | date: 'dd/MM/yyyy HH:mm' }}
-            </div>
-          </div>
-        </div>
-
-        <div class="col-12 md:col-4">
-          <div class="info-card h-full flex flex-column justify-content-center align-items-start">
-            <span class="info-label">
-              <i class="pi pi-file text-purple-500 mr-1"></i> Documento
-            </span>
-            <p-tag 
-              [value]="detalleActivo.documentoReferencia || 'Sin Documento'"
-              severity="info"
-              styleClass="font-mono text-sm px-3 mt-1">
-            </p-tag>
-          </div>
-        </div>
-      </div>
-
-      <div class="almacen-section">
-        <div class="almacen-section-title flex align-items-center gap-2">
-          <i class="pi pi-sort-alt text-orange-500" style="transform: rotate(90deg);"></i> TRANSFERENCIA
-        </div>
-        <p-divider styleClass="mt-2 mb-4"></p-divider>
-      </div>
-
-      <div class="grid align-items-stretch text-center mb-5">
-        <div class="col-12 md:col-5 flex flex-column">
-          <div class="warehouse origin h-full flex flex-column justify-content-center">
-            <small class="uppercase font-bold text-500 tracking-wide mb-2"><i class="pi pi-sign-out mr-1"></i> Almacén Origen</small>
-            <div class="warehouse-name text-xl text-800">
-              {{ detalleActivo.almacenOrigenNombre || 'N/A' }}
-            </div>
-          </div>
-        </div>
-
-        <div class="col-12 md:col-2 flex align-items-center justify-content-center py-3 md:py-0">
-          <i class="pi pi-arrow-right transfer-arrow hidden md:inline-flex"></i>
-          <i class="pi pi-arrow-down transfer-arrow inline-flex md:hidden"></i>
-        </div>
-
-        <div class="col-12 md:col-5 flex flex-column">
-          <div class="warehouse destination h-full flex flex-column justify-content-center">
-            <small class="uppercase font-bold text-500 tracking-wide mb-2"><i class="pi pi-sign-in mr-1"></i> Almacén Destino</small>
-            <div class="warehouse-name text-xl text-800">
-              {{ detalleActivo.almacenDestinoNombre || 'N/A' }}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="almacen-section">
-        <div class="almacen-section-title flex align-items-center gap-2">
-          <i class="pi pi-cog text-gray-500"></i> DETALLE DE OPERACIÓN
-        </div>
-        <p-divider styleClass="mt-2 mb-4"></p-divider>
-      </div>
-
-      <div class="grid form-grid">
-        <div class="col-12 md:col-4 flex flex-column justify-content-center">
-          <label class="field-label font-bold text-500 text-sm mb-2">TIPO DE OPERACIÓN</label>
           <div>
-            <p-tag
-              [value]="detalleActivo.tipoMovimiento"
-              [severity]="getSeverity(detalleActivo.tipoMovimiento)"
-              styleClass="uppercase font-bold tracking-wide px-3 py-2 text-sm">
-            </p-tag>
+            <p class="sedes-kicker">ADMINISTRACION - LOGISTICA - MOVIMIENTO INVENTARIO</p>
+            <h2 class="sedes-title">
+              Movimiento de Inventario
+              @if (currentMovimientoId) {
+                <span class="detalle-id">#{{ currentMovimientoId }}</span>
+              }
+            </h2>
           </div>
         </div>
 
-        <div class="col-12 md:col-8">
-          <label class="field-label font-bold text-500 text-sm mb-2 block">OBSERVACIÓN</label>
-          <div class="observation text-700 font-medium flex align-items-center">
-            {{ detalleActivo.motivo || 'Sin observación registrada.' }}
-          </div>
+        <div class="flex justify-items-end gap-2">
+          <p-button
+            label="Volver"
+            icon="pi pi-arrow-left"
+            styleClass="sedes-pill"
+            (onClick)="volver()"
+          ></p-button>
         </div>
       </div>
-
     </p-card>
 
-    <p-card styleClass="almacen-card border-none shadow-sm">
-      
-      <div class="almacen-section mb-4 flex align-items-center justify-content-between border-bottom-1 surface-border pb-3">
-        <div class="almacen-section-title flex align-items-center gap-2 m-0">
-          <i class="pi pi-box text-blue-500"></i> ARTÍCULOS INVOLUCRADOS
+    <p-card styleClass="detalle-main-card mt-3">
+      <div class="overview-hero">
+        <div class="overview-copy">
+          <h2 class="overview-title">Movimiento de Inventario</h2>
+          <p class="overview-subtitle">
+            Detalle consolidado del movimiento registrado en inventario.
+          </p>
         </div>
-        <p-tag [value]="(detalleActivo.detalles?.length || 0) + ' ítems'" severity="info" [rounded]="true"></p-tag>
+
+        <p-tag
+          [value]="detalleActivo.tipoMovimiento || 'MOVIMIENTO'"
+          [severity]="getSeverity(detalleActivo.tipoMovimiento)"
+          styleClass="tipo-tag"
+        ></p-tag>
+      </div>
+
+      <div class="section-block">
+        <div class="section-label">
+          <i class="pi pi-id-card"></i>
+          <span>Datos del movimiento</span>
+        </div>
+
+        <div class="summary-grid">
+          <article class="summary-item">
+            <span class="summary-label"><i class="pi pi-building"></i> Sede principal</span>
+            <strong class="summary-value">{{ detalleActivo.sedeNombre || 'Sin sede' }}</strong>
+          </article>
+
+          <article class="summary-item">
+            <span class="summary-label"><i class="pi pi-calendar"></i> Fecha de registro</span>
+            <strong class="summary-value">{{ detalleActivo.fechaMovimiento | date: 'dd/MM/yyyy HH:mm' }}</strong>
+          </article>
+
+          <article class="summary-item">
+            <span class="summary-label"><i class="pi pi-file"></i> Documento referencia</span>
+            <strong class="summary-value">{{ detalleActivo.documentoReferencia || 'Sin documento' }}</strong>
+          </article>
+
+          <article class="summary-item">
+            <span class="summary-label"><i class="pi pi-user"></i> Responsable</span>
+            <strong class="summary-value">{{ detalleActivo.usuario || 'Sin responsable' }}</strong>
+          </article>
+
+          <article class="summary-item">
+            <span class="summary-label"><i class="pi pi-sync"></i> Tipo de operacion</span>
+            <strong class="summary-value">{{ detalleActivo.tipoMovimiento || 'Movimiento' }}</strong>
+          </article>
+
+          <article class="summary-item">
+            <span class="summary-label"><i class="pi pi-box"></i> Items registrados</span>
+            <strong class="summary-value">{{ items.length }}</strong>
+          </article>
+        </div>
+        <p-tag [value]="items.length + ' ítems'" severity="info" [rounded]="true"></p-tag>
+      </div>
+
+      <div class="section-block">
+        <div class="section-label">
+          <i class="pi pi-warehouse"></i>
+          <span>Almacenes relacionados</span>
+        </div>
+
+        <div class="warehouse-flow">
+          <article class="warehouse-box warehouse-box-origin">
+            <span class="warehouse-label"><i class="pi pi-sign-out"></i> Almacen origen</span>
+            <strong class="warehouse-value">{{ detalleActivo.almacenOrigenNombre || 'No registrado' }}</strong>
+          </article>
+
+          <div class="warehouse-arrow">
+            <i class="pi pi-ellipsis-h"></i>
+          </div>
+
+          <article class="warehouse-box warehouse-box-destination">
+            <span class="warehouse-label"><i class="pi pi-sign-in"></i> Almacen destino</span>
+            <strong class="warehouse-value">{{ detalleActivo.almacenDestinoNombre || 'No registrado' }}</strong>
+          </article>
+        </div>
+      </div>
+
+      <div class="section-block">
+        <div class="section-label">
+          <i class="pi pi-comment"></i>
+          <span>Motivo del movimiento</span>
+        </div>
+
+        <div class="observacion-box">
+          <p>{{ detalleActivo.motivo || 'Sin observacion registrada.' }}</p>
+        </div>
+      </div>
+    </p-card>
+
+    <p-card styleClass="detalle-main-card mt-3">
+      <div class="section-header">
+        <h3><i class="pi pi-box"></i> Detalle de articulos</h3>
+        <span class="items-count-chip">{{ items.length }} items</span>
       </div>
 
       <p-table
-        [value]="detalleActivo.detalles || []"
-        [paginator]="true"
-        [rows]="10"
+        [value]="items"
         responsiveLayout="scroll"
-        styleClass="p-datatable-sm custom-table">
-
+        styleClass="detalle-items-table"
+      >
         <ng-template pTemplate="header">
           <tr>
             <th class="w-4rem text-center">#</th>
@@ -155,28 +144,34 @@
         </ng-template>
 
         <ng-template pTemplate="body" let-item let-rowIndex="rowIndex">
-          <tr class="transition-colors hover:surface-hover">
-            <td class="text-center text-500 font-medium">{{ rowIndex + 1 }}</td>
-
+          <tr>
+            <td class="text-center row-index">{{ rowIndex + 1 }}</td>
             <td>
-              <div class="product-name text-800 font-bold">{{ item.productoNombre }}</div>
-              <div class="text-500 font-mono text-sm mt-1">{{ item.codigo }}</div>
+              <div class="product-cell">
+                <strong class="product-name">{{ item.productoNombre || item.codigo || 'Producto sin nombre' }}</strong>
+                <span class="product-code">{{ item.codigo || 'Sin codigo' }}</span>
+              </div>
             </td>
 
             <td class="text-center">
-              <span class="unit-badge">{{ item.unidadMedida }}</span>
+              <span class="unidad-badge">{{ item.unidadMedida || 'N/A' }}</span>
             </td>
+            <td class="text-right">
+              <span
+                class="cantidad-chip"
+                [class.cantidad-chip-ingreso]="item.tipoOperacionItem === 'INGRESO'"
+                [class.cantidad-chip-salida]="item.tipoOperacionItem === 'SALIDA'"
+              >
+                @if (item.tipoOperacionItem === 'INGRESO') {
+                  <i class="pi pi-arrow-up-right"></i>
+                }
 
-            <td class="text-right quantity text-xl"
-              [ngClass]="{
-                'in': item.tipoOperacionItem === 'INGRESO',
-                'out': item.tipoOperacionItem === 'SALIDA'
-              }">
-              <div class="flex align-items-center justify-content-end gap-1">
-                <i *ngIf="item.tipoOperacionItem === 'INGRESO'" class="pi pi-arrow-up-right text-sm"></i>
-                <i *ngIf="item.tipoOperacionItem === 'SALIDA'" class="pi pi-arrow-down-right text-sm"></i>
+                @if (item.tipoOperacionItem === 'SALIDA') {
+                  <i class="pi pi-arrow-down-right"></i>
+                }
+
                 {{ item.cantidad }}
-              </div>
+              </span>
             </td>
 
           </tr>
@@ -184,23 +179,21 @@
 
         <ng-template pTemplate="emptymessage">
           <tr>
-            <td colspan="4" class="text-center p-6 text-500">
-              <i class="pi pi-inbox text-4xl mb-3 block text-300"></i>
-              No hay detalles de artículos registrados.
+            <td colspan="4" class="p-0">
+              <div class="empty-inline">No hay detalles de articulos registrados en este movimiento.</div>
             </td>
           </tr>
         </ng-template>
 
       </p-table>
     </p-card>
-
-  </ng-container>
-
-  <ng-template #loadingTpl>
-    <div class="flex flex-column align-items-center justify-content-center p-6 min-h-screen">
-      <i class="pi pi-spin pi-spinner text-5xl text-blue-500 mb-4"></i>
-      <p class="text-500 font-medium text-lg">Cargando detalles del movimiento...</p>
-    </div>
-  </ng-template>
-
+  } @else {
+    <p-card styleClass="detalle-main-card mt-3">
+      <div class="empty-state">
+        <i class="pi pi-spin pi-spinner"></i>
+        <p>Cargando detalle del movimiento...</p>
+      </div>
+    </p-card>
+  }
 </div>
+

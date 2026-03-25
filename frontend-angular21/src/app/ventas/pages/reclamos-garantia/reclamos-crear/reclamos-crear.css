@@ -8,11 +8,10 @@
   display: grid;
   place-items: center;
   border-radius: 999px;
-  background: #f5c34d;
+  background: #e8a424 !important;
   color: #1f2937;
   font-size: 18px;
 }
-
 
 .ventas-kicker {
   margin: 0;
@@ -29,6 +28,19 @@
   color: #1f2937;
 }
 
+.cabecera-pagina {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.tarjeta-principal {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
 :host ::ng-deep .ventas-pill {
   border-radius: 8px !important;
   border: none !important;
@@ -40,12 +52,34 @@
   transition: all 0.2s ease !important;
 }
 
+
 :host ::ng-deep .ventas-pill:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12) !important;
+  background-color: #f6af33;
+}
+
+:host ::ng-deep .ventas-pill:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+:host ::ng-deep .ventas-pill-warning {
+  background: #f6af33 !important;
+  color: #1f2937 !important;
 }
 
 .wizard-card ::ng-deep .p-card-body {
+  padding: 0 !important;
+}
+
+.ventas-header-bordered {
+  border-radius: 12px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+  overflow: hidden;
+}
+
+.ventas-header-bordered .p-card-body {
   padding: 0 !important;
 }
 
@@ -989,10 +1023,17 @@
 :host-context(.app-dark) .comprobante-item-card {
   background: #0f0f12 !important;
 }
-
+:host-context(.app-dark) .tarjeta-principal {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
 :host-context(.app-dark) .section-label,
 :host-context(.app-dark) .input-label,
-:host-context(.app-dark) .ventas-title,
+:host-context(.app-dark) .ventas-title {
+  color: #ffffff;
+}
+:host-context(.app-dark) .ventas-kicker {
+  color: #a1a1aa;
+}
 :host-context(.app-dark) .step-header h3,
 :host-context(.app-dark) .cliente-nombre,
 :host-context(.app-dark) .resumen-titulo,
@@ -1487,3 +1528,4 @@
   background: rgba(251, 146, 60, 0.2) !important;
   color: #fb923c !important;
 }
+

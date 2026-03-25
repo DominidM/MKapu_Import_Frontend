@@ -137,10 +137,17 @@ export class PromocionesFormulario implements OnInit {
         this.form.patchValue({
           concepto: promo.concepto,
           tipo:     promo.tipo,
+          valor:    promo.valor,
           activo:   promo.activo,
-        });
-        promo.reglas.forEach(r => this.agregarRegla(r.tipoCondicion, r.valorCondicion));
-        promo.descuentosAplicados.forEach(d => this.agregarDescuento(d.monto, d.idDescuento));
+        }, { emitEvent: false });
+        this.reglas.clear();
+        this.descuentos.clear();
+        promo.reglas.forEach(r =>
+          this.agregarRegla(r.tipoCondicion, r.valorCondicion, r.idRegla)
+        );
+        promo.descuentosAplicados.forEach(d =>
+          this.agregarDescuento(d.monto, d.idDescuento)
+        );
       },
       error: () => {
         this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo cargar la promoción' });
@@ -151,8 +158,13 @@ export class PromocionesFormulario implements OnInit {
 
   // ── Reglas ────────────────────────────────────────────────────────────────
   // Sin Validators.required para no bloquear el form; se valida en guardar()
-  agregarRegla(tipoCondicion = '', valorCondicion: any = ''): void {
+  agregarRegla(
+    tipoCondicion = '',
+    valorCondicion: any = '',
+    idRegla?: number,
+  ): void {
     this.reglas.push(this.fb.group({
+      idRegla: [idRegla ?? null],
       tipoCondicion:  [tipoCondicion],
       valorCondicion: [valorCondicion],
     }));
@@ -221,10 +233,10 @@ export class PromocionesFormulario implements OnInit {
       valor:    Number(v.valor),
       activo:   v.activo,
       reglas: v.reglas
-        .filter((r: any) => r.tipoCondicion) // descartar reglas sin tipo
+        .filter((r: any) => r.tipoCondicion)
         .map((r: any) => ({
-          tipoCondicion:  r.tipoCondicion,
-          // CLIENTE_NUEVO no tiene input pero el backend requiere un valor no vacío
+          ...(r.idRegla ? { idRegla: Number(r.idRegla) } : {}),
+          tipoCondicion: r.tipoCondicion,
           valorCondicion: r.tipoCondicion === 'CLIENTE_NUEVO'
             ? 'true'
             : String(r.valorCondicion ?? ''),
