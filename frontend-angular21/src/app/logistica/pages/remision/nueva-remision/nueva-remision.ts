@@ -20,6 +20,7 @@ import { MessageService } from 'primeng/api';
 import { SunatService, ReniecDniResponse } from '../../../services/sunat.service';
 import { TagModule } from 'primeng/tag';
 import { CreateRemissionDto } from '../../../interfaces/remision.interface';
+import { TooltipModule } from 'primeng/tooltip';
 
 @Component({
   selector: 'app-nueva-remision',
@@ -36,6 +37,7 @@ import { CreateRemissionDto } from '../../../interfaces/remision.interface';
     ToastModule,
     CardModule,
     TagModule,
+    TooltipModule
   ],
   providers: [MessageService],
   templateUrl: './nueva-remision.html',
@@ -86,7 +88,7 @@ export class NuevaRemision implements OnInit {
       id_almacen_origen: [null, Validators.required],
       id_sede_ref: ['', Validators.required],
       tipo_guia: ['0', Validators.required],
-      modalidad: [1, Validators.required],
+      modalidad: [0, Validators.required], // Fijo en 0 (Público)
       fecha_inicio: [new Date(), Validators.required],
       motivo_traslado: ['VENTA', Validators.required],
       unidad_peso: ['KGM', Validators.required],
@@ -94,30 +96,18 @@ export class NuevaRemision implements OnInit {
       datos_traslado: this.fb.group({
         ubigeo_origen: ['150101', Validators.required],
         direccion_origen: ['Almacén Principal', Validators.required],
-        // ✅ Se agregó validación de regex para asegurar exactamente 6 números
         ubigeo_destino: ['', [Validators.required, Validators.pattern(/^\d{6}$/)]],
         direccion_destino: ['', Validators.required],
       }),
 
+      // Exclusivo para Transporte Público
       datos_transporte: this.fb.group({
-        nombre_completo: [''],
-        tipo_documento: ['DNI'],
-        numero_documento: [''], 
-        licencia: [''],
-        placa: [''],
-        ruc: [''],
-        razon_social: [{ value: '', disabled: true }],
+        ruc: ['', [Validators.required, Validators.pattern(/^\d{11}$/)]],
+        razon_social: [{ value: '', disabled: true }, Validators.required],
       }),
 
       items: this.fb.array([]),
     });
-
-    this.remissionForm
-      .get('modalidad')
-      ?.valueChanges.subscribe((val) => this.ajustarValidadoresTransporte(val));
-      
-    // Inicializar validadores para modo por defecto
-    this.ajustarValidadoresTransporte(1);
 
     this.items.valueChanges.subscribe(() => {
       this.items.controls.forEach((control) => {
@@ -256,89 +246,6 @@ export class NuevaRemision implements OnInit {
     this.itemsWeights.set(this.items.getRawValue());
   }
 
-  enviar() {
-    if (this.remissionForm.invalid) {
-      this.remissionForm.markAllAsTouched();
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Formulario Inválido',
-        detail: 'Por favor, revise los campos marcados en rojo.',
-      });
-      return;
-    }
-    
-    this.isLoading.set(true);
-    const formValue = this.remissionForm.getRawValue(); 
-    
-    const cantidadTotal = formValue.items.reduce((acc: number, curr: any) => acc + (Number(curr.cantidad) || 0), 0);
-
-    const payload: CreateRemissionDto = {
-      id_comprobante_ref: Number(formValue.id_comprobante_ref),
-      id_almacen_origen: Number(formValue.id_almacen_origen),
-      id_sede_origen: String(formValue.id_sede_ref),
-      id_usuario: 1,
-      tipo_guia: Number(formValue.tipo_guia),
-      modalidad: Number(formValue.modalidad),
-      fecha_inicio_traslado: formValue.fecha_inicio.toISOString(),
-      motivo_traslado: formValue.motivo_traslado,
-      peso_bruto_total: this.pesoBrutoTotal(),
-      unidad_peso: formValue.unidad_peso,
-      descripcion: formValue.descripcion,
-      observaciones: formValue.descripcion,
-      cantidad: cantidadTotal,
-      razon_social: formValue.modalidad === 0 ? formValue.datos_transporte.razon_social : formValue.datos_transporte.nombre_completo,
-      datos_traslado: formValue.datos_traslado,
-      datos_transporte: formValue.datos_transporte,
-      items: formValue.items 
-    };
-
-    this.remissionService.create(payload).subscribe({
-      next: (res) => {
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Éxito',
-          detail: `Guía ${res.serie_numero || 'generada exitosamente'}`,
-        });
-        setTimeout(() => {
-          this.cerrar();
-        }, 1500);
-      },
-      error: (err) => {
-        this.isLoading.set(false);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: err.error?.message || 'Error al emitir guía',
-        });
-      },
-    });
-  }
-  
-  private ajustarValidadoresTransporte(modalidad: number) {
-    const transport = this.remissionForm.get('datos_transporte') as FormGroup;
-    if (modalidad === 1) { // Privado
-      transport.get('nombre_completo')?.setValidators(Validators.required);
-      // ✅ Regex: Solo acepta de 8 a 11 números
-      transport.get('numero_documento')?.setValidators([Validators.required, Validators.pattern(/^\d{8,11}$/)]);
-      // ✅ Regex: Acepta exactamente formato ABC-123
-      transport.get('placa')?.setValidators([Validators.required, Validators.pattern(/^[A-Z0-9]{3}-[A-Z0-9]{3}$/)]);
-      transport.get('licencia')?.setValidators(Validators.required);
-      transport.get('ruc')?.clearValidators();
-      transport.get('razon_social')?.clearValidators();
-    } else { // Público
-      transport.get('ruc')?.setValidators([Validators.required, Validators.pattern(/^\d{11}$/)]);
-      transport.get('razon_social')?.setValidators(Validators.required);
-      transport.get('nombre_completo')?.clearValidators();
-      transport.get('numero_documento')?.clearValidators();
-      transport.get('placa')?.clearValidators();
-      transport.get('licencia')?.clearValidators();
-    }
-    
-    Object.keys(transport.controls).forEach(key => {
-      transport.get(key)?.updateValueAndValidity({ emitEvent: false });
-    });
-  }
-
   buscarRucTransportista() {
     const rucControl = this.remissionForm.get('datos_transporte.ruc');
     const ruc = rucControl?.value;
@@ -374,30 +281,71 @@ export class NuevaRemision implements OnInit {
     });
   }
 
+  enviar() {
+    if (this.remissionForm.invalid) {
+      this.remissionForm.markAllAsTouched();
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Formulario Inválido',
+        detail: 'Por favor, revise los campos marcados en rojo.',
+      });
+      return;
+    }
+    
+    this.isLoading.set(true);
+    const formValue = this.remissionForm.getRawValue(); 
+    
+    const cantidadTotal = formValue.items.reduce((acc: number, curr: any) => acc + (Number(curr.cantidad) || 0), 0);
+
+    const payload: CreateRemissionDto = {
+      id_comprobante_ref: Number(formValue.id_comprobante_ref),
+      id_almacen_origen: Number(formValue.id_almacen_origen),
+      id_sede_origen: String(formValue.id_sede_ref),
+      id_usuario: 1,
+      tipo_guia: Number(formValue.tipo_guia),
+      modalidad: Number(formValue.modalidad), // Siempre será 0
+      fecha_inicio_traslado: formValue.fecha_inicio.toISOString(),
+      motivo_traslado: formValue.motivo_traslado,
+      peso_bruto_total: this.pesoBrutoTotal(),
+      unidad_peso: formValue.unidad_peso,
+      descripcion: formValue.descripcion,
+      observaciones: formValue.descripcion,
+      cantidad: cantidadTotal,
+      razon_social: formValue.datos_transporte.razon_social,
+      datos_traslado: formValue.datos_traslado,
+      datos_transporte: formValue.datos_transporte,
+      items: formValue.items 
+    };
+
+    this.remissionService.create(payload).subscribe({
+      next: (res) => {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Éxito',
+          detail: `Guía ${res.serie_numero || 'generada exitosamente'}`,
+        });
+        setTimeout(() => {
+          this.cerrar();
+        }, 1500);
+      },
+      error: (err) => {
+        this.isLoading.set(false);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: err.error?.message || 'Error al emitir guía',
+        });
+      },
+    });
+  }
+
   cerrar() {
     this.router.navigate(['/logistica/remision']);
   }
-
 
   allowOnlyNumbers(event: Event, controlPath: string) {
     const input = event.target as HTMLInputElement;
     const cleanValue = input.value.replace(/[^0-9]/g, '');
     this.remissionForm.get(controlPath)?.setValue(cleanValue, { emitEvent: false });
-  }
-
-  formatPlaca(event: Event) {
-    const input = event.target as HTMLInputElement;
-    let cleanValue = input.value.toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 6);
-    
-    if (cleanValue.length > 3) {
-      cleanValue = cleanValue.substring(0, 3) + '-' + cleanValue.substring(3);
-    }
-    
-    this.remissionForm.get('datos_transporte.placa')?.setValue(cleanValue, { emitEvent: false });
-  }
-
-  forceUppercase(event: Event, controlPath: string) {
-    const input = event.target as HTMLInputElement;
-    this.remissionForm.get(controlPath)?.setValue(input.value.toUpperCase(), { emitEvent: false });
   }
 }

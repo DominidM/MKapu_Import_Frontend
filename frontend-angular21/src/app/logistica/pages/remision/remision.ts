@@ -28,8 +28,8 @@ import {
 } from '../../../shared/utils/date-peru.utils';
 
 // Auth
-import { AuthService }  from '../../../auth/services/auth.service';
-import { UserRole }     from '../../../core/constants/roles.constants';
+import { AuthService } from '../../../auth/services/auth.service';
+import { UserRole } from '../../../core/constants/roles.constants';
 import { VentasAdminService } from '../../../administracion/services/ventas.service';
 import { SedeAdmin } from '../../../administracion/interfaces/ventas.interface';
 
@@ -56,11 +56,12 @@ import { SedeAdmin } from '../../../administracion/interfaces/ventas.interface';
   styleUrl: './remision.css',
 })
 export class Remision implements OnInit {
-  private readonly router         = inject(Router);
+  private readonly router = inject(Router);
   private readonly remissionService = inject(RemissionService);
-  private readonly authService    = inject(AuthService);
-  private readonly ventasService  = inject(VentasAdminService);
+  private readonly authService = inject(AuthService);
+  private readonly ventasService = inject(VentasAdminService);
   private readonly messageService = inject(MessageService);
+  private readonly confirmationService = inject(ConfirmationService);
 
   // ── Auth / Sede ───────────────────────────────────────────────────
   readonly esAdmin: boolean;
@@ -71,49 +72,53 @@ export class Remision implements OnInit {
 
   // ── Opciones ──────────────────────────────────────────────────────
   opcionesEstado = [
-    { label: 'Todos',     value: null        },
-    { label: 'Emitido',   value: 'EMITIDO'   },
-    { label: 'Procesado', value: 'PROCESADO' },
-    { label: 'Anulado',   value: 'ANULADO'   },
+    { label: 'Todos',       value: null },
+    { label: 'Emitido',     value: 'EMITIDO' },
+    { label: 'En Camino',   value: 'EN_CAMINO' },
+    { label: 'Entregado',   value: 'ENTREGADO' },
+    { label: 'Anulado',     value: 'ANULADO' },
+    { label: 'Rechazado',   value: 'RECHAZADO' },
   ];
 
   // ── Estado tabla ──────────────────────────────────────────────────
-  remisiones   = signal<RemissionResponse[]>([]);
+  remisiones = signal<RemissionResponse[]>([]);
   totalRecords = signal<number>(0);
-  loading      = signal<boolean>(false);
+  loading = signal<boolean>(false);
 
   paginaActual = signal<number>(1);
   limitePagina = signal<number>(10);
   totalPaginas = computed(() => Math.ceil(this.totalRecords() / this.limitePagina()));
 
   // ── Filtros ───────────────────────────────────────────────────────
-  filtroTexto      = signal<string>('');
-  filtroEstado     = signal<string | null>(null);
+  filtroTexto = signal<string>('');
+  filtroEstado = signal<string | null>(null);
   filtroFechaInicio = signal<Date | null>(getLunesSemanaActualPeru());
-  filtroFechaFin    = signal<Date | null>(getDomingoSemanaActualPeru());
-  filtroSede       = signal<number | null>(null);
+  filtroFechaFin = signal<Date | null>(getDomingoSemanaActualPeru());
+  filtroSede = signal<number | null>(null);
 
   // ── Resumen ───────────────────────────────────────────────────────
   resumen = signal<RemissionSummaryResponse>({
-    totalMes: 0, enTransito: 0, entregadas: 0, observadas: 0,
+    totalMes: 0,
+    enTransito: 0,
+    entregadas: 0,
+    observadas: 0,
   });
 
   // ── Constructor ───────────────────────────────────────────────────
   constructor() {
-    const user        = this.authService.getCurrentUser();
-    this.esAdmin      = this.authService.getRoleId() === UserRole.ADMIN;
-    this.sedeNombre   = user?.sedeNombre ?? 'Mi sede';
+    const user = this.authService.getCurrentUser();
+    this.esAdmin = this.authService.getRoleId() === UserRole.ADMIN;
+    this.sedeNombre = user?.sedeNombre ?? 'Mi sede';
     this.sedePropiaId = user?.idSede ?? null;
   }
 
   // ── Lifecycle ─────────────────────────────────────────────────────
   ngOnInit(): void {
-    // Pre-selecciona la sede del usuario logueado
-    this.filtroSede.set(this.sedePropiaId);
-
     if (this.esAdmin) {
+      this.filtroSede.set(null); 
       this.cargarSedes();
     } else {
+      this.filtroSede.set(this.sedePropiaId);
       this.cargarDatos();
       this.cargarResumen();
     }
@@ -123,10 +128,10 @@ export class Remision implements OnInit {
   private cargarSedes(): void {
     this.ventasService.obtenerSedes().subscribe({
       next: (data: SedeAdmin[]) => {
-        const activas = data.filter(s => s.activo);
+        const activas = data.filter((s) => s.activo);
         this.sedesOpciones = [
           { label: 'Todas las sedes', value: null },
-          ...activas.map(s => ({ label: s.nombre, value: s.id_sede })),
+          ...activas.map((s) => ({ label: s.nombre, value: s.id_sede })),
         ];
         this.cargarDatos();
         this.cargarResumen();
@@ -134,9 +139,9 @@ export class Remision implements OnInit {
       error: () => {
         this.messageService.add({
           severity: 'error',
-          summary:  'Error',
-          detail:   'No se pudieron cargar las sedes',
-          life:     3000,
+          summary: 'Error',
+          detail: 'No se pudieron cargar las sedes',
+          life: 3000,
         });
         this.cargarDatos();
         this.cargarResumen();
@@ -149,10 +154,10 @@ export class Remision implements OnInit {
     this.loading.set(true);
 
     const inicio = this.filtroFechaInicio();
-    const fin    = this.filtroFechaFin();
+    const fin = this.filtroFechaFin();
 
     let startDate: string | undefined;
-    let endDate:   string | undefined;
+    let endDate: string | undefined;
 
     if (inicio) startDate = inicio.toISOString();
     if (fin) {
@@ -165,7 +170,7 @@ export class Remision implements OnInit {
       .getRemisiones(
         this.paginaActual(),
         this.limitePagina(),
-        this.filtroTexto()  || undefined,
+        this.filtroTexto() || undefined,
         this.filtroEstado() ?? undefined,
         startDate,
         endDate,
@@ -185,13 +190,25 @@ export class Remision implements OnInit {
   }
 
   cargarResumen(): void {
-    this.remissionService.getRemissionSummary().subscribe({
-      next:  (data: RemissionSummaryResponse) => this.resumen.set(data),
+    const inicio = this.filtroFechaInicio();
+    const fin = this.filtroFechaFin();
+
+    let startDate: string | undefined;
+    let endDate: string | undefined;
+
+    if (inicio) startDate = inicio.toISOString();
+    if (fin) {
+      const finCopia = new Date(fin);
+      finCopia.setHours(23, 59, 59, 999);
+      endDate = finCopia.toISOString();
+    }
+    this.remissionService.getRemissionSummary(this.filtroSede(), startDate, endDate).subscribe({
+      next: (data: RemissionSummaryResponse) => this.resumen.set(data),
       error: (err) => console.error('Error cargando el resumen', err),
     });
   }
 
-  // ── Paginación ────────────────────────────────────────────────────
+  // ── Paginación y Filtros ──────────────────────────────────────────
   onPageChange(page: number): void {
     this.paginaActual.set(page);
     this.cargarDatos();
@@ -203,31 +220,67 @@ export class Remision implements OnInit {
     this.cargarDatos();
   }
 
-  // ── Filtros ───────────────────────────────────────────────────────
   aplicarFiltros(): void {
     if (!this.esAdmin) {
       this.filtroSede.set(this.sedePropiaId);
     }
     this.paginaActual.set(1);
     this.cargarDatos();
+    this.cargarResumen();
   }
 
   limpiarFiltros(): void {
     this.filtroTexto.set('');
     this.filtroEstado.set(null);
-    this.filtroFechaInicio.set(null);
-    this.filtroFechaFin.set(null);
+    this.filtroFechaInicio.set(getLunesSemanaActualPeru());
+    this.filtroFechaFin.set(getDomingoSemanaActualPeru());
+    if (this.esAdmin) {
+      this.filtroSede.set(null);
+    } else {
+      this.filtroSede.set(this.sedePropiaId);
+    }
     this.filtroSede.set(null);
     this.paginaActual.set(1);
     this.cargarDatos();
+    this.cargarResumen();
   }
 
-  // ── Navegación ────────────────────────────────────────────────────
+  // ── Navegación y Acciones ─────────────────────────────────────────
   abrirFormulario(): void {
     this.router.navigate(['/logistica/remision/nueva']);
   }
 
   verDetalles(idGuia: string): void {
     this.router.navigate(['/logistica/remision/detalle', idGuia]);
+  }
+
+  actualizarEstado(remision: RemissionResponse, nuevoEstado: string): void {
+    let accionTexto = '';
+    if (nuevoEstado === 'EN_CAMINO') accionTexto = 'iniciar el traslado';
+    if (nuevoEstado === 'ENTREGADO') accionTexto = 'confirmar la entrega';
+    if (nuevoEstado === 'RECHAZADO') accionTexto = 'rechazar';
+
+    this.confirmationService.confirm({
+      message: `¿Estás seguro de ${accionTexto} de la guía #${remision.id_comprobante_ref || 'S/N'}?`,
+      header: 'Confirmar Actualización',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Sí, continuar',
+      rejectLabel: 'Cancelar',
+      accept: () => {
+        this.loading.set(true);
+        this.remissionService.cambiarEstado(remision.id_guia, nuevoEstado).subscribe({
+          next: () => {
+            this.messageService.add({ severity: 'success', summary: 'Éxito', detail: `Estado actualizado a ${nuevoEstado}` });
+            this.cargarDatos();
+            this.cargarResumen();
+          },
+          error: (err) => {
+            console.error('Error actualizando estado:', err);
+            this.loading.set(false);
+            this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo actualizar el estado de la guía' });
+          }
+        });
+      }
+    });
   }
 }
