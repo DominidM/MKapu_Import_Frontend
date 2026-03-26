@@ -195,19 +195,19 @@ export class ClienteSeguimiento implements OnInit, OnDestroy {
     this.loadTracking();
   }
 
-  exportarPDF(): void {
-    this.exportando.set(true);
+  // exportarPDF(): void {
+  //   this.exportando.set(true);
 
-    setTimeout(() => {
-      this.exportando.set(false);
-      this.messageService.add({
-        severity: 'info',
-        summary: 'PDF pendiente',
-        detail: `La exportacion del reporte de ${this.nombreCompleto()} aun no esta conectada.`,
-        life: 3000,
-      });
-    }, 700);
-  }
+  //   setTimeout(() => {
+  //     this.exportando.set(false);
+  //     this.messageService.add({
+  //       severity: 'info',
+  //       summary: 'PDF pendiente',
+  //       detail: `La exportacion del reporte de ${this.nombreCompleto()} aun no esta conectada.`,
+  //       life: 3000,
+  //     });
+  //   }, 700);
+  // }
 
   getCompraSeverity(estado: string): 'success' | 'warn' | 'danger' | 'info' | 'secondary' {
     switch ((estado ?? '').toUpperCase()) {
