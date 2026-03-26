@@ -88,6 +88,31 @@
             </ng-template>
           </p-autocomplete>
         </div>
+
+        <div class="filtro-item filtro-grupo-fechas">
+          <label>Rango de Fechas</label>
+          <div class="fechas-con-guion">
+            <p-datepicker
+              [(ngModel)]="fechaInicio"
+              dateFormat="dd/mm/yy"
+              placeholder="Fecha inicio"
+              [showClear]="true"
+              [showIcon]="true"
+              (onSelect)="onDateRangeSelect()"
+              (onClear)="onDateRangeClear()">
+            </p-datepicker>
+            <span class="fecha-separador">-</span>
+            <p-datepicker
+              [(ngModel)]="fechaFin"
+              dateFormat="dd/mm/yy"
+              placeholder="Fecha fin"
+              [showClear]="true"
+              [showIcon]="true"
+              (onSelect)="onDateRangeSelect()"
+              (onClear)="onDateRangeClear()">
+            </p-datepicker>
+          </div>
+        </div>
       </div>
 
       <!-- Línea 2: selectores + limpiar -->

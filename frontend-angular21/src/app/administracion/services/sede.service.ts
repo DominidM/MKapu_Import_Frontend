@@ -2,7 +2,7 @@ import { Injectable, computed, signal } from '@angular/core';
 import { environment } from '../../../enviroments/enviroment';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { finalize, tap, catchError } from 'rxjs/operators';
-import { Observable, throwError } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
 import {
   Headquarter,
   HeadquarterResponse,
@@ -34,7 +34,16 @@ export class SedeService {
     return new HttpHeaders({ 'x-role': role ?? '' });
    }
 
-  loadSedes(role: string = 'Administrador'): Observable<HeadquarterResponse> {
+  loadSedes(
+    role: string = 'Administrador',
+    options?: { force?: boolean },
+  ): Observable<HeadquarterResponse> {
+    const force = options?.force ?? false;
+    const cachedResponse = this._sedesResponse();
+    if (cachedResponse && !force) {
+      return of(cachedResponse);
+    }
+
     this._loading.set(true);
     this._error.set(null);
     return this.http
@@ -52,7 +61,7 @@ export class SedeService {
       );
   }
 
-  // ── NUEVO: carga almacenes de una sede y enriquece el objeto ─────────────────
+  // â”€â”€ NUEVO: carga almacenes de una sede y enriquece el objeto â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   loadAlmacenesParaSede(
     id_sede: number,
     role: string = 'Administrador'
@@ -65,7 +74,7 @@ export class SedeService {
       )
       .pipe(
         tap((rel) => {
-          // Enriquece la sede en caché con sus almacenes
+          // Enriquece la sede en cachÃ© con sus almacenes
           const prev = this._sedesResponse();
           if (!prev) return;
           const almacenes = rel.almacenes.map((a) => a.almacen);
