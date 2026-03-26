@@ -60,15 +60,14 @@
 
       <div class="filtros-linea-1">
         <div class="filtro-item filtro-cliente-50">
-          <label>BUSCAR (SERIE / NÚMERO / MOTIVO)</label>
+          <label>BUSCAR NÚMERO DE GUÍA</label>
           <input
             type="text"
             pInputText
-            placeholder="Ej: T001, 000123, VENTA..."
+            placeholder="Ej: T001, 123, T001-00000123"
             class="w-full font-bold"
             [ngModel]="filtroTexto()"
-            (ngModelChange)="filtroTexto.set($event)"
-            (keyup.enter)="aplicarFiltros()"
+            (ngModelChange)="onSearchChange($event)"
           />
         </div>
 
@@ -127,7 +126,7 @@
             [showClear]="true"
             styleClass="w-full"
             [ngModel]="filtroEstado()"
-            (ngModelChange)="filtroEstado.set($event); aplicarFiltros()"
+            (onChange)="onEstadoChange($event.value)"
           ></p-select>
         </div>
 
@@ -163,39 +162,49 @@
         >
           <ng-template pTemplate="header">
             <tr>
-              <th style="width: 14%">Guía</th>
-              <th style="width: 12%">Ref. Venta</th>
-              <th style="width: 14%">Tipo de Guía</th>
-              <th style="width: 12%">Fecha Traslado</th>
-              <th style="width: 18%">Motivo</th>
-              <th style="width: 12%">Peso Total</th>
-              <th style="width: 10%">N° Prod.</th>
-              <th style="width: 8%">Acciones</th>
+              <th style="width: 12%">Guía</th>
+              <th style="width: 10%">Ref. Venta</th>
+              <th style="width: 12%">Tipo de Guía</th>
+              <th style="width: 11%">Fecha Traslado</th>
+              <th style="width: 15%">Motivo</th>
+              <th style="width: 12%">Estado</th>
+              <th style="width: 10%">Peso Total</th>
+              <th style="width: 9%">N° Prod.</th>
+              <th style="width: 9%">Acciones</th>
             </tr>
           </ng-template>
 
           <ng-template pTemplate="body" let-remision>
             <tr>
-              <td class="font-bold text-primary">
-                {{ remision.serie }}-{{ remision.numero }}
-              </td>
-              
-              <td class="font-semibold text-600">
-                #{{ remision.id_comprobante_ref || 'N/A' }}
-              </td>
-              
+              <td class="font-bold text-primary">{{ remision.serie }}-{{ remision.numero }}</td>
+
+              <td class="font-semibold text-600">#{{ remision.id_comprobante_ref || 'N/A' }}</td>
+
               <td>
                 <p-tag
                   [severity]="remision.tipo_guia === 0 ? 'success' : 'warn'"
                   [value]="remision.tipo_guia === 0 ? 'REMITENTE' : 'TRANSPORTISTA'"
-                  styleClass="font-bold"
+                  styleClass="font-bold text-xs"
                 ></p-tag>
               </td>
               <td>{{ remision.fecha_inicio | date: 'dd/MM/yyyy' }}</td>
               <td>{{ remision.motivo_traslado }}</td>
+
+              <td>
+                <p-tag
+                  [severity]="getSeverity(remision.estado)"
+                  [value]="remision.estado === 0 ? 'EMITIDO' : remision.estado"
+                  styleClass="font-bold text-xs uppercase"
+                >
+                </p-tag>
+              </td>
+
               <td>{{ remision.peso_total }} {{ remision.unidad_peso }}</td>
               <td>
-                <p-tag [value]="remision.cantidad + ' ítems'" styleClass="font-bold"></p-tag>
+                <p-tag
+                  [value]="remision.cantidad + ' ítems'"
+                  styleClass="font-bold text-xs"
+                ></p-tag>
               </td>
               <td>
                 <div class="flex align-items-center gap-2">
@@ -244,7 +253,7 @@
 
           <ng-template pTemplate="emptymessage">
             <tr>
-              <td colspan="8" class="text-center py-6">
+              <td colspan="9" class="text-center py-6">
                 <i class="pi pi-inbox text-4xl text-400 mb-3 block"></i>
                 <p class="text-900 font-medium mb-0">No se encontraron guías de remisión</p>
                 <p class="text-600 mt-2">Ajusta los filtros arriba</p>
