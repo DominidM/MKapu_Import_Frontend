@@ -45,122 +45,453 @@
 <div class="p-2 surface-card border-1 border-300 border-round-xl shadow-2">
   <form [formGroup]="productoForm" (ngSubmit)="guardarProducto()" class="formgrid grid p-4">
 
+    <!-- ══════════════════════════════════════════
+         SECCIÓN 1 — Información Básica
+    ══════════════════════════════════════════ -->
     <div class="col-12 mb-3">
       <h3 class="text-xl font-bold text-900 m-0 flex align-items-center gap-2">
         <i class="pi pi-info-circle text-warning"></i>
         Información Básica
       </h3>
+      <p class="text-500 mt-1 text-sm mb-0">Identifica el producto con un código único y nombre descriptivo.</p>
     </div>
 
+    <!-- Código -->
     <div class="field col-12 md:col-6 mb-4">
-      <label for="codigo" class="font-semibold text-900 mb-2 block">Código *</label>
-      <input pInputText id="codigo" formControlName="codigo" class="w-full border-1 border-300 uppercase"
-        placeholder="Ej: RAF-TV55, RAF-LG32" />
-      @if (productoForm.get('codigo')?.invalid && productoForm.get('codigo')?.touched) {
-        <small class="text-red-500 block mt-2">El código es requerido</small>
-      }
+      <label for="codigo" class="font-semibold text-900 mb-2 block">
+        Código <span class="text-red-500">*</span>
+      </label>
+      <input
+        pInputText
+        id="codigo"
+        formControlName="codigo"
+        class="w-full border-1 uppercase"
+        [class.border-red-400]="campoInvalido('codigo')"
+        [class.border-green-400]="campoValido('codigo')"
+        [class.border-300]="!campoInvalido('codigo') && !campoValido('codigo')"
+        placeholder="Ej: RAF-TV55, RAF-LG32"
+        maxlength="50"
+      />
+      <div class="flex align-items-center justify-content-between mt-1">
+        <div>
+          @if (campoInvalido('codigo')) {
+            @if (productoForm.get('codigo')?.errors?.['required']) {
+              <small class="text-red-500 flex align-items-center gap-1">
+                <i class="pi pi-times-circle text-xs"></i> El código es obligatorio.
+              </small>
+            } @else if (productoForm.get('codigo')?.errors?.['minlength']) {
+              <small class="text-red-500 flex align-items-center gap-1">
+                <i class="pi pi-times-circle text-xs"></i> Mínimo 2 caracteres.
+              </small>
+            } @else if (productoForm.get('codigo')?.errors?.['pattern']) {
+              <small class="text-red-500 flex align-items-center gap-1">
+                <i class="pi pi-times-circle text-xs"></i> Solo letras, números y guiones.
+              </small>
+            }
+          } @else if (campoValido('codigo')) {
+            <small class="text-green-500 flex align-items-center gap-1">
+              <i class="pi pi-check-circle text-xs"></i> Código válido.
+            </small>
+          } @else {
+            <small class="text-400">Ej: RAF-TV55 · Máx. 50 caracteres.</small>
+          }
+        </div>
+        <small class="text-400">{{ productoForm.get('codigo')?.value?.length || 0 }}/50</small>
+      </div>
     </div>
 
+    <!-- Nombre / Anexo -->
     <div class="field col-12 md:col-6 mb-4">
-      <label for="anexo" class="font-semibold text-900 mb-2 block">Nombre *</label>
-      <input pInputText id="anexo" formControlName="anexo" class="w-full border-1 border-300 uppercase"
-        placeholder="Ej: Smart TV LED 55 pulgadas 4K RAF..." />
-      @if (productoForm.get('anexo')?.invalid && productoForm.get('anexo')?.touched) {
-        <small class="text-red-500 block mt-2">El nombre es requerido</small>
-      }
+      <label for="anexo" class="font-semibold text-900 mb-2 block">
+        Nombre del Producto <span class="text-red-500">*</span>
+      </label>
+      <input
+        pInputText
+        id="anexo"
+        formControlName="anexo"
+        class="w-full border-1 uppercase"
+        [class.border-red-400]="campoInvalido('anexo')"
+        [class.border-green-400]="campoValido('anexo')"
+        [class.border-300]="!campoInvalido('anexo') && !campoValido('anexo')"
+        placeholder="Ej: Smart TV LED 55 pulgadas 4K"
+        maxlength="150"
+      />
+      <div class="flex align-items-center justify-content-between mt-1">
+        <div>
+          @if (campoInvalido('anexo')) {
+            @if (productoForm.get('anexo')?.errors?.['required']) {
+              <small class="text-red-500 flex align-items-center gap-1">
+                <i class="pi pi-times-circle text-xs"></i> El nombre es obligatorio.
+              </small>
+            } @else if (productoForm.get('anexo')?.errors?.['minlength']) {
+              <small class="text-red-500 flex align-items-center gap-1">
+                <i class="pi pi-times-circle text-xs"></i> Mínimo 3 caracteres.
+              </small>
+            }
+          } @else if (campoValido('anexo')) {
+            <small class="text-green-500 flex align-items-center gap-1">
+              <i class="pi pi-check-circle text-xs"></i> Nombre válido.
+            </small>
+          } @else {
+            <small class="text-400">Nombre comercial completo del producto.</small>
+          }
+        </div>
+        <small class="text-400">{{ productoForm.get('anexo')?.value?.length || 0 }}/150</small>
+      </div>
     </div>
 
+    <!-- Descripción -->
     <div class="field col-12 mb-4">
-      <label for="descripcion" class="font-semibold text-900 mb-2 block">Descripción</label>
-      <textarea id="descripcion" formControlName="descripcion" rows="3"
-        class="w-full border-1 border-300 p-3 border-round uppercase" style="resize: vertical; font-family: inherit"
-        placeholder="Descripción detallada del producto (opcional)"></textarea>
+      <label for="descripcion" class="font-semibold text-900 mb-2 block">
+        Descripción <span class="text-red-500">*</span>
+      </label>
+      <textarea
+        id="descripcion"
+        formControlName="descripcion"
+        rows="3"
+        class="w-full border-1 p-3 border-round uppercase"
+        [class.border-red-400]="campoInvalido('descripcion')"
+        [class.border-green-400]="campoValido('descripcion')"
+        [class.border-300]="!campoInvalido('descripcion') && !campoValido('descripcion')"
+        style="resize: vertical; font-family: inherit"
+        placeholder="Descripción detallada: marca, modelo, características técnicas, color, material..."
+        maxlength="500"
+      ></textarea>
+      <div class="flex align-items-center justify-content-between mt-1">
+        <div>
+          @if (campoInvalido('descripcion')) {
+            @if (productoForm.get('descripcion')?.errors?.['required']) {
+              <small class="text-red-500 flex align-items-center gap-1">
+                <i class="pi pi-times-circle text-xs"></i> La descripción es obligatoria.
+              </small>
+            } @else if (productoForm.get('descripcion')?.errors?.['minlength']) {
+              <small class="text-red-500 flex align-items-center gap-1">
+                <i class="pi pi-times-circle text-xs"></i> Mínimo 10 caracteres para una descripción útil.
+              </small>
+            }
+          } @else if (campoValido('descripcion')) {
+            <small class="text-green-500 flex align-items-center gap-1">
+              <i class="pi pi-check-circle text-xs"></i> Descripción registrada.
+            </small>
+          } @else {
+            <small class="text-400">Incluye marca, modelo y características clave.</small>
+          }
+        </div>
+        <small class="text-400">{{ productoForm.get('descripcion')?.value?.length || 0 }}/500</small>
+      </div>
     </div>
 
     <div class="col-12 mb-3"><div class="border-top-1 border-300"></div></div>
 
+    <!-- ══════════════════════════════════════════
+         SECCIÓN 2 — Categoría
+    ══════════════════════════════════════════ -->
     <div class="col-12 mb-3">
       <h3 class="text-xl font-bold text-900 m-0 flex align-items-center gap-2">
         <i class="pi pi-tag text-warning"></i>
         Categoría
       </h3>
+      <p class="text-500 mt-1 text-sm mb-0">Clasifica el producto para facilitar búsquedas y reportes.</p>
     </div>
 
+    <!-- Familia -->
     <div class="field col-12 md:col-6 mb-4">
-      <label for="familia" class="font-semibold text-900 mb-2 block">Familia *</label>
-      <p-select id="familia" formControlName="familia" [options]="categorias()" optionLabel="nombre"
-        optionValue="id_categoria" placeholder="Seleccionar familia" styleClass="w-full border-1 border-300" />
-      @if (productoForm.get('familia')?.invalid && productoForm.get('familia')?.touched) {
-        <small class="text-red-500 block mt-2">La familia es requerida</small>
+      <label for="familia" class="font-semibold text-900 mb-2 block">
+        Familia / Categoría <span class="text-red-500">*</span>
+      </label>
+      <p-select
+        id="familia"
+        formControlName="familia"
+        [options]="categorias()"
+        optionLabel="nombre"
+        optionValue="id_categoria"
+        placeholder="— Seleccionar categoría —"
+        styleClass="w-full border-1"
+        [class.border-red-400]="campoInvalido('familia')"
+        [class.border-green-400]="campoValido('familia')"
+        [class.border-300]="!campoInvalido('familia') && !campoValido('familia')"
+        [filter]="true"
+        filterPlaceholder="Buscar categoría..."
+        emptyMessage="No hay categorías disponibles"
+      />
+      @if (campoInvalido('familia')) {
+        <small class="text-red-500 flex align-items-center gap-1 mt-1">
+          <i class="pi pi-times-circle text-xs"></i> Debes seleccionar una categoría.
+        </small>
+      } @else if (campoValido('familia')) {
+        <small class="text-green-500 flex align-items-center gap-1 mt-1">
+          <i class="pi pi-check-circle text-xs"></i> Categoría seleccionada.
+        </small>
+      } @else {
+        <small class="text-400 mt-1 block">Puedes escribir para filtrar la lista.</small>
       }
     </div>
 
+    <!-- Unidad de Medida -->
     <div class="field col-12 md:col-6 mb-4">
-      <label for="unidadMedida" class="font-semibold text-900 mb-2 block">Unidad de Medida *</label>
-      <input pInputText formControlName="unidadMedida" class="w-full border-1 border-300 uppercase"
-        placeholder="Ej: UND" />
-      @if (productoForm.get('unidadMedida')?.invalid && productoForm.get('unidadMedida')?.touched) {
-        <small class="text-red-500 block mt-2">La unidad de medida es requerida</small>
+      <label for="unidadMedida" class="font-semibold text-900 mb-2 block">
+        Unidad de Medida <span class="text-red-500">*</span>
+      </label>
+      <p-select
+        id="unidadMedida"
+        formControlName="unidadMedida"
+        [options]="unidadesMedida"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="— Seleccionar unidad —"
+        styleClass="w-full border-1"
+        [class.border-red-400]="campoInvalido('unidadMedida')"
+        [class.border-green-400]="campoValido('unidadMedida')"
+        [class.border-300]="!campoInvalido('unidadMedida') && !campoValido('unidadMedida')"
+      />
+      @if (campoInvalido('unidadMedida')) {
+        <small class="text-red-500 flex align-items-center gap-1 mt-1">
+          <i class="pi pi-times-circle text-xs"></i> Selecciona la unidad de medida.
+        </small>
+      } @else if (campoValido('unidadMedida')) {
+        <small class="text-green-500 flex align-items-center gap-1 mt-1">
+          <i class="pi pi-check-circle text-xs"></i> Unidad: {{ productoForm.get('unidadMedida')?.value }}.
+        </small>
+      } @else {
+        <small class="text-400 mt-1 block">Ej: UNIDAD, CAJA, PAR, KG, LITRO.</small>
       }
     </div>
 
     <div class="col-12 mb-3"><div class="border-top-1 border-300"></div></div>
 
+    <!-- ══════════════════════════════════════════
+         SECCIÓN 3 — Precios
+    ══════════════════════════════════════════ -->
     <div class="col-12 mb-3">
       <h3 class="text-xl font-bold text-900 m-0 flex align-items-center gap-2">
         <i class="pi pi-dollar text-warning"></i>
         Precios
       </h3>
+      <p class="text-500 mt-1 text-sm mb-0">
+        Todos los precios deben ser mayores a 0. El precio de venta no debe ser menor al de compra.
+      </p>
+    </div>
+
+    <!-- Alerta precio venta < precio compra -->
+    @if (alertaPrecioVenta()) {
+      <div class="col-12 mb-3">
+        <div class="flex align-items-center gap-2 p-3 bg-orange-50 border-1 border-orange-300 border-round-lg">
+          <i class="pi pi-exclamation-triangle text-orange-500"></i>
+          <span class="text-orange-700 text-sm font-medium">
+            El precio de venta (S/ {{ productoForm.get('precioVenta')?.value | number:'1.2-2' }})
+            es menor al precio de compra (S/ {{ productoForm.get('precioCompra')?.value | number:'1.2-2' }}).
+            Revisa los valores antes de guardar.
+          </span>
+        </div>
+      </div>
+    }
+
+    <div class="field col-12 md:col-6 lg:col-4 mb-4">
+      <label class="font-semibold text-900 mb-2 block">
+        Precio Compra (S/) <span class="text-red-500">*</span>
+      </label>
+      <p-inputNumber
+        formControlName="precioCompra"
+        mode="currency" currency="PEN" locale="es-PE"
+        styleClass="w-full"
+        [class.ng-invalid-border]="campoInvalido('precioCompra')"
+        [min]="0" [maxFractionDigits]="2"
+        placeholder="S/ 0.00"
+      />
+      @if (campoInvalido('precioCompra')) {
+        <small class="text-red-500 flex align-items-center gap-1 mt-1">
+          <i class="pi pi-times-circle text-xs"></i>
+          @if (productoForm.get('precioCompra')?.errors?.['required']) { Ingresa el precio de compra. }
+          @else if (productoForm.get('precioCompra')?.errors?.['min']) { Debe ser mayor a S/ 0.00. }
+        </small>
+      } @else if (campoValido('precioCompra')) {
+        <small class="text-green-500 flex align-items-center gap-1 mt-1">
+          <i class="pi pi-check-circle text-xs"></i> OK
+        </small>
+      }
     </div>
 
     <div class="field col-12 md:col-6 lg:col-4 mb-4">
-      <label class="font-semibold text-900 mb-2 block">Precio Compra (S/) *</label>
-      <p-inputNumber formControlName="precioCompra" mode="currency" currency="PEN" locale="es-PE"
-        styleClass="w-full" [min]="0" placeholder="S/ 0.00" />
+      <label class="font-semibold text-900 mb-2 block">
+        Precio Venta (S/) <span class="text-red-500">*</span>
+      </label>
+      <p-inputNumber
+        formControlName="precioVenta"
+        mode="currency" currency="PEN" locale="es-PE"
+        styleClass="w-full"
+        [min]="0" [maxFractionDigits]="2"
+        placeholder="S/ 0.00"
+      />
+      @if (campoInvalido('precioVenta')) {
+        <small class="text-red-500 flex align-items-center gap-1 mt-1">
+          <i class="pi pi-times-circle text-xs"></i>
+          @if (productoForm.get('precioVenta')?.errors?.['required']) { Ingresa el precio de venta. }
+          @else if (productoForm.get('precioVenta')?.errors?.['min']) { Debe ser mayor a S/ 0.00. }
+        </small>
+      } @else if (campoValido('precioVenta')) {
+        <small class="text-green-500 flex align-items-center gap-1 mt-1">
+          <i class="pi pi-check-circle text-xs"></i> OK
+        </small>
+      }
     </div>
 
     <div class="field col-12 md:col-6 lg:col-4 mb-4">
-      <label class="font-semibold text-900 mb-2 block">Precio Venta (S/) *</label>
-      <p-inputNumber formControlName="precioVenta" mode="currency" currency="PEN" locale="es-PE"
-        styleClass="w-full" [min]="0" placeholder="S/ 0.00" />
-    </div>
-
-    <div class="field col-12 md:col-6 lg:col-4 mb-4">
-      <label class="font-semibold text-900 mb-2 block">Precio Unidad (S/) *</label>
-      <p-inputNumber formControlName="precioUnidad" mode="currency" currency="PEN" locale="es-PE"
-        styleClass="w-full" [min]="0" placeholder="S/ 0.00" />
+      <label class="font-semibold text-900 mb-2 block">
+        Precio Unidad (S/) <span class="text-red-500">*</span>
+      </label>
+      <p-inputNumber
+        formControlName="precioUnidad"
+        mode="currency" currency="PEN" locale="es-PE"
+        styleClass="w-full"
+        [min]="0" [maxFractionDigits]="2"
+        placeholder="S/ 0.00"
+      />
+      @if (campoInvalido('precioUnidad')) {
+        <small class="text-red-500 flex align-items-center gap-1 mt-1">
+          <i class="pi pi-times-circle text-xs"></i>
+          @if (productoForm.get('precioUnidad')?.errors?.['required']) { Ingresa el precio por unidad. }
+          @else if (productoForm.get('precioUnidad')?.errors?.['min']) { Debe ser mayor a S/ 0.00. }
+        </small>
+      } @else if (campoValido('precioUnidad')) {
+        <small class="text-green-500 flex align-items-center gap-1 mt-1">
+          <i class="pi pi-check-circle text-xs"></i> OK
+        </small>
+      }
     </div>
 
     <div class="field col-12 md:col-6 mb-4">
-      <label class="font-semibold text-900 mb-2 block">Precio Caja (S/) *</label>
-      <p-inputNumber formControlName="precioCaja" mode="currency" currency="PEN" locale="es-PE"
-        styleClass="w-full" [min]="0" placeholder="S/ 0.00" />
+      <label class="font-semibold text-900 mb-2 block">
+        Precio Caja (S/) <span class="text-red-500">*</span>
+      </label>
+      <p-inputNumber
+        formControlName="precioCaja"
+        mode="currency" currency="PEN" locale="es-PE"
+        styleClass="w-full"
+        [min]="0" [maxFractionDigits]="2"
+        placeholder="S/ 0.00"
+      />
+      @if (campoInvalido('precioCaja')) {
+        <small class="text-red-500 flex align-items-center gap-1 mt-1">
+          <i class="pi pi-times-circle text-xs"></i>
+          @if (productoForm.get('precioCaja')?.errors?.['required']) { Ingresa el precio por caja. }
+          @else if (productoForm.get('precioCaja')?.errors?.['min']) { Debe ser mayor a S/ 0.00. }
+        </small>
+      } @else if (campoValido('precioCaja')) {
+        <small class="text-green-500 flex align-items-center gap-1 mt-1">
+          <i class="pi pi-check-circle text-xs"></i> OK
+        </small>
+      }
     </div>
 
     <div class="field col-12 md:col-6 mb-4">
-      <label class="font-semibold text-900 mb-2 block">Precio Mayorista (S/) *</label>
-      <p-inputNumber formControlName="precioMayorista" mode="currency" currency="PEN" locale="es-PE"
-        styleClass="w-full" [min]="0" placeholder="S/ 0.00" />
+      <label class="font-semibold text-900 mb-2 block">
+        Precio Mayorista (S/) <span class="text-red-500">*</span>
+      </label>
+      <p-inputNumber
+        formControlName="precioMayorista"
+        mode="currency" currency="PEN" locale="es-PE"
+        styleClass="w-full"
+        [min]="0" [maxFractionDigits]="2"
+        placeholder="S/ 0.00"
+      />
+      @if (campoInvalido('precioMayorista')) {
+        <small class="text-red-500 flex align-items-center gap-1 mt-1">
+          <i class="pi pi-times-circle text-xs"></i>
+          @if (productoForm.get('precioMayorista')?.errors?.['required']) { Ingresa el precio mayorista. }
+          @else if (productoForm.get('precioMayorista')?.errors?.['min']) { Debe ser mayor a S/ 0.00. }
+        </small>
+      } @else if (campoValido('precioMayorista')) {
+        <small class="text-green-500 flex align-items-center gap-1 mt-1">
+          <i class="pi pi-check-circle text-xs"></i> OK
+        </small>
+      }
     </div>
 
     <div class="col-12 mb-3"><div class="border-top-1 border-300"></div></div>
 
+    <!-- ══════════════════════════════════════════
+         SECCIÓN 4 — Almacén
+    ══════════════════════════════════════════ -->
     <div class="col-12 mb-3">
       <h3 class="text-xl font-bold text-900 m-0 flex align-items-center gap-2">
-        <i class="pi pi-tag text-warning"></i>
+        <i class="pi pi-building text-warning"></i>
         Almacén
       </h3>
+      <p class="text-500 mt-1 text-sm mb-0">
+        Primero selecciona la sede y luego el almacén correspondiente.
+      </p>
     </div>
 
-    <div class="field col-12 mb-4">
-      <label for="almacen" class="font-semibold text-900 mb-2 block">Almacén *</label>
-      <p-select id="almacen" formControlName="almacen" [options]="almacenesFiltrados()" optionLabel="nombre"
-        optionValue="id" placeholder="Seleccionar almacén" styleClass="w-full border-1 border-300" />
-      @if (productoForm.get('almacen')?.invalid && productoForm.get('almacen')?.touched) {
-        <small class="text-red-500 block mt-2">El almacén es requerido</small>
+    <!-- Sede -->
+    <div class="field col-12 md:col-6 mb-4">
+      <label class="font-semibold text-900 mb-2 block">
+        Sede <span class="text-red-500">*</span>
+      </label>
+      <p-select
+        formControlName="sede"
+        [options]="sedes()"
+        optionLabel="nombre"
+        optionValue="id_sede"
+        placeholder="— Seleccionar sede —"
+        styleClass="w-full border-1"
+        [class.border-red-400]="campoInvalido('sede')"
+        [class.border-green-400]="campoValido('sede')"
+        [class.border-300]="!campoInvalido('sede') && !campoValido('sede')"
+        emptyMessage="No hay sedes disponibles"
+      />
+      @if (campoInvalido('sede')) {
+        <small class="text-red-500 flex align-items-center gap-1 mt-1">
+          <i class="pi pi-times-circle text-xs"></i> Selecciona una sede.
+        </small>
+      } @else if (campoValido('sede')) {
+        <small class="text-green-500 flex align-items-center gap-1 mt-1">
+          <i class="pi pi-check-circle text-xs"></i> Sede seleccionada.
+        </small>
+      } @else {
+        <small class="text-400 mt-1 block">Al cambiar de sede se actualizará el listado de almacenes.</small>
       }
     </div>
 
+    <!-- Almacén -->
+    <div class="field col-12 md:col-6 mb-4">
+      <label for="almacen" class="font-semibold text-900 mb-2 block">
+        Almacén <span class="text-red-500">*</span>
+      </label>
+      <p-select
+        id="almacen"
+        formControlName="almacen"
+        [options]="almacenesFiltrados()"
+        optionLabel="nombre"
+        optionValue="id_almacen"
+        placeholder="— Seleccionar almacén —"
+        styleClass="w-full border-1"
+        [class.border-red-400]="campoInvalido('almacen')"
+        [class.border-green-400]="campoValido('almacen')"
+        [class.border-300]="!campoInvalido('almacen') && !campoValido('almacen')"
+        emptyMessage="Primero selecciona una sede"
+      />
+      @if (campoInvalido('almacen') && !productoForm.get('almacen')?.disabled) {
+        <small class="text-red-500 flex align-items-center gap-1 mt-1">
+          <i class="pi pi-times-circle text-xs"></i> Selecciona un almacén.
+        </small>
+      } @else if (campoValido('almacen') || productoForm.get('almacen')?.disabled) {
+        <small class="text-green-500 flex align-items-center gap-1 mt-1">
+          <i class="pi pi-check-circle text-xs"></i> Almacén asignado.
+        </small>
+      } @else if (!productoForm.get('sede')?.value) {
+        <small class="text-orange-500 flex align-items-center gap-1 mt-1">
+          <i class="pi pi-exclamation-triangle text-xs"></i> Selecciona primero la sede.
+        </small>
+      } @else {
+        <small class="text-400 mt-1 block">Almacén donde se guardará el producto.</small>
+      }
+    </div>
+
+    <div class="col-12 mb-3"><div class="border-top-1 border-300"></div></div>
+
+    <!-- ══════════════════════════════════════════
+         SECCIÓN 5 — Stock
+    ══════════════════════════════════════════ -->
     <div class="col-12 mb-3">
       <h3 class="text-xl font-bold text-900 m-0 flex align-items-center gap-2">
         <i class="pi pi-warehouse text-warning"></i>
@@ -168,44 +499,97 @@
       </h3>
       <p class="text-500 mt-2 text-sm">
         {{ esModoEdicion()
-          ? 'Añade unidades al stock actual (deja en 0 si no deseas agregar).'
-          : 'El producto ingresará con esta cantidad a la sede indicada.' }}
+          ? 'Añade unidades al stock actual (deja en 0 si no deseas agregar). Máximo 500 unidades por ajuste.'
+          : 'El producto ingresará con esta cantidad al almacén seleccionado. Máximo 500 unidades.' }}
       </p>
     </div>
 
-    <div class="field col-12 md:col-4 mb-4">
-      <label class="font-semibold text-900 mb-2 block">Sede *</label>
-      <p-select formControlName="sede" [options]="sedes()" optionLabel="nombre" optionValue="id_sede"
-        placeholder="Seleccionar sede" styleClass="w-full border-1 border-300" />
-    </div>
-
+    <!-- Cantidad -->
     <div class="field col-12 md:col-4 mb-4">
       <label class="font-semibold text-900 mb-2 block">
-        {{ esModoEdicion() ? 'Cantidad a Agregar' : 'Cantidad Inicial' }} *
+        {{ esModoEdicion() ? 'Cantidad a Agregar' : 'Cantidad Inicial' }}
+        <span class="text-red-500">*</span>
       </label>
-      <p-inputNumber formControlName="stockInicial" [showButtons]="true" buttonLayout="horizontal"
-        incrementButtonIcon="pi pi-plus" decrementButtonIcon="pi pi-minus" [min]="0" styleClass="w-full" />
+      <p-inputNumber
+        formControlName="stockInicial"
+        [showButtons]="true"
+        buttonLayout="horizontal"
+        incrementButtonIcon="pi pi-plus"
+        decrementButtonIcon="pi pi-minus"
+        [min]="0"
+        [max]="500"
+        styleClass="w-full"
+      />
+      @if (campoInvalido('stockInicial')) {
+        <small class="text-red-500 flex align-items-center gap-1 mt-1">
+          <i class="pi pi-times-circle text-xs"></i>
+          @if (productoForm.get('stockInicial')?.errors?.['max']) {
+            El máximo permitido por ajuste es 500 unidades.
+          } @else if (productoForm.get('stockInicial')?.errors?.['min']) {
+            No puede ser negativo.
+          }
+        </small>
+      } @else {
+        <small class="text-400 mt-1 block">Rango permitido: 0 – 500 unidades.</small>
+      }
     </div>
 
+    <!-- Resultante (solo edición) -->
     @if (esModoEdicion()) {
-      <div class="field col-12 md:col-4 mb-4">
+      <div class="field col-12 md:col-8 mb-4">
         <label class="font-semibold text-900 mb-2 block">Stock Total Resultante</label>
-        <div class="flex align-items-center h-3rem bg-yellow-50 border-round px-3 font-bold text-xl border-1 border-yellow-200 text-800">
-          <i class="pi pi-box mr-2 text-warning"></i>
-          <span class="text-warning ml-2">{{ stockActual() }} + {{ stockAgregado() }} = </span>
-          <span class="text-warning ml-2">{{ stockTotal() }}</span>
+        <div class="flex align-items-center gap-3 h-3rem bg-yellow-50 border-round px-4 border-1 border-yellow-200">
+          <span class="text-600 text-sm">Stock actual:</span>
+          <span class="font-bold text-9002">{{ stockActual() }}</span>
+          <i class="pi pi-plus text-warning"></i>
+          <span class="text-600 text-sm">Agregando:</span>
+          <span class="font-bold text-9002">{{ stockAgregado() }}</span>
+          <i class="pi pi-equals text-warning"></i>
+          <span class="text-warning font-bold text-xl">{{ stockTotal() }}</span>
+          <span class="text-500 text-sm">unidades</span>
         </div>
       </div>
     }
 
+    <div class="col-12 mb-3"><div class="border-top-1 border-300"></div></div>
+
+    <!-- ══════════════════════════════════════════
+         RESUMEN DE ERRORES (si el form fue enviado con errores)
+    ══════════════════════════════════════════ -->
+    @if (mostrarResumenErrores()) {
+      <div class="col-12 mb-3">
+        <div class="p-3 bg-red-50 border-1 border-red-300 border-round-lg">
+          <p class="font-bold text-red-700 mb-2 flex align-items-center gap-2">
+            <i class="pi pi-exclamation-circle"></i>
+            Corrige los siguientes errores antes de guardar:
+          </p>
+          <ul class="m-0 pl-4 text-red-600 text-sm">
+            @for (error of erroresFormulario(); track error) {
+              <li>{{ error }}</li>
+            }
+          </ul>
+        </div>
+      </div>
+    }
+
+    <!-- Botones -->
     <div class="field col-12 flex gap-3 justify-content-end pt-3">
-      <p-button type="button" label="Cancelar" severity="secondary" [outlined]="true" icon="pi pi-times"
-        styleClass="w-10rem" (onClick)="cancelar()" />
-      <p-button type="submit"
+      <p-button
+        type="button"
+        label="Cancelar"
+        severity="secondary"
+        [outlined]="true"
+        icon="pi pi-times"
+        styleClass="w-10rem"
+        (onClick)="cancelar()"
+      />
+      <p-button
+        type="submit"
         [label]="esModoEdicion() ? 'Actualizar' : 'Guardar'"
         [icon]="isSubmitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"
-        [disabled]="productoForm.invalid || isSubmitting()"
-        styleClass="productos-pill productos-pill-warning w-10rem" />
+        [disabled]="isSubmitting()"
+        styleClass="productos-pill productos-pill-warning w-10rem"
+      />
     </div>
 
   </form>

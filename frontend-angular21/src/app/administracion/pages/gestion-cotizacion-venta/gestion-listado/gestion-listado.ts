@@ -34,7 +34,7 @@ import { SharedTableContainerComponent } from '../../../../shared/components/tab
     CommonModule, FormsModule, RouterModule, TableModule, SelectModule, CardModule,
     ButtonModule, TagModule, ToastModule, ConfirmDialog, ConfirmDialogModule,
     AutoComplete, TooltipModule, DatePickerModule, DialogModule,
-    AccionesComprobanteDialogComponent, SharedTableContainerComponent,
+    AccionesComprobanteDialogComponent, SharedTableContainerComponent
   ],
   templateUrl: './gestion-listado.html',
   styleUrl: './gestion-listado.css',
@@ -165,16 +165,16 @@ export class GestionCotizacionesComponent implements OnInit, OnDestroy {
   }
 
   cargarCotizacion() {
+    const search = this.buscarValue()?.trim() || undefined;
     this.quoteService.loadQuotes({
-      estado: this.estadoSeleccionado(),
-      tipo: this.TIPO_FIJO,
+      estado:  this.estadoSeleccionado(),
+      tipo:    this.TIPO_FIJO,
       id_sede: this.sedeSeleccionada(),
-      search: this.buscarValue()?.trim() || undefined,
-      page: this.currentPage(),
-      limit: this.rows(),
+      search,                          // ← este valor debe llegar al backend
+      page:    this.currentPage(),
+      limit:   this.rows(),
     }).subscribe();
   }
-
   // --- Filtros y Fechas ---
 
   onSedeChange(nuevaSedeId: number | null) {
@@ -213,14 +213,24 @@ export class GestionCotizacionesComponent implements OnInit, OnDestroy {
     this.searchSubject$.next(event.query.trim());
   }
 
-  seleccionarCotizacionBusqueda(event: { value: QuoteListItem }) {
-    this.buscarValue.set(event.value.codigo);
-    this.irDetalle(event.value.id_cotizacion);
+  seleccionarCotizacionBusqueda(event: any) {
+    // event puede ser { value: QuoteListItem } o directamente QuoteListItem
+    const item: QuoteListItem = event?.value ?? event;
+    this.buscarValue.set(item.codigo);
+    this.cotizacionSugerencias.set([]);
+    this.currentPage.set(1);
+    this.cargarCotizacion(); // filtra la tabla, no navega
   }
 
-  onBuscarChange(value: string) {
-    this.buscarValue.set(value);
-    if (!value?.trim()) {
+  onBuscarChange(value: string | QuoteListItem | null) {
+    // Cuando seleccionas del dropdown llega el objeto, cuando escribes llega string
+    const texto = typeof value === 'object' && value !== null
+      ? (value as QuoteListItem).codigo
+      : (value ?? '');
+
+    this.buscarValue.set(texto);
+
+    if (!texto?.trim()) {
       this.cotizacionSugerencias.set([]);
       this.currentPage.set(1);
       this.cargarCotizacion();

@@ -225,8 +225,26 @@ h3 {
     color: #e5e5e5 !important;
   }
 
+  .text-9002 {
+    color: #e5e5e5 !important;
+  }
+
   .text-600 {
     color: #a3a3a3 !important;
+  }
+  
+  :host-context(.app-dark) :host ::ng-deep  .text-9002 {
+  color: #202122 !important;
+  }
+
+
+  :host-context(.app-dark) :host ::ng-deep .text-600 {
+  color: #202122 !important;
+  }
+
+
+  :host-context(.app-dark) :host ::ng-deep .text-warning {
+  color: #ffa200 !important;
   }
 
   .text-500 {

@@ -62,7 +62,7 @@ export class ProductosFormulario implements OnInit {
 
   categorias         = signal<Categoria[]>([]);
   isSubmitting       = signal<boolean>(false);
-  cargandoFormulario = signal<boolean>(false); // skeleton mientras carga en edición
+  cargandoFormulario = signal<boolean>(false);
   sedes              = this.sedeService.sedes;
   almacenes          = this.almacenService.sedes;
   almacenesFiltrados = signal<any[]>([]);
@@ -71,7 +71,7 @@ export class ProductosFormulario implements OnInit {
   esModoEdicion    = signal<boolean>(false);
   idProductoActual = signal<number | null>(null);
 
-  // Almacén y sede guardados como signals (campos disabled no son confiables en getRawValue)
+  // Almacén y sede guardados como signals
   almacenCargado = signal<number | null>(null);
   sedeCargada    = signal<number | null>(null);
 
@@ -80,34 +80,118 @@ export class ProductosFormulario implements OnInit {
   stockAgregado = signal<number>(0);
   stockTotal    = computed(() => this.stockActual() + this.stockAgregado());
 
+  // UX: mostrar resumen de errores tras intento de envío
+  intentoEnvio = signal<boolean>(false);
+
+  // Alerta precio venta < precio compra
+  alertaPrecioVenta = computed(() => {
+    const compra = this.productoForm?.get('precioCompra')?.value || 0;
+    const venta  = this.productoForm?.get('precioVenta')?.value  || 0;
+    return venta > 0 && compra > 0 && venta < compra;
+  });
+
+  // Resumen de errores para mostrar al usuario
+  mostrarResumenErrores = computed(() => this.intentoEnvio() && this.productoForm.invalid);
+  erroresFormulario     = computed(() => {
+    if (!this.intentoEnvio()) return [];
+    const errores: string[] = [];
+    const ctrl = (name: string) => this.productoForm.get(name);
+
+    if (ctrl('codigo')?.errors?.['required'])      errores.push('Código: es obligatorio.');
+    if (ctrl('codigo')?.errors?.['minlength'])     errores.push('Código: mínimo 2 caracteres.');
+    if (ctrl('codigo')?.errors?.['pattern'])       errores.push('Código: solo letras, números y guiones.');
+    if (ctrl('anexo')?.errors?.['required'])       errores.push('Nombre: es obligatorio.');
+    if (ctrl('anexo')?.errors?.['minlength'])      errores.push('Nombre: mínimo 3 caracteres.');
+    if (ctrl('descripcion')?.errors?.['required']) errores.push('Descripción: es obligatoria.');
+    if (ctrl('descripcion')?.errors?.['minlength'])errores.push('Descripción: mínimo 10 caracteres.');
+    if (ctrl('familia')?.errors?.['required'])     errores.push('Categoría: debes seleccionar una familia.');
+    if (ctrl('unidadMedida')?.errors?.['required'])errores.push('Unidad de medida: es obligatoria.');
+    if (ctrl('precioCompra')?.errors?.['required'] || ctrl('precioCompra')?.errors?.['min'])
+      errores.push('Precio Compra: debe ser mayor a S/ 0.00.');
+    if (ctrl('precioVenta')?.errors?.['required']  || ctrl('precioVenta')?.errors?.['min'])
+      errores.push('Precio Venta: debe ser mayor a S/ 0.00.');
+    if (ctrl('precioUnidad')?.errors?.['required'] || ctrl('precioUnidad')?.errors?.['min'])
+      errores.push('Precio Unidad: debe ser mayor a S/ 0.00.');
+    if (ctrl('precioCaja')?.errors?.['required']   || ctrl('precioCaja')?.errors?.['min'])
+      errores.push('Precio Caja: debe ser mayor a S/ 0.00.');
+    if (ctrl('precioMayorista')?.errors?.['required'] || ctrl('precioMayorista')?.errors?.['min'])
+      errores.push('Precio Mayorista: debe ser mayor a S/ 0.00.');
+    if (ctrl('sede')?.errors?.['required'])        errores.push('Sede: selecciona una sede.');
+    if (ctrl('almacen')?.errors?.['required'] && !ctrl('almacen')?.disabled)
+      errores.push('Almacén: selecciona un almacén.');
+    if (ctrl('stockInicial')?.errors?.['max'])     errores.push('Stock: máximo 500 unidades por ajuste.');
+    if (ctrl('stockInicial')?.errors?.['min'])     errores.push('Stock: no puede ser negativo.');
+    return errores;
+  });
+
   // Cabecera dinámica
   tituloKicker    = signal<string>('ADMINISTRADOR - ADMINISTRACIÓN - PRODUCTOS CREACIÓN');
   tituloPrincipal = signal<string>('CREAR PRODUCTO');
   iconoCabecera   = signal<string>('pi pi-plus-circle');
 
+  // Opciones de unidad de medida
+  readonly unidadesMedida = [
+    { label: 'UNIDAD',  value: 'UNIDAD'  },
+    { label: 'CAJA',    value: 'CAJA'    },
+    { label: 'PAR',     value: 'PAR'     },
+    { label: 'KG',      value: 'KG'      },
+    { label: 'LITRO',   value: 'LITRO'   },
+    { label: 'METRO',   value: 'METRO'   },
+    { label: 'ROLLO',   value: 'ROLLO'   },
+    { label: 'BOLSA',   value: 'BOLSA'   },
+    { label: 'PAQUETE', value: 'PAQUETE' },
+  ];
+
   productoForm: FormGroup = this.fb.group({
-    codigo:          ['', Validators.required],
-    anexo:           ['', Validators.required],
-    descripcion:     ['', Validators.required],
+    codigo: ['', [
+      Validators.required,
+      Validators.minLength(2),
+      Validators.maxLength(50),
+      Validators.pattern(/^[A-Za-z0-9\-]+$/),
+    ]],
+    anexo: ['', [
+      Validators.required,
+      Validators.minLength(3),
+      Validators.maxLength(150),
+    ]],
+    descripcion: ['', [
+      Validators.required,
+      Validators.minLength(10),
+      Validators.maxLength(500),
+    ]],
     familia:         [null, Validators.required],
-    precioCompra:    [0, [Validators.required, Validators.min(0)]],
-    precioVenta:     [0, [Validators.required, Validators.min(0)]],
-    precioUnidad:    [0, [Validators.required, Validators.min(0)]],
-    precioCaja:      [0, [Validators.required, Validators.min(0)]],
-    precioMayorista: [0, [Validators.required, Validators.min(0)]],
+    precioCompra:    [null, [Validators.required, Validators.min(0.01)]],
+    precioVenta:     [null, [Validators.required, Validators.min(0.01)]],
+    precioUnidad:    [null, [Validators.required, Validators.min(0.01)]],
+    precioCaja:      [null, [Validators.required, Validators.min(0.01)]],
+    precioMayorista: [null, [Validators.required, Validators.min(0.01)]],
     unidadMedida:    ['UNIDAD', Validators.required],
     almacen:         [null, Validators.required],
     sede:            [null, Validators.required],
-    stockInicial:    [0, [Validators.required, Validators.min(0)]],
+    stockInicial:    [0, [Validators.required, Validators.min(0), Validators.max(500)]],
   });
 
+  // ── Helpers UX ──────────────────────────────────────────
+  /** Retorna true si el campo es inválido y fue tocado o se intentó enviar */
+  campoInvalido(campo: string): boolean {
+    const ctrl = this.productoForm.get(campo);
+    if (!ctrl || ctrl.disabled) return false;
+    return ctrl.invalid && (ctrl.touched || this.intentoEnvio());
+  }
+
+  /** Retorna true si el campo es válido y fue tocado */
+  campoValido(campo: string): boolean {
+    const ctrl = this.productoForm.get(campo);
+    if (!ctrl || ctrl.disabled) return false;
+    return ctrl.valid && ctrl.touched;
+  }
+  // ────────────────────────────────────────────────────────
+
   ngOnInit() {
-    // Escucha cambios de stock en tiempo real
     this.productoForm.get('stockInicial')?.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(valor => this.stockAgregado.set(valor || 0));
 
-    // Carga almacenes al cambiar sede (solo en modo creación — en edición está disabled)
     this.productoForm.get('sede')?.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(idSede => {
@@ -116,14 +200,19 @@ export class ProductosFormulario implements OnInit {
           .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe({
             next: (rel) => {
-              this.almacenesFiltrados.set(rel.almacenes.map(a => a.almacen));
+              // ── FIX: mapear con la clave correcta (id_almacen) ──
+              this.almacenesFiltrados.set(
+                rel.almacenes.map(a => ({
+                  ...a.almacen,
+                  id_almacen: a.almacen.id_almacen ?? a.almacen.id_almacen,
+                }))
+              );
               this.productoForm.patchValue({ almacen: null });
             },
             error: (err) => console.error('Error cargando almacenes', err),
           });
       });
 
-    // Carga datos iniciales y luego verifica modo edición
     this.cargarDatosIniciales();
   }
 
@@ -133,7 +222,6 @@ export class ProductosFormulario implements OnInit {
     const esModo    = !!idParam;
 
     if (esModo) {
-      // En edición mostramos skeleton y cargamos TODO en paralelo
       this.cargandoFormulario.set(true);
       this.esModoEdicion.set(true);
       this.idProductoActual.set(Number(idParam));
@@ -143,7 +231,6 @@ export class ProductosFormulario implements OnInit {
 
       const idSede = sedeParam ? Number(sedeParam) : this.resolverSedeLocalStorage();
 
-      // Cargamos categorías, sedes y datos del producto EN PARALELO
       forkJoin({
         categorias: this.categoriaService.getCategorias(),
         sedes:      this.sedeService.loadSedes(),
@@ -162,65 +249,55 @@ export class ProductosFormulario implements OnInit {
           this.almacenCargado.set(Number(stock?.id_almacen) || null);
           this.sedeCargada.set(Number(stock?.id_sede) || null);
 
-          // Cargar almacenes de la sede del producto
+          const patchForm = () => {
+            this.productoForm.patchValue({
+              codigo:          prod.codigo,
+              anexo:           prod.nombre,
+              descripcion:     prod.descripcion || '',
+              familia:         prod.categoria.id_categoria,
+              precioCompra:    prod.precio_compra,
+              precioVenta:     prod.precio_unitario,
+              precioUnidad:    prod.precio_unitario,
+              precioCaja:      prod.precio_caja,
+              precioMayorista: prod.precio_mayor,
+              unidadMedida:    prod.unidad_medida?.nombre || 'UNIDAD',
+              sede:            stock?.id_sede,
+              almacen:         stock?.id_almacen,
+              stockInicial:    0,
+            });
+            this.productoForm.get('sede')?.disable();
+            this.productoForm.get('almacen')?.disable();
+          };
+
           if (stock?.id_sede) {
             this.sedeService.loadAlmacenesParaSede(stock.id_sede)
               .pipe(takeUntilDestroyed(this.destroyRef))
               .subscribe({
                 next: (rel) => {
-                  this.almacenesFiltrados.set(rel.almacenes.map(a => a.almacen));
-                  // Patchear el form DESPUÉS de tener los almacenes (evita el "salto")
-                  this.productoForm.patchValue({
-                    codigo:          prod.codigo,
-                    anexo:           prod.nombre,
-                    descripcion:     prod.descripcion || '',
-                    familia:         prod.categoria.id_categoria,
-                    precioCompra:    prod.precio_compra,
-                    precioVenta:     prod.precio_unitario,
-                    precioUnidad:    prod.precio_unitario,
-                    precioCaja:      prod.precio_caja,
-                    precioMayorista: prod.precio_mayor,
-                    unidadMedida:    prod.unidad_medida?.nombre || 'UNIDAD',
-                    sede:            stock?.id_sede,
-                    almacen:         stock?.id_almacen,
-                    stockInicial:    0,
-                  });
-                  this.productoForm.get('sede')?.disable();
-                  this.productoForm.get('almacen')?.disable();
+                  this.almacenesFiltrados.set(
+                    rel.almacenes.map(a => ({
+                      ...a.almacen,
+                      id_almacen: a.almacen.id_almacen ?? a.almacen.id_almacen,
+                    }))
+                  );
+                  patchForm();
                 },
-                error: () => {
-                  // Si falla carga de almacenes igual parchamos el form
-                  this.productoForm.patchValue({
-                    codigo:          prod.codigo,
-                    anexo:           prod.nombre,
-                    descripcion:     prod.descripcion || '',
-                    familia:         prod.categoria.id_categoria,
-                    precioCompra:    prod.precio_compra,
-                    precioVenta:     prod.precio_unitario,
-                    precioUnidad:    prod.precio_unitario,
-                    precioCaja:      prod.precio_caja,
-                    precioMayorista: prod.precio_mayor,
-                    unidadMedida:    prod.unidad_medida?.nombre || 'UNIDAD',
-                    sede:            stock?.id_sede,
-                    almacen:         stock?.id_almacen,
-                    stockInicial:    0,
-                  });
-                  this.productoForm.get('sede')?.disable();
-                  this.productoForm.get('almacen')?.disable();
-                },
+                error: () => patchForm(),
               });
+          } else {
+            patchForm();
           }
         },
         error: (err) => {
           console.error('Error cargando datos de edición:', err);
           this.messageService.add({
-            severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los datos del producto.',
+            severity: 'error', summary: 'Error',
+            detail: 'No se pudieron cargar los datos del producto.',
           });
         },
       });
 
     } else {
-      // Modo creación — carga categorías y sedes en paralelo, sede por defecto
       forkJoin({
         categorias: this.categoriaService.getCategorias(),
         sedes:      this.sedeService.loadSedes(),
@@ -250,7 +327,12 @@ export class ProductosFormulario implements OnInit {
         this.sedeService.loadAlmacenesParaSede(user.idSede)
           .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe({
-            next: (rel) => this.almacenesFiltrados.set(rel.almacenes.map(a => a.almacen)),
+            next: (rel) => this.almacenesFiltrados.set(
+              rel.almacenes.map(a => ({
+                ...a.almacen,
+                id_almacen: a.almacen.id_almacen ?? a.almacen.id_almacen,
+              }))
+            ),
             error: (err) => console.error(err),
           });
       }
@@ -264,11 +346,22 @@ export class ProductosFormulario implements OnInit {
   }
 
   guardarProducto() {
+    // Marcar intento de envío para mostrar errores
+    this.intentoEnvio.set(true);
+    this.productoForm.markAllAsTouched();
+
     if (this.productoForm.invalid) {
-      this.productoForm.markAllAsTouched();
       this.messageService.add({
-        severity: 'error', summary: 'Error', detail: 'Complete los campos obligatorios.',
+        severity: 'warn',
+        summary: 'Formulario incompleto',
+        detail: 'Revisa los campos marcados en rojo antes de guardar.',
+        life: 4000,
       });
+      // Scroll al primer error
+      setTimeout(() => {
+        const firstError = document.querySelector('.text-red-500');
+        firstError?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 100);
       return;
     }
 
