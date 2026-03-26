@@ -1,7 +1,5 @@
 <div class="p-2 surface-card border-1 border-300 border-round-xl shadow-2">
   <form [formGroup]="proveedorForm" (ngSubmit)="guardar()" class="formgrid grid p-4">
-
-    <!-- Header -->
     <div class="col-12 mb-3">
       <div class="flex align-items-center gap-3">
         <span class="proveedores-title-icon">
@@ -11,17 +9,17 @@
       </div>
     </div>
 
-    <!-- Información Básica -->
     <div class="col-12 mb-3">
-      <h3 class="text-xl font-bold text-900 m-0 flex align-items-center gap-2">
+      <h3 class="text-base font-bold text-900 m-0 flex align-items-center gap-2">
         <i class="pi pi-info-circle text-warning"></i>
         Información Básica
       </h3>
     </div>
 
-    <!-- RUC con botón buscar -->
-    <div class="field col-12 md:col-6 mb-4">
-      <label for="ruc" class="font-semibold text-900 mb-2 block">RUC *</label>
+    <div class="field col-12 md:col-6 mb-3">
+      <label for="ruc" class="font-semibold text-900 mb-2 block">
+        RUC * <small class="text-400 font-normal">(11 dígitos)</small>
+      </label>
       <div class="flex gap-2">
         <input
           pInputText
@@ -30,6 +28,8 @@
           class="w-full border-1 border-300"
           placeholder="Ej: 20123456789"
           maxlength="11"
+          inputmode="numeric"
+          (input)="onInputSoloNumeros($event, 'ruc')"
         />
         <p-button
           type="button"
@@ -39,11 +39,12 @@
           severity="warn"
           [loading]="buscandoRuc()"
           [disabled]="buscandoRuc() || loading()"
-          (onClick)="buscarRuc()">
+          (onClick)="buscarRuc()"
+        >
         </p-button>
       </div>
-      <small class="text-red-500 block mt-2" *ngIf="rucInvalido">
-        El RUC debe tener exactamente 11 dígitos
+      <small class="text-red-500 block mt-1" *ngIf="rucInvalido">
+        {{ getErrores('ruc') || 'El RUC debe tener exactamente 11 dígitos numéricos' }}
       </small>
       <small class="text-500 block mt-1">
         <i class="pi pi-info-circle mr-1"></i>
@@ -51,20 +52,21 @@
       </small>
     </div>
 
-    <!-- Razón Social -->
-    <div class="field col-12 md:col-6 mb-4">
-      <label for="razon_social" class="font-semibold text-900 mb-2 block">Razón Social *</label>
+    <div class="field col-12 md:col-6 mb-3">
+      <label for="razon_social" class="font-semibold text-900 mb-2 block">
+        Razón Social * <small class="text-400 font-normal">(máx. 80 caracteres)</small>
+      </label>
       <input
         pInputText
         id="razon_social"
         formControlName="razon_social"
         class="w-full border-1 border-300"
         placeholder="Se completa automáticamente con SUNAT"
+        maxlength="80"
+        (input)="onInputLetrasNumeros($event, 'razon_social')"
       />
-      <small
-        class="text-red-500 block mt-2"
-        *ngIf="proveedorForm.get('razon_social')?.invalid && proveedorForm.get('razon_social')?.touched">
-        La razón social es requerida (mínimo 3 caracteres)
+      <small class="text-red-500 block mt-1" *ngIf="razonSocialInvalida">
+        {{ getErrores('razon_social') }}
       </small>
     </div>
 
@@ -72,27 +74,35 @@
       <div class="border-top-1 border-300"></div>
     </div>
 
-    <!-- Información de Contacto -->
     <div class="col-12 mb-3">
-      <h3 class="text-xl font-bold text-900 m-0 flex align-items-center gap-2">
+      <h3 class="text-base font-bold text-900 m-0 flex align-items-center gap-2">
         <i class="pi pi-phone text-warning"></i>
         Información de Contacto
       </h3>
     </div>
 
-    <div class="field col-12 md:col-6 mb-4">
-      <label for="contacto" class="font-semibold text-900 mb-2 block">Nombre de Contacto</label>
+    <div class="field col-12 md:col-6 mb-3">
+      <label for="contacto" class="font-semibold text-900 mb-2 block">
+        Nombre de Contacto <small class="text-400 font-normal">(máx. 50 caracteres)</small>
+      </label>
       <input
         pInputText
         id="contacto"
         formControlName="contacto"
         class="w-full border-1 border-300"
         placeholder="Ej: Juan Pérez"
+        maxlength="50"
+        (input)="onInputSoloLetras($event, 'contacto')"
       />
+      <small class="text-red-500 block mt-1" *ngIf="contactoInvalido">
+        {{ getErrores('contacto') || 'Solo se permiten letras y espacios' }}
+      </small>
     </div>
 
-    <div class="field col-12 md:col-6 mb-4">
-      <label for="telefono" class="font-semibold text-900 mb-2 block">Teléfono</label>
+    <div class="field col-12 md:col-6 mb-3">
+      <label for="telefono" class="font-semibold text-900 mb-2 block">
+        Teléfono <small class="text-400 font-normal">(7–15 dígitos)</small>
+      </label>
       <input
         pInputText
         id="telefono"
@@ -100,14 +110,18 @@
         class="w-full border-1 border-300"
         placeholder="Ej: 987654321"
         maxlength="15"
+        inputmode="numeric"
+        (input)="onInputSoloNumeros($event, 'telefono')"
       />
-      <small class="text-red-500 block mt-2" *ngIf="telefonoInvalido">
-        El teléfono debe tener entre 7 y 15 dígitos
+      <small class="text-red-500 block mt-1" *ngIf="telefonoInvalido">
+        {{ getErrores('telefono') || 'El teléfono debe tener entre 7 y 15 dígitos' }}
       </small>
     </div>
 
-    <div class="field col-12 mb-4">
-      <label for="email" class="font-semibold text-900 mb-2 block">Email</label>
+    <div class="field col-12 mb-3">
+      <label for="email" class="font-semibold text-900 mb-2 block">
+        Email <small class="text-400 font-normal">(máx. 50 caracteres)</small>
+      </label>
       <input
         pInputText
         id="email"
@@ -115,9 +129,10 @@
         type="email"
         class="w-full border-1 border-300"
         placeholder="Ej: contacto@proveedor.com"
+        maxlength="50"
       />
-      <small class="text-red-500 block mt-2" *ngIf="emailInvalido">
-        El email no tiene un formato válido
+      <small class="text-red-500 block mt-1" *ngIf="emailInvalido">
+        {{ getErrores('email') || 'El email no tiene un formato válido' }}
       </small>
     </div>
 
@@ -125,32 +140,43 @@
       <div class="border-top-1 border-300"></div>
     </div>
 
-    <!-- Dirección Fiscal -->
     <div class="col-12 mb-3">
-      <h3 class="text-xl font-bold text-900 m-0 flex align-items-center gap-2">
+      <h3 class="text-base font-bold text-900 m-0 flex align-items-center gap-2">
         <i class="pi pi-map-marker text-warning"></i>
         Dirección Fiscal
       </h3>
     </div>
 
-    <div class="field col-12 mb-4">
-      <label for="dir_fiscal" class="font-semibold text-900 mb-2 block">Dirección Fiscal</label>
+    <div class="field col-12 mb-3">
+      <label for="dir_fiscal" class="font-semibold text-900 mb-2 block">
+        Dirección Fiscal <small class="text-400 font-normal">(máx. 100 caracteres)</small>
+      </label>
       <textarea
         id="dir_fiscal"
         formControlName="dir_fiscal"
         rows="3"
         class="w-full border-1 border-300 p-3 border-round"
         style="resize: vertical; font-family: inherit"
-        placeholder="Se completa automáticamente con SUNAT o ingresa manualmente">
+        placeholder="Se completa automáticamente con SUNAT o ingresa manualmente"
+        maxlength="100"
+        (input)="onInputDireccion($event, 'dir_fiscal')"
+      >
       </textarea>
+      <div class="flex justify-content-between mt-1">
+        <small class="text-red-500" *ngIf="dirFiscalInvalida">
+          {{ getErrores('dir_fiscal') || 'Solo letras, números y caracteres: . , - # /' }}
+        </small>
+        <small class="text-400 ml-auto">
+          {{ proveedorForm.get('dir_fiscal')?.value?.length || 0 }}/100
+        </small>
+      </div>
     </div>
 
     <div class="col-12 mb-3">
       <div class="border-top-1 border-300"></div>
     </div>
 
-    <!-- Info Box Proveedor Original (solo edit mode) -->
-    <div class="field col-12 mb-4" *ngIf="isEditMode() && proveedorOriginal()">
+    <div class="field col-12 mb-3" *ngIf="isEditMode() && proveedorOriginal()">
       <div class="surface-50 border-round p-3 border-1 border-300">
         <div class="flex align-items-center gap-3">
           <i class="pi pi-info-circle text-2xl text-warning"></i>
@@ -159,10 +185,15 @@
               Editando proveedor: {{ proveedorOriginal()!.razon_social }}
             </p>
             <p class="m-0 text-sm text-600 mt-1">
-              RUC:
-              <span class="font-semibold text-warning">{{ proveedorOriginal()!.ruc }}</span> |
+              RUC: <span class="font-semibold text-warning">{{ proveedorOriginal()!.ruc }}</span> |
               Estado:
-              <span [class]="proveedorOriginal()!.estado ? 'font-semibold text-green-600' : 'font-semibold text-red-600'">
+              <span
+                [class]="
+                  proveedorOriginal()!.estado
+                    ? 'font-semibold text-green-600'
+                    : 'font-semibold text-red-600'
+                "
+              >
                 {{ proveedorOriginal()!.estado ? 'Activo' : 'Inactivo' }}
               </span>
             </p>
@@ -171,8 +202,7 @@
       </div>
     </div>
 
-    <!-- Footer Actions -->
-    <div class="field col-12 flex gap-3 justify-content-end pt-3">
+    <div class="field col-12 flex gap-3 justify-content-end pt-2">
       <p-button
         type="button"
         label="Cancelar"
@@ -181,19 +211,19 @@
         icon="pi pi-times"
         styleClass="w-10rem"
         (onClick)="volver()"
-        [disabled]="loading()">
+        [disabled]="loading()"
+      >
       </p-button>
-
       <p-button
         type="submit"
         [label]="labelBotonGuardar()"
         [icon]="iconoBotonGuardar()"
         styleClass="proveedores-pill proveedores-pill-warning w-10rem"
         [disabled]="!proveedorForm.valid || loading()"
-        [loading]="loading()">
+        [loading]="loading()"
+      >
       </p-button>
     </div>
-
   </form>
 </div>
 

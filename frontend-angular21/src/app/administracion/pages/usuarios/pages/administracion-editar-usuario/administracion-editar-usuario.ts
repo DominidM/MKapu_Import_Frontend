@@ -13,7 +13,11 @@ import { MessageService } from 'primeng/api';
 import { RoleService } from '../../../../services/role.service';
 import { UsuarioService } from '../../../../services/usuario.service';
 import { SedeService } from '../../../../services/sede.service';
-import { UsuarioInterfaceResponse, UsuarioStatusUpdateRequest, UsuarioUpdateRequest } from '../../../../interfaces/usuario.interface';
+import {
+  UsuarioInterfaceResponse,
+  UsuarioStatusUpdateRequest,
+  UsuarioUpdateRequest,
+} from '../../../../interfaces/usuario.interface';
 
 @Component({
   selector: 'app-administracion-editar-usuario',
@@ -28,19 +32,16 @@ import { UsuarioInterfaceResponse, UsuarioStatusUpdateRequest, UsuarioUpdateRequ
     ToastModule,
     SelectModule,
     MessageModule,
-    DividerModule
-
+    DividerModule,
   ],
   providers: [MessageService],
   templateUrl: './administracion-editar-usuario.html',
   styleUrls: ['./administracion-editar-usuario.css'],
 })
 export class AdministracionEditarUsuario implements OnInit {
-  // Estado reactivo con signals:
   loading = signal<boolean>(false);
   error = signal<string | null>(null);
 
-  // Formulario editable reactivo
   form = signal<any>({
     id: null,
     usu_nom: '',
@@ -53,108 +54,113 @@ export class AdministracionEditarUsuario implements OnInit {
     id_sede: null,
     sedeNombre: '',
     rolNombre: '',
-    activo: true
+    activo: true,
   });
 
   sedesOptions = signal<{ label: string; value: any }[]>([]);
-  rolesOptions = signal<{ label: string; value: any }[]>([
-    { label: 'ADMINISTRADOR', value: 'ADMINISTRADOR' },
-    { label: 'ALMACEN', value: 'ALMACEN' },
-    { label: 'VENTAS', value: 'VENTAS' }
-  ]);
+  rolesOptions = signal<{ label: string; value: any }[]>([]);
 
+  constructor(
+    private usuarioService: UsuarioService,
+    private sedeService: SedeService,
+    private roleService: RoleService,
+    private messageService: MessageService,
+    private route: ActivatedRoute,
+    private router: Router,
+  ) {}
 
+  ngOnInit(): void {
+    this.sedeService.getSedes().subscribe({
+      next: (res: any) => {
+        this.sedesOptions.set(
+          (res.headquarters || []).map((s: any) => ({ label: s.nombre, value: s.id_sede })),
+        );
+      },
+      error: () => {
+        this.error.set('No se pudo cargar la lista de sedes');
+        this.msg('error', 'No se pudo cargar la lista de sedes');
+      },
+    });
 
-constructor(
-  private usuarioService: UsuarioService,
-  private sedeService: SedeService,
-  private roleService: RoleService,      
-  private messageService: MessageService,
-  private route: ActivatedRoute,
-  private router: Router
-) {}
+    this.roleService.loadRoles().subscribe({
+      next: () => {
+        this.rolesOptions.set(
+          this.roleService.roles().map((r: any) => ({ label: r.nombre, value: r.nombre })),
+        );
+      },
+      error: () => this.msg('error', 'No se pudo cargar los roles'),
+    });
 
-  setFormField(field: keyof ReturnType<typeof this.form>, value: any) {
-    this.form.update(formData => ({ ...formData, [field]: value }));
+    const idParam = this.route.snapshot.paramMap.get('id');
+    const id = idParam ? Number(idParam) : null;
+    if (!id || Number.isNaN(id)) return;
+
+    this.loading.set(true);
+    this.form.update((f) => ({ ...f, id }));
+
+    this.usuarioService.getUsuarioById(id).subscribe({
+      next: (usuario: UsuarioInterfaceResponse) => {
+        this.form.set({
+          ...this.form(),
+          ...usuario,
+          id: usuario.id_usuario ?? id,
+          rolNombre: usuario.rolNombre || (usuario as any).roleName || '',
+        });
+        this.loading.set(false);
+      },
+      error: () => {
+        this.loading.set(false);
+        this.error.set('No se pudo cargar el usuario');
+        this.msg('error', 'No se pudo cargar el usuario');
+      },
+    });
   }
 
-    ngOnInit(): void {
-      // 1. Cargar SEDES dinámicamente
-      this.sedeService.getSedes().subscribe({
-        next: (res: any) => {
-          this.sedesOptions.set(
-            (res.headquarters || []).map((s: any) => ({
-              label: s.nombre,
-              value: s.id_sede
-            }))
-          );
-        },
-        error: () => {
-          this.error.set('No se pudo cargar la lista de sedes');
-          this.messageService.add({
-            severity: 'error', summary: 'Error',
-            detail: 'No se pudo cargar la lista de sedes', life: 2200
-          });
-        }
-      });
+  setFormField(field: string, value: any): void {
+    this.form.update((f) => ({ ...f, [field]: value }));
+  }
 
-      // 2. Cargar ROLES dinámicamente
-      this.roleService.loadRoles().subscribe({
-        next: () => {
-          this.rolesOptions.set(
-            this.roleService.roles().map((r: any) => ({
-              label: r.nombre,
-              value: r.nombre
-            }))
-          );
-        },
-        error: () => {
-          this.messageService.add({
-            severity: 'error', summary: 'Error',
-            detail: 'No se pudo cargar los roles', life: 2200
-          });
-        }
-      });
-
-      // 3. Cargar usuario por ID
-      const idParam = this.route.snapshot.paramMap.get('id');
-      const id = idParam ? Number(idParam) : null;
-      if (!id || Number.isNaN(id)) return;
-
-      this.loading.set(true);
-      this.form.update(f => ({ ...f, id }));
-
-      this.usuarioService.getUsuarioById(id).subscribe({
-        next: (usuario: UsuarioInterfaceResponse) => {
-          this.form.set({
-            ...this.form(),
-            ...usuario,
-            id: usuario.id_usuario ?? id,
-            // ← normalizar: backend puede devolver roleName o rolNombre
-            rolNombre: usuario.rolNombre || (usuario as any).roleName || '',
-          });
-          this.loading.set(false);
-        },
-        error: () => {
-          this.loading.set(false);
-          this.error.set('No se pudo cargar el usuario');
-          this.messageService.add({
-            severity: 'error', summary: 'Error',
-            detail: 'No se pudo cargar el usuario', life: 2200
-          });
-        }
-      });
+  toUpperCase(field: string): void {
+    const value = this.form()[field];
+    if (typeof value === 'string') {
+      this.form.update((f) => ({ ...f, [field]: value.toUpperCase() }));
     }
+  }
+
+  allowOnlyLetters(event: KeyboardEvent): void {
+    if (event.key.length !== 1) return;
+    if (!/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]$/.test(event.key)) event.preventDefault();
+  }
+
+  allowOnlyDigits(event: KeyboardEvent): void {
+    if (event.key.length !== 1) return;
+    if (!/^\d$/.test(event.key)) event.preventDefault();
+  }
+
+  onCelularEdit(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const digits = input.value.replace(/\D/g, '').slice(0, 9);
+    input.value = digits;
+    this.setFormField('celular', digits);
+  }
+
+  onDireccionInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const limpio = input.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ0-9\s\.\,\-\#\/]/g, '');
+    if (input.value !== limpio) {
+      input.value = limpio;
+      this.setFormField('direccion', limpio);
+    }
+  }
+
+  trimValue(value: string): string {
+    return typeof value === 'string' ? value.trim() : value;
+  }
 
   actualizarUsuarioCompleto(): void {
     const value = this.form();
     if (!value.id) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'ID requerido',
-        detail: 'No se encontró el ID del usuario',
-        life: 1800
-      });
+      this.msg('warn', 'No se encontró el ID del usuario');
       return;
     }
 
@@ -167,8 +173,9 @@ constructor(
       direccion: value.direccion,
       fec_nac: value.fec_nac,
       id_sede: value.id_sede,
-      rolNombre: value.rolNombre
+      rolNombre: value.rolNombre,
     };
+
     const payloadEstado: UsuarioStatusUpdateRequest = { activo: value.activo };
 
     this.loading.set(true);
@@ -178,49 +185,32 @@ constructor(
         this.usuarioService.updateUsuarioStatus(value.id, payloadEstado).subscribe({
           next: () => {
             this.loading.set(false);
-            this.messageService.add({
-              severity: 'success',
-              summary: 'Actualizado',
-              detail: 'Usuario actualizado correctamente',
-              life: 2000
-            });
+            this.msg('success', 'Usuario actualizado correctamente');
             setTimeout(() => this.router.navigate(['/admin/usuarios']), 1200);
           },
           error: () => {
             this.loading.set(false);
-            this.messageService.add({
-              severity: 'error',
-              summary: 'Error',
-              detail: 'Se actualizó los datos, pero falló el estado',
-              life: 2200
-            });
-          }
+            this.msg('error', 'Se actualizaron los datos pero falló el estado');
+          },
         });
       },
       error: () => {
         this.loading.set(false);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudo actualizar el usuario',
-          life: 2200
-        });
-      }
+        this.msg('error', 'No se pudo actualizar el usuario');
+      },
     });
   }
 
-    
-  toUpperCase(field: keyof ReturnType<typeof this.form>): void {
-    const value = this.form();
-    if (typeof value[field] === 'string') {
-      this.form.update(f => ({ ...f, [field]: (value[field] as string).toUpperCase() }));
-    }
+  goBack(): void {
+    this.router.navigate(['/admin/usuarios']);
   }
-    goBack(): void {
-      this.router.navigate(['/admin/usuarios']);
-    }
-  }
-  function goBack() {
-    throw new Error('Function not implemented.');
-}
 
+  private msg(severity: string, detail: string): void {
+    this.messageService.add({
+      severity,
+      summary: severity === 'success' ? 'Listo' : 'Aviso',
+      detail,
+      life: 2200,
+    });
+  }
+}

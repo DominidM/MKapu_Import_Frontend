@@ -23,7 +23,6 @@
 
 <div class="p-2">
   <div *ngIf="!isRutaHija()">
-    <!-- CONTADORES -->
     <div class="contadores-proveedores mb-4">
       <div class="contador-card">
         <i class="pi pi-building"></i>
@@ -55,7 +54,6 @@
       </div>
     </div>
 
-    <!-- FILTROS -->
     <div class="filtros-container mb-4">
       <div class="seccion-filtros">
         <h3><i class="pi pi-filter"></i> Filtros de búsqueda</h3>
@@ -64,12 +62,13 @@
           <div class="filtro-item filtro-compacto" style="flex: 2">
             <label>Buscar Proveedor</label>
             <p-autocomplete
-              [ngModel]="buscarValue()"
-              (ngModelChange)="buscarValue.set($event)"
+              [ngModel]="autoInputValue()"
+              (ngModelChange)="autoInputValue.set($event)"
               name="buscarProveedores"
               [suggestions]="items()"
               (completeMethod)="searchBuscar($event)"
               (onSelect)="filtrarPorBusqueda($event)"
+              [forceSelection]="false"
               placeholder="Razón social, RUC o contacto..."
               fluid
               styleClass="autocomplete-proveedores w-full"
@@ -123,7 +122,6 @@
       </div>
     </div>
 
-    <!-- TABLA -->
     <app-shared-table-container
       titulo="Listado de Proveedores"
       iconoTitulo="pi pi-building"
@@ -242,10 +240,7 @@
     </app-shared-table-container>
   </div>
 
-  <div
-    class="router-child-outlet surface-section"
-    [style.min-height]="isRutaHija() ? '400px' : '0'"
-  >
+  <div [style.min-height]="isRutaHija() ? 'auto' : '0'">
     <router-outlet></router-outlet>
   </div>
 </div>

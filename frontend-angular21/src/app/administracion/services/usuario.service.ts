@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import { catchError } from 'rxjs/operators';
 import { environment } from '../../../enviroments/enviroment';
 import {
   AccountCredentialsResponse,
@@ -14,11 +15,20 @@ import {
   UsuarioUpdateRequest,
 } from '../interfaces/usuario.interface';
 
+export interface ConsultaDocumentoResponse {
+  nombres: string;
+  apellidoPaterno: string;
+  apellidoMaterno: string;
+  nombreCompleto: string;
+  tipoDocumento: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
 export class UsuarioService {
   private api = environment.apiUrl;
+  private readonly salesUrl = `${environment.apiUrl}/sales`;
 
   constructor(private http: HttpClient) {}
 
@@ -49,7 +59,10 @@ export class UsuarioService {
     return this.http.post<CuentaUsuarioResponse>(`${this.api}/auth/create-account`, body);
   }
 
-  updateUsuarioStatus(id: number, body: UsuarioStatusUpdateRequest): Observable<UsuarioInterfaceResponse> {
+  updateUsuarioStatus(
+    id: number,
+    body: UsuarioStatusUpdateRequest,
+  ): Observable<UsuarioInterfaceResponse> {
     return this.http.put<UsuarioInterfaceResponse>(`${this.api}/admin/users/${id}/status`, body);
   }
 
@@ -61,10 +74,29 @@ export class UsuarioService {
     return this.http.get<AccountCredentialsResponse>(`${this.api}/admin/users/${id}/account`);
   }
 
-  changeCredentials(id: number, body: ChangeCredentialsRequest): Observable<AccountCredentialsResponse> {
+  changeCredentials(
+    id: number,
+    body: ChangeCredentialsRequest,
+  ): Observable<AccountCredentialsResponse> {
     return this.http.patch<AccountCredentialsResponse>(
       `${this.api}/admin/users/${id}/account/credentials`,
       body,
     );
+  }
+
+  consultarDocumentoIdentidad(numero: string): Observable<ConsultaDocumentoResponse> {
+    return this.http
+      .get<ConsultaDocumentoResponse>(`${this.salesUrl}/reniec/consultar/${numero}`)
+      .pipe(
+        catchError(() =>
+          of({
+            nombres: '',
+            apellidoPaterno: '',
+            apellidoMaterno: '',
+            nombreCompleto: '',
+            tipoDocumento: '',
+          }),
+        ),
+      );
   }
 }

@@ -1,5 +1,3 @@
-/* src/app/administracion/pages/proveedores/proveedores-listado/proveedor-listado.ts */
-
 import { Component, OnInit, OnDestroy, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, NavigationEnd, RouterModule, RouterOutlet } from '@angular/router';
@@ -47,45 +45,31 @@ interface SelectOption {
 })
 export class ProveedorListado implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
-
   private currentUrl = signal<string>('');
 
-  // ── Datos ──────────────────────────────────────────────────────────────────
   private todosLosProveedores = signal<SupplierResponse[]>([]);
 
-  loading    = signal(false);
-  buscarValue = signal<string | null>(null);
-  items       = signal<SupplierResponse[]>([]);
-
-  filtroEstado = signal<EstadoFiltro>('activos');
-
-  paginaActual = signal<number>(1);
-  rows         = signal<number>(5);
+  loading         = signal(false);
+  buscarValue     = signal<string | null>(null);
+  autoInputValue  = signal<string>('');
+  items           = signal<SupplierResponse[]>([]);
+  filtroEstado    = signal<EstadoFiltro>('activos');
+  paginaActual    = signal<number>(1);
+  rows            = signal<number>(5);
 
   readonly estadoOptions: SelectOption[] = [
-    { label: 'Todos',    value: 'todos'    },
-    { label: 'Activos',  value: 'activos'  },
+    { label: 'Todos',     value: 'todos'     },
+    { label: 'Activos',   value: 'activos'   },
     { label: 'Inactivos', value: 'inactivos' },
   ];
 
-  // ── Computed: filtrado local (sin HTTP extra) ──────────────────────────────
   readonly proveedoresFiltrados = computed(() => {
-    const todos   = this.todosLosProveedores();
-    const estado  = this.filtroEstado();
-    const buscar  = (this.buscarValue() ?? '').trim().toLowerCase();
+    const todos  = this.todosLosProveedores();
+    const estado = this.filtroEstado();
 
     let resultado = todos;
-
     if (estado === 'activos')   resultado = resultado.filter(p => p.estado);
     if (estado === 'inactivos') resultado = resultado.filter(p => !p.estado);
-
-    if (buscar) {
-      resultado = resultado.filter(p =>
-        p.razon_social?.toLowerCase().includes(buscar) ||
-        p.ruc?.toLowerCase().includes(buscar) ||
-        p.contacto?.toLowerCase().includes(buscar),
-      );
-    }
 
     return resultado;
   });
@@ -98,7 +82,6 @@ export class ProveedorListado implements OnInit, OnDestroy {
     return this.proveedoresFiltrados().slice(inicio, inicio + this.rows());
   });
 
-  // ── Computed cabecera ──────────────────────────────────────────────────────
   readonly tituloKicker = computed(() => {
     const url = this.currentUrl();
     if (url.includes('crear'))       return 'ADMINISTRACIÓN - PROVEEDORES CREACIÓN';
@@ -117,7 +100,6 @@ export class ProveedorListado implements OnInit, OnDestroy {
 
   readonly subtituloKicker = 'GESTIÓN DE PROVEEDORES';
 
-  // ── Contadores computed ────────────────────────────────────────────────────
   readonly totalProveedoresActivos     = computed(() => this.todosLosProveedores().filter(p => p.estado).length);
   readonly totalProveedoresConContacto = computed(() => this.todosLosProveedores().filter(p => p.contacto).length);
   readonly totalProveedoresConEmail    = computed(() => this.todosLosProveedores().filter(p => p.email).length);
@@ -145,10 +127,9 @@ export class ProveedorListado implements OnInit, OnDestroy {
     this.confirmationService.close();
   }
 
-  // ── Carga única ────────────────────────────────────────────────────────────
   cargarProveedores(): void {
     this.loading.set(true);
-    this.proveedorService.listSuppliers({ search: this.buscarValue() || undefined }).subscribe({
+    this.proveedorService.listSuppliers({}).subscribe({
       next: response => {
         this.todosLosProveedores.set(response.suppliers);
         this.paginaActual.set(1);
@@ -161,7 +142,6 @@ export class ProveedorListado implements OnInit, OnDestroy {
     });
   }
 
-  // ── Filtros ────────────────────────────────────────────────────────────────
   onEstadoChange(valor: EstadoFiltro): void {
     this.filtroEstado.set(valor);
     this.paginaActual.set(1);
@@ -169,6 +149,7 @@ export class ProveedorListado implements OnInit, OnDestroy {
 
   searchBuscar(event: any): void {
     const query = (event.query || '').trim();
+    this.autoInputValue.set(query);
     this.proveedorService.listSuppliers({ estado: true, search: query }).subscribe({
       next:  r  => this.items.set(r.suppliers.slice(0, 10)),
       error: () => this.items.set([]),
@@ -177,31 +158,29 @@ export class ProveedorListado implements OnInit, OnDestroy {
 
   filtrarPorBusqueda(event: any): void {
     if (event?.value) {
-      this.buscarValue.set(event.value.razon_social);
-      this.paginaActual.set(1);
+      this.irDetalle(event.value.id_proveedor);
     }
   }
 
   limpiarFiltros(): void {
     this.buscarValue.set(null);
+    this.autoInputValue.set('');
     this.filtroEstado.set('activos');
     this.items.set([]);
     this.paginaActual.set(1);
     this.cargarProveedores();
   }
 
-  // ── Paginación ─────────────────────────────────────────────────────────────
   onPageChange(page: number): void   { this.paginaActual.set(page); }
   onLimitChange(limit: number): void { this.rows.set(limit); this.paginaActual.set(1); }
 
-  // ── Acciones ───────────────────────────────────────────────────────────────
   toggleStatus(proveedor: SupplierResponse): void {
     const nuevoEstado = !proveedor.estado;
     const destino     = nuevoEstado ? 'activos' : 'eliminados';
     this.confirmationService.confirm({
       message: `¿Está seguro de ${nuevoEstado ? 'activar' : 'enviar a eliminados'} el proveedor "${proveedor.razon_social}"?`,
-      header: 'Confirmar acción',
-      icon: 'pi pi-exclamation-triangle',
+      header:  'Confirmar acción',
+      icon:    'pi pi-exclamation-triangle',
       accept: () => {
         this.proveedorService.changeSupplierStatus(proveedor.id_proveedor, nuevoEstado).subscribe({
           next: () => {
