@@ -32,6 +32,7 @@ import { AuthService } from '../../../auth/services/auth.service';
 import { UserRole } from '../../../core/constants/roles.constants';
 import { VentasAdminService } from '../../../administracion/services/ventas.service';
 import { SedeAdmin } from '../../../administracion/interfaces/ventas.interface';
+import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 
 @Component({
   selector: 'app-remision',
@@ -62,6 +63,7 @@ export class Remision implements OnInit {
   private readonly ventasService = inject(VentasAdminService);
   private readonly messageService = inject(MessageService);
   private readonly confirmationService = inject(ConfirmationService);
+  private searchSubject = new Subject<string>();
 
   // ── Auth / Sede ───────────────────────────────────────────────────
   readonly esAdmin: boolean;
@@ -122,6 +124,10 @@ export class Remision implements OnInit {
       this.cargarDatos();
       this.cargarResumen();
     }
+    this.searchSubject.pipe(debounceTime(400), distinctUntilChanged()).subscribe((searchTerm) => {
+      this.filtroTexto.set(searchTerm);
+      this.aplicarFiltros();
+    });
   }
 
   // ── Carga de sedes ────────────────────────────────────────────────
@@ -171,7 +177,7 @@ export class Remision implements OnInit {
         this.paginaActual(),
         this.limitePagina(),
         this.filtroTexto() || undefined,
-        this.filtroEstado() ?? undefined,
+        this.filtroEstado() || undefined,
         startDate,
         endDate,
         this.filtroSede(),
@@ -282,5 +288,28 @@ export class Remision implements OnInit {
         });
       }
     });
+  }
+  onSearchChange(termino: string): void {
+    console.log('Filtro de estado detectado:', termino);
+    this.filtroTexto.set(termino);
+    this.searchSubject.next(termino);
+  }
+
+  onEstadoChange(nuevoEstado: string | null): void {
+    console.log('Filtro de estado detectado:', nuevoEstado);
+    this.filtroEstado.set(nuevoEstado);
+    this.aplicarFiltros();
+  }
+
+  getSeverity(estado: any): 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast' {
+    switch (estado) {
+      case 'ENTREGADO': return 'success';
+      case 'EN_CAMINO': return 'warn';
+      case 'EMITIDO': 
+      case 0: return 'info';
+      case 'ANULADO': 
+      case 'RECHAZADO': return 'danger';
+      default: return 'info';
+    }
   }
 }
