@@ -2,7 +2,6 @@
   <p-toast position="top-right"></p-toast>
   <p-confirmDialog></p-confirmDialog>
 
-  <!-- CABECERA -->
   <p-card styleClass="sedes-header-card mb-4 ventas-header-bordered">
     <div class="flex align-items-center justify-content-between flex-wrap gap-2">
       <div class="flex align-items-center gap-3">
@@ -30,7 +29,6 @@
 
       <div class="grid form-grid">
 
-        <!-- NOMBRE -->
         <div class="col-12 md:col-6">
           <label class="field-label" for="nombre">NOMBRE: <span class="required">*</span></label>
           <input
@@ -41,19 +39,19 @@
             [(ngModel)]="categoria.nombre"
             name="nombre"
             required
+            maxlength="50"
             #nombre="ngModel"
-            (input)="toUpperCase('nombre')"
-            (keypress)="onlyLetters($event)"
+            (input)="onInputChange('nombre')"
+            (keypress)="onlyLettersAndNumbers($event)"
             [ngClass]="{ 'p-invalid': (categoriaForm.submitted || nombre.touched) && nombre.invalid }"
           />
           <p-message
             *ngIf="(categoriaForm.submitted || nombre.touched) && nombre.invalid"
             severity="error"
-            text="El nombre es obligatorio."
+            text="El nombre es obligatorio (Máx. 50 caracteres)."
           />
         </div>
 
-        <!-- DESCRIPCIÓN -->
         <div class="col-12 md:col-6">
           <label class="field-label" for="descripcion">DESCRIPCIÓN:</label>
           <input
@@ -63,8 +61,10 @@
             placeholder="Ingrese descripción"
             [(ngModel)]="categoria.descripcion"
             name="descripcion"
+            maxlength="50"
             #descripcion="ngModel"
-            (input)="toUpperCase('descripcion')"
+            (input)="onInputChange('descripcion')"
+            (keypress)="onlyLettersAndNumbers($event)"
           />
         </div>
 
@@ -93,8 +93,4 @@
 
     </form>
   </p-card>
-
-  <p-confirmdialog />
 </div>
-
-

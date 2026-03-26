@@ -448,7 +448,6 @@
     }
 
     cargarActividadReciente(): void {
-      console.log('>>> cargarActividadReciente con idSede:', this.idSede()); // ← agregar
       this.dashboardService
         .getRecentSales(this.periodoVentasDia(), this.idSede() || undefined)
         .subscribe({

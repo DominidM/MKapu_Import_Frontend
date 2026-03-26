@@ -120,7 +120,6 @@ export class ProveedorFormulario implements OnInit, OnDestroy {
 
     effect(() => {
       if (this.isEditMode()) {
-        console.log('Modo edición activado para ID:', this.proveedorId());
       }
     });
   }

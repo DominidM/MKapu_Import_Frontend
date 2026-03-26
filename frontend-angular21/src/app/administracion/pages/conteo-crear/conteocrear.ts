@@ -162,7 +162,6 @@ export class ConteoCrear implements OnInit {
     this.router.navigate(['/admin/conteo-inventario']);
   }
 
-  /* 🔥 GUARDAR CON PRODUCTOS */
   guardarConteo() {
 
     const productosContados = this.productosFiltrados
@@ -187,7 +186,7 @@ export class ConteoCrear implements OnInit {
       detalle: `Conteo ${this.familiaSeleccionada || 'General'} - ${this.sedeSeleccionada || 'Todas las sedes'}`,
       estado: 'Inicio',
       familia: this.familiaSeleccionada || 'General',
-      productos: productosContados // 🔥 IMPORTANTE
+      productos: productosContados 
     };
 
     this.conteoService.crearConteo(nuevoConteo);

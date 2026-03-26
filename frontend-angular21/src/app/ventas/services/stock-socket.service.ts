@@ -18,7 +18,6 @@ export class StockSocketService {
 
     this.socket.on('connect', () => {
       this._connected.set(true);
-      console.log('📦 [Stock Socket] Conectado exitosamente al backend!');
     });
 
     this.socket.on('disconnect', () => this._connected.set(false));

@@ -28,8 +28,6 @@ export class ClienteService {
     return this.http.get<ClienteBusquedaResponse>(
       `${this.apiUrl}/customers/document/${documento}`,
     ).pipe(
-      // 🕵️‍♂️ ESPÍA 1
-      tap(data => console.log('📦 CLIENTE SERVICE - DATA CRUDA (buscarCliente):', data))
     );
   }
 
@@ -44,8 +42,6 @@ export class ClienteService {
     return this.http.get<ClienteResponse>(
       `${this.apiUrl}/customers/${customerId}`,
     ).pipe(
-      // 🕵️‍♂️ ESPÍA 2
-      tap(data => console.log('📦 CLIENTE SERVICE - DATA CRUDA (obtenerClientePorId):', data))
     );
   }
 
@@ -88,7 +84,6 @@ export class ClienteService {
   buscarPorDocumento(documento: string): Observable<Cliente | null> {
     return this.http.get<any>(`${this.apiUrl}/customers/document/${documento}`).pipe(
       // 🕵️‍♂️ ESPÍA 3: Vemos la data ANTES de que el map la transforme
-      tap(data => console.log('📦 CLIENTE SERVICE - DATA CRUDA (buscarPorDocumento ANTES del MAP):', data)),
       map((data) => {
         if (!data) return null;
 

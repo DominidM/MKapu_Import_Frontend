@@ -146,9 +146,7 @@ export class ReclamosEditar implements OnInit, OnDestroy {
         try {
           if (claimData.receiptId) {
             const reciboCrudo = await firstValueFrom<any>(this.ventasService.getDetalleComprobante(claimData.receiptId));
-            
-            console.log('ESTRUCTURA REAL DEL RECIBO:', reciboCrudo);
-            
+                        
             const recibo = reciboCrudo.data || reciboCrudo;
 
             if (recibo) {
@@ -222,7 +220,6 @@ export class ReclamosEditar implements OnInit, OnDestroy {
       message: mensaje,
       icon: 'pi pi-question-circle',
       accept: () => {
-        console.log('🔴 PASO 3: Usuario aceptó, llamando a ejecutarPatch()');
         this.ejecutarPatch();
       },
     });
@@ -234,8 +231,6 @@ export class ReclamosEditar implements OnInit, OnDestroy {
     const estado = this.estadoSeleccionado();
     const textoRespuesta = this.respuesta();
 
-    console.log('📦 DATOS A ENVIAR:', { id, estado, textoRespuesta });
-
     try {
       if (estado === 'EN_PROCESO') {
         await firstValueFrom(this.reclamosApi.atenderReclamo(id, textoRespuesta));
@@ -246,7 +241,6 @@ export class ReclamosEditar implements OnInit, OnDestroy {
         await firstValueFrom(this.reclamosApi.resolverReclamo(id, `[${estado}] - ${textoRespuesta}`));
       } 
       else {
-         console.log('🔴 DETENIDO LOCALMENTE: Estado inválido');
          throw new Error('Debe cambiar el estado a "En Proceso", "Resuelto" o "Rechazado".');
       }
 

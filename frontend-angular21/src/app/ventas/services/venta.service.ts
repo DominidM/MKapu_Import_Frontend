@@ -33,7 +33,6 @@ export class VentaService {
   }
   getComprobanteById(id: number): Observable<ComprobanteVenta> {
     return this.http.get<ComprobanteVenta>(`${this.apiUrl}/receipts/${id}`).pipe(
-      tap(data => console.log('📦 DATA CRUDA (getComprobanteById):', data)) 
     );
   }
 
@@ -102,13 +101,11 @@ export class VentaService {
 
   obtenerVentaPorId(ventaId: number): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/receipts/${ventaId}`).pipe(
-      tap(data => console.log('📦 DATA CRUDA (obtenerVentaPorId):', data)) 
     );
   }
 
   obtenerVentaConHistorial(id: number): Observable<SalesReceiptWithHistoryDto> {
     return this.http.get<SalesReceiptWithHistoryDto>(`${this.apiUrl}/receipts/${id}/detalle`).pipe(
-      tap(data => console.log('📦 DATA CRUDA (obtenerVentaConHistorial):', data)) 
     );
   }
 

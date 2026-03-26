@@ -280,12 +280,7 @@ export class IngresosAgregar implements OnInit {
       return;
     }
 
-    // Actualizar totales finales
     this.actualizarTotalesIngreso();
-
-    // Aquí iría la lógica para guardar en el backend
-    console.log('Ingreso a guardar:', this.ingreso);
-    console.log('Productos:', this.productos);
 
     this.messageService.add({
       severity: 'success',

@@ -18,12 +18,10 @@ export class RoleSocketService {
 
     // 👇 2. LISTENERS DE DEPURACIÓN (Obligatorio para saber qué pasa)
     this.socket.on('connect', () => {
-      console.log('✅ [Roles Socket] Conectado exitosamente al backend!');
     });
 
     this.socket.on('connect_error', (err) => {
       console.error('❌ [Roles Socket] Falló la conexión:', err.message);
-      console.log(this.socket); // Ver qué transporte se está usando
     });
 
     this.socket.on('disconnect', (reason) => {
@@ -35,7 +33,6 @@ export class RoleSocketService {
     return new Observable((observer) => {
       this.socket.on('role_permissions_updated', (data) => {
         this.ngZone.run(() => {
-          console.log('🔔 [Roles Socket] Señal recibida dentro de Angular Zone:', data);
           observer.next(data);
         });
       });

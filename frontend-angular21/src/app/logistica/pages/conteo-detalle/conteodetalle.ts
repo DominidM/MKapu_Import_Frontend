@@ -94,7 +94,6 @@ export class ConteoDetalle implements OnInit {
 
   descargarPDF() {
     const id = this.conteo()?.idConteo;
-    console.log(`Iniciando generación de PDF para el conteo #${id}`);
   }
   retomarConteo() {
     const id = this.conteo()?.idConteo || this.conteo()?.id_conteo;

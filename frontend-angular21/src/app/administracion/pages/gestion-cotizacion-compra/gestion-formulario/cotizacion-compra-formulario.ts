@@ -284,6 +284,23 @@ export class CotizacionCompraFormulario implements OnInit {
     }
   }
 
+  private getIdUsuarioActual(): number | null {
+    try {
+      const userString = localStorage.getItem('user');
+      if (userString) {
+        const user = JSON.parse(userString);
+        return (
+          user.id          ??
+          user.userId      ??
+          user.user_id     ??
+          user.idUsuario   ??
+          user.id_usuario  ??
+          null
+        );
+      }
+    } catch (e) { console.error('Error parseando usuario', e); }
+    return null;
+  }
   // ── Proveedor — Autocomplete ──────────────────────────────────────────────
 
   /** Llamado en cada (input) del campo RUC */
@@ -555,14 +572,15 @@ export class CotizacionCompraFormulario implements OnInit {
       : new Date(raw.fec_venc).toISOString();
 
     const payload = {
-      id_proveedor: this.form.get('id_proveedor')?.value,
-      id_sede:      raw.sede,
-      id_almacen:   this.almacenSeleccionado() ?? raw.id_almacen ?? null,
-      fec_venc:     fecVenc,
-      subtotal:     this.subtotal,
-      igv:          this.igv,
-      total:        this.total,
-      tipo:         'COMPRA' as const,
+      id_proveedor:       this.form.get('id_proveedor')?.value,
+      id_sede:            raw.sede,
+      id_almacen:         this.almacenSeleccionado() ?? raw.id_almacen ?? null,
+      fec_venc:           fecVenc,
+      subtotal:           this.subtotal,
+      igv:                this.igv,
+      total:              this.total,
+      tipo:               'COMPRA' as const,
+      id_responsable_ref: this.getIdUsuarioActual(), 
       detalles:     this.detalles().map(
         ({ importe, uni_med, tipoPrecio, pre_unit, pre_may, pre_caja, almacen, stock, ...d }) => d
       ),

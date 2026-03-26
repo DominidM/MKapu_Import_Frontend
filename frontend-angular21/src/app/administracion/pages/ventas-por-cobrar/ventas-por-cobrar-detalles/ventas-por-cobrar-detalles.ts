@@ -51,7 +51,6 @@ export class VentasPorCobrarDetalles implements OnInit {
   ) {}
 
   ngOnInit() {
-    console.log(123)
     this.route.paramMap.subscribe(params => {
     this.idProducto = Number(params.get('id'));
 

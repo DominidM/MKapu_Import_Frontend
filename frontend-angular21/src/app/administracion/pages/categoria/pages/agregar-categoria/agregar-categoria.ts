@@ -54,13 +54,30 @@ export class AgregarCategoria implements CanComponentDeactivate {
     private router: Router
   ) {}
 
-  toUpperCase(field: 'nombre' | 'descripcion'): void {
-    this.categoria[field] = this.categoria[field].toUpperCase();
+  /**
+   * Limpia espacios invisibles múltiples mientras se escribe y pasa a mayúsculas.
+   */
+  onInputChange(field: 'nombre' | 'descripcion'): void {
+    let value = this.categoria[field] || '';
+    
+    // Reemplaza múltiples espacios consecutivos por uno solo y lo pasa a Mayúsculas
+    value = value.replace(/\s+/g, ' ').toUpperCase();
+    
+    this.categoria[field] = value;
   }
 
-  onlyLetters(event: KeyboardEvent): boolean {
-    const regex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]$/;
-    return regex.test(event.key) || event.key === 'Backspace' || event.key === 'Tab';
+  /**
+   * Bloquea caracteres especiales de teclado (Solo letras, números y espacios).
+   */
+  onlyLettersAndNumbers(event: KeyboardEvent): boolean {
+    const regex = /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]$/;
+    const allowedKeys = ['Backspace', 'Tab', 'ArrowLeft', 'ArrowRight', 'Delete'];
+
+    if (allowedKeys.includes(event.key)) {
+      return true;
+    }
+
+    return regex.test(event.key);
   }
 
   saveCategoria(form: NgForm): void {
@@ -75,9 +92,10 @@ export class AgregarCategoria implements CanComponentDeactivate {
       return;
     }
 
+    // El .trim() final elimina espacios vacíos que hayan quedado en los extremos.
     const payload = {
-      nombre: this.categoria.nombre.trim().toUpperCase(),
-      descripcion: this.categoria.descripcion.trim().toUpperCase(),
+      nombre: this.categoria.nombre.trim(),
+      descripcion: this.categoria.descripcion.trim(),
     };
 
     this.categoriaService.createCategoria(payload, 'Administrador').subscribe({
@@ -128,8 +146,15 @@ export class AgregarCategoria implements CanComponentDeactivate {
       rejectLabel: 'Continuar',
       acceptButtonProps: { severity: 'danger' },
       rejectButtonProps: { severity: 'secondary', outlined: true },
-      accept: () => { this.allowNavigate = true; result.next(true); result.complete(); },
-      reject: () => { result.next(false); result.complete(); },
+      accept: () => {
+        this.allowNavigate = true;
+        result.next(true);
+        result.complete();
+      },
+      reject: () => {
+        result.next(false);
+        result.complete();
+      },
     });
     return result.asObservable();
   }

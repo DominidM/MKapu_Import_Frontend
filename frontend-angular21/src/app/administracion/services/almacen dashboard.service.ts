@@ -65,7 +65,6 @@ export class AlmacenDashboardService {
 
   getKpis(periodo = 'mes', sedeId?: string | null): Observable<AlmacenKpisDto> {
     const params = this.buildParams(periodo, sedeId);
-    console.log('🚀 Llamando kpis con params:', params.toString()); // ← agregar
     return this.http.get<AlmacenKpisDto>(`${this.baseUrl}/kpis`, { params });
   }
 

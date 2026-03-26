@@ -206,11 +206,9 @@ export class RematesRegistro implements OnInit {
     this.productosSugeridos.set([]);
     this.cdr.detectChanges();
 
-    // Segunda llamada para resolver id_almacen
     const sede = this.id_sede_ref > 0 ? this.id_sede_ref : 0;
     this.productoService.getProductoByCodigoConStock(p.codigo, sede).subscribe({
       next: (resp: any) => {
-        console.log('🔍 stock resp:', JSON.stringify(resp));
         const idAlmacen = resp?.stock?.id_almacen
           ?? resp?.almacen?.id_almacen
           ?? resp?.id_almacen
