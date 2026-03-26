@@ -47,7 +47,7 @@ interface DeliveryDetalle {
 @Component({
   selector: 'app-delivery-detalles',
   standalone: true,
-  imports: [CommonModule, RouterModule, Card, Button, Tag, TableModule, Skeleton, Tooltip, Divider],
+  imports: [CommonModule, RouterModule, Card, Button, Tag, TableModule, Skeleton, Tooltip],
   templateUrl: './delivery-detalles.html',
   styleUrl: './delivery-detalles.css',
 })
