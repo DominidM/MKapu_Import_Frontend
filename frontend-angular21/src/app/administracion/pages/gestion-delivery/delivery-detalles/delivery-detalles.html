@@ -1,0 +1,245 @@
+<div class="p-2">
+  <!-- HEADER -->
+  <p-card styleClass="det-header-card mb-4">
+    <div class="flex align-items-center justify-content-between flex-wrap gap-2">
+      <div class="flex align-items-center gap-3">
+        <span class="det-title-icon">
+          <i [class]="iconoCabecera"></i>
+        </span>
+        <div>
+          <p class="det-kicker mb-0">{{ tituloKicker }}</p>
+          <h2 class="det-title mb-0">{{ subtituloKicker }}</h2>
+        </div>
+      </div>
+      <div class="flex gap-2 flex-wrap">
+        <p-button
+          label="Listado"
+          icon="pi pi-list"
+          severity="secondary"
+          [outlined]="true"
+          (click)="irListado()"
+          pTooltip="Volver al listado"
+          tooltipPosition="bottom"
+        />
+        <p-button
+          label="Gestionar"
+          icon="pi pi-sliders-h"
+          severity="info"
+          [outlined]="true"
+          (click)="irFormulario()"
+          pTooltip="Ir a asignación"
+          tooltipPosition="bottom"
+        />
+      </div>
+    </div>
+  </p-card>
+</div>
+
+<!-- SKELETON -->
+@if (loading) {
+  <div class="p-2">
+    <p-card>
+      <div class="det-skeleton-wrapper">
+        <p-skeleton width="100%" height="140px" styleClass="mb-3"></p-skeleton>
+        <p-skeleton width="100%" height="280px" styleClass="mb-3"></p-skeleton>
+        <p-skeleton width="100%" height="180px"></p-skeleton>
+      </div>
+    </p-card>
+  </div>
+}
+
+<!-- CONTENIDO -->
+@if (!loading && detalle) {
+
+  <!-- CARD PRINCIPAL -->
+  <div class="p-2">
+    <p-card styleClass="det-main-card mb-4">
+
+      <!-- CABECERA DEL COMPROBANTE -->
+      <div class="det-comp-header">
+        <div class="det-comp-tipo">
+          <span class="det-tipo-icon">
+            <i [class]="detalle.tipo === 'VENTA_DELIVERY' ? 'pi pi-send' : 'pi pi-download'"></i>
+          </span>
+          <div>
+            <h2>{{ getTipoLabel(detalle.tipo) }}</h2>
+            <p class="det-comp-numero">{{ detalle.comprobante }}</p>
+          </div>
+        </div>
+        <p-tag
+          [value]="detalle.estado"
+          [severity]="getEstadoSeverity(detalle.estado)"
+          [rounded]="true"
+        ></p-tag>
+      </div>
+
+      <!-- GRILLA DE INFO -->
+      <div class="det-info-grid-wrapper">
+        <div class="det-info-grid">
+
+          <!-- CLIENTE / PROVEEDOR -->
+          <div class="det-info-section">
+            <h3><i class="pi pi-user"></i> {{ detalle.tipo === 'VENTA_DELIVERY' ? 'Cliente' : 'Proveedor' }}</h3>
+            <div class="det-info-row">
+              <span class="det-label">Nombre:</span>
+              <span class="det-value">{{ detalle.cliente }}</span>
+            </div>
+            <div class="det-info-row">
+              <span class="det-label">Documento:</span>
+              <span class="det-value">{{ detalle.clienteDoc }}</span>
+            </div>
+            <div class="det-info-row">
+              <span class="det-label">Teléfono:</span>
+              <span class="det-value">{{ detalle.clienteTelefono }}</span>
+            </div>
+            <div class="det-info-row">
+              <span class="det-label">Email:</span>
+              <span class="det-value">{{ detalle.clienteEmail }}</span>
+            </div>
+          </div>
+
+          <!-- RUTA -->
+          <div class="det-info-section">
+            <h3><i class="pi pi-map"></i> Ruta de Entrega</h3>
+            <div class="det-info-row">
+              <span class="det-label">Fecha:</span>
+              <span class="det-value">{{ detalle.fecha }}</span>
+            </div>
+            <div class="det-info-row">
+              <span class="det-label">Hora:</span>
+              <span class="det-value">{{ detalle.hora }}</span>
+            </div>
+            <div class="det-info-row">
+              <span class="det-label">Origen:</span>
+              <span class="det-value">
+                <i class="pi pi-circle-fill det-icon-origen mr-1"></i>{{ detalle.origen }}
+              </span>
+            </div>
+            <div class="det-info-row">
+              <span class="det-label">Destino:</span>
+              <span class="det-value">
+                <i class="pi pi-map-marker det-icon-destino mr-1"></i>{{ detalle.destino }}
+              </span>
+            </div>
+            <div class="det-info-row" *ngIf="detalle.observaciones">
+              <span class="det-label">Observaciones:</span>
+              <span class="det-value">{{ detalle.observaciones }}</span>
+            </div>
+          </div>
+
+          <!-- RESPONSABLE -->
+          <div class="det-info-section">
+            <h3><i class="pi pi-id-card"></i> Responsable</h3>
+            <div class="det-info-row">
+              <span class="det-label">Nombre:</span>
+              <span class="det-value det-responsable-nombre">{{ detalle.responsableNombre }}</span>
+            </div>
+            <div class="det-info-row">
+              <span class="det-label">Cargo:</span>
+              <span class="det-value">
+                <span class="det-cargo-badge">{{ detalle.responsableCargo }}</span>
+              </span>
+            </div>
+            <div class="det-info-row">
+              <span class="det-label">Teléfono:</span>
+              <span class="det-value">{{ detalle.responsableTelefono }}</span>
+            </div>
+          </div>
+
+          <!-- PAGO -->
+          <div class="det-info-section">
+            <h3><i class="pi pi-wallet"></i> Información de Pago</h3>
+            <div class="det-info-row">
+              <span class="det-label">Comprobante:</span>
+              <span class="det-value">{{ detalle.comprobante }}</span>
+            </div>
+            <div class="det-info-row">
+              <span class="det-label">Tipo:</span>
+              <span class="det-value">
+                <p-tag
+                  [value]="getTipoLabel(detalle.tipo)"
+                  [severity]="getTipoSeverity(detalle.tipo)"
+                  styleClass="det-tag"
+                ></p-tag>
+              </span>
+            </div>
+            <div class="det-info-row det-monto-row">
+              <span class="det-label">Monto total:</span>
+              <span class="det-value det-monto-valor">S/ {{ detalle.monto | number:'1.2-2' }}</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </p-card>
+  </div>
+
+  <!-- PRODUCTOS -->
+  <div class="p-2">
+    <p-card styleClass="det-productos-card mb-4">
+      <ng-template pTemplate="header">
+        <div class="det-card-header">
+          <h3>
+            <span class="det-icon-cart"><i class="pi pi-shopping-cart"></i></span>
+            {{ detalle.tipo === 'VENTA_DELIVERY' ? 'Productos Vendidos' : 'Productos a Recoger' }}
+          </h3>
+          <p-tag
+            [value]="detalle.productos.length + ' items'"
+            severity="success"
+            [rounded]="true"
+          ></p-tag>
+        </div>
+      </ng-template>
+
+      <p-table
+        [value]="detalle.productos"
+        [tableStyle]="{ 'min-width': '46rem' }"
+        styleClass="p-datatable-gridlines p-datatable-sm"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th>CÓDIGO</th>
+            <th>DESCRIPCIÓN</th>
+            <th>CATEGORÍA</th>
+            <th>CANT.</th>
+            <th>P. UNITARIO</th>
+            <th>TOTAL</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-prod>
+          <tr>
+            <td><span class="det-cod-producto">{{ prod.codigo }}</span></td>
+            <td>{{ prod.descripcion }}</td>
+            <td>{{ prod.categoria }}</td>
+            <td>{{ prod.cantidad }}</td>
+            <td>S/ {{ prod.precioUnitario | number:'1.2-2' }}</td>
+            <td><strong>S/ {{ prod.total | number:'1.2-2' }}</strong></td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="6" class="det-empty-msg">
+              <i class="pi pi-info-circle"></i>
+              <span>Sin productos registrados</span>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+
+      <!-- TOTAL FINAL -->
+      <div class="det-totales-container">
+        <div class="det-totales-grid">
+          <div class="det-total-row">
+            <span class="det-total-label">Subtotal productos</span>
+            <span class="det-total-value">S/ {{ calcularTotal() | number:'1.2-2' }}</span>
+          </div>
+          <div class="det-total-row det-total-final">
+            <span class="det-total-label">MONTO TOTAL DELIVERY</span>
+            <span class="det-total-value det-total-final-valor">S/ {{ detalle.monto | number:'1.2-2' }}</span>
+          </div>
+        </div>
+      </div>
+    </p-card>
+  </div>
+
+}

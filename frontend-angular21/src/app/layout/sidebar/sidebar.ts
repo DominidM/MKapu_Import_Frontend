@@ -82,6 +82,8 @@ export class Sidebar implements OnInit {
     CREAR_PROVEEDORES:       { path: '/admin/proveedores',                     label: 'Proveedores',       icon: 'pi pi-truck' },
     AGREGAR_DOCUMENTO:       { path: '/admin/documento-contador',              label: 'Documentos',        icon: 'pi pi-file' },
     CREAR_PERMISOS:          { path: '/admin/roles-permisos',                  label: 'Permisos',          icon: 'pi pi-key' },
+    ASIGNAR_DELIVERY:          { path: '/admin/gestion-delivery',              label: 'DELIVERY',          icon: 'pi pi-key' },
+
     // Ventas usuario — mismas rutas /admin/, el permiso limita el acceso
     //borrarVER_DASHBOARD_VENTAS:    { path: '/admin/dashboard-admin',                 label: 'Dashboard',         icon: 'pi pi-chart-line' },
     //borrarCREAR_VENTA:             { path: '/admin/generar-ventas-administracion',   label: 'Generar Venta',     icon: 'pi pi-plus-circle' },
