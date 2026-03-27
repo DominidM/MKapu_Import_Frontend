@@ -179,7 +179,6 @@ export class MermasPr implements OnInit {
 
   cargarMermas(id_sede = 0): void {
     this.wastageService.loadWastages(1, this.limitePagina(), id_sede).subscribe({
-      next: () => console.log(`✅ ${this.mermas().length} mermas cargadas`),
       error: () => this.messageService.add({
         severity: 'error', summary: 'Error',
         detail: 'No se pudieron cargar las mermas', life: 3000,
@@ -251,7 +250,6 @@ export class MermasPr implements OnInit {
   }
 
   getNombreSede(id_sede: number): string {
-    console.log('id_sede recibido:', id_sede, '| sedes cargadas:', this.sedeService.sedes().length);
     const sede = this.sedeService.sedes().find(s => s.id_sede === id_sede);
     return sede ? sede.nombre : '—';
   }

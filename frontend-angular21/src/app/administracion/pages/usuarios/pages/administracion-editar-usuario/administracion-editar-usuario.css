@@ -501,3 +501,22 @@
 .usuarios-cargando-bar .pi {
   font-size: 1.15em;
 }
+
+.field-hint {
+  font-size: 0.68rem;
+  font-weight: 400;
+  color: #9ca3af;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.field-error {
+  display: block;
+  margin-top: 0.3rem;
+  font-size: 0.75rem;
+  color: #fb7185;
+}
+
+:host-context(.app-dark) .field-hint {
+  color: #6b7280;
+}

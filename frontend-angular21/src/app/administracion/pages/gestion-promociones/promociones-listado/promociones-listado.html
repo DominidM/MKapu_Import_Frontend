@@ -1,4 +1,4 @@
-<div class="p-2">
+﻿<div class="p-2">
   <p-card styleClass="ventas-header-card mb-4 ventas-header-bordered">
     <div class="flex align-items-center justify-content-between flex-wrap gap-2">
       <div class="flex align-items-center gap-3">
@@ -70,7 +70,7 @@
           <input
             pInputText
             type="text"
-            placeholder="Concepto, tipo o valor..."
+            placeholder="Código, concepto, tipo o valor..."
             [value]="filtros().busqueda"
             (input)="setBusqueda($any($event.target).value)"
             class="w-full"
@@ -153,7 +153,6 @@
     (limitChange)="onLimitChange($event)"
   >
 
-    <!-- Tag contador en slot de acciones -->
     <div slot="acciones" class="flex align-items-center gap-2">
       <p-tag
         [value]="filteredPromociones().length + ' promociones'"
@@ -162,7 +161,6 @@
       </p-tag>
     </div>
 
-    <!-- Tabla -->
     <p-table
       [value]="promocionesPaginadas()"
       styleClass="p-datatable-striped"

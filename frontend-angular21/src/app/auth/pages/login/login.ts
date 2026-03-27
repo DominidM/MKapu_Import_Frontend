@@ -63,7 +63,6 @@ export class Login {
 
     this.authService.login(username, password).subscribe({
       next: (data) => {
-        console.log('Login exitoso:', data);
         this.messageService.add({
           severity: 'success',
           summary:  'Bienvenido',

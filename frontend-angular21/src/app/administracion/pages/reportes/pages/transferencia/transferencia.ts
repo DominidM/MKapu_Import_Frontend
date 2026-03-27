@@ -15,6 +15,7 @@ import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { AutoCompleteModule } from 'primeng/autocomplete';
 import { SelectModule } from 'primeng/select';
+import { DatePickerModule } from 'primeng/datepicker';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
@@ -73,6 +74,7 @@ interface ActiveHeadquarterContext {
     ButtonModule,
     AutoCompleteModule,
     SelectModule,
+    DatePickerModule,
     TableModule,
     TagModule,
     ConfirmDialogModule,
@@ -145,13 +147,23 @@ export class Transferencia {
     };
   });
 
+  private readonly initialWeekRange = this.buildCurrentWeekRange(new Date());
   private readonly searchTermSig      = signal('');
   private readonly estadoFilterSig    = signal<TransferStatus | null>(null);
   private readonly solicitudFilterSig = signal<string | null>(null);
+  private readonly fechaInicioSig     = signal<Date | null>(this.initialWeekRange.start);
+  private readonly fechaFinSig        = signal<Date | null>(this.initialWeekRange.end);
+  private readonly ignoreDateRangeSig = signal(false);
   private readonly lastErrorShown = signal<string | null>(null);
   private readonly lastSocketErrorShown = signal<string | null>(null);
   private readonly lastRealtimeEventKey = signal<string | null>(null);
   private readonly paginationSig = this.transferStore.pagination;
+  private pendingInitialNewRequestEventKey = this.buildSocketEventSignalKey(
+    this.transferSocket.lastNewRequest(),
+  );
+  private pendingInitialStatusEventKey = this.buildSocketEventSignalKey(
+    this.transferSocket.lastStatusUpdate(),
+  );
 
   readonly transferenciasSig = computed(() =>
     this.transferStore
@@ -236,6 +248,12 @@ export class Transferencia {
         return;
       }
 
+      const eventKey = this.buildSocketEventSignalKey(realtimeEvent);
+      if (eventKey && this.pendingInitialNewRequestEventKey === eventKey) {
+        this.pendingInitialNewRequestEventKey = null;
+        return;
+      }
+
       untracked(() => {
         this.handleRealtimeEvent('new_transfer_request', realtimeEvent, true);
       });
@@ -244,6 +262,12 @@ export class Transferencia {
     effect(() => {
       const realtimeEvent = this.transferSocket.lastStatusUpdate();
       if (!realtimeEvent) {
+        return;
+      }
+
+      const eventKey = this.buildSocketEventSignalKey(realtimeEvent);
+      if (eventKey && this.pendingInitialStatusEventKey === eventKey) {
+        this.pendingInitialStatusEventKey = null;
         return;
       }
 
@@ -259,24 +283,31 @@ export class Transferencia {
     });
 
     const initialPagination = this.paginationSig();
+    const initialHeadquarterId = this.resolveActiveHeadquarterId();
+
+    this.connectRealtimeForCurrentHeadquarter();
+    this.loadTransfersPage(initialPagination.page, initialPagination.pageSize);
 
     this.sedeService
       .loadSedes()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
+          const resolvedHeadquarterId = this.resolveActiveHeadquarterId();
+          if (!resolvedHeadquarterId || resolvedHeadquarterId === initialHeadquarterId) {
+            return;
+          }
+
           this.connectRealtimeForCurrentHeadquarter();
-          this.loadTransfersPage(initialPagination.page, initialPagination.pageSize);
+          this.loadTransfersPage(this.paginationSig().page, this.paginationSig().pageSize);
         },
         error: () => {
-          // Si falla este catalogo, la tabla sigue operando con el fallback actual.
-          this.connectRealtimeForCurrentHeadquarter();
-          this.loadTransfersPage(initialPagination.page, initialPagination.pageSize);
+          // La tabla ya se cargÃ³ con el contexto disponible; este catÃ¡logo solo enriquece nombres y cÃ³digos.
         },
       });
   }
 
-  // ── Getters / setters ─────────────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Getters / setters Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   get transferencias():           TransferenciaRow[]   { return this.transferenciasSig(); }
   get filteredTransferencias():   TransferenciaRow[]   { return this.filteredTransferenciasSig(); }
   get transferenciaSuggestions(): TransferenciaRow[]   { return this.filteredTransferenciasSig(); }
@@ -296,8 +327,12 @@ export class Transferencia {
   set estadoFilter(v: TransferStatus | null)  { this.estadoFilterSig.set(v ?? null); }
   get solicitudFilter(): string | null        { return this.solicitudFilterSig(); }
   set solicitudFilter(v: string | null)       { this.solicitudFilterSig.set(v ?? null); }
+  get fechaInicio(): Date | null              { return this.fechaInicioSig(); }
+  set fechaInicio(v: Date | string | null)    { this.fechaInicioSig.set(this.normalizeDateInput(v)); }
+  get fechaFin(): Date | null                 { return this.fechaFinSig(); }
+  set fechaFin(v: Date | string | null)       { this.fechaFinSig.set(this.normalizeDateInput(v)); }
 
-  // ── Eventos ───────────────────────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Eventos Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   trackByTransferId = (_: number, item: TransferenciaRow): number => item.id;
 
   onSearch(event: { query: string }): void { this.searchTerm = event.query ?? ''; }
@@ -322,6 +357,22 @@ export class Transferencia {
     this.searchTerm      = '';
     this.estadoFilter    = null;
     this.solicitudFilter = null;
+    this.fechaInicio = null;
+    this.fechaFin = null;
+    this.ignoreDateRangeSig.set(true);
+    this.loadTransfersPage(1, this.paginationSig().pageSize);
+  }
+
+  onDateRangeSelect(): void {
+    this.ignoreDateRangeSig.set(false);
+    this.applyDateRangeFilter();
+  }
+
+  onDateRangeClear(): void {
+    this.ignoreDateRangeSig.set(
+      !this.fechaInicioSig() && !this.fechaFinSig(),
+    );
+    this.applyDateRangeFilter();
   }
 
   filtrar(valor: string): void { this.searchTerm = valor || ''; }
@@ -366,7 +417,7 @@ export class Transferencia {
       !this.isUserFromTransferOrigin(row.originHeadquartersId) ||
       this.isUserFromTransferDestination(row.destinationHeadquartersId)
     ) {
-      this.messageService.add({ severity: 'warn', summary: 'Acción no permitida',
+      this.messageService.add({ severity: 'warn', summary: 'AcciÃƒÂ³n no permitida',
         detail: 'Solo un administrador de la sede origen (y no de destino) puede aprobar esta solicitud.' });
       return;
     }
@@ -375,7 +426,7 @@ export class Transferencia {
     this.transferStore.approve(row.id, dto).pipe(takeUntilDestroyed(this.destroyRef)).subscribe((response) => {
       if (!response) return;
       this.messageService.add({ severity: 'success', summary: 'Transferencia aprobada',
-        detail: `Se aprobó la transferencia #${row.codigo}` });
+        detail: `Se aprobÃƒÂ³ la transferencia #${row.codigo}` });
     });
   }
 
@@ -448,6 +499,20 @@ export class Transferencia {
       resetToFirstPage ? 1 : pagination.page,
       pagination.pageSize,
     );
+  }
+
+  private buildSocketEventSignalKey(
+    event: TransferSocketEventDto | null | undefined,
+  ): string | null {
+    if (!event) {
+      return null;
+    }
+
+    const transferId = Number(event.transfer?.id ?? 0);
+    const status = String(event.transfer?.status ?? '').trim();
+    const reason = String(event.transfer?.reason ?? '').trim();
+    const emittedAt = String(event.emittedAt ?? '').trim();
+    return `${transferId}:${status}:${reason}:${emittedAt}`;
   }
 
   private buildRealtimeEventKey(
@@ -673,23 +738,156 @@ export class Transferencia {
     return null;
   }
 
+  private applyDateRangeFilter(): void {
+    const validationError = this.validateDateRange();
+    if (validationError) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Rango de fechas invalido',
+        detail: validationError,
+      });
+      return;
+    }
+
+    this.loadTransfersPage(1, this.paginationSig().pageSize);
+  }
+
+  private validateDateRange(): string | null {
+    const fechaInicio = this.fechaInicioSig();
+    const fechaFin = this.fechaFinSig();
+
+    if (!fechaInicio || !fechaFin) {
+      return null;
+    }
+
+    const start = new Date(fechaInicio);
+    start.setHours(0, 0, 0, 0);
+
+    const end = new Date(fechaFin);
+    end.setHours(0, 0, 0, 0);
+
+    if (end.getTime() < start.getTime()) {
+      return 'La fecha fin no puede ser menor que la fecha inicio.';
+    }
+
+    return null;
+  }
+
   private loadTransfersPage(page: number, pageSize: number): void {
-    const headquartersId = this.activeHeadquarterContextSig().id ?? this.transferUserContext.getCurrentHeadquarterId();
+    const headquartersId = this.resolveActiveHeadquarterId();
     this.transferStore.loadAll({
       headquartersId: headquartersId ?? undefined,
       page,
       pageSize,
+      dateFrom: this.formatDateForQuery(this.fechaInicioSig()),
+      dateTo: this.formatDateForQuery(this.fechaFinSig()),
+      ignoreDateRange: this.ignoreDateRangeSig() || undefined,
     });
   }
 
+  private resetDateRangeToCurrentWeek(): void {
+    const weekRange = this.buildCurrentWeekRange(new Date());
+    this.fechaInicio = weekRange.start;
+    this.fechaFin = weekRange.end;
+    this.ignoreDateRangeSig.set(false);
+  }
+
+  private buildCurrentWeekRange(referenceDate: Date): { start: Date; end: Date } {
+    const anchorDate = new Date(referenceDate);
+    anchorDate.setHours(12, 0, 0, 0);
+
+    const start = new Date(anchorDate);
+    const daysSinceMonday = (start.getDay() + 6) % 7;
+    start.setDate(start.getDate() - daysSinceMonday);
+    start.setHours(0, 0, 0, 0);
+
+    const end = new Date(start);
+    end.setDate(end.getDate() + 6);
+    end.setHours(23, 59, 59, 999);
+
+    return { start, end };
+  }
+
+  private formatDateForQuery(date: Date | null): string | undefined {
+    if (!this.isValidDate(date)) {
+      return undefined;
+    }
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  private normalizeDateInput(value: Date | string | null | undefined): Date | null {
+    if (value === null || value === undefined || value === '') {
+      return null;
+    }
+
+    if (value instanceof Date) {
+      return this.isValidDate(value) ? new Date(value) : null;
+    }
+
+    const normalized = String(value).trim();
+    if (!normalized) {
+      return null;
+    }
+
+    const slashMatch = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(normalized);
+    if (slashMatch) {
+      const day = Number(slashMatch[1]);
+      const month = Number(slashMatch[2]);
+      const year = Number(slashMatch[3]);
+      const parsed = new Date(year, month - 1, day);
+      return this.matchesDateParts(parsed, year, month, day) ? parsed : null;
+    }
+
+    const dashMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(normalized);
+    if (dashMatch) {
+      const year = Number(dashMatch[1]);
+      const month = Number(dashMatch[2]);
+      const day = Number(dashMatch[3]);
+      const parsed = new Date(year, month - 1, day);
+      return this.matchesDateParts(parsed, year, month, day) ? parsed : null;
+    }
+
+    const parsed = new Date(normalized);
+    return this.isValidDate(parsed) ? parsed : null;
+  }
+
+  private matchesDateParts(
+    date: Date,
+    year: number,
+    month: number,
+    day: number,
+  ): boolean {
+    return (
+      this.isValidDate(date) &&
+      date.getFullYear() === year &&
+      date.getMonth() === month - 1 &&
+      date.getDate() === day
+    );
+  }
+
+  private isValidDate(date: Date | null | undefined): date is Date {
+    return !!date && !Number.isNaN(date.getTime());
+  }
+
   private connectRealtimeForCurrentHeadquarter(): void {
-    const headquartersId = this.activeHeadquarterContextSig().id ?? this.transferUserContext.getCurrentHeadquarterId();
+    const headquartersId = this.resolveActiveHeadquarterId();
     if (headquartersId) {
       this.transferSocket.connect(headquartersId, 'transfer-page');
       return;
     }
 
     this.transferSocket.disconnect('transfer-page');
+  }
+
+  private resolveActiveHeadquarterId(): string | null {
+    return (
+      this.activeHeadquarterContextSig().id ??
+      this.normalizeId(this.transferUserContext.getCurrentHeadquarterId())
+    );
   }
 
   private belongsToCurrentHeadquarter(transfer: TransferListResponseDto): boolean {

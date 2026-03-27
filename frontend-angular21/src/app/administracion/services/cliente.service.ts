@@ -11,9 +11,8 @@ export interface Customer {
   documentTypeSunatCode: string;
   documentValue: string;
   name: string;
-  lastName: string | null;
-  apellido?: string | null;
-  businessName: string | null;
+  apellidos?: string | null;
+  razonsocial?: string | null;
   address: string | null;
   email: string | null;
   phone: string | null;
@@ -42,7 +41,7 @@ export interface LoadCustomersFilters {
   search?: string;
   page?: number;
   limit?: number;
-  tipo?: string;
+  tipo?: 'juridica' | 'natural';
   status?: boolean;
 }
 
@@ -71,8 +70,6 @@ export class ClienteService {
   readonly total = computed(() => this._total());
   readonly loading = computed(() => this._loading());
   readonly error = computed(() => this._error());
-
-  // Mantener compatibilidad con código que use customerResponse
   readonly customerResponse = computed(() => ({
     customers: this._customers(),
     total: this._total(),
@@ -93,7 +90,7 @@ export class ClienteService {
     if (filters?.search) params = params.set('search', filters.search);
     if (filters?.page) params = params.set('page', filters.page.toString());
     if (filters?.limit) params = params.set('limit', filters.limit.toString());
-    if (filters?.tipo && filters.tipo !== 'todas') params = params.set('tipo', filters.tipo);
+    if (filters?.tipo) params = params.set('tipo', filters.tipo);
     if (filters?.status !== undefined) params = params.set('status', String(filters.status));
 
     return this.http
@@ -111,12 +108,12 @@ export class ClienteService {
       );
   }
 
-  suggestCustomers(query: string, limit = 5, role = 'Administrador'): Observable<Customer[]> {
-    let params = new HttpParams().set('limit', String(limit));
-    if (query) params = params.set('q', query);
+  // ← NUEVO: busca en toda la BD, sin paginación
+  suggestCustomers(q: string, limit = 5, role = 'Administrador'): Observable<Customer[]> {
+    let params = new HttpParams().set('q', q).set('limit', String(limit));
     return this.http
       .get<Customer[]>(`${this.api}/suggest`, { headers: this.buildHeaders(role), params })
-      .pipe(catchError((err) => throwError(() => err)));
+      .pipe(catchError(() => of([])));
   }
 
   obtenerTiposDocumento(): Observable<any[]> {
@@ -126,7 +123,6 @@ export class ClienteService {
   createCustomer(payload: CreateCustomerRequest, role = 'Administrador'): Observable<Customer> {
     this._loading.set(true);
     this._error.set(null);
-
     return this.http.post<Customer>(this.api, payload, { headers: this.buildHeaders(role) }).pipe(
       catchError((err) => {
         this._error.set('No se pudo registrar al cliente.');
@@ -143,7 +139,6 @@ export class ClienteService {
   ): Observable<Customer> {
     this._loading.set(true);
     this._error.set(null);
-
     return this.http
       .put<Customer>(`${this.api}/${id}`, payload, { headers: this.buildHeaders(role) })
       .pipe(
@@ -158,7 +153,6 @@ export class ClienteService {
   updateCustomerStatus(id: string, status: boolean, role = 'Administrador'): Observable<Customer> {
     this._loading.set(true);
     this._error.set(null);
-
     return this.http
       .put<Customer>(`${this.api}/${id}/status`, { status }, { headers: this.buildHeaders(role) })
       .pipe(
@@ -180,7 +174,6 @@ export class ClienteService {
   getCustomerById(id: string, role = 'Administrador'): Observable<Customer> {
     this._loading.set(true);
     this._error.set(null);
-
     return this.http.get<Customer>(`${this.api}/${id}`, { headers: this.buildHeaders(role) }).pipe(
       catchError((err) => {
         this._error.set('No se pudo obtener la información del cliente.');

@@ -113,13 +113,9 @@ export class ClienteSeguimiento implements OnInit, OnDestroy {
     return iniciales || 'CL';
   });
 
-  readonly estadoClienteLabel = computed(() =>
-    this.cliente().activo ? 'Activo' : 'Inactivo',
-  );
+  readonly estadoClienteLabel = computed(() => (this.cliente().activo ? 'Activo' : 'Inactivo'));
 
-  readonly estadoClienteSeverity = computed(() =>
-    this.cliente().activo ? 'success' : 'danger',
-  );
+  readonly estadoClienteSeverity = computed(() => (this.cliente().activo ? 'success' : 'danger'));
 
   readonly totalMontoCompras = computed(() =>
     this.compras().reduce((sum, compra) => sum + compra.total, 0),
@@ -199,23 +195,21 @@ export class ClienteSeguimiento implements OnInit, OnDestroy {
     this.loadTracking();
   }
 
-  exportarPDF(): void {
-    this.exportando.set(true);
+  // exportarPDF(): void {
+  //   this.exportando.set(true);
 
-    setTimeout(() => {
-      this.exportando.set(false);
-      this.messageService.add({
-        severity: 'info',
-        summary: 'PDF pendiente',
-        detail: `La exportacion del reporte de ${this.nombreCompleto()} aun no esta conectada.`,
-        life: 3000,
-      });
-    }, 700);
-  }
+  //   setTimeout(() => {
+  //     this.exportando.set(false);
+  //     this.messageService.add({
+  //       severity: 'info',
+  //       summary: 'PDF pendiente',
+  //       detail: `La exportacion del reporte de ${this.nombreCompleto()} aun no esta conectada.`,
+  //       life: 3000,
+  //     });
+  //   }, 700);
+  // }
 
-  getCompraSeverity(
-    estado: string,
-  ): 'success' | 'warn' | 'danger' | 'info' | 'secondary' {
+  getCompraSeverity(estado: string): 'success' | 'warn' | 'danger' | 'info' | 'secondary' {
     switch ((estado ?? '').toUpperCase()) {
       case 'EMITIDO':
       case 'ENTREGADO':
@@ -231,9 +225,7 @@ export class ClienteSeguimiento implements OnInit, OnDestroy {
     }
   }
 
-  getCotizacionSeverity(
-    estado: string,
-  ): 'success' | 'warn' | 'danger' | 'secondary' {
+  getCotizacionSeverity(estado: string): 'success' | 'warn' | 'danger' | 'secondary' {
     switch ((estado ?? '').toUpperCase()) {
       case 'APROBADA':
         return 'success';
@@ -272,10 +264,7 @@ export class ClienteSeguimiento implements OnInit, OnDestroy {
           this.compras.set([]);
           this.cotizaciones.set([]);
           this.chartData.set(
-            this.buildChartData(
-              new Map<string, number>(),
-              new Map<string, number>(),
-            ),
+            this.buildChartData(new Map<string, number>(), new Map<string, number>()),
           );
           this.messageService.add({
             severity: 'error',
@@ -296,10 +285,7 @@ export class ClienteSeguimiento implements OnInit, OnDestroy {
     this.compras.set(compras);
     this.cotizaciones.set(cotizaciones);
     this.chartData.set(
-      this.buildChartData(
-        this.aggregateMonthly(compras),
-        this.aggregateMonthly(cotizaciones),
-      ),
+      this.buildChartData(this.aggregateMonthly(compras), this.aggregateMonthly(cotizaciones)),
     );
   }
 
@@ -322,8 +308,8 @@ export class ClienteSeguimiento implements OnInit, OnDestroy {
   }
 
   private mapCustomerProfile(customer: Customer): ClientePerfil {
-    const businessName = customer.businessName?.trim() ?? '';
-    const lastName = customer.lastName?.trim() || customer.apellido?.trim() || '';
+    const businessName = customer.razonsocial?.trim() ?? '';
+    const lastName = customer.apellidos?.trim() ?? '';
     const isBusiness = customer.documentTypeSunatCode === '06' || businessName.length > 0;
 
     return {
@@ -357,9 +343,7 @@ export class ClienteSeguimiento implements OnInit, OnDestroy {
     }));
   }
 
-  private aggregateMonthly(
-    items: Array<{ fecha: Date; total: number }>,
-  ): Map<string, number> {
+  private aggregateMonthly(items: Array<{ fecha: Date; total: number }>): Map<string, number> {
     const formatter = new Intl.DateTimeFormat('es-PE', {
       month: 'short',
       year: '2-digit',

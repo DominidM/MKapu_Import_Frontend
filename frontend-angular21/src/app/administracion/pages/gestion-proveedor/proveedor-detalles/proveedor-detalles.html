@@ -1,8 +1,6 @@
-<!-- src/app/administracion/pages/proveedores/proveedor-detalles/proveedor-detalles.html -->
-
-<div class="p-4" *ngIf="proveedor()">
-  <div class="surface-card border-1 border-300 border-round-xl shadow-1 p-4 mb-4">
-    <div class="flex justify-content-between align-items-center flex-wrap gap-3">
+<div class="p-2" *ngIf="proveedor()">
+  <div class="surface-card border-1 border-300 border-round-xl shadow-1 p-3 mb-3">
+    <div class="flex justify-content-between align-items-center flex-wrap gap-2">
       <div class="flex align-items-center gap-3">
         <span class="proveedores-title-icon">
           <i class="pi pi-eye"></i>
@@ -12,37 +10,32 @@
           <h2 class="proveedores-title mb-0">{{ proveedor()!.razon_social }}</h2>
         </div>
       </div>
-
-      <div class="flex gap-2 flex-wrap">
-        <p-button
-          label="Volver"
-          icon="pi pi-arrow-left"
-          severity="secondary"
-          styleClass="proveedores-pill proveedores-pill-secondary"
-          (onClick)="volver()"
-        >
-        </p-button>
-      </div>
+      <p-button
+        label="Volver"
+        icon="pi pi-arrow-left"
+        severity="secondary"
+        styleClass="proveedores-pill proveedores-pill-secondary"
+        (onClick)="volver()"
+      >
+      </p-button>
     </div>
   </div>
 
   <div class="grid">
-    <!-- Información General -->
     <div class="col-12 lg:col-8">
-      <p-card styleClass="border-1 border-300 border-round-xl shadow-2 h-full">
-        <div class="flex align-items-center gap-3 mb-4">
-          <i class="pi pi-info-circle text-3xl text-primary"></i>
-          <h3 class="m-0 text-xl font-bold text-900">Información General</h3>
+      <p-card styleClass="border-1 border-300 border-round-xl shadow-1 h-full">
+        <div class="flex align-items-center gap-2 mb-3">
+          <i class="pi pi-info-circle text-2xl text-primary"></i>
+          <h3 class="m-0 text-lg font-bold text-900">Información General</h3>
         </div>
-
-        <p-divider></p-divider>
+        <p-divider styleClass="my-2"></p-divider>
 
         <div class="grid">
-          <div class="col-12 md:col-6 mb-4">
-            <label class="block text-sm font-semibold text-600 mb-2">RUC</label>
-            <div class="flex align-items-center gap-2 p-3 bg-primary-50 border-round-lg">
-              <i class="pi pi-id-card text-primary text-xl"></i>
-              <span class="text-2xl font-black text-primary flex-1">{{ proveedor()!.ruc }}</span>
+          <div class="col-12 md:col-6 mb-2">
+            <label class="block text-xs font-semibold text-600 mb-1">RUC</label>
+            <div class="campo-display flex align-items-center gap-2">
+              <i class="pi pi-id-card text-primary"></i>
+              <span class="text-xl font-black text-primary flex-1">{{ proveedor()!.ruc }}</span>
               <p-button
                 icon="pi pi-copy"
                 [text]="true"
@@ -51,64 +44,63 @@
                 size="small"
                 pTooltip="Copiar RUC"
                 (onClick)="copiarAlPortapapeles(proveedor()!.ruc, 'RUC')"
-              ></p-button>
+              >
+              </p-button>
             </div>
           </div>
 
-          <div class="col-12 md:col-6 mb-4">
-            <label class="block text-sm font-semibold text-600 mb-2">ESTADO</label>
-            <div class="p-3">
+          <div class="col-12 md:col-6 mb-2">
+            <label class="block text-xs font-semibold text-600 mb-1">ESTADO</label>
+            <div class="p-2">
               <p-tag
                 [value]="estadoLabel()"
                 [severity]="estadoSeverity()"
-                styleClass="text-lg font-bold px-4 py-2"
+                styleClass="text-base font-bold px-3 py-1"
               >
               </p-tag>
             </div>
           </div>
 
-          <div class="col-12 mb-4">
-            <label class="block text-sm font-semibold text-600 mb-2">RAZÓN SOCIAL</label>
-            <div class="p-3 surface-50 border-round-lg border-1 border-300">
-              <p class="m-0 text-xl font-semibold text-900">{{ proveedor()!.razon_social }}</p>
+          <div class="col-12 mb-2">
+            <label class="block text-xs font-semibold text-600 mb-1">RAZÓN SOCIAL</label>
+            <div class="campo-display">
+              <p class="m-0 text-base font-semibold text-900">{{ proveedor()!.razon_social }}</p>
             </div>
           </div>
 
-          <div class="col-12 mb-4" *ngIf="tieneDireccion()">
-            <label class="block text-sm font-semibold text-600 mb-2">DIRECCIÓN FISCAL</label>
-            <div class="p-3 surface-50 border-round-lg border-1 border-300">
-              <p class="m-0 text-base text-700 line-height-3">{{ proveedor()!.dir_fiscal }}</p>
+          <div class="col-12 mb-2" *ngIf="tieneDireccion()">
+            <label class="block text-xs font-semibold text-600 mb-1">DIRECCIÓN FISCAL</label>
+            <div class="campo-display">
+              <p class="m-0 text-sm text-700">{{ proveedor()!.dir_fiscal }}</p>
             </div>
           </div>
         </div>
       </p-card>
     </div>
 
-    <!-- Información de Contacto -->
     <div class="col-12 lg:col-4">
-      <p-card styleClass="border-1 border-300 border-round-xl shadow-2 h-full">
-        <div class="flex align-items-center gap-3 mb-4">
-          <i class="pi pi-phone text-3xl text-green-600"></i>
-          <h3 class="m-0 text-xl font-bold text-900">Contacto</h3>
+      <p-card styleClass="border-1 border-300 border-round-xl shadow-1 h-full">
+        <div class="flex align-items-center gap-2 mb-3">
+          <i class="pi pi-phone text-2xl text-green-600"></i>
+          <h3 class="m-0 text-lg font-bold text-900">Contacto</h3>
         </div>
+        <p-divider styleClass="my-2"></p-divider>
 
-        <p-divider></p-divider>
-
-        <div class="flex flex-column gap-4">
-          <div class="p-4 bg-blue-50 border-round-xl border-2 border-blue-200" *ngIf="tieneContacto()">
-            <label class="block text-xs font-bold text-blue-700 mb-2 uppercase">Persona de Contacto</label>
+        <div class="flex flex-column gap-2">
+          <div class="contacto-item contacto-blue" *ngIf="tieneContacto()">
+            <label class="contacto-label">PERSONA DE CONTACTO</label>
             <div class="flex align-items-center gap-2">
-              <i class="pi pi-user text-blue-600 text-xl"></i>
-              <span class="text-xl font-bold text-blue-600">{{ proveedor()!.contacto }}</span>
+              <i class="pi pi-user contacto-icono"></i>
+              <span class="contacto-valor">{{ proveedor()!.contacto }}</span>
             </div>
           </div>
 
-          <div class="p-4 bg-green-50 border-round-xl border-2 border-green-200" *ngIf="tieneTelefono()">
-            <label class="block text-xs font-bold text-green-700 mb-2 uppercase">Teléfono</label>
+          <div class="contacto-item contacto-green" *ngIf="tieneTelefono()">
+            <label class="contacto-label">TELÉFONO</label>
             <div class="flex align-items-center justify-content-between gap-2">
               <div class="flex align-items-center gap-2">
-                <i class="pi pi-phone text-green-600 text-xl"></i>
-                <span class="text-xl font-bold text-green-600">{{ proveedor()!.telefono }}</span>
+                <i class="pi pi-phone contacto-icono"></i>
+                <span class="contacto-valor">{{ proveedor()!.telefono }}</span>
               </div>
               <p-button
                 icon="pi pi-copy"
@@ -118,16 +110,17 @@
                 size="small"
                 pTooltip="Copiar teléfono"
                 (onClick)="copiarAlPortapapeles(proveedor()!.telefono!, 'Teléfono')"
-              ></p-button>
+              >
+              </p-button>
             </div>
           </div>
 
-          <div class="p-4 bg-orange-50 border-round-xl border-2 border-orange-200" *ngIf="tieneEmail()">
-            <label class="block text-xs font-bold text-orange-700 mb-2 uppercase">Email</label>
+          <div class="contacto-item contacto-orange" *ngIf="tieneEmail()">
+            <label class="contacto-label">EMAIL</label>
             <div class="flex align-items-center justify-content-between gap-2">
               <div class="flex align-items-center gap-2 flex-1 overflow-hidden">
-                <i class="pi pi-envelope text-orange-600 text-xl"></i>
-                <span class="text-base font-bold text-orange-600 truncate">{{ proveedor()!.email }}</span>
+                <i class="pi pi-envelope contacto-icono"></i>
+                <span class="contacto-valor truncate">{{ proveedor()!.email }}</span>
               </div>
               <p-button
                 icon="pi pi-copy"
@@ -137,69 +130,92 @@
                 size="small"
                 pTooltip="Copiar email"
                 (onClick)="copiarAlPortapapeles(proveedor()!.email!, 'Email')"
-              ></p-button>
+              >
+              </p-button>
             </div>
           </div>
 
-          <div class="p-4 surface-100 border-round-xl text-center" *ngIf="!tieneContacto() && !tieneTelefono() && !tieneEmail()">
-            <i class="pi pi-info-circle text-3xl text-400 mb-2"></i>
-            <p class="m-0 text-sm text-600">Sin información de contacto registrada</p>
+          <div
+            class="campo-display text-center"
+            *ngIf="!tieneContacto() && !tieneTelefono() && !tieneEmail()"
+          >
+            <i class="pi pi-info-circle text-2xl text-400 mb-1"></i>
+            <p class="m-0 text-sm text-600">Sin información de contacto</p>
           </div>
         </div>
       </p-card>
     </div>
 
-    <!-- Estadísticas Rápidas -->
     <div class="col-12">
-      <p-card styleClass="border-1 border-300 border-round-xl shadow-2">
-        <div class="flex align-items-center gap-3 mb-4">
-          <i class="pi pi-chart-bar text-3xl text-purple-600"></i>
-          <h3 class="m-0 text-xl font-bold text-900">Datos Adicionales</h3>
+      <p-card styleClass="border-1 border-300 border-round-xl shadow-1">
+        <div class="flex align-items-center gap-2 mb-3">
+          <i class="pi pi-chart-bar text-2xl text-purple-600"></i>
+          <h3 class="m-0 text-lg font-bold text-900">Datos Adicionales</h3>
         </div>
-
-        <p-divider></p-divider>
+        <p-divider styleClass="my-2"></p-divider>
 
         <div class="grid">
-          <div class="col-12 md:col-6 lg:col-3">
-            <div class="p-3 estadistica-box estadistica-promedio border-round-lg text-center">
-              <label class="block text-xs font-bold mb-2 uppercase estadistica-label">RUC Verificado</label>
-              <div class="flex align-items-center justify-content-center gap-2">
-                <i class="pi pi-verified text-2xl estadistica-icono"></i>
-                <span class="text-xl font-black estadistica-valor">Sí</span>
+          <div class="col-6 md:col-3">
+            <div class="estadistica-box estadistica-promedio p-2 border-round-lg text-center">
+              <label class="block text-xs font-bold mb-1 uppercase estadistica-label"
+                >RUC Verificado</label
+              >
+              <div class="flex align-items-center justify-content-center gap-1">
+                <i class="pi pi-verified estadistica-icono"></i>
+                <span class="text-base font-black estadistica-valor">Sí</span>
               </div>
             </div>
           </div>
-
-          <div class="col-12 md:col-6 lg:col-3">
-            <div class="p-3 estadistica-box estadistica-minimo border-round-lg text-center">
-              <label class="block text-xs font-bold mb-2 uppercase estadistica-label">Datos Completos</label>
-              <div class="flex align-items-center justify-content-center gap-2">
-                <i class="pi pi-check-circle text-2xl estadistica-icono"></i>
-                <span class="text-xl font-black estadistica-valor">
-                  {{ (tieneContacto() ? 25 : 0) + (tieneEmail() ? 25 : 0) + (tieneTelefono() ? 25 : 0) + (tieneDireccion() ? 25 : 0) }}%
+          <div class="col-6 md:col-3">
+            <div class="estadistica-box estadistica-minimo p-2 border-round-lg text-center">
+              <label class="block text-xs font-bold mb-1 uppercase estadistica-label"
+                >Datos Completos</label
+              >
+              <div class="flex align-items-center justify-content-center gap-1">
+                <i class="pi pi-check-circle estadistica-icono"></i>
+                <span class="text-base font-black estadistica-valor">
+                  {{
+                    (tieneContacto() ? 25 : 0) +
+                      (tieneEmail() ? 25 : 0) +
+                      (tieneTelefono() ? 25 : 0) +
+                      (tieneDireccion() ? 25 : 0)
+                  }}%
                 </span>
               </div>
             </div>
           </div>
-
-          <div class="col-12 md:col-6 lg:col-3">
-            <div class="p-3 estadistica-box estadistica-maximo border-round-lg text-center">
-              <label class="block text-xs font-bold mb-2 uppercase estadistica-label">Campos Opcionales</label>
-              <div class="flex align-items-center justify-content-center gap-2">
-                <i class="pi pi-list text-2xl estadistica-icono"></i>
-                <span class="text-xl font-black estadistica-valor">
-                  {{ (tieneContacto() ? 1 : 0) + (tieneEmail() ? 1 : 0) + (tieneTelefono() ? 1 : 0) + (tieneDireccion() ? 1 : 0) }}/4
+          <div class="col-6 md:col-3">
+            <div class="estadistica-box estadistica-maximo p-2 border-round-lg text-center">
+              <label class="block text-xs font-bold mb-1 uppercase estadistica-label"
+                >Campos Opcionales</label
+              >
+              <div class="flex align-items-center justify-content-center gap-1">
+                <i class="pi pi-list estadistica-icono"></i>
+                <span class="text-base font-black estadistica-valor">
+                  {{
+                    (tieneContacto() ? 1 : 0) +
+                      (tieneEmail() ? 1 : 0) +
+                      (tieneTelefono() ? 1 : 0) +
+                      (tieneDireccion() ? 1 : 0)
+                  }}/4
                 </span>
               </div>
             </div>
           </div>
-
-          <div class="col-12 md:col-6 lg:col-3">
-            <div class="p-3 estadistica-box estadistica-diferencia border-round-lg text-center">
-              <label class="block text-xs font-bold mb-2 uppercase estadistica-label">Estado Actual</label>
-              <div class="flex align-items-center justify-content-center gap-2">
-                <i [class]="proveedor()!.estado ? 'pi pi-check-circle text-2xl estadistica-icono' : 'pi pi-times-circle text-2xl estadistica-icono'"></i>
-                <span class="text-xl font-black estadistica-valor">{{ estadoLabel() }}</span>
+          <div class="col-6 md:col-3">
+            <div class="estadistica-box estadistica-diferencia p-2 border-round-lg text-center">
+              <label class="block text-xs font-bold mb-1 uppercase estadistica-label"
+                >Estado Actual</label
+              >
+              <div class="flex align-items-center justify-content-center gap-1">
+                <i
+                  [class]="
+                    proveedor()!.estado
+                      ? 'pi pi-check-circle estadistica-icono'
+                      : 'pi pi-times-circle estadistica-icono'
+                  "
+                ></i>
+                <span class="text-base font-black estadistica-valor">{{ estadoLabel() }}</span>
               </div>
             </div>
           </div>
@@ -207,15 +223,13 @@
       </p-card>
     </div>
 
-    <!-- Acciones -->
     <div class="col-12">
-      <p-card styleClass="border-1 border-300 border-round-xl shadow-2">
-        <div class="flex justify-content-between align-items-center flex-wrap gap-3">
-          <div class="flex align-items-center gap-3">
-            <i class="pi pi-cog text-2xl text-600"></i>
-            <h3 class="m-0 text-lg font-bold text-900">Acciones</h3>
+      <p-card styleClass="border-1 border-300 border-round-xl shadow-1">
+        <div class="flex justify-content-between align-items-center flex-wrap gap-2">
+          <div class="flex align-items-center gap-2">
+            <i class="pi pi-cog text-xl text-600"></i>
+            <h3 class="m-0 text-base font-bold text-900">Acciones</h3>
           </div>
-
           <div class="flex gap-2 flex-wrap">
             <p-button
               [label]="proveedor()!.estado ? 'Desactivar' : 'Activar'"
@@ -226,7 +240,6 @@
               (onClick)="cambiarEstado($event)"
             >
             </p-button>
-
             <p-button
               label="Eliminar"
               icon="pi pi-trash"
@@ -236,7 +249,6 @@
               (onClick)="eliminarProveedor($event)"
             >
             </p-button>
-
             <p-button
               label="Editar"
               icon="pi pi-pencil"
@@ -253,18 +265,18 @@
   </div>
 </div>
 
-<div *ngIf="!proveedor() && !loading()" class="surface-card p-8 text-center mb-6 border-round-xl">
-  <div class="flex flex-column align-items-center gap-4">
-    <i class="pi pi-exclamation-triangle text-6xl text-warning"></i>
-    <h3 class="text-2xl font-bold text-900 mb-2">Proveedor No Encontrado</h3>
-    <p class="text-xl text-600 m-0">El proveedor que buscas no existe o fue eliminado</p>
+<div *ngIf="!proveedor() && !loading()" class="surface-card p-6 text-center border-round-xl">
+  <div class="flex flex-column align-items-center gap-3">
+    <i class="pi pi-exclamation-triangle text-5xl text-warning"></i>
+    <h3 class="text-xl font-bold text-900 mb-1">Proveedor No Encontrado</h3>
+    <p class="text-base text-600 m-0">El proveedor que buscas no existe o fue eliminado</p>
     <p-button
       label="Volver a Proveedores"
       icon="pi pi-arrow-left"
       [outlined]="true"
-      size="large"
       (onClick)="volver()"
-    ></p-button>
+    >
+    </p-button>
   </div>
 </div>
 

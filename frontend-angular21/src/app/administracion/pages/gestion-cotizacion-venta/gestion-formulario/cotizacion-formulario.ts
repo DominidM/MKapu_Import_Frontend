@@ -85,12 +85,31 @@ export class CotizacionFormulario implements OnInit {
   private readonly sedeAlmacenService = inject(SedeAlmacenService);
   private messageService  = inject(MessageService);
 
+  // ── Helpers localStorage ──────────────────────────────────────────────────
   private getSedeUsuarioActual(): number | null {
     try {
       const userString = localStorage.getItem('user');
       if (userString) {
         const user = JSON.parse(userString);
         return user.idSede ?? null;
+      }
+    } catch (e) { console.error('Error parseando usuario', e); }
+    return null;
+  }
+
+  private getIdUsuarioActual(): number | null {
+    try {
+      const userString = localStorage.getItem('user');
+      if (userString) {
+        const user = JSON.parse(userString);
+        return (
+          user.id          ??
+          user.userId      ??
+          user.user_id     ??
+          user.idUsuario   ??
+          user.id_usuario  ??
+          null
+        );
       }
     } catch (e) { console.error('Error parseando usuario', e); }
     return null;
@@ -657,7 +676,7 @@ export class CotizacionFormulario implements OnInit {
   get total()    { return +(this.subtotal + this.igv).toFixed(2); }
 
   // ── Guardar ───────────────────────────────────────────────────────────────
-  guardar() {
+guardar() {
     if (!this.form.get('id_cliente')?.value) {
       this.messageService.add({
         severity: 'warn',
@@ -716,19 +735,20 @@ export class CotizacionFormulario implements OnInit {
       ? raw.fec_venc.toISOString()
       : new Date(raw.fec_venc).toISOString();
 
-  const payload = {
-    documento_cliente: raw.documento,
-    id_sede:           raw.sede,
-    id_almacen:        this.almacenSeleccionado() ?? raw.id_almacen ?? null,
-    fec_venc:          fecVenc,
-    subtotal:          this.subtotal,
-    igv:               this.igv,
-    total:             this.total,
-    tipo:              this.tipoCotizacion() ?? 'VENTA', 
-    detalles: this.detalles().map(
-      ({ importe, uni_med, tipoPrecio, pre_unit, pre_may, pre_caja, almacen, stock, ...d }) => d
-    ),
-  };
+    const payload = {
+      documento_cliente:  raw.documento,
+      id_sede:            raw.sede,
+      id_almacen:         this.almacenSeleccionado() ?? raw.id_almacen ?? null,
+      fec_venc:           fecVenc,
+      subtotal:           this.subtotal,
+      igv:                this.igv,
+      total:              this.total,
+      tipo:               this.tipoCotizacion() ?? 'VENTA',
+      id_responsable_ref: this.getIdUsuarioActual(), // ✅ FIX: responsable desde localStorage
+      detalles: this.detalles().map(
+        ({ importe, uni_med, tipoPrecio, pre_unit, pre_may, pre_caja, almacen, stock, ...d }) => d
+      ),
+    };
 
     const req$ = this.esModoEdicion()
       ? this.quoteService.approveQuote(raw.id_cotizacion)
@@ -761,7 +781,7 @@ export class CotizacionFormulario implements OnInit {
 
   cancelar() { this.router.navigate(['/admin/cotizaciones-venta']); }
 
-  // ── Helpers ───────────────────────────────────────────────────────────────
+  // ── Helpers privados ──────────────────────────────────────────────────────
   private _limpiarClienteSinDoc() {
     this.clienteEncontrado.set(null);
     this.busquedaSinResultado.set(false);

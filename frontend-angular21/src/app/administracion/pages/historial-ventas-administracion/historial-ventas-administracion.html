@@ -67,7 +67,7 @@
             [suggestions]="sugerenciasBusqueda"
             (completeMethod)="buscarSugerencias($event)"
             (onSelect)="onSeleccionarSugerencia($event)"
-            (onClear)="aplicarFiltros()"
+            (onClear)="onBusquedaLimpiada()"
             (onKeyUp)="onBusquedaKeyUp($event)"
             placeholder="Buscar por nombre, DNI o RUC..."
             [dropdown]="true"

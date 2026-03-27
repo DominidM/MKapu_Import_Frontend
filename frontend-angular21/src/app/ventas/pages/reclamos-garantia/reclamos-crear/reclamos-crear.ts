@@ -635,8 +635,6 @@ export class ReclamosCrear implements OnInit {
 
     this.guardando.set(true);
 
-    console.log('Objeto comprobante completo:', comprobante);
-
     const idComprobanteReal = comprobante.id_comprobante || comprobante.id;
 
     if (!idComprobanteReal) {
@@ -667,8 +665,6 @@ export class ReclamosCrear implements OnInit {
         },
       ],
     };
-
-    console.log('Payload a enviar:', payload);
 
     try {
       const reclamoCreado = await this.claimService.register(payload);

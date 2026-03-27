@@ -1,9 +1,5 @@
-/* src/app/administracion/pages/proveedores/proveedor-detalles/proveedor-detalles.css */
-
-:host ::ng-deep {
-  .surface-50 {
-    border-radius: 1rem !important;
-  }
+:host ::ng-deep .surface-50 {
+  border-radius: 1rem !important;
 }
 
 .proveedores-title-icon {
@@ -55,12 +51,12 @@
 
 .proveedores-pill-warning {
   background: transparent !important;
-  border: 3px solid #F6AF33 !important;
-  color: #F6AF33 !important;
+  border: 3px solid #f6af33 !important;
+  color: #f6af33 !important;
 }
 
 .proveedores-pill-warning:hover {
-  background: #F6AF33 !important;
+  background: #f6af33 !important;
   color: #1f2937 !important;
 }
 
@@ -75,239 +71,287 @@
   box-shadow: 0 8px 20px #00000033 !important;
 }
 
-.estadistica-box {
-  transition: all 0.3s ease;
-}
-
-.estadistica-promedio {
-  background: #eff6ff;
-  border: 2px solid #bfdbfe;
-}
-
-.estadistica-promedio .estadistica-label {
-  color: #1e40af;
-}
-
-.estadistica-promedio .estadistica-valor {
-  color: #1d4ed8;
-}
-
-.estadistica-promedio .estadistica-icono {
-  color: #3b82f6;
-}
-
-.estadistica-minimo {
-  background: #f0fdf4;
-  border: 2px solid #bbf7d0;
-}
-
-.estadistica-minimo .estadistica-label {
-  color: #15803d;
-}
-
-.estadistica-minimo .estadistica-valor {
-  color: #16a34a;
-}
-
-.estadistica-minimo .estadistica-icono {
-  color: #22c55e;
-}
-
-.estadistica-maximo {
-  background: #fef2f2;
-  border: 2px solid #fecaca;
-}
-
-.estadistica-maximo .estadistica-label {
-  color: #991b1b;
-}
-
-.estadistica-maximo .estadistica-valor {
-  color: #dc2626;
-}
-
-.estadistica-maximo .estadistica-icono {
-  color: #ef4444;
-}
-
-.estadistica-diferencia {
-  background: #faf5ff;
-  border: 2px solid #e9d5ff;
-}
-
-.estadistica-diferencia .estadistica-label {
-  color: #6b21a8;
-}
-
-.estadistica-diferencia .estadistica-valor {
-  color: #7c3aed;
-}
-
-.estadistica-diferencia .estadistica-icono {
-  color: #a855f7;
-}
-
 .truncate {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-/* DARK MODE */
+.campo-display {
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  border: 1.5px solid #d1d5db;
+  background: transparent;
+}
+
+.estadistica-box {
+  transition: all 0.3s ease;
+  border-radius: 0.75rem;
+}
+
+.estadistica-promedio {
+  background: #eff6ff;
+  border: 1.5px solid #bfdbfe;
+}
+.estadistica-promedio .estadistica-label {
+  color: #1e40af;
+}
+.estadistica-promedio .estadistica-valor {
+  color: #1d4ed8;
+}
+.estadistica-promedio .estadistica-icono {
+  color: #3b82f6;
+}
+
+.estadistica-minimo {
+  background: #f0fdf4;
+  border: 1.5px solid #bbf7d0;
+}
+.estadistica-minimo .estadistica-label {
+  color: #15803d;
+}
+.estadistica-minimo .estadistica-valor {
+  color: #16a34a;
+}
+.estadistica-minimo .estadistica-icono {
+  color: #22c55e;
+}
+
+.estadistica-maximo {
+  background: #fef2f2;
+  border: 1.5px solid #fecaca;
+}
+.estadistica-maximo .estadistica-label {
+  color: #991b1b;
+}
+.estadistica-maximo .estadistica-valor {
+  color: #dc2626;
+}
+.estadistica-maximo .estadistica-icono {
+  color: #ef4444;
+}
+
+.estadistica-diferencia {
+  background: #faf5ff;
+  border: 1.5px solid #e9d5ff;
+}
+.estadistica-diferencia .estadistica-label {
+  color: #6b21a8;
+}
+.estadistica-diferencia .estadistica-valor {
+  color: #7c3aed;
+}
+.estadistica-diferencia .estadistica-icono {
+  color: #a855f7;
+}
+
+.contacto-item {
+  padding: 0.6rem 0.75rem;
+  border-radius: 0.5rem;
+  border: 1.5px solid transparent;
+}
+
+.contacto-label {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 0.25rem;
+}
+
+.contacto-blue {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+.contacto-blue .contacto-label {
+  color: #1e40af;
+}
+.contacto-blue .contacto-icono {
+  color: #3b82f6;
+}
+.contacto-blue .contacto-valor {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1d4ed8;
+}
+
+.contacto-green {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+.contacto-green .contacto-label {
+  color: #15803d;
+}
+.contacto-green .contacto-icono {
+  color: #22c55e;
+}
+.contacto-green .contacto-valor {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #16a34a;
+}
+
+.contacto-orange {
+  background: #fff7ed;
+  border-color: #fed7aa;
+}
+.contacto-orange .contacto-label {
+  color: #c2410c;
+}
+.contacto-orange .contacto-icono {
+  color: #f97316;
+}
+.contacto-orange .contacto-valor {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #ea580c;
+}
 
 :host-context(.app-dark) {
-  .estadistica-promedio {
-    background: #12263f !important;
-    border-color: #1d4ed8 !important;
+  .proveedores-title-icon {
+    background: #e8a424 !important;
+    color: #1f2937 !important;
   }
 
+  .proveedores-kicker {
+    color: #64748b !important;
+  }
+  .proveedores-title {
+    color: #e2e8f0 !important;
+  }
+
+  ::ng-deep .text-900 {
+    color: #e2e8f0 !important;
+  }
+  ::ng-deep .text-700 {
+    color: #94a3b8 !important;
+  }
+  ::ng-deep .text-600 {
+    color: #64748b !important;
+  }
+  ::ng-deep .surface-100 {
+    background: #1e2330 !important;
+  }
+  ::ng-deep .text-primary {
+    color: #60a5fa !important;
+  }
+  ::ng-deep .border-300 {
+    border-color: #2a3347 !important;
+  }
+
+  .campo-display {
+    border-color: #2a3347 !important;
+    background: transparent !important;
+  }
+
+  ::ng-deep .p-card .border-1.border-300.border-round-lg {
+    background: transparent !important;
+    border-color: #2a3347 !important;
+  }
+
+  ::ng-deep .p-card .flex.align-items-center.gap-2.border-1 {
+    background: transparent !important;
+    border-color: #2a3347 !important;
+  }
+
+  .estadistica-promedio {
+    background: #1a2535 !important;
+    border-color: #2d4a6a !important;
+  }
   .estadistica-promedio .estadistica-label {
     color: #93c5fd !important;
   }
-
   .estadistica-promedio .estadistica-valor {
     color: #bfdbfe !important;
   }
-
   .estadistica-promedio .estadistica-icono {
     color: #60a5fa !important;
   }
 
   .estadistica-minimo {
-    background: #142a1f !important;
-    border-color: #16a34a !important;
+    background: #162420 !important;
+    border-color: #1f4a30 !important;
   }
-
   .estadistica-minimo .estadistica-label {
     color: #86efac !important;
   }
-
   .estadistica-minimo .estadistica-valor {
     color: #bbf7d0 !important;
   }
-
   .estadistica-minimo .estadistica-icono {
     color: #4ade80 !important;
   }
 
   .estadistica-maximo {
-    background: #3d1f1f !important;
-    border-color: #dc2626 !important;
+    background: #2a1a1a !important;
+    border-color: #5a2020 !important;
   }
-
   .estadistica-maximo .estadistica-label {
     color: #fca5a5 !important;
   }
-
   .estadistica-maximo .estadistica-valor {
     color: #fecaca !important;
   }
-
   .estadistica-maximo .estadistica-icono {
     color: #f87171 !important;
   }
 
   .estadistica-diferencia {
-    background: #1a1228 !important;
-    border-color: #6d28d9 !important;
+    background: #1e1728 !important;
+    border-color: #3d2a5a !important;
   }
-
   .estadistica-diferencia .estadistica-label {
     color: #d8b4fe !important;
   }
-
   .estadistica-diferencia .estadistica-valor {
     color: #e9d5ff !important;
   }
-
   .estadistica-diferencia .estadistica-icono {
     color: #c084fc !important;
   }
-}
 
-:host-context(.app-dark) ::ng-deep .bg-blue-50 {
-  background: linear-gradient(135deg, #12223a 0%, #0d1828 100%) !important;
-}
+  .contacto-blue {
+    background: #1a2535 !important;
+    border-color: #2d4a6a !important;
+  }
+  .contacto-blue .contacto-label {
+    color: #93c5fd !important;
+  }
+  .contacto-blue .contacto-icono {
+    color: #60a5fa !important;
+  }
+  .contacto-blue .contacto-valor {
+    color: #bfdbfe !important;
+  }
 
-:host-context(.app-dark) ::ng-deep .text-blue-600 {
-  color: #60a5fa !important;
-}
+  .contacto-green {
+    background: #162420 !important;
+    border-color: #1f4a30 !important;
+  }
+  .contacto-green .contacto-label {
+    color: #86efac !important;
+  }
+  .contacto-green .contacto-icono {
+    color: #4ade80 !important;
+  }
+  .contacto-green .contacto-valor {
+    color: #bbf7d0 !important;
+  }
 
-:host-context(.app-dark) ::ng-deep .text-blue-700 {
-  color: #93c5fd !important;
-}
-
-:host-context(.app-dark) ::ng-deep .border-blue-200 {
-  border-color: #283a52 !important;
-}
-
-:host-context(.app-dark) ::ng-deep .bg-green-50 {
-  background: linear-gradient(135deg, #152a1f 0%, #101f15 100%) !important;
-}
-
-:host-context(.app-dark) ::ng-deep .text-green-600 {
-  color: #4ade80 !important;
-}
-
-:host-context(.app-dark) ::ng-deep .text-green-700 {
-  color: #86efac !important;
-}
-
-:host-context(.app-dark) ::ng-deep .border-green-200 {
-  border-color: #284a2a !important;
-}
-
-:host-context(.app-dark) ::ng-deep .bg-orange-50 {
-  background: linear-gradient(135deg, #2a1e12 0%, #1f150d 100%) !important;
-}
-
-:host-context(.app-dark) ::ng-deep .text-orange-600 {
-  color: #fb923c !important;
-}
-
-:host-context(.app-dark) ::ng-deep .text-orange-700 {
-  color: #fdba74 !important;
-}
-
-:host-context(.app-dark) ::ng-deep .border-orange-200 {
-  border-color: #4a3528 !important;
-}
-
-:host-context(.app-dark) ::ng-deep .bg-primary-50 {
-  background: linear-gradient(135deg, #12223a 0%, #0d1828 100%) !important;
-}
-
-:host-context(.app-dark) ::ng-deep .text-primary {
-  color: #60a5fa !important;
-}
-
-:host-context(.app-dark) .proveedores-title-icon {
-  background: #e8a424 !important;
-  color: #1f2937 !important;
-}
-
-:host-context(.app-dark) .proveedores-kicker {
-  color: #94a3b8 !important;
-}
-
-:host-context(.app-dark) .proveedores-title {
-  color: #f1f5f9 !important;
-}
-
-:host-context(.app-dark) ::ng-deep .text-900 {
-  color: #f1f5f9 !important;
-}
-
-:host-context(.app-dark) ::ng-deep .text-700 {
-  color: #cbd5e1 !important;
-}
-
-:host-context(.app-dark) ::ng-deep .text-600 {
-  color: #94a3b8 !important;
-}
-
-:host-context(.app-dark) ::ng-deep .surface-100 {
-  background: #1a1a1a !important;
+  .contacto-orange {
+    background: #231d14 !important;
+    border-color: #4a3520 !important;
+  }
+  .contacto-orange .contacto-label {
+    color: #fdba74 !important;
+  }
+  .contacto-orange .contacto-icono {
+    color: #fb923c !important;
+  }
+  .contacto-orange .contacto-valor {
+    color: #fed7aa !important;
+  }
 }
 
 @media (max-width: 768px) {

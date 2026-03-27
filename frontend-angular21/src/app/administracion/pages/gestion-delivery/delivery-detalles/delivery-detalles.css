@@ -1,0 +1,331 @@
+.det-header-card .p-card-body { padding: 1rem 1.25rem; }
+
+/* ─── HEADER ─── */
+.det-title-icon {
+  width: 40px; height: 40px;
+  display: grid; place-items: center;
+  border-radius: 999px;
+  background: #f5c34d;
+  color: #1f2937; font-size: 18px;
+}
+
+.det-kicker {
+  margin: 0; font-size: 0.65rem; letter-spacing: 0.18em;
+  text-transform: uppercase; color: #94a3b8; font-weight: 600;
+}
+
+.det-title {
+  margin: 0; font-size: 1.1rem; font-weight: 600; color: #1f2937;
+}
+
+/* ─── SKELETON ─── */
+.det-skeleton-wrapper { padding: 2rem; }
+
+:host ::ng-deep .p-skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: det-loading 1.5s ease-in-out infinite;
+  border-radius: 8px;
+}
+
+@keyframes det-loading {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ─── MAIN CARD ─── */
+:host ::ng-deep .det-main-card .p-card,
+:host ::ng-deep .det-productos-card .p-card {
+  border: 2px solid #e5e7eb; border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+  transition: all 0.3s ease; background: #ffffff;
+}
+
+:host ::ng-deep .det-main-card .p-card:hover,
+:host ::ng-deep .det-productos-card .p-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(246, 175, 51, 0.18);
+}
+
+/* ─── COMP HEADER ─── */
+.det-comp-header {
+  display: flex; justify-content: space-between;
+  align-items: center; margin-bottom: 1.5rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 2px solid #fde68a;
+}
+
+.det-comp-tipo { display: flex; align-items: center; gap: 1.25rem; }
+
+.det-comp-tipo h2 {
+  margin: 0; font-size: 1.2rem; font-weight: 700;
+  color: #1f2937; line-height: 1.2;
+}
+
+.det-comp-numero {
+  font-size: 1.1rem; font-weight: 700; color: #e8a424;
+  margin: 0.25rem 0 0; font-family: 'Courier New', monospace;
+  letter-spacing: 1.5px;
+}
+
+.det-tipo-icon {
+  width: 52px; height: 52px;
+  display: grid; place-items: center;
+  border-radius: 999px;
+  background: #fef9e7;
+  color: #e8a424; font-size: 24px;
+  border: 2px solid #fde68a;
+}
+
+/* ─── INFO GRID ─── */
+.det-info-grid-wrapper { margin-top: 1.5rem; }
+
+.det-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.det-info-section {
+  background: #ffffff; padding: 1.5rem;
+  border-radius: 8px; border: 2px solid #e5e7eb;
+  border-left: 4px solid #F6AF33;
+  transition: box-shadow 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+}
+
+.det-info-section:hover {
+  box-shadow: 0 4px 12px rgba(246, 175, 51, 0.18);
+}
+
+.det-info-section h3 {
+  margin: 0 0 1rem; font-size: 0.9rem;
+  font-weight: 700; color: #1f2937;
+  display: flex; align-items: center; gap: 0.6rem;
+  text-transform: uppercase; letter-spacing: 0.5px;
+  padding-bottom: 0.75rem; border-bottom: 2px solid #fde68a;
+}
+
+.det-info-section h3 i { color: #e8a424; font-size: 1.1rem; }
+
+.det-info-row {
+  display: flex; justify-content: space-between;
+  align-items: flex-start; padding: 0.6rem 0;
+  border-bottom: 1px solid #fef9e7; gap: 0.75rem;
+}
+
+.det-info-row:last-child { border-bottom: none; padding-bottom: 0; }
+
+.det-label {
+  font-weight: 600; color: #64748b;
+  font-size: 0.82rem; flex-shrink: 0; max-width: 45%;
+}
+
+.det-value {
+  font-weight: 600; color: #1f2937;
+  text-align: right; display: flex;
+  align-items: center; justify-content: flex-end;
+  gap: 0.4rem; flex: 1; word-break: break-word;
+  font-size: 0.85rem;
+}
+
+/* ─── ICONOS RUTA ─── */
+.det-icon-origen  { color: #16a34a; font-size: 0.6rem; flex-shrink: 0; }
+.det-icon-destino { color: #dc2626; flex-shrink: 0; }
+
+/* ─── RESPONSABLE ─── */
+.det-responsable-nombre { color: #e8a424; font-weight: 700; }
+
+.det-cargo-badge {
+  display: inline-block; padding: 0.2rem 0.6rem;
+  border-radius: 999px; background: #fef9e7; color: #92400e;
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em;
+  border: 1px solid #fde68a;
+}
+
+/* ─── MONTO ─── */
+.det-monto-row {
+  border-top: 2px solid #fde68a;
+  margin-top: 0.5rem; padding-top: 0.75rem;
+}
+
+.det-monto-valor { color: #e8a424; font-size: 1.15rem; font-weight: 800; }
+
+/* ─── CARD HEADER PRODUCTOS ─── */
+.det-card-header {
+  border-radius: 12px 12px 0 0;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 1.25rem 1.75rem;
+  background: #fefce8; border-bottom: 2px solid #fde68a;
+}
+
+.det-card-header h3 {
+  margin: 0; font-size: 1.2rem; font-weight: 700;
+  display: flex; align-items: center; gap: 0.75rem; color: #1f2937;
+}
+
+.det-icon-cart {
+  width: 38px; height: 38px; border-radius: 999px;
+  display: grid; place-items: center;
+  background: #fef9e7; color: #e8a424;
+  font-size: 16px; border: 1px solid #fde68a;
+}
+
+/* ─── TABLE ─── */
+:host ::ng-deep .p-datatable .p-datatable-thead > tr > th {
+  background: #fefce8; color: #1f2937;
+  font-weight: 700; text-transform: uppercase;
+  font-size: 0.82rem; letter-spacing: 0.5px;
+  border-bottom: 2px solid #F6AF33; padding: 1rem;
+}
+
+:host ::ng-deep .p-datatable .p-datatable-tbody > tr:hover {
+  background: #FFF5E6 !important;
+}
+
+:host ::ng-deep .p-datatable .p-datatable-tbody > tr > td {
+  padding: 0.85rem 1rem; font-size: 0.9rem;
+  border-bottom: 1px solid #fef9e7;
+}
+
+.det-cod-producto {
+  font-family: 'Courier New', monospace;
+  background: #fef9e7; padding: 0.3rem 0.65rem;
+  border-radius: 6px; font-size: 0.82rem;
+  font-weight: 700; color: #92400e;
+  border: 1px solid #fde68a; display: inline-block;
+}
+
+.det-empty-msg {
+  text-align: center; padding: 2.5rem 1rem; color: #64748b;
+}
+
+.det-empty-msg i { font-size: 2rem; margin-right: 0.5rem; color: #fde68a; }
+
+/* ─── TOTALES ─── */
+.det-totales-container {
+  display: flex; justify-content: flex-end; margin-top: 1.75rem;
+}
+
+.det-totales-grid {
+  min-width: 380px; background: #fefce8;
+  padding: 1.5rem; border-radius: 12px;
+  border: 2px solid #fde68a;
+}
+
+.det-total-row {
+  display: flex; justify-content: space-between;
+  align-items: center; padding: 0.6rem 0;
+  border-bottom: 1px solid #fde68a;
+}
+
+.det-total-row:last-child { border-bottom: none; }
+
+.det-total-label { font-weight: 600; color: #64748b; font-size: 0.9rem; }
+.det-total-value { font-weight: 700; color: #1f2937; font-size: 0.95rem; }
+
+.det-total-final {
+  margin-top: 0.5rem; padding-top: 1rem;
+  border-top: 3px solid #F6AF33 !important;
+}
+
+.det-total-final .det-total-label {
+  font-size: 1rem; font-weight: 800;
+  color: #1f2937; text-transform: uppercase;
+}
+
+.det-total-final-valor {
+  font-size: 1.4rem; font-weight: 800; color: #e8a424;
+}
+
+.det-tag { font-size: 0.75rem; }
+
+/* ─── DARK MODE ─── */
+:host-context(.app-dark) .det-kicker     { color: #a1a1aa; }
+:host-context(.app-dark) .det-title      { color: #f1f5f9; }
+:host-context(.app-dark) .det-title-icon { background: #e8a424; color: #1f2937; }
+:host-context(.app-dark) .det-tipo-icon  { background: #2a2218; color: #fbbf24; border-color: #78350f; }
+:host-context(.app-dark) .det-icon-cart  { background: #2a2218; color: #fbbf24; border-color: #78350f; }
+:host-context(.app-dark) .det-comp-tipo h2  { color: #f1f5f9; }
+:host-context(.app-dark) .det-comp-numero   { color: #fbbf24; }
+:host-context(.app-dark) .det-comp-header   { border-bottom-color: #3d2e1a; }
+
+:host-context(.app-dark) :host ::ng-deep .det-main-card .p-card,
+:host-context(.app-dark) :host ::ng-deep .det-productos-card .p-card {
+  background: #18181B; border-color: #27272a;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.6);
+}
+
+:host-context(.app-dark) :host ::ng-deep .det-main-card .p-card:hover,
+:host-context(.app-dark) :host ::ng-deep .det-productos-card .p-card:hover {
+  box-shadow: 0 6px 20px rgba(246, 175, 51, 0.15);
+}
+
+:host-context(.app-dark) .det-info-section {
+  background: #09090b; border-color: #27272a; border-left-color: #F6AF33;
+}
+
+:host-context(.app-dark) .det-info-section:hover {
+  box-shadow: 0 4px 12px rgba(246, 175, 51, 0.12);
+}
+
+:host-context(.app-dark) .det-info-section h3 { color: #f1f5f9; border-bottom-color: #3d2e1a; }
+:host-context(.app-dark) .det-info-section h3 i { color: #fbbf24; }
+:host-context(.app-dark) .det-info-row { border-bottom-color: #27272a; }
+:host-context(.app-dark) .det-label  { color: #a1a1aa; }
+:host-context(.app-dark) .det-value  { color: #f1f5f9; }
+:host-context(.app-dark) .det-responsable-nombre { color: #fbbf24; }
+:host-context(.app-dark) .det-cargo-badge { background: #2a2218; color: #fcd34d; border-color: #78350f; }
+:host-context(.app-dark) .det-monto-valor { color: #fbbf24; }
+:host-context(.app-dark) .det-monto-row   { border-top-color: #3d2e1a; }
+
+:host-context(.app-dark) .det-card-header { background: #09090b; border-bottom-color: #3d2e1a; }
+:host-context(.app-dark) .det-card-header h3 { color: #f1f5f9; }
+
+:host-context(.app-dark) .det-cod-producto {
+  background: #2a2218; color: #fcd34d; border-color: #78350f;
+}
+
+:host-context(.app-dark) .det-empty-msg i { color: #78350f; }
+
+:host-context(.app-dark) .det-totales-grid { background: #09090b; border-color: #3d2e1a; }
+:host-context(.app-dark) .det-total-label  { color: #a1a1aa; }
+:host-context(.app-dark) .det-total-value  { color: #f1f5f9; }
+:host-context(.app-dark) .det-total-row    { border-bottom-color: #27272a; }
+:host-context(.app-dark) .det-total-final  { border-top-color: #F6AF33 !important; }
+:host-context(.app-dark) .det-total-final-valor { color: #fbbf24; }
+
+:host-context(.app-dark) :host ::ng-deep .p-datatable .p-datatable-thead > tr > th {
+  background: #09090b; color: #f1f5f9; border-bottom-color: #F6AF33;
+}
+
+:host-context(.app-dark) :host ::ng-deep .p-datatable .p-datatable-tbody > tr {
+  background: #18181B;
+}
+
+:host-context(.app-dark) :host ::ng-deep .p-datatable .p-datatable-tbody > tr:hover {
+  background: #3d2e1a !important;
+}
+
+:host-context(.app-dark) :host ::ng-deep .p-datatable .p-datatable-tbody > tr > td {
+  border-bottom-color: #27272a; color: #f1f5f9;
+}
+
+:host-context(.app-dark) :host ::ng-deep .p-skeleton {
+  background: linear-gradient(90deg, #27272a 25%, #3f3f46 50%, #27272a 75%);
+}
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 1200px) {
+  .det-info-grid { grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+  .det-totales-grid { min-width: 100%; }
+}
+
+@media (max-width: 768px) {
+  .det-info-grid { grid-template-columns: 1fr; gap: 1rem; }
+  .det-comp-header { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+  .det-totales-container { padding: 0; }
+  .det-totales-grid { min-width: 100%; padding: 1.25rem; }
+  .det-card-header { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+  .det-total-final-valor { font-size: 1.2rem; }
+}

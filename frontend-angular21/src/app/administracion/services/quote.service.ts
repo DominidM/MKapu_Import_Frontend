@@ -168,6 +168,20 @@ export class QuoteService {
     );
   }
 
+  autocomplete(
+    q: string,
+    tipo?: string,
+    id_sede?: number,
+  ): Observable<QuoteListItem[]> {
+    const params: Record<string, any> = { q };
+    if (tipo)    params['tipo']    = tipo;
+    if (id_sede) params['id_sede'] = id_sede;
+    return this.http.get<QuoteListItem[]>(
+      `${this.api}/quote/autocomplete/search`,
+      { params },
+    );
+  }
+
   // ── Aprobar ───────────────────────────────────────────────────────
   approveQuote(id: number): Observable<Quote> {
     this._loading.set(true);

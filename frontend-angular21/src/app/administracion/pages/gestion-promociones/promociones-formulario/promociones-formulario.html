@@ -1,4 +1,4 @@
-<div class="p-2">
+﻿<div class="p-2">
   <p-card styleClass="promociones-header-card mb-4 ventas-header-bordered">
     <div class="flex align-items-center justify-content-between flex-wrap gap-2">
       <div class="flex align-items-center gap-3">
@@ -19,22 +19,20 @@
   <p-card styleClass="tarjeta-principal border-round-xl">
     <form [formGroup]="form" (ngSubmit)="guardar()" class="formgrid grid">
 
-      <!-- ── Información General ── -->
       <div class="col-12 mb-3">
         <h3 class="form-section-title"><i class="pi pi-info-circle"></i> Información General</h3>
       </div>
 
       <div class="field col-12 mb-4">
         <label class="form-label">Concepto <span class="text-red-400">*</span></label>
-        <input pInputText formControlName="concepto" class="w-full" placeholder="Ej: DESCUENTO LANZAMIENTO 2026" />
+        <input pInputText formControlName="concepto" class="w-full" placeholder="Ej: DESCUENTO LANZAMIENTO 2026" (beforeinput)="onConceptoBeforeInput($event)" (keydown)="onConceptoKeydown($event)" (paste)="onConceptoPaste($event)" (input)="onConceptoInput()" />
         @if (form.get('concepto')?.invalid && form.get('concepto')?.touched) {
-          <small class="text-red-500 block mt-1"><i class="pi pi-exclamation-circle mr-1"></i>Mínimo 3 caracteres, máximo 100</small>
+          <small class="text-red-500 block mt-1"><i class="pi pi-exclamation-circle mr-1"></i>Solo letras, números y espacios visibles. Mínimo 3 y máximo 100 caracteres.</small>
         }
       </div>
 
       <div class="col-12"><div class="border-top-1 surface-border mb-4"></div></div>
 
-      <!-- ── Configuración del Descuento ── -->
       <div class="col-12 mb-3">
         <h3 class="form-section-title"><i class="pi pi-percentage"></i> Configuración del Descuento</h3>
       </div>
@@ -44,7 +42,6 @@
         <p-select formControlName="tipo" [options]="tiposPromocion" optionLabel="label" optionValue="value" placeholder="Seleccionar tipo" styleClass="w-full" />
       </div>
 
-      <!-- Campo valor: se destruye y recrea al cambiar tipo gracias a mostrarInputValor -->
       <div class="field col-12 md:col-6 mb-4">
         @if (mostrarInputValor()) {
           @if (esModoMonto()) {
@@ -89,7 +86,6 @@
 
       <div class="col-12"><div class="border-top-1 surface-border mb-4"></div></div>
 
-      <!-- ── Reglas de Aplicación ── -->
       <div class="col-12 mb-3">
         <div class="flex align-items-center justify-content-between">
           <h3 class="form-section-title mb-0">
@@ -182,7 +178,7 @@
           </div>
         }
       </div>
-      <!--  
+      <!--
       <div class="col-12"><div class="border-top-1 surface-border mb-4"></div></div>
 
       <div class="col-12 mb-3">
@@ -223,16 +219,13 @@
         }
       </div>
     -->
-      <!-- ── Acciones ── 
-      <div class="col-12"><div class="border-top-1 surface-border mb-4"></div></div>
-      -->
       <div class="col-12 flex gap-2 justify-content-end">
         <p-button type="button" label="Cancelar" icon="pi pi-times" severity="secondary" [outlined]="true" styleClass="ventas-pill" (click)="cancelar()"></p-button>
         <p-button
           type="submit"
           [label]="esModoEdicion() ? 'Actualizar Promoción' : 'Guardar Promoción'"
           [icon]="isSubmitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"
-          [disabled]="form.invalid || isSubmitting()"
+          [disabled]="form.invalid || isSubmitting() || (esModoEdicion() && !hasMeaningfulChanges())"
           styleClass="ventas-pill ventas-pill-warning"
         ></p-button>
       </div>
@@ -243,3 +236,4 @@
 
 <p-toast />
 <p-confirmDialog />
+

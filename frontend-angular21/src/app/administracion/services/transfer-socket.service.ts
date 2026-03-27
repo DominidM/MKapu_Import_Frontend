@@ -75,7 +75,7 @@ export class TransferSocketService {
     this.connectionState.set('connecting');
     this.lastError.set(null);
 
-    const socket = io(`${environment.apiUrlSocket}/transfers`, {
+    const socket = io(`${this.resolveSocketBaseUrl()}/transfers`, {
       path: '/logistics/socket.io',
       //path: '/socket.io',
       transports: ['websocket', 'polling'],
@@ -123,6 +123,23 @@ export class TransferSocketService {
     );
   }
 
+  private resolveSocketBaseUrl(): string {
+    const apiBaseUrl = this.normalizeBaseUrl(environment.apiUrl);
+    const configuredSocketBaseUrl = this.normalizeBaseUrl(
+      environment.apiUrlSocket,
+    );
+
+    if (!environment.production && apiBaseUrl) {
+      return apiBaseUrl;
+    }
+
+    return configuredSocketBaseUrl || apiBaseUrl;
+  }
+
+  private normalizeBaseUrl(url: string | null | undefined): string {
+    return String(url ?? '').trim().replace(/\/api\/?$/i, '');
+  }
+
   private teardownSocket(resetEvents: boolean): void {
     if (this.socket) {
       this.socket.removeAllListeners();
@@ -158,3 +175,4 @@ export class TransferSocketService {
     this.zone.run(callback);
   }
 }
+

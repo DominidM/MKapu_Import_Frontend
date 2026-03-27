@@ -47,8 +47,7 @@
 :host ::ng-deep .seg-filtros-card.p-card,
 :host ::ng-deep .seg-card.p-card {
   background: var(--seg-card-bg) !important;
-  border: 1px solid var(--seg-border) !important;
-  border-radius: 22px !important;
+  border-radius: 12px !important;
   box-shadow: var(--seg-shadow) !important;
 }
 
@@ -286,46 +285,33 @@
   max-width: 260px;
 }
 
+:host ::ng-deep .seg-date-input .p-datepicker,
 :host ::ng-deep .seg-date-input .p-inputwrapper {
-  display: inline-flex;
+  position: relative;
+  display: block;
   width: 100%;
 }
 
-:host ::ng-deep .seg-date-input .p-datepicker-input-icon-container {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 2.65rem;
-  width: 2.65rem;
-  height: 2.3rem;
-  border: 1px solid var(--seg-border-strong) !important;
-  border-left: none !important;
-  border-radius: 0 12px 12px 0 !important;
-  background: var(--seg-soft-bg) !important;
-  color: var(--seg-muted) !important;
-}
-
 :host ::ng-deep .seg-date-input .p-inputtext,
 :host ::ng-deep .seg-date-input .p-datepicker-input,
 :host ::ng-deep .seg-date-input .p-inputwrapper input,
-:host ::ng-deep .seg-date-input .p-inputwrapper,
 :host ::ng-deep .seg-filtros-card .p-inputtext,
-:host ::ng-deep .seg-filtros-card .p-datepicker-input-icon-container,
 :host ::ng-deep .seg-filtros-card .p-button {
-  border-radius: 12px !important;
+  border-radius: 14px !important;
 }
 
 :host ::ng-deep .seg-date-input .p-inputtext,
 :host ::ng-deep .seg-date-input .p-datepicker-input,
 :host ::ng-deep .seg-date-input .p-inputwrapper input,
 :host ::ng-deep .seg-filtros-card .p-inputtext,
-:host ::ng-deep .seg-filtros-card .p-select,
-:host ::ng-deep .seg-filtros-card .p-datepicker-input-icon-container {
+:host ::ng-deep .seg-filtros-card .p-select {
+  width: 100% !important;
   background: var(--seg-soft-bg) !important;
-  border-color: var(--seg-border-strong) !important;
+  border: 1px solid var(--seg-border-strong) !important;
   color: var(--seg-text) !important;
-  height: 2.3rem;
-  border-radius: 12px 0 0 12px !important;
+  height: 3rem;
+  padding-left: 1rem !important;
+  padding-right: 3.7rem !important;
 }
 
 :host ::ng-deep .seg-date-input .p-inputtext::placeholder,
@@ -334,14 +320,53 @@
   opacity: 0.9;
 }
 
-:host ::ng-deep .seg-date-input .p-inputtext:hover,
+:host ::ng-deep .seg-date-input .p-datepicker-input-icon-container {
+  position: absolute !important;
+  top: 0 !important;
+  right: 0.95rem !important;
+  bottom: 0 !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.1rem;
+  min-width: 1.1rem;
+  margin: auto 0;
+  padding: 0;
+  border: none !important;
+  background: transparent !important;
+  color: var(--seg-muted) !important;
+  line-height: 1 !important;
+  z-index: 2;
+}
+
+:host ::ng-deep .seg-date-input .p-datepicker-input-icon {
+  display: block;
+  width: 1rem;
+  height: 1rem;
+  margin: 0;
+  line-height: 1 !important;
+  vertical-align: middle;
+}
+
+:host ::ng-deep .seg-date-input:hover .p-inputtext,
+:host ::ng-deep .seg-date-input:hover .p-datepicker-input,
+:host ::ng-deep .seg-date-input:hover .p-inputwrapper input,
 :host ::ng-deep .seg-date-input .p-inputtext:focus,
-:host ::ng-deep .seg-date-input .p-inputtext:focus-visible {
-  border-color: rgba(246, 175, 51, 0.45) !important;
+:host ::ng-deep .seg-date-input .p-datepicker-input:focus,
+:host ::ng-deep .seg-date-input .p-inputwrapper input:focus,
+:host ::ng-deep .seg-date-input .p-inputtext:focus-visible,
+:host ::ng-deep .seg-date-input .p-datepicker-input:focus-visible,
+:host ::ng-deep .seg-date-input .p-inputwrapper input:focus-visible {
+  border-color: rgba(246, 175, 51, 0.55) !important;
   box-shadow: 0 0 0 1px rgba(246, 175, 51, 0.12) !important;
 }
 
-:host ::ng-deep .seg-filter-btn.p-button {
+:host ::ng-deep .seg-date-input:hover .p-datepicker-input-icon,
+:host ::ng-deep .seg-date-input .p-inputtext:focus ~ .p-datepicker-input-icon-container .p-datepicker-input-icon,
+:host ::ng-deep .seg-date-input .p-datepicker-input:focus ~ .p-datepicker-input-icon-container .p-datepicker-input-icon,
+:host ::ng-deep .seg-date-input .p-inputwrapper input:focus ~ .p-datepicker-input-icon-container .p-datepicker-input-icon {
+  color: var(--seg-text) !important;
+}:host ::ng-deep .seg-filter-btn.p-button {
   min-width: 5.4rem;
   min-height: 2.3rem;
   flex-shrink: 0;
@@ -884,6 +909,13 @@
     max-width: none;
   }
 }
+
+
+
+
+
+
+
 
 
 

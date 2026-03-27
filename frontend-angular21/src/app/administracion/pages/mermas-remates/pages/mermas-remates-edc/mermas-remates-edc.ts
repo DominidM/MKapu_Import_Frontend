@@ -184,9 +184,6 @@ export class MermasRematesEdcComponent implements OnInit {
       return;
     }
 
-    // Aquí iría la lógica para guardar en el backend
-    console.log('Producto a guardar:', this.producto);
-
     this.messageService.add({
       severity: 'success',
       summary: this.modoEdicion ? 'Producto Actualizado' : 'Producto Registrado',

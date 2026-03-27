@@ -2,7 +2,14 @@ import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef, signal } from 
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { Subject, Subscription, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
+import {
+  Subject,
+  Subscription,
+  debounceTime,
+  distinctUntilChanged,
+  switchMap,
+  takeUntil,
+} from 'rxjs';
 
 import { Card } from 'primeng/card';
 import { Button } from 'primeng/button';
@@ -92,6 +99,7 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
 
   private subscriptions = new Subscription();
   private busquedaSubject = new Subject<string>();
+  private readonly cancelCargar$ = new Subject<void>();
 
   comprobantes: SalesReceiptSummaryAdmin[] = [];
   comprobantesFiltrados: SalesReceiptSummaryAdmin[] = [];
@@ -110,8 +118,6 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
 
   readonly esAdmin: boolean;
   readonly sedeNombreVentas: string;
-
-  /** Sede del usuario logueado — usada como valor por defecto al limpiar filtros */
   private readonly sedePropiaId: number | null;
 
   dialogVisible = false;
@@ -125,7 +131,6 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
   wspPollingInterval: any = null;
   wspComprobanteActual: SalesReceiptSummaryAdmin | null = null;
 
-  // Dialogo voucher termico
   ticketDialogVisible = false;
   ticketConsultando = false;
   ticketDetalle: any = null;
@@ -169,18 +174,13 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
     this.sedePropiaId = user?.idSede ?? null;
   }
 
-  // ── Lifecycle ─────────────────────────────────────────────────────
-
   ngOnInit(): void {
-    // Ambos roles arrancan con su propia sede pre-seleccionada
     this.filtros.sedeSeleccionada = this.sedePropiaId;
 
     this.cargarTiposComprobante();
     this.cargarMetodosPago();
 
     if (this.esAdmin) {
-      // cargarSedes() se encarga de llamar cargarComprobantes() y cargarKpis()
-      // una vez que las opciones del selector ya están listas
       this.cargarSedes();
     } else {
       this.cargarComprobantes();
@@ -192,20 +192,18 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
     this.messageService.add({
       severity: 'success',
       summary: this.esAdmin ? 'Modo Administración' : 'Historial de Ventas',
-      detail: this.esAdmin
-        ? `Visualizando ventas de: ${this.sedeNombreVentas}`
-        : `Visualizando ventas de: ${this.sedeNombreVentas}`,
+      detail: `Visualizando ventas de: ${this.sedeNombreVentas}`,
       life: 3000,
     });
   }
 
   ngOnDestroy(): void {
+    this.cancelCargar$.next();
+    this.cancelCargar$.complete();
     this.busquedaSubject.complete();
     this.subscriptions.unsubscribe();
     this.detenerPollingWsp();
   }
-
-  // ── Busqueda Subject ──────────────────────────────────────────────
 
   private configurarBusqueda(): void {
     const subBusqueda = this.busquedaSubject
@@ -241,8 +239,6 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
     this.subscriptions.add(subBusqueda);
   }
 
-  // ── Paginador ─────────────────────────────────────────────────────
-
   onPageChange(page: number): void {
     this.paginaActual = page;
     this.cargarComprobantes();
@@ -254,10 +250,7 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
     this.cargarComprobantes();
   }
 
-  // ── Filtros ───────────────────────────────────────────────────────
-
   aplicarFiltros(): void {
-    // VENTAS nunca puede cambiar su sede
     if (!this.esAdmin) {
       this.filtros.sedeSeleccionada = this.sedePropiaId;
     }
@@ -267,7 +260,6 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
   }
 
   limpiarFiltros(): void {
-    // Al limpiar, ambos roles vuelven a su propia sede — ADMIN no queda en "Todas"
     this.filtros = {
       sedeSeleccionada: this.sedePropiaId,
       tipoComprobante: null,
@@ -297,6 +289,13 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
     if (event.key === 'Enter') this.aplicarFiltros();
   }
 
+  onBusquedaLimpiada(): void {
+    this.filtros.busqueda = '';
+    this.paginaActual = 1;
+    this.cargarComprobantes();
+    this.cargarKpis();
+  }
+
   buscarSugerencias(event: any): void {
     const query = (event.query ?? '').trim();
     if (query.length < 3) {
@@ -306,10 +305,9 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
     this.busquedaSubject.next(query);
   }
 
-  // ── Carga de datos ────────────────────────────────────────────────
-
   cargarComprobantes(): void {
     this.loading = true;
+    this.cancelCargar$.next();
 
     const query: SalesReceiptsQueryAdmin = {
       page: this.paginaActual,
@@ -326,55 +324,43 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
       _t: Date.now(),
     };
 
-    const sub = this.ventasService.listarHistorialVentas(query).subscribe({
-      next: (res: any) => {
-        const data = res?.receipts ?? res?.data ?? res?.items ?? [];
-        this.comprobantes = Array.isArray(data) ? data : [];
-        this.comprobantesFiltrados = [...this.comprobantes];
-        this.cargarSugerenciasBusqueda();
-        this.loading = false;
-        setTimeout(() => {
-          this.totalRegistros = res?.total ?? this.comprobantes.length;
-          this.totalPaginas = res?.total_pages ?? 1;
-          this.cdr.markForCheck();
-        });
-      },
-      error: () => {
-        this.loading = false;
-        this.comprobantes = [];
-        this.comprobantesFiltrados = [];
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudo cargar el historial de ventas',
-          life: 3000,
-        });
-      },
-    });
+    const sub = this.ventasService
+      .listarHistorialVentas(query)
+      .pipe(takeUntil(this.cancelCargar$))
+      .subscribe({
+        next: (res: any) => {
+          const data = res?.receipts ?? res?.data ?? res?.items ?? [];
+          this.comprobantes = Array.isArray(data) ? data : [];
+          this.comprobantesFiltrados = [...this.comprobantes];
+          this.cargarSugerenciasBusqueda();
+          this.loading = false;
+          setTimeout(() => {
+            this.totalRegistros = res?.total ?? this.comprobantes.length;
+            this.totalPaginas = res?.total_pages ?? 1;
+            this.cdr.markForCheck();
+          });
+        },
+        error: () => {
+          this.loading = false;
+          this.comprobantes = [];
+          this.comprobantesFiltrados = [];
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'No se pudo cargar el historial de ventas',
+            life: 3000,
+          });
+        },
+      });
+
     this.subscriptions.add(sub);
   }
 
   cargarKpis(): void {
     const f = this.filtros;
 
-    let dateFrom: string | undefined;
-    let dateTo: string | undefined;
-
-    if (f.fechaInicio && f.fechaFin) {
-      dateFrom = f.fechaInicio.toISOString().split('T')[0];
-      dateTo = f.fechaFin.toISOString().split('T')[0];
-    } else if (f.fechaInicio && !f.fechaFin) {
-      const d = f.fechaInicio.toISOString().split('T')[0];
-      dateFrom = d;
-      dateTo = d;
-    } else if (!f.fechaInicio && f.fechaFin) {
-      const d = f.fechaFin.toISOString().split('T')[0];
-      dateFrom = d;
-      dateTo = d;
-    } else {
-      dateFrom = undefined;
-      dateTo = undefined;
-    }
+    const dateFrom = f.fechaInicio ? f.fechaInicio.toISOString().split('T')[0] : undefined;
+    const dateTo = f.fechaFin ? f.fechaFin.toISOString().split('T')[0] : undefined;
 
     const sub = this.ventasService
       .getKpiPorFiltros({
@@ -408,12 +394,10 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
           { label: 'Todas las sedes', value: null },
           ...this.sedes.map((s) => ({ label: s.nombre, value: s.id_sede })),
         ];
-        // Pre-seleccionar la sede propia del admin al cargar
         if (this.sedePropiaId) {
           this.filtros.sedeSeleccionada = this.sedePropiaId;
         }
         this.cdr.markForCheck();
-        // Cargar datos ahora que el selector tiene opciones y la sede está lista
         this.cargarComprobantes();
         this.cargarKpis();
       },
@@ -468,8 +452,6 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
     this.todasLasSugerencias = Array.from(set).sort();
   }
 
-  // ── Dialog AccionesComprobanteDialog ──────────────────────────────
-
   abrirDialogAcciones(comprobante: SalesReceiptSummaryAdmin): void {
     this.comprobanteDialogActual = comprobante;
     this.dialogConfig = {
@@ -479,7 +461,7 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
       mostrarEmail: true,
       labelPdf: 'PDF',
       labelVoucher: 'Voucher',
-      mostrarNotaVenta: true, // <- propiedad nueva en el config
+      mostrarNotaVenta: true,
       labelNotaVenta: 'Nota de Venta',
     };
     this.dialogVisible = true;
@@ -813,8 +795,6 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
       life: 3000,
     });
   }
-
-  // ── Helpers ───────────────────────────────────────────────────────
 
   getSeverityEstado(estado: string): 'success' | 'danger' | 'warn' | 'info' {
     switch (estado) {

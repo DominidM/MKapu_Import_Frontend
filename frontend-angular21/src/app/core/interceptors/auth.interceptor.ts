@@ -7,9 +7,6 @@ import { Router } from '@angular/router';
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const token = localStorage.getItem('token');
   const router = inject(Router);
-  console.log('🚀 Interceptando petición hacia:', req.url);
-  console.log('🔑 Token encontrado en localStorage:', token);
-
   let authReq = req;
   if (token && !req.url.includes('/auth/login')) {
     authReq = req.clone({

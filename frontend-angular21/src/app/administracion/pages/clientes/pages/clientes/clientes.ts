@@ -1,7 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
+import { Subject, of } from 'rxjs';
+import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 
 import { AutoCompleteModule } from 'primeng/autocomplete';
 import { ButtonModule } from 'primeng/button';
@@ -50,6 +53,10 @@ export class Clientes implements OnInit {
   private readonly clienteService = inject(ClienteService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly messageService = inject(MessageService);
+  private readonly destroyRef = inject(DestroyRef);
+
+  // ── stream de búsqueda con debounce ──────────────────────────────────────
+  private readonly searchInput$ = new Subject<string>();
 
   readonly loading = this.clienteService.loading;
   readonly error = this.clienteService.error;
@@ -60,6 +67,9 @@ export class Clientes implements OnInit {
   readonly autoTerm = signal<string>('');
   readonly viewMode = signal<ViewMode>('todas');
   readonly statusFilter = signal<StatusFilter>('activos');
+
+  // ← ahora es signal, no computed (se llena desde el backend)
+  readonly suggestions = signal<Customer[]>([]);
 
   readonly customers = computed(() => this.clienteService.customers());
   readonly totalItems = computed(() => this.clienteService.total());
@@ -77,41 +87,8 @@ export class Clientes implements OnInit {
     { label: 'Todos', value: 'todos' },
   ];
 
-  readonly suggestions = computed(() => {
-    const q = this.autoTerm().trim().toLowerCase();
-    if (!q) return [];
-    return this.customers()
-      .filter(
-        (c) =>
-          String(c.displayName ?? '')
-            .toLowerCase()
-            .includes(q) ||
-          String(c.documentValue ?? '')
-            .toLowerCase()
-            .includes(q),
-      )
-      .slice(0, 5);
-  });
-
   selectedClient = signal<Customer | null>(null);
   showDetails = signal<boolean>(false);
-
-  ngOnInit(): void {
-    this.cargar();
-  }
-
-  private cargar(): void {
-    const status = this.statusFilter();
-    this.clienteService
-      .loadCustomers({
-        page: this.page(),
-        limit: this.rows(),
-        search: this.searchTerm().trim() || undefined,
-        status: status === 'activos' ? true : status === 'inactivos' ? false : undefined,
-        tipo: this.viewMode() !== 'todas' ? this.viewMode() : undefined,
-      })
-      .subscribe();
-  }
 
   private readonly docTypeMap: Record<string, string> = {
     '00': 'OTROS',
@@ -121,21 +98,56 @@ export class Clientes implements OnInit {
     '07': 'PASAPORTE',
   };
 
+  ngOnInit(): void {
+    this.cargar();
+    this.initSuggestSearch();
+  }
+
+  // ── debounce → backend suggest ───────────────────────────────────────────
+  private initSuggestSearch(): void {
+    this.searchInput$
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged(),
+        switchMap((q) => {
+          if (!q || q.length < 2) {
+            this.suggestions.set([]);
+            return of([]);
+          }
+          return this.clienteService.suggestCustomers(q, 7);
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((results) => this.suggestions.set(results));
+  }
+
+  private cargar(): void {
+    const status = this.statusFilter();
+    const mode = this.viewMode();
+
+    this.clienteService
+      .loadCustomers({
+        page: this.page(),
+        limit: this.rows(),
+        search: this.searchTerm().trim() || undefined,
+        status: status === 'activos' ? true : status === 'inactivos' ? false : undefined,
+        tipo: mode !== 'todas' ? mode : undefined,
+      })
+      .subscribe();
+  }
+
   getDocTypeLabel(code: string): string {
     return this.docTypeMap[code] ?? 'DOC';
   }
 
-  isCompany(code?: string, businessName?: string | null): boolean {
-    if (businessName && String(businessName).trim().length > 0) return true;
+  isCompany(code?: string, razonsocial?: string | null): boolean {
+    if (razonsocial && String(razonsocial).trim().length > 0) return true;
     return code === '06';
   }
 
   getDisplayName(c: Customer): string {
-    const bn = c.businessName ?? (c as any).razonsocial ?? null;
-    if (bn && String(bn).trim().length > 0) return String(bn).trim();
-    const name = c.name ?? '';
-    const last = c.lastName ?? '';
-    return [name, last].filter(Boolean).join(' ').trim() || c.documentValue || '—';
+    if (c.razonsocial?.trim()) return c.razonsocial.trim();
+    return [c.name, c.apellidos].filter(Boolean).join(' ').trim() || c.documentValue || '—';
   }
 
   getPhoneDisplay(c: Customer): string {
@@ -143,12 +155,14 @@ export class Clientes implements OnInit {
   }
 
   getCustomerTypeLabel(c: Customer): string {
-    return this.isCompany(c.documentTypeSunatCode, c.businessName) ? 'JURÍDICA' : 'NATURAL';
+    return this.isCompany(c.documentTypeSunatCode, c.razonsocial) ? 'JURÍDICA' : 'NATURAL';
   }
 
+  // ── autocomplete handlers ─────────────────────────────────────────────────
   onAutoChange(value: unknown): void {
     if (typeof value === 'string') {
       this.autoTerm.set(value);
+      this.searchInput$.next(value.trim()); // ← dispara búsqueda al backend
       return;
     }
     if (value && typeof value === 'object') {
@@ -156,24 +170,28 @@ export class Clientes implements OnInit {
       return;
     }
     this.autoTerm.set('');
+    this.suggestions.set([]);
   }
 
   onAutoComplete(event: any): void {
-    this.autoTerm.set(String(event?.query ?? ''));
+    const q = String(event?.query ?? '');
+    this.autoTerm.set(q);
+    this.searchInput$.next(q.trim()); // ← dispara búsqueda al backend
   }
 
   onSelectCliente(event: any): void {
     const selected: Customer | undefined = event?.value;
     if (!selected) return;
     this.searchTerm.set(selected.documentValue ?? '');
-    this.autoTerm.set('');
+    this.autoTerm.set(this.getDisplayName(selected));
+    this.suggestions.set([]);
     this.page.set(1);
-    this.cargar();
+    this.cargar(); // ← recarga tabla filtrada por el cliente seleccionado
   }
 
   confirmAutoSearch(): void {
     this.searchTerm.set(this.autoTerm().trim());
-    this.autoTerm.set('');
+    this.suggestions.set([]);
     this.page.set(1);
     this.cargar();
   }
@@ -204,17 +222,19 @@ export class Clientes implements OnInit {
   clearSearch(): void {
     this.searchTerm.set('');
     this.autoTerm.set('');
+    this.suggestions.set([]);
     this.viewMode.set('todas');
     this.statusFilter.set('activos');
     this.page.set(1);
     this.cargar();
   }
 
-  openDetails(c: Customer) {
+  openDetails(c: Customer): void {
     this.selectedClient.set(c);
     this.showDetails.set(true);
   }
-  closeDetails() {
+
+  closeDetails(): void {
     this.selectedClient.set(null);
     this.showDetails.set(false);
   }

@@ -141,6 +141,9 @@ export interface TransferListQueryDto {
   headquartersId?: string;
   page?: number;
   pageSize?: number;
+  dateFrom?: string;
+  dateTo?: string;
+  ignoreDateRange?: boolean;
 }
 
 export interface TransferListPaginationDto {

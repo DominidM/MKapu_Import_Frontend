@@ -1,0 +1,424 @@
+<div class="p-2">
+  <!-- HEADER -->
+  <p-card styleClass="frm-header-card mb-3">
+    <div class="flex align-items-center justify-content-between flex-wrap gap-2">
+      <div class="flex align-items-center gap-3">
+        <span class="frm-title-icon"><i class="pi pi-truck"></i></span>
+        <div>
+          <p class="frm-kicker mb-0">{{ tituloKicker }}</p>
+          <h2 class="frm-title mb-0">{{ subtituloKicker }}</h2>
+        </div>
+      </div>
+      <div class="flex gap-2">
+        <p-button
+          label="Cancelar"
+          icon="pi pi-arrow-left"
+          styleClass="frm-pill frm-pill-secondary"
+          (onClick)="cancelar()"
+        ></p-button>
+        <p-button
+          label="Guardar asignación"
+          icon="pi pi-check"
+          styleClass="frm-pill frm-pill-warning"
+          (onClick)="guardar()"
+        ></p-button>
+      </div>
+    </div>
+  </p-card>
+
+  <div class="frm-layout">
+
+    <!-- ══════════════ COLUMNA IZQUIERDA ══════════════ -->
+    <div class="frm-col-main">
+
+      <!-- SECCIÓN 1 — DATOS GENERALES -->
+      <p-card styleClass="frm-section-card mb-3">
+        <div class="frm-section-header">
+          <span class="frm-section-icon"><i class="pi pi-file-edit"></i></span>
+          <span class="frm-section-title">Datos generales del delivery</span>
+        </div>
+
+        <div class="formgrid grid mt-3">
+
+          <!-- Tipo -->
+          <div class="field col-12 md:col-6">
+            <label class="frm-label">Tipo de operación <span class="frm-required">*</span></label>
+            <p-select
+              [options]="tipoOptions"
+              [(ngModel)]="form.tipo"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Selecciona tipo..."
+              styleClass="w-full"
+            >
+              <ng-template let-item pTemplate="selectedItem">
+                <div class="flex align-items-center gap-2" *ngIf="item">
+                  <i [class]="item.value === 'VENTA_DELIVERY' ? 'pi pi-send' : 'pi pi-download'"></i>
+                  <span>{{ item.label }}</span>
+                </div>
+              </ng-template>
+            </p-select>
+          </div>
+
+          <!-- Comprobante -->
+          <div class="field col-12 md:col-6">
+            <label class="frm-label">N° Comprobante</label>
+            <input
+              pInputText
+              [(ngModel)]="form.comprobante"
+              placeholder="Ej: B001-00008060"
+              class="w-full"
+            />
+          </div>
+
+          <!-- Cliente / Proveedor -->
+          <div class="field col-12 md:col-6">
+            <label class="frm-label">Cliente / Proveedor <span class="frm-required">*</span></label>
+            <input
+              pInputText
+              [(ngModel)]="form.cliente"
+              placeholder="Nombre o razón social..."
+              class="w-full"
+            />
+          </div>
+
+          <!-- Fecha entrega -->
+          <div class="field col-12 md:col-6">
+            <label class="frm-label">Fecha de entrega / recojo</label>
+            <p-datepicker
+              [(ngModel)]="form.fechaEntrega"
+              [showIcon]="true"
+              dateFormat="dd/mm/yy"
+              placeholder="dd/mm/aaaa"
+              styleClass="w-full"
+            ></p-datepicker>
+          </div>
+
+          <!-- Estado -->
+          <div class="field col-12 md:col-6">
+            <label class="frm-label">Estado</label>
+            <p-select
+              [options]="estadoOptions"
+              [(ngModel)]="form.estado"
+              optionLabel="label"
+              optionValue="value"
+              styleClass="w-full"
+            ></p-select>
+          </div>
+
+          <!-- Observaciones -->
+          <div class="field col-12 md:col-6">
+            <label class="frm-label">Observaciones</label>
+            <textarea
+              pTextarea
+              [(ngModel)]="form.observaciones"
+              rows="2"
+              placeholder="Instrucciones adicionales..."
+              class="w-full"
+              style="resize: vertical;"
+            ></textarea>
+          </div>
+
+        </div>
+      </p-card>
+
+      <!-- SECCIÓN 2 — RUTA -->
+      <p-card styleClass="frm-section-card mb-3">
+        <div class="frm-section-header">
+          <span class="frm-section-icon"><i class="pi pi-map"></i></span>
+          <span class="frm-section-title">Ruta de entrega</span>
+        </div>
+
+        <div class="formgrid grid mt-3">
+
+          <!-- Origen -->
+          <div class="field col-12 md:col-6">
+            <label class="frm-label">
+              <i class="pi pi-circle-fill frm-icon-origen mr-1"></i>Origen
+            </label>
+            <input
+              pInputText
+              [(ngModel)]="form.origen"
+              placeholder="Dirección de salida..."
+              class="w-full"
+            />
+          </div>
+
+          <!-- Destino -->
+          <div class="field col-12 md:col-6">
+            <label class="frm-label">
+              <i class="pi pi-map-marker frm-icon-destino mr-1"></i>Destino <span class="frm-required">*</span>
+            </label>
+            <input
+              pInputText
+              [(ngModel)]="form.destino"
+              placeholder="Dirección de entrega..."
+              class="w-full"
+            />
+          </div>
+
+        </div>
+      </p-card>
+
+      <!-- SECCIÓN 3 — PRODUCTOS -->
+      <p-card styleClass="frm-section-card">
+        <div class="frm-section-header">
+          <span class="frm-section-icon"><i class="pi pi-box"></i></span>
+          <span class="frm-section-title">Productos / Carga</span>
+          <p-button
+            label="Agregar línea"
+            icon="pi pi-plus"
+            styleClass="frm-pill frm-pill-warning ml-auto"
+            size="small"
+            (onClick)="agregarProducto()"
+          ></p-button>
+        </div>
+
+        <div class="frm-table-scroll mt-3">
+          <p-table
+            [value]="form.productos"
+            styleClass="frm-table"
+            [tableStyle]="{ 'min-width': '42rem' }"
+          >
+            <ng-template pTemplate="header">
+              <tr>
+                <th style="width: 14%">CÓDIGO</th>
+                <th style="width: 36%">DESCRIPCIÓN</th>
+                <th style="width: 12%">CANTIDAD</th>
+                <th style="width: 16%">PRECIO UNIT.</th>
+                <th style="width: 16%">SUBTOTAL</th>
+                <th style="width: 6%"></th>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-prod>
+              <tr>
+                <td>
+                  <input
+                    pInputText
+                    [(ngModel)]="prod.codigo"
+                    placeholder="COD-001"
+                    class="w-full frm-input-inline"
+                  />
+                </td>
+                <td>
+                  <input
+                    pInputText
+                    [(ngModel)]="prod.descripcion"
+                    placeholder="Descripción del producto..."
+                    class="w-full frm-input-inline"
+                  />
+                </td>
+                <td>
+                  <p-inputnumber
+                    [(ngModel)]="prod.cantidad"
+                    [min]="1"
+                    [showButtons]="true"
+                    styleClass="frm-qty-input"
+                  ></p-inputnumber>
+                </td>
+                <td>
+                  <p-inputnumber
+                    [(ngModel)]="prod.precio"
+                    mode="currency"
+                    currency="PEN"
+                    locale="es-PE"
+                    [min]="0"
+                    styleClass="w-full"
+                  ></p-inputnumber>
+                </td>
+                <td>
+                  <span class="frm-subtotal">
+                    S/ {{ prod.cantidad * prod.precio | number:'1.2-2' }}
+                  </span>
+                </td>
+                <td>
+                  <p-button
+                    icon="pi pi-trash"
+                    text
+                    severity="danger"
+                    [rounded]="true"
+                    (onClick)="eliminarProducto(prod._uid)"
+                    pTooltip="Eliminar línea"
+                    tooltipPosition="top"
+                  ></p-button>
+                </td>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="6" class="frm-empty">
+                  <i class="pi pi-box mr-2"></i>Sin productos. Haz clic en "Agregar línea".
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+
+        <!-- TOTALES -->
+        <div class="frm-totales">
+          <div class="frm-totales-grid">
+            <div class="frm-total-row">
+              <span class="frm-total-label">Subtotal</span>
+              <span class="frm-total-value">S/ {{ subtotal | number:'1.2-2' }}</span>
+            </div>
+            <div class="frm-total-row">
+              <span class="frm-total-label">IGV (18%)</span>
+              <span class="frm-total-value">S/ {{ igv | number:'1.2-2' }}</span>
+            </div>
+            <div class="frm-total-row frm-total-final">
+              <span class="frm-total-label-final">TOTAL</span>
+              <span class="frm-total-valor-final">S/ {{ total | number:'1.2-2' }}</span>
+            </div>
+          </div>
+        </div>
+      </p-card>
+
+    </div>
+
+    <!-- ══════════════ COLUMNA DERECHA ══════════════ -->
+    <div class="frm-col-aside">
+
+      <!-- RESUMEN -->
+      <p-card styleClass="frm-section-card mb-3">
+        <div class="frm-section-header">
+          <span class="frm-section-icon"><i class="pi pi-info-circle"></i></span>
+          <span class="frm-section-title">Resumen</span>
+        </div>
+
+        <div class="frm-resumen mt-3">
+          <div class="frm-resumen-row">
+            <span class="frm-resumen-label">Tipo</span>
+            <p-tag
+              [value]="getTipoLabel(form.tipo)"
+              [severity]="getTipoSeverity(form.tipo)"
+            ></p-tag>
+          </div>
+          <div class="frm-resumen-row">
+            <span class="frm-resumen-label">Estado</span>
+            <p-tag
+              [value]="form.estado"
+              [severity]="getEstadoSeverity(form.estado)"
+            ></p-tag>
+          </div>
+          <div class="frm-resumen-row">
+            <span class="frm-resumen-label">Cliente</span>
+            <span class="frm-resumen-value">{{ form.cliente || '—' }}</span>
+          </div>
+          <div class="frm-resumen-row">
+            <span class="frm-resumen-label">Destino</span>
+            <span class="frm-resumen-value">{{ form.destino || '—' }}</span>
+          </div>
+          <div class="frm-resumen-row">
+            <span class="frm-resumen-label">Productos</span>
+            <span class="frm-resumen-value">{{ form.productos.length }} línea(s)</span>
+          </div>
+          <div class="frm-resumen-row frm-resumen-total">
+            <span class="frm-resumen-label">Total</span>
+            <span class="frm-resumen-monto">S/ {{ total | number:'1.2-2' }}</span>
+          </div>
+        </div>
+      </p-card>
+
+      <!-- ASIGNACIÓN DE PERSONAL -->
+      <p-card styleClass="frm-section-card">
+        <div class="frm-section-header">
+          <span class="frm-section-icon"><i class="pi pi-users"></i></span>
+          <span class="frm-section-title">Asignar responsable</span>
+        </div>
+
+        <div class="field mt-3">
+          <label class="frm-label">Seleccionar personal</label>
+          <p-select
+            [options]="personalOptions"
+            [(ngModel)]="form.responsableId"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Elige un responsable..."
+            styleClass="w-full"
+            (onChange)="onResponsableChange()"
+          >
+            <ng-template let-item pTemplate="item">
+              <div class="flex align-items-center justify-content-between w-full gap-2">
+                <div class="flex align-items-center gap-2">
+                  <i class="pi pi-user"></i>
+                  <span>{{ item.label }}</span>
+                </div>
+                <span
+                  class="frm-disp-badge"
+                  [class.frm-disp-badge--ok]="item.disponible"
+                  [class.frm-disp-badge--no]="!item.disponible"
+                >
+                  {{ item.disponible ? 'Disponible' : 'Ocupado' }}
+                </span>
+              </div>
+            </ng-template>
+          </p-select>
+        </div>
+
+        <!-- Tarjeta del responsable seleccionado -->
+        <div class="frm-personal-card mt-3" *ngIf="personalSeleccionado">
+          <div class="frm-personal-avatar">
+            <i class="pi pi-user"></i>
+          </div>
+          <div class="frm-personal-info">
+            <span class="frm-personal-nombre">{{ personalSeleccionado.nombre }}</span>
+            <span class="frm-personal-cargo">{{ personalSeleccionado.cargo }}</span>
+            <span class="frm-personal-tel">
+              <i class="pi pi-phone mr-1"></i>{{ personalSeleccionado.telefono }}
+            </span>
+          </div>
+          <span
+            class="frm-disp-badge"
+            [class.frm-disp-badge--ok]="personalSeleccionado.disponible"
+            [class.frm-disp-badge--no]="!personalSeleccionado.disponible"
+          >
+            {{ personalSeleccionado.disponible ? 'Disponible' : 'Ocupado' }}
+          </span>
+        </div>
+
+        <div class="frm-personal-empty mt-3" *ngIf="!personalSeleccionado">
+          <i class="pi pi-user-plus"></i>
+          <span>Ningún responsable asignado aún</span>
+        </div>
+
+        <!-- LISTADO DE PERSONAL -->
+        <p-divider styleClass="my-3"></p-divider>
+        <div class="frm-section-header mb-2">
+          <span class="frm-section-title" style="font-size: 0.8rem">Todo el personal</span>
+        </div>
+
+        <div class="frm-personal-list">
+          <div
+            *ngFor="let p of personal"
+            class="frm-personal-item"
+            [class.frm-personal-item--seleccionado]="form.responsableId === p.id"
+            [class.frm-personal-item--no-disp]="!p.disponible"
+            (click)="p.disponible && (form.responsableId = p.id) && onResponsableChange()"
+          >
+            <div class="frm-personal-avatar frm-personal-avatar--sm">
+              <i class="pi pi-user"></i>
+            </div>
+            <div class="frm-personal-info">
+              <span class="frm-personal-nombre">{{ p.nombre }}</span>
+              <span class="frm-personal-cargo">{{ p.cargo }}</span>
+            </div>
+            <span
+              class="frm-disp-badge"
+              [class.frm-disp-badge--ok]="p.disponible"
+              [class.frm-disp-badge--no]="!p.disponible"
+            >
+              {{ p.disponible ? '✓' : '✕' }}
+            </span>
+          </div>
+        </div>
+
+      </p-card>
+
+    </div>
+  </div>
+
+</div>
+
+<p-toast position="top-right"></p-toast>

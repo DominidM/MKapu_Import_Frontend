@@ -1,0 +1,408 @@
+/* ─── HOST ─────────────────────────────────────────── */
+:host {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+:host ::ng-deep .delivery-page * { box-sizing: border-box; }
+
+/* ─── LAYOUT ────────────────────────────────────────── */
+.delivery-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ─── HEADER ────────────────────────────────────────── */
+.delivery-title-icon {
+  width: 40px; height: 40px;
+  display: grid; place-items: center;
+  border-radius: 999px;
+  background: #f5c34d;
+  color: #1f2937;
+  font-size: 18px;
+}
+
+.delivery-kicker {
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #94a3b8;
+  font-weight: 600;
+  margin: 0;
+}
+
+.delivery-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+}
+
+/* ─── PILL ───────────────────────────────────────────── */
+.delivery-pill {
+  border-radius: 9999px !important;
+  font-weight: 600;
+  padding: 0.35rem 1rem;
+  font-size: 0.75rem;
+  transition: all 0.2s;
+}
+
+.delivery-pill-warning {
+  background: #F6AF33 !important;
+  border: 2px solid #e8a424 !important;
+  color: #1f2937 !important;
+}
+
+.delivery-pill-danger {
+  background: transparent !important;
+  border: 3px solid #ef4444 !important;
+  color: #ef4444 !important;
+}
+
+.delivery-pill-danger:hover {
+  background: #ef4444 !important;
+  color: #ffffff !important;
+}
+
+/* ─── KPI GRID ───────────────────────────────────────── */
+.delivery-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.delivery-kpi-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  background: #ffffff;
+  border-right: 2px solid #e5e7eb;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.delivery-kpi-card:last-child { border-right: none; }
+
+.delivery-kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 4px;
+  background: linear-gradient(90deg, #F6AF33 0%, #e8a424 100%);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+}
+
+.delivery-kpi-card:hover::before { transform: scaleX(1); }
+
+.delivery-kpi-card:hover {
+  background: #fefce8;
+  box-shadow: inset 0 -2px 8px rgba(246, 175, 51, 0.1);
+}
+
+/* Icono grande igual que contador-card de proveedores */
+.delivery-kpi-card > i {
+  font-size: 2.5rem;
+  color: #F6AF33;
+  transition: all 0.3s ease;
+}
+
+.delivery-kpi-card:hover > i {
+  transform: scale(1.1);
+  color: #e8a424;
+}
+
+/* Wrapper del icono pequeño (si usas span.delivery-kpi-icon) */
+.delivery-kpi-icon {
+  width: 42px; height: 42px;
+  border-radius: 12px;
+  display: grid; place-items: center;
+  font-size: 1.1rem; flex-shrink: 0;
+  background: rgba(246, 175, 51, 0.12);
+  color: #F6AF33;
+  transition: all 0.3s ease;
+}
+
+.delivery-kpi-card:hover .delivery-kpi-icon {
+  background: rgba(246, 175, 51, 0.2);
+  transform: scale(1.1);
+}
+
+.delivery-kpi-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  width: 100%;
+}
+
+.delivery-kpi-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+
+.delivery-kpi-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1f2937;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+/* ─── FILTROS ────────────────────────────────────────── */
+.delivery-search-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+:host ::ng-deep .delivery-filter-card .p-inputtext:focus,
+:host ::ng-deep .delivery-filter-card .p-autocomplete-input:focus {
+  border-color: #F6AF33;
+  box-shadow: 0 0 0 3px rgba(246, 175, 51, 0.15);
+}
+
+/* ─── SECTION ICON ───────────────────────────────────── */
+.delivery-section-icon {
+  width: 34px; height: 34px;
+  border-radius: 999px;
+  display: grid; place-items: center;
+  background: rgba(246, 175, 51, 0.12);
+  color: #F6AF33;
+  border: 1px solid rgba(246, 175, 51, 0.2);
+  font-size: 14px;
+}
+
+/* ─── TABLA ──────────────────────────────────────────── */
+.delivery-table-scroll { overflow-x: auto; }
+
+:host ::ng-deep .delivery-table .p-datatable-thead > tr > th {
+  background: var(--surface-50, #f8fafc) !important;
+  border-bottom: 2px solid var(--surface-border) !important;
+  color: var(--text-color) !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  font-size: 0.75rem !important;
+  padding: 1rem 0.75rem !important;
+}
+
+:host ::ng-deep .delivery-table .p-datatable-tbody > tr > td {
+  border-bottom: 1px solid var(--surface-border-light) !important;
+  padding: 1rem 0.75rem !important;
+  vertical-align: top;
+}
+
+:host ::ng-deep .delivery-table .p-datatable-tbody > tr:hover {
+  background-color: #FFF5E6 !important;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+
+:host ::ng-deep .delivery-table .p-datatable-tbody > tr:hover > td {
+  background-color: transparent !important;
+}
+
+/* ─── CELDAS ─────────────────────────────────────────── */
+.delivery-code { display: flex; flex-direction: column; gap: 0.2rem; }
+.delivery-code-main { font-weight: 700; color: #334155; }
+.delivery-code-meta { font-size: 0.72rem; color: #9ca3af; }
+
+.delivery-dato { color: #374151; font-weight: 500; }
+.delivery-cliente-nombre { font-weight: 600; color: #334155; }
+
+.delivery-punto { display: flex; align-items: flex-start; gap: 6px; }
+.delivery-punto-icon { margin-top: 3px; font-size: 0.65rem; flex-shrink: 0; }
+.delivery-punto-icon--origen  { color: #16a34a; }
+.delivery-punto-icon--destino { color: #dc2626; }
+.delivery-punto-texto { font-size: 0.82rem; color: #374151; line-height: 1.4; }
+
+.delivery-monto { font-weight: 700; color: #e8a424; font-size: 0.9rem; }
+
+.delivery-responsable {
+  display: inline-flex; align-items: center;
+  padding: 0.2rem 0.6rem; border-radius: 999px;
+  background: #fef9e7; color: #92400e;
+  font-size: 0.75rem; font-weight: 600;
+  border: 1px solid #fde68a;
+}
+
+.delivery-responsable--vacio {
+  background: #fee2e2;
+  color: #b91c1c;
+  border-color: #fecaca;
+}
+
+/* ─── ICON BUTTONS / ACCIONES ────────────────────────── */
+.delivery-actions { display: flex; align-items: center; gap: 0.35rem; }
+
+.delivery-icon-btn { border-radius: 999px !important; }
+
+/* ─── TAGS ───────────────────────────────────────────── */
+:host ::ng-deep .p-tag {
+  font-weight: 600;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.35rem 0.75rem;
+  border-radius: 4px;
+}
+
+:host ::ng-deep .p-tag.p-tag-success { background: #d1fae5; color: #059669; }
+:host ::ng-deep .p-tag.p-tag-info    { background: #dbeafe; color: #0369a1; }
+:host ::ng-deep .p-tag.p-tag-warn    { background: #fef3c7; color: #92400e; }
+:host ::ng-deep .p-tag.p-tag-danger  { background: #fee2e2; color: #dc2626; }
+:host ::ng-deep .p-tag-label         { color: #000000; }
+
+/* ─── PAGINATOR ──────────────────────────────────────── */
+:host ::ng-deep .p-paginator .p-paginator-page:hover {
+  background: #FFF5E6 !important;
+  color: #92400e !important;
+}
+
+:host ::ng-deep .p-paginator .p-paginator-page.p-highlight {
+  background: #F6AF33 !important;
+  color: #1f2937 !important;
+  font-weight: 600 !important;
+}
+
+/* ─── EMPTY STATE ────────────────────────────────────── */
+.delivery-empty { text-align: center; padding: 2rem 1rem; }
+
+.delivery-empty-inner {
+  display: flex; flex-direction: column;
+  gap: 0.6rem; align-items: center;
+}
+
+.delivery-empty-icon {
+  width: 48px; height: 48px; border-radius: 14px;
+  background: #fef9e7; display: grid;
+  place-items: center; color: #e8a424; font-size: 1.4rem;
+}
+
+.delivery-empty-title { font-weight: 700; color: #111827; }
+.delivery-empty-text  { color: #6b7280; font-size: 0.85rem; }
+
+/* ─── DARK MODE ──────────────────────────────────────── */
+:host-context(.app-dark) .delivery-kicker      { color: #94a3b8; }
+:host-context(.app-dark) .delivery-title       { color: #f1f5f9; }
+:host-context(.app-dark) .delivery-title-icon  { background: #e8a424; color: #1f2937; }
+:host-context(.app-dark) .delivery-search-label { color: #94a3b8; }
+:host-context(.app-dark) .delivery-section-icon {
+  background: rgba(246, 175, 51, 0.08);
+  color: #F6AF33;
+  border-color: rgba(246, 175, 51, 0.15);
+}
+
+:host-context(.app-dark) .delivery-kpi-grid {
+  background: #18181B;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+:host-context(.app-dark) .delivery-kpi-card {
+  background: #18181B;
+  border-right-color: #27272a;
+}
+
+:host-context(.app-dark) .delivery-kpi-card:hover {
+  background: #27272a;
+  box-shadow: inset 0 -2px 8px rgba(246, 175, 51, 0.2);
+}
+
+:host-context(.app-dark) .delivery-kpi-card > i { color: #F6AF33; }
+:host-context(.app-dark) .delivery-kpi-icon     { background: rgba(246, 175, 51, 0.1); color: #F6AF33; }
+:host-context(.app-dark) .delivery-kpi-label    { color: #a1a1aa; }
+:host-context(.app-dark) .delivery-kpi-value    { color: #ffffff; }
+:host-context(.app-dark) .delivery-kpi-value--pendiente { color: #fbbf24; }
+:host-context(.app-dark) .delivery-kpi-value--camino    { color: #93c5fd; }
+:host-context(.app-dark) .delivery-kpi-value--entregado { color: #86efac; }
+
+:host-context(.app-dark) :host ::ng-deep .delivery-table .p-datatable-thead > tr > th {
+  background: #12161b !important;
+  color: #cbd5f5 !important;
+  border-bottom-color: #2f3540 !important;
+}
+
+:host-context(.app-dark) :host ::ng-deep .delivery-table .p-datatable-tbody > tr > td {
+  color: #e2e8f0 !important;
+  border-bottom-color: #2f3540 !important;
+}
+
+:host-context(.app-dark) :host ::ng-deep .delivery-table .p-datatable-tbody > tr:hover {
+  background-color: #3d2e1a !important;
+}
+
+:host-context(.app-dark) .delivery-code-main,
+:host-context(.app-dark) .delivery-cliente-nombre,
+:host-context(.app-dark) .delivery-dato        { color: #e2e8f0; }
+:host-context(.app-dark) .delivery-code-meta,
+:host-context(.app-dark) .delivery-punto-texto { color: #94a3b8; }
+:host-context(.app-dark) .delivery-monto       { color: #fbbf24; }
+
+:host-context(.app-dark) .delivery-responsable {
+  background: #2a2218; color: #fcd34d; border-color: #78350f;
+}
+:host-context(.app-dark) .delivery-responsable--vacio {
+  background: #3d1f1f; color: #f87171; border-color: #7f1d1d;
+}
+
+:host-context(.app-dark) :host ::ng-deep .p-tag-label        { color: #ffffff; }
+:host-context(.app-dark) :host ::ng-deep .p-tag.p-tag-success { background: rgba(52, 211, 153, 0.2); color: #86efac; }
+:host-context(.app-dark) :host ::ng-deep .p-tag.p-tag-info    { background: rgba(56, 189, 248, 0.2); color: #bae6fd; }
+:host-context(.app-dark) :host ::ng-deep .p-tag.p-tag-warn    { background: rgba(251, 191, 36, 0.2); color: #fde68a; }
+:host-context(.app-dark) :host ::ng-deep .p-tag.p-tag-danger  { background: rgba(248, 113, 113, 0.2); color: #fecaca; }
+
+:host-context(.app-dark) .delivery-empty-title { color: #f1f5f9; }
+:host-context(.app-dark) .delivery-empty-text  { color: #94a3b8; }
+:host-context(.app-dark) .delivery-empty-icon  { background: #2a2218; color: #fbbf24; }
+
+:host-context(.app-dark) :host ::ng-deep .p-paginator {
+  background: #18181B !important;
+  border-top-color: #27272a !important;
+}
+:host-context(.app-dark) :host ::ng-deep .p-paginator .p-paginator-page:hover {
+  background: #3d2e1a !important;
+  color: #fcd34d !important;
+}
+:host-context(.app-dark) :host ::ng-deep .p-paginator .p-paginator-page.p-highlight {
+  background: #F6AF33 !important;
+  color: #1f2937 !important;
+}
+
+/* ─── RESPONSIVE ─────────────────────────────────────── */
+@media (max-width: 1200px) {
+  .delivery-kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .delivery-kpi-card:nth-child(2) { border-right: none; }
+  .delivery-kpi-card:nth-child(1),
+  .delivery-kpi-card:nth-child(2) { border-bottom: 2px solid #e5e7eb; }
+  :host-context(.app-dark) .delivery-kpi-card:nth-child(1),
+  :host-context(.app-dark) .delivery-kpi-card:nth-child(2) { border-bottom-color: #27272a; }
+}
+
+@media (max-width: 768px) {
+  .delivery-kpi-grid { grid-template-columns: 1fr; }
+  .delivery-kpi-card {
+    border-right: none;
+    border-bottom: 2px solid #e5e7eb;
+    padding: 1.25rem;
+  }
+  .delivery-kpi-card:last-child { border-bottom: none; }
+  :host-context(.app-dark) .delivery-kpi-card { border-bottom-color: #27272a; }
+  .delivery-title { font-size: 1rem; }
+}

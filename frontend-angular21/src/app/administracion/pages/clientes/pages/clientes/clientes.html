@@ -2,7 +2,6 @@
   <p-toast></p-toast>
   <p-confirmDialog></p-confirmDialog>
 
-  <!-- CABECERA -->
   <p-card styleClass="ventas-header-card mb-4 ventas-header-bordered">
     <div class="flex align-items-center justify-content-between flex-wrap gap-3">
       <div class="flex align-items-center gap-3">
@@ -21,7 +20,6 @@
     </div>
   </p-card>
 
-  <!-- FILTROS -->
   <div class="filtros-container mb-4">
     <div class="seccion-filtros">
       <h3><i class="pi pi-filter"></i> Filtros de búsqueda</h3>
@@ -93,15 +91,9 @@
     </div>
   </div>
 
-  <!-- ERROR -->
-  <p-message
-    *ngIf="!loading() && error() as e"
-    severity="error"
-    [text]="e"
-    class="mb-3 block">
+  <p-message *ngIf="!loading() && error() as e" severity="error" [text]="e" class="mb-3 block">
   </p-message>
 
-  <!-- TABLA -->
   <app-shared-table-container
     titulo="Listado de clientes"
     iconoTitulo="pi pi-list"
@@ -116,10 +108,7 @@
     (limitChange)="onLimitChange($event)">
 
     <div slot="acciones" class="flex align-items-center gap-2">
-      <p-tag
-        [value]="totalItems() + ' clientes'"
-        severity="info">
-      </p-tag>
+      <p-tag [value]="totalItems() + ' clientes'" severity="info"></p-tag>
     </div>
 
     <div *ngIf="!loading() && customers().length === 0" class="mensaje-vacio">
@@ -155,7 +144,9 @@
 
       <ng-template pTemplate="body" let-cliente>
         <tr>
-          <td><span class="doc-value">{{ cliente.documentValue }}</span></td>
+          <td>
+            <span class="doc-value">{{ cliente.documentValue }}</span>
+          </td>
           <td>
             <p-tag
               [value]="getDocTypeLabel(cliente.documentTypeSunatCode)"
@@ -165,15 +156,19 @@
           </td>
           <td>
             <div class="flex align-items-center gap-3">
-              <i [class]="isCompany(cliente.documentTypeSunatCode, cliente.businessName)
-                ? 'pi pi-building' : 'pi pi-user'"></i>
+              <i [class]="isCompany(cliente.documentTypeSunatCode, cliente.razonsocial)
+                ? 'pi pi-building'
+                : 'pi pi-user'">
+              </i>
               <div class="flex flex-column">
                 <span class="display-name">{{ getDisplayName(cliente) }}</span>
                 <small class="type-label">{{ getCustomerTypeLabel(cliente) }}</small>
               </div>
             </div>
           </td>
-          <td><span class="phone-value">{{ getPhoneDisplay(cliente) }}</span></td>
+          <td>
+            <span class="phone-value">{{ getPhoneDisplay(cliente) }}</span>
+          </td>
           <td class="text-center">
             <p-tag
               [value]="cliente.status ? 'Activo' : 'Inactivo'"
@@ -184,26 +179,35 @@
             <div class="acciones-tabla">
               <p-button
                 icon="pi pi-eye"
-                [rounded]="true" [text]="true" severity="secondary"
-                pTooltip="Ver detalle" tooltipPosition="top"
+                [rounded]="true"
+                [text]="true"
+                severity="secondary"
+                pTooltip="Ver detalle"
+                tooltipPosition="top"
                 (onClick)="openDetails(cliente)">
               </p-button>
               <p-button
                 icon="pi pi-pencil"
-                [rounded]="true" [text]="true" severity="secondary"
-                pTooltip="Editar cliente" tooltipPosition="top"
+                [rounded]="true"
+                [text]="true"
+                severity="secondary"
+                pTooltip="Editar cliente"
+                tooltipPosition="top"
                 [routerLink]="['editar-cliente', cliente.customerId]">
               </p-button>
-               <p-button
+              <p-button
                 icon="pi pi-chart-line"
-                [rounded]="true" [text]="true" severity="info"
-                pTooltip="Ver seguimiento" tooltipPosition="top"
-                [routerLink]="['seguimiento-cliente', cliente.customerId]"
-                >
+                [rounded]="true"
+                [text]="true"
+                severity="info"
+                pTooltip="Ver seguimiento"
+                tooltipPosition="top"
+                [routerLink]="['seguimiento-cliente', cliente.customerId]">
               </p-button>
               <p-button
                 [icon]="cliente.status ? 'pi pi-times' : 'pi pi-check'"
-                [rounded]="true" [text]="true"
+                [rounded]="true"
+                [text]="true"
                 [severity]="cliente.status ? 'danger' : 'success'"
                 [pTooltip]="cliente.status ? 'Desactivar' : 'Activar'"
                 tooltipPosition="top"
@@ -226,7 +230,6 @@
       </ng-template>
     </p-table>
 
-    <!-- Dialog detalle -->
     <p-dialog
       [visible]="showDetails()"
       [modal]="true"
@@ -239,12 +242,13 @@
 
       <ng-container *ngIf="selectedClient() as c">
         <div class="cliente-detail-modal">
-
           <div class="cdm-banner"
-            [class.cdm-banner--empresa]="isCompany(c.documentTypeSunatCode, c.businessName)">
+            [class.cdm-banner--empresa]="isCompany(c.documentTypeSunatCode, c.razonsocial)">
             <div class="cdm-banner-icon">
-              <i [class]="isCompany(c.documentTypeSunatCode, c.businessName)
-                ? 'pi pi-building' : 'pi pi-user'"></i>
+              <i [class]="isCompany(c.documentTypeSunatCode, c.razonsocial)
+                ? 'pi pi-building'
+                : 'pi pi-user'">
+              </i>
             </div>
             <div class="cdm-banner-info">
               <span class="cdm-tipo">{{ getCustomerTypeLabel(c) }}</span>
@@ -299,19 +303,21 @@
 
           <div class="cdm-footer">
             <p-button
-              label="Cerrar" icon="pi pi-times"
-              severity="secondary" [outlined]="true"
+              label="Cerrar"
+              icon="pi pi-times"
+              severity="secondary"
+              [outlined]="true"
               styleClass="cdm-btn-close"
               (onClick)="closeDetails()">
             </p-button>
             <p-button
-              label="Editar Cliente" icon="pi pi-pencil"
+              label="Editar Cliente"
+              icon="pi pi-pencil"
               styleClass="cdm-btn-edit"
               [routerLink]="['editar-cliente', c.customerId]"
               (onClick)="closeDetails()">
             </p-button>
           </div>
-
         </div>
       </ng-container>
     </p-dialog>

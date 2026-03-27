@@ -103,6 +103,9 @@ export class TransferApiService {
     params = this.setParamIfDefined(params, 'headquartersId', query.headquartersId);
     params = this.setParamIfDefined(params, 'page', query.page);
     params = this.setParamIfDefined(params, 'pageSize', query.pageSize);
+    params = this.setParamIfDefined(params, 'dateFrom', query.dateFrom);
+    params = this.setParamIfDefined(params, 'dateTo', query.dateTo);
+    params = this.setParamIfDefined(params, 'ignoreDateRange', query.ignoreDateRange);
 
     return this.http
       .get<TransferListPaginatedResponseDto>(this.transferBase, {

@@ -74,13 +74,12 @@ export class EditarRemateComponent implements OnInit {
     if (!precioOriginal || precioOriginal <= 0) return 0;
     return Math.max(0, Math.round(((precioOriginal - precioRemate) / precioOriginal) * 100));
   });
-
+  
   formularioValido = computed(() => {
     const f = this.form();
     return (
-      f.descripcion.trim().length > 0 &&
-      f.precioRemate > 0              &&
-      f.stockRemate  >= 0             &&
+      f.precioRemate > 0  &&
+      f.stockRemate  >= 0 &&
       Object.keys(this.errores()).length === 0
     );
   });
@@ -148,10 +147,7 @@ export class EditarRemateComponent implements OnInit {
     const errs = { ...this.errores() };
 
     switch (key) {
-      case 'descripcion':
-        if (!f.descripcion.trim()) errs.descripcion = 'La descripción es obligatoria.';
-        else delete errs.descripcion;
-        break;
+      // 'descripcion' eliminado — campo readonly, no se valida
       case 'precioRemate':
         if (!f.precioRemate || f.precioRemate <= 0) {
           errs.precioRemate = 'El precio de remate debe ser mayor a 0.';
@@ -171,7 +167,7 @@ export class EditarRemateComponent implements OnInit {
   }
 
   private validarTodo(): boolean {
-    (['descripcion', 'precioRemate', 'stockRemate'] as (keyof RemateForm)[])
+    (['precioRemate', 'stockRemate'] as (keyof RemateForm)[])
       .forEach(c => this.validarCampo(c));
     return Object.keys(this.errores()).length === 0;
   }

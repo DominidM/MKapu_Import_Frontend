@@ -125,7 +125,14 @@ export class TransferStore {
     this.error.set(null);
 
     this.transferApiService
-      .listAll({ headquartersId, page, pageSize })
+      .listAll({
+        headquartersId,
+        page,
+        pageSize,
+        dateFrom: query.dateFrom,
+        dateTo: query.dateTo,
+        ignoreDateRange: query.ignoreDateRange,
+      })
       .pipe(
         take(1),
         finalize(() => this.loading.set(false)),
