@@ -211,11 +211,11 @@ export class DeliveryDetalles implements OnInit, OnDestroy {
   }
 
   irListado(): void {
-    this.router.navigate(['/admin/listado-delivery']);
+    this.router.navigate(['/admin/gestion-delivery']);
   }
 
   irFormulario(): void {
-    this.router.navigate(['/admin/formulario-delivery']);
+    this.router.navigate(['/admin/gestion-delivery/formulario-delivery']);
   }
   getTipoLabel(tipo: TipoOperacion): string {
     return tipo === 'VENTA_DELIVERY' ? 'Venta / Delivery' : 'Compra / Recojo';

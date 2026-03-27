@@ -35,7 +35,6 @@ import {
   AccionesComprobanteConfig,
   AccionComprobante,
 } from '../../../../shared/components/acciones-comprobante-dialog/acciones-comprobante';
-import { SharedTableContainerComponent } from '../../../../shared/components/table.componente/shared-table-container.component';
 
 @Component({
   selector: 'app-ventas-por-cobrar-listado',

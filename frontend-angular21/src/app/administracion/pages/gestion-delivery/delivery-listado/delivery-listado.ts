@@ -232,11 +232,11 @@ export class DeliveryListado implements OnInit {
   }
 
   verDetalle(fila: DeliveryRow): void {
-    this.router.navigate(['/admin/detalle-delivery', fila.id]);
+    this.router.navigate(['/admin/gestion-delivery/detalle-delivery', fila.id]);
   }
 
   irFormulario(): void {
-    this.router.navigate(['/admin/formulario-delivery']);
+    this.router.navigate(['/admin/gestion-delivery/formulario-delivery']);
   }
 
   getTipoLabel(tipo: TipoOperacion): string {

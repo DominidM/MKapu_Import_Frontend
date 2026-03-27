@@ -180,11 +180,11 @@ export class DeliveryFormulario implements OnInit {
       life: 3500,
     });
 
-    setTimeout(() => this.router.navigate(['/admin/listado-delivery']), 1800);
+    setTimeout(() => this.router.navigate(['/admin/gestion-delivery']), 1800);
   }
 
   cancelar(): void {
-    this.router.navigate(['/admin/listado-delivery']);
+    this.router.navigate(['/admin/gestion-delivery']);
   }
 
   getTipoLabel(tipo: TipoOperacion | null): string {

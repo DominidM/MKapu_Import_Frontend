@@ -820,24 +820,31 @@ export const ADMIN_ROUTES: Routes = [
   },
 
   {
-    path: 'listado-delivery',
-    loadComponent: () =>
-      import('./pages/gestion-delivery/delivery-listado/delivery-listado').then(
-        (m) => m.DeliveryListado,
-      ),
-  },
-  {
-    path: 'formulario-delivery',
-    loadComponent: () =>
-      import('./pages/gestion-delivery/delivery-formulario/delivery-formulario').then(
-        (m) => m.DeliveryFormulario,
-      ),
-  },
-  {
-    path: 'detalle-delivery/:id',
-    loadComponent: () =>
-      import('./pages/gestion-delivery/delivery-detalles/delivery-detalles').then(
-        (m) => m.DeliveryDetalles,
-      ),
+    path: 'gestion-delivery',
+    canActivate: [roleGuard],
+    data: { permiso: 'ASIGNAR_DELIVERY' },
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/gestion-delivery/delivery-listado/delivery-listado').then(
+            (m) => m.DeliveryListado,
+          ),
+      },
+      {
+        path: 'formulario-delivery',
+        loadComponent: () =>
+          import('./pages/gestion-delivery/delivery-formulario/delivery-formulario').then(
+            (m) => m.DeliveryFormulario,
+          ),
+      },
+      {
+        path: 'detalle-delivery/:id',
+        loadComponent: () =>
+          import('./pages/gestion-delivery/delivery-detalles/delivery-detalles').then(
+            (m) => m.DeliveryDetalles,
+          ),
+      },
+    ],
   },
 ];
