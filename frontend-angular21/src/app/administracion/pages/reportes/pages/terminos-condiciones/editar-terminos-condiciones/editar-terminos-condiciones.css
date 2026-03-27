@@ -1,0 +1,167 @@
+/* ─────────────────────────────────────────────
+   HEADER
+───────────────────────────────────────────── */
+.productos-header-card .p-card-body {
+  padding: 1rem 1.25rem;
+}
+
+.productos-title-icon {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #f5c34d;
+  color: #1f2937;
+  font-size: 18px;
+}
+
+.productos-kicker {
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #94a3b8;
+  margin: 0;
+}
+
+.productos-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+}
+
+/* ─────────────────────────────────────────────
+   FORM META
+───────────────────────────────────────────── */
+label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+input[pInputText] {
+  font-size: 0.85rem;
+  padding: 0.55rem 0.6rem;
+}
+
+/* ─────────────────────────────────────────────
+   CARD SECCIÓN
+───────────────────────────────────────────── */
+:host ::ng-deep .p-card {
+  border-radius: 12px;
+  border: 1px solid var(--surface-border);
+  transition: all 0.2s ease;
+}
+
+:host ::ng-deep .p-card:hover {
+  border-color: color-mix(in srgb, var(--p-primary-color) 40%, transparent);
+}
+
+/* Header sección */
+.terminos-seccion-num {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--p-primary-color) 15%, transparent);
+  color: var(--p-primary-color);
+  font-size: 0.75rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ─────────────────────────────────────────────
+   INPUT TITULO
+───────────────────────────────────────────── */
+input[pInputText].font-bold {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+/* ─────────────────────────────────────────────
+   TEXTAREA
+───────────────────────────────────────────── */
+textarea[pTextarea] {
+  font-size: 0.85rem;
+  line-height: 1.6;
+  border-radius: 8px;
+  padding: 0.6rem;
+}
+
+/* ─────────────────────────────────────────────
+   ITEMS (bullets)
+───────────────────────────────────────────── */
+.pi-check-circle {
+  font-size: 0.85rem;
+}
+
+/* ─────────────────────────────────────────────
+   BOTONES
+───────────────────────────────────────────── */
+:host ::ng-deep .p-button {
+  border-radius: 8px;
+  font-size: 0.8rem;
+}
+
+:host ::ng-deep .p-button.p-button-text {
+  padding: 0.35rem 0.5rem;
+}
+
+/* Hover suave */
+:host ::ng-deep .p-button:not(.p-disabled):hover {
+  transform: translateY(-1px);
+}
+
+/* ─────────────────────────────────────────────
+   DIVIDER
+───────────────────────────────────────────── */
+:host ::ng-deep .p-divider {
+  margin: 1rem 0;
+}
+
+/* ─────────────────────────────────────────────
+   SECCIONES (espaciado)
+───────────────────────────────────────────── */
+.terminos-seccion-body {
+  padding-top: 0.5rem;
+}
+
+/* ─────────────────────────────────────────────
+   DARK MODE
+───────────────────────────────────────────── */
+:host-context(.app-dark) .productos-title {
+  color: #f1f5f9;
+}
+
+:host-context(.app-dark) label {
+  color: #94a3b8;
+}
+
+:host-context(.app-dark) input,
+:host-context(.app-dark) textarea {
+  background: #18181b;
+  color: #e2e8f0;
+  border-color: #27272a;
+}
+
+:host-context(.app-dark) :host ::ng-deep .p-card {
+  background: #18181b;
+  border-color: #27272a;
+}
+
+/* ─────────────────────────────────────────────
+   RESPONSIVE
+───────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .productos-title {
+    font-size: 1rem;
+  }
+
+  textarea[pTextarea] {
+    font-size: 0.8rem;
+  }
+}

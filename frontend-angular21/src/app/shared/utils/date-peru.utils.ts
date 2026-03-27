@@ -1,3 +1,40 @@
+
+// ── Agrega estas dos funciones a date-peru.utils.ts ──────────────────
+
+/**
+ * Retorna el primer día del mes actual en hora Perú (UTC-5),
+ * con hora 00:00:00.000
+ */
+export function getPrimerDiaMesActualPeru(): Date {
+  const now = new Date();
+  // Offset Perú: UTC-5
+  const peruOffset = -5 * 60;
+  const localOffset = now.getTimezoneOffset();
+  const diff = (localOffset - peruOffset) * 60 * 1000;
+  const peruNow = new Date(now.getTime() - diff);
+
+  const primer = new Date(peruNow.getFullYear(), peruNow.getMonth(), 1);
+  primer.setHours(0, 0, 0, 0);
+  return primer;
+}
+
+/**
+ * Retorna el último día del mes actual en hora Perú (UTC-5),
+ * con hora 23:59:59.999
+ */
+export function getUltimoDiaMesActualPeru(): Date {
+  const now = new Date();
+  const peruOffset = -5 * 60;
+  const localOffset = now.getTimezoneOffset();
+  const diff = (localOffset - peruOffset) * 60 * 1000;
+  const peruNow = new Date(now.getTime() - diff);
+
+  // Día 0 del mes siguiente = último día del mes actual
+  const ultimo = new Date(peruNow.getFullYear(), peruNow.getMonth() + 1, 0);
+  ultimo.setHours(23, 59, 59, 999);
+  return ultimo;
+}
+
 /**
  * Utilidades de fecha para zona horaria de Perú (UTC-5).
  * Perú no usa horario de verano, siempre UTC-5.
