@@ -17,8 +17,8 @@ import { SedeService } from '../../../services/sede.service';
 import { AuthService } from '../../../../auth/services/auth.service';
 import { SharedTableContainerComponent } from '../../../../shared/components/table.componente/shared-table-container.component';
 import {
-  getLunesSemanaActualPeru,
-  getDomingoSemanaActualPeru,
+  getPrimerDiaMesActualPeru,
+  getUltimoDiaMesActualPeru,
 } from '../../../../shared/utils/date-peru.utils';
 
 @Component({
@@ -60,8 +60,8 @@ export class ComisionReportes implements OnInit {
     String(this.authService.getCurrentUser()?.idSede ?? '')
   );
 
-  fechaInicio = signal<Date | null>(getLunesSemanaActualPeru());
-  fechaFin    = signal<Date | null>(getDomingoSemanaActualPeru());
+  fechaInicio = signal<Date | null>(getPrimerDiaMesActualPeru());
+  fechaFin    = signal<Date | null>(getUltimoDiaMesActualPeru());
 
   readonly sedesOpciones = computed(() => [
     { label: 'Todas las sedes', value: '' },
@@ -155,19 +155,21 @@ export class ComisionReportes implements OnInit {
     this.cargar();
   }
 
+  // ✅ limpiarFiltros: resetea al rango del mes actual (no a null)
   limpiarFiltros() {
     this.filtroBusqueda.set('');
     this.filtroEstado.set(null);
-    this.filtroSede.set(String(''));
-    this.fechaInicio.set(null);
-    this.fechaFin.set(null);
+    this.filtroSede.set(String(this.authService.getCurrentUser()?.idSede ?? ''));
+    this.fechaInicio.set(getPrimerDiaMesActualPeru());
+    this.fechaFin.set(getUltimoDiaMesActualPeru());
     this.paginaActual.set(1);
     this.cargar();
   }
 
   private cargar() {
-    const desde = this.fechaInicio() ?? getLunesSemanaActualPeru()!;
-    const hasta = this.fechaFin()    ?? getDomingoSemanaActualPeru()!;
+    // ✅ Siempre usa las fechas del signal — nunca null gracias al default del mes
+    const desde = this.fechaInicio() ?? getPrimerDiaMesActualPeru();
+    const hasta = this.fechaFin()    ?? getUltimoDiaMesActualPeru();
     const d = new Date(desde); d.setHours(0, 0, 0, 0);
     const h = new Date(hasta); h.setHours(23, 59, 59, 999);
     this.commissionService.loadReport(d, h).subscribe();
@@ -185,6 +187,7 @@ export class ComisionReportes implements OnInit {
           detail: `Comisión #${r.id_comision} marcada como LIQUIDADA`,
           life: 3000,
         });
+        this.cargar();
       },
       error: () => {
         this.atendiendo.set(null);

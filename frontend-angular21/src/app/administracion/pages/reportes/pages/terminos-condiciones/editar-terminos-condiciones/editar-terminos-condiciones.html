@@ -1,0 +1,93 @@
+<p-toast/>
+<p-confirmDialog/>
+
+<div class="p-2">
+
+  <!-- HEADER -->
+  <p-card class="productos-header-card mb-4 productos-header-bordered">
+    <div class="flex justify-content-between flex-wrap gap-2">
+
+      <div class="flex gap-3 align-items-center">
+        <span class="productos-title-icon">
+          <i class="pi pi-pencil"></i>
+        </span>
+        <div>
+          <p class="productos-kicker">LEGAL · EMPRESA</p>
+          <h2 class="productos-title">EDITAR TÉRMINOS</h2>
+        </div>
+      </div>
+
+      <div class="flex gap-2">
+        <p-button label="Cancelar" icon="pi pi-times"
+          severity="secondary" [outlined]="true"
+          (onClick)="cancelar()"/>
+
+        <p-button label="Guardar"
+          icon="pi pi-check"
+          severity="success"
+          [loading]="guardando()"
+          (onClick)="guardar()"/>
+      </div>
+
+    </div>
+  </p-card>
+
+  <!-- SKELETON -->
+  @if (cargando()) {
+    @for (i of [1,2,3]; track i) {
+      <p-skeleton height="160px" class="mb-3"/>
+    }
+  }
+
+  @if (!cargando()) {
+
+    <!-- META -->
+    <p-card class="mb-4">
+      <div class="grid">
+
+        <div class="col-12 md:col-3">
+          <label>Versión</label>
+          <input pInputText [(ngModel)]="form().version" class="w-full"/>
+        </div>
+
+        <div class="col-12 md:col-4">
+          <label>Fecha</label>
+          <input pInputText [(ngModel)]="form().fechaVigencia" class="w-full"/>
+        </div>
+
+      </div>
+    </p-card>
+
+    <!-- SECCIONES -->
+    @for (sec of form().secciones; track sec.orden; let i = $index) {
+
+      <p-card class="mb-3">
+
+        <div class="terminos-actions">
+        <p-button icon="pi pi-arrow-up" [text]="true"></p-button>
+        <p-button icon="pi pi-arrow-down" [text]="true"></p-button>
+        <p-button icon="pi pi-trash" severity="danger" [text]="true"></p-button>
+        </div>
+
+        <!-- Párrafos -->
+        @for (p of sec.parrafos; track $index; let pi = $index) {
+          <textarea pTextarea [(ngModel)]="p.contenido" class="w-full mb-2"></textarea>
+        }
+
+        <p-button label="Agregar párrafo" (onClick)="agregarParrafo(sec)"/>
+
+        <!-- Items -->
+        @for (item of sec.items; track $index; let ii = $index) {
+          <input pInputText [(ngModel)]="item.contenido" class="w-full mb-2"/>
+        }
+
+        <p-button label="Agregar item" (onClick)="agregarItem(sec)"/>
+
+      </p-card>
+    }
+
+    <p-button label="Nueva sección" (onClick)="agregarSeccion()"/>
+
+  }
+
+</div>

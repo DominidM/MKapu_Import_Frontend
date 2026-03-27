@@ -4,6 +4,7 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   inject,
+  signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -23,7 +24,7 @@ import { MessageService, ConfirmationService } from 'primeng/api';
 import { AuthService } from '../../../../../auth/services/auth.service';
 import { LoadingOverlayComponent } from '../../../../../shared/components/loading-overlay/loading-overlay.component';
 import { PaginadorComponent } from '../../../../../shared/components/paginador/paginador.components';
-import { getDomingoSemanaActualPeru, getLunesSemanaActualPeru } from '../../../../../shared/utils/date-peru.utils';
+import { getDomingoSemanaActualPeru, getLunesSemanaActualPeru, getPrimerDiaMesActualPeru, getUltimoDiaMesActualPeru } from '../../../../../shared/utils/date-peru.utils';
 
 // ─── Tipos locales ────────────────────────────────────────────────────────────r
 
@@ -202,13 +203,17 @@ export class DocumentoContador implements OnInit {
   // ── Filtros ──────────────────────────────────────────────────────
   filtros: FiltrosComprobante = {
     busqueda:        '',
-    fechaInicio:     getLunesSemanaActualPeru(),
-    fechaFin:        getDomingoSemanaActualPeru(),
+    fechaInicio:     getPrimerDiaMesActualPeru(),
+    fechaFin:        getUltimoDiaMesActualPeru(),
     tipoComprobante: null,
     moneda:          null,
     estado:          null,
     periodo:         null,
   };
+
+  fechaInicio = signal<Date | null>(getPrimerDiaMesActualPeru());
+  fechaFin    = signal<Date | null>(getUltimoDiaMesActualPeru());
+
 
   readonly tiposComprobante = [
     { label: 'Todos',           value: null },
@@ -319,8 +324,8 @@ export class DocumentoContador implements OnInit {
   limpiarFiltros(): void {
     this.filtros = {
       busqueda:        '',
-      fechaInicio:     null,
-      fechaFin:        null,
+      fechaInicio:     getPrimerDiaMesActualPeru(),
+      fechaFin:        getUltimoDiaMesActualPeru(),
       tipoComprobante: null,
       moneda:          null,
       estado:          null,

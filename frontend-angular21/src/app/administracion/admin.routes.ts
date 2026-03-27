@@ -810,7 +810,7 @@ export const ADMIN_ROUTES: Routes = [
       },
     ],
   },
-
+    
   {
     path: 'terminos-condiciones',
     loadComponent: () =>
@@ -818,7 +818,17 @@ export const ADMIN_ROUTES: Routes = [
         (m) => m.TerminosCondicionesComponent,
       ),
   },
+  {
+    path: 'editar-condiciones',
+    canActivate: [roleGuard],
+    data: { permiso: 'EDITAR_TERMINOS_CONDICIONES' },
+    loadComponent: () =>
+      import('./pages/reportes/pages/terminos-condiciones/editar-terminos-condiciones/editar-terminos-condiciones').then(
+        (m) => m.EditarTerminosCondicionesComponent,
+      ),
+  },
 
+  
   {
     path: 'gestion-delivery',
     canActivate: [roleGuard],
