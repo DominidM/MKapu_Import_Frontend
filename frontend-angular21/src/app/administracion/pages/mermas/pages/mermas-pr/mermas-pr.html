@@ -10,15 +10,16 @@
           <h2 class="clientes-title">GESTIÓN DE MERMAS</h2>
         </div>
       </div>
-      <div class="flex align-items-center gap-2">
-        <p-button (onClick)="irRegistro()" label="Registrar Merma"
-          icon="pi pi-plus" styleClass="clientes-pill">
-        </p-button>
-      </div>
+      <p-button
+        (onClick)="irRegistro()"
+        label="Registrar Merma"
+        icon="pi pi-plus"
+        styleClass="clientes-pill"
+      >
+      </p-button>
     </div>
   </p-card>
 
-  <!-- Métricas -->
   <div class="grid mb-4 mermas-metrics">
     <div class="col-12 md:col-4">
       <p-card styleClass="stat-card">
@@ -27,7 +28,7 @@
           <div>
             <p class="stat-label">TOTAL MERMAS</p>
             <h3 class="stat-value">{{ totalMermas() }}</h3>
-            <p class="stat-change">Productos dados de baja</p>
+            <p class="stat-change">Registros dados de baja</p>
           </div>
         </div>
       </p-card>
@@ -58,18 +59,38 @@
     </div>
   </div>
 
-  <!-- Filtros -->
   <div class="filtros-container mb-4">
     <div class="seccion-filtros">
       <h3><i class="pi pi-filter"></i> Filtros de búsqueda</h3>
       <div class="filtros-linea-1">
         <div class="filtro-item filtro-cliente-50">
           <label>Buscar Merma</label>
-          <input pInputText type="text"
-            placeholder="Buscar por código, motivo o responsable..."
-            class="w-full"
-            [ngModel]="busqueda()"
-            (ngModelChange)="busqueda.set($event); paginaActual.set(1)">
+          <p-autocomplete
+            [ngModel]="busquedaObj"
+            (ngModelChange)="busquedaObj = $event"
+            [suggestions]="sugeridos()"
+            (completeMethod)="buscarSugeridos($event)"
+            (onSelect)="onSugeridoSeleccionado($event)"
+            (onClear)="onBusquedaLimpiada()"
+            (keyup.escape)="onBusquedaLimpiada()"
+            field="motivo"
+            placeholder="Buscar por código, motivo, tipo o producto..."
+            styleClass="w-full"
+            [minLength]="1"
+            [delay]="300"
+            appendTo="body"
+          >
+            <ng-template let-item pTemplate="item">
+              <div class="sugerido-item">
+                <div class="flex align-items-center gap-2">
+                  <span class="sugerido-codigo">{{ item.codigo }}</span>
+                  <span class="sugerido-motivo">{{ item.motivo }}</span>
+                  <span class="sugerido-tipo ml-auto">{{ item.tipo_merma }}</span>
+                </div>
+                <div class="sugerido-desc">{{ item.descripcion }}</div>
+              </div>
+            </ng-template>
+          </p-autocomplete>
         </div>
       </div>
       <div class="filtros-linea-2">
@@ -78,12 +99,13 @@
           <p-select
             [options]="tiposMermaOpciones()"
             [ngModel]="tipoMermaFiltro()"
-            (ngModelChange)="tipoMermaFiltro.set($event); paginaActual.set(1)"
+            (ngModelChange)="tipoMermaFiltro.set($event); recargarConFiltros()"
             optionLabel="label"
             optionValue="value"
             placeholder="Todos los tipos"
             styleClass="w-full"
-            [showClear]="true">
+            [showClear]="true"
+          >
           </p-select>
         </div>
         <div class="filtro-item filtro-compacto">
@@ -91,27 +113,31 @@
           <p-select
             [options]="sedesOpciones()"
             [ngModel]="sedeFiltro()"
-            (ngModelChange)="sedeFiltro.set($event); paginaActual.set(1)"
+            (ngModelChange)="sedeFiltro.set($event); recargarConFiltros()"
             optionLabel="label"
             optionValue="value"
             placeholder="Todas las sedes"
             styleClass="w-full"
-            [showClear]="true">
+            [showClear]="true"
+          >
           </p-select>
         </div>
         <div class="filtro-item filtro-boton-limpiar">
           <label>&nbsp;</label>
           <p-button
-            label="Limpiar Filtros" icon="pi pi-filter-slash"
-            severity="danger" styleClass="btn-limpiar-filtros"
-            type="button" (click)="limpiarFiltros()">
+            label="Limpiar"
+            icon="pi pi-filter-slash"
+            severity="danger"
+            styleClass="btn-limpiar-filtros"
+            type="button"
+            (click)="limpiarFiltros()"
+          >
           </p-button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- TABLA -->
   <app-shared-table-container
     titulo="Mermas Registradas"
     iconoTitulo="pi pi-exclamation-triangle"
@@ -123,71 +149,95 @@
     [limitePorPagina]="limitePagina()"
     [mostrarExportar]="false"
     (pageChange)="onPageChange($event)"
-    (limitChange)="onLimitChange($event)">
-
+    (limitChange)="onLimitChange($event)"
+  >
     <div slot="acciones">
-      <p-tag *ngIf="mermasFiltradas().length > 0"
-        [value]="mermasFiltradas().length + ' registros'" severity="warn">
+      <p-tag
+        *ngIf="mermasFiltradas().length > 0"
+        [value]="mermasFiltradas().length + ' registros'"
+        severity="warn"
+      >
       </p-tag>
     </div>
 
-    <p-table [value]="mermasPaginadas()" [tableStyle]="{ 'min-width': '100%' }"
-      styleClass="p-datatable-striped" [paginator]="false">
-
+    <p-table
+      [value]="mermasPaginadas()"
+      [tableStyle]="{ 'min-width': '100%' }"
+      styleClass="p-datatable-striped"
+      [paginator]="false"
+    >
       <ng-template pTemplate="header">
         <tr>
-          <th style="width:8%">CÓDIGO</th>
-          <th style="width:20%">MOTIVO</th>
-          <th style="width:20%">PRODUCTOS</th>
-          <th style="width:10%">TIPO MERMA</th>
-          <th style="width:8%">CANTIDAD</th>
-          <th style="width:12%">RESPONSABLE</th>
-          <th style="width:12%">SEDE</th>
-          <th style="width:10%" class="text-center">ACCIONES</th>
+          <th style="width: 8%">CÓDIGO</th>
+          <th style="width: 20%">MOTIVO</th>
+          <th style="width: 20%">PRODUCTOS</th>
+          <th style="width: 10%">TIPO MERMA</th>
+          <th style="width: 8%">CANTIDAD</th>
+          <th style="width: 12%">RESPONSABLE</th>
+          <th style="width: 12%">SEDE</th>
+          <th style="width: 10%" class="text-center">ACCIONES</th>
         </tr>
       </ng-template>
 
       <ng-template pTemplate="body" let-merma>
         <tr>
-          <td><span class="codigo-producto">{{ merma.codigo }}</span></td>
+          <td>
+            <span class="codigo-merma">{{ merma.codigo }}</span>
+          </td>
           <td>
             <div class="producto-info">
               <div class="producto-nombre">{{ merma.motivo }}</div>
-              <div class="producto-responsable text-sm text-500">
-                {{ merma.observacion || 'Sin observaciones' }}
-              </div>
+              <div class="producto-responsable">{{ merma.observacion || 'Sin observaciones' }}</div>
             </div>
           </td>
           <td>
-            <div *ngIf="merma.detalles && merma.detalles.length > 0" class="flex flex-column gap-1">
-              <div *ngFor="let d of merma.detalles" class="flex align-items-center gap-1">
-                <span class="codigo-producto" style="font-size:0.72rem">{{ d.cod_prod }}</span>
-                <span class="text-700" style="font-size:0.82rem">{{ d.desc_prod }}</span>
+            <div *ngIf="merma.detalles && merma.detalles.length > 0" class="flex flex-column gap-2">
+              <div *ngFor="let d of merma.detalles" class="producto-celda">
+                <span class="producto-cod">{{ d.cod_prod }}</span>
+                <span class="producto-desc">{{ d.desc_prod }}</span>
               </div>
             </div>
-            <span *ngIf="!merma.detalles || merma.detalles.length === 0"
-              class="text-400 text-sm">—</span>
+            <span *ngIf="!merma.detalles || merma.detalles.length === 0" class="text-400 text-sm"
+              >—</span
+            >
           </td>
           <td>
             <p-tag
               [value]="getTipoMermaLabel(merma.tipoMerma)"
-              [severity]="getTipoMermaSeverity(merma.tipoMerma)">
+              [severity]="getTipoMermaSeverity(merma.tipoMerma)"
+            >
             </p-tag>
           </td>
-          <td><span class="cantidad-badge">{{ merma.cantidad }} unid.</span></td>
-          <td><span class="text-700">{{ merma.responsable }}</span></td>
+          <td>
+            <span class="cantidad-badge">{{ merma.cantidad }} unid.</span>
+          </td>
+          <td>
+            <span class="text-700">{{ merma.responsable }}</span>
+          </td>
           <td>
             <span class="text-700">{{ getNombreSede(merma.id_sede) }}</span>
           </td>
           <td class="text-center">
             <div class="acciones-tabla">
-              <p-button icon="pi pi-eye" [rounded]="true" [text]="true" severity="secondary"
-                pTooltip="Ver detalle" tooltipPosition="top"
-                (onClick)="verDetalleMerma(merma)">
+              <p-button
+                icon="pi pi-eye"
+                [rounded]="true"
+                [text]="true"
+                severity="secondary"
+                pTooltip="Ver detalle"
+                tooltipPosition="top"
+                (onClick)="verDetalleMerma(merma)"
+              >
               </p-button>
-              <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="secondary"
-                pTooltip="Editar" tooltipPosition="top"
-                (onClick)="irEditar(merma)">
+              <p-button
+                icon="pi pi-pencil"
+                [rounded]="true"
+                [text]="true"
+                severity="secondary"
+                pTooltip="Editar"
+                tooltipPosition="top"
+                (onClick)="irEditar(merma)"
+              >
               </p-button>
             </div>
           </td>
@@ -207,20 +257,19 @@
     </p-table>
   </app-shared-table-container>
 
-  <!-- DIALOG DETALLE -->
   <p-dialog
     [visible]="mostrarModalDetalle()"
     (onHide)="cerrarModalDetalle()"
-    [modal]="true" [draggable]="false"
+    [modal]="true"
+    [draggable]="false"
     [style]="{ width: '700px', 'border-radius': '16px', overflow: 'hidden' }"
     [contentStyle]="{ padding: '0' }"
-    styleClass="mermas-dialog">
-
+    styleClass="mermas-dialog"
+  >
     <ng-template pTemplate="header"><span></span></ng-template>
 
     <ng-container *ngIf="mermaSeleccionada() as ms">
       <div class="merma-detail-modal">
-
         <div class="mdm-banner">
           <div class="mdm-banner-icon"><i class="pi pi-exclamation-triangle"></i></div>
           <div class="mdm-banner-info">
@@ -260,7 +309,7 @@
             <span class="mdm-info-icon"><i class="pi pi-calendar"></i></span>
             <div class="mdm-info-content">
               <span class="mdm-info-label">Fecha</span>
-              <span class="mdm-info-value">{{ ms.fechaRegistro | date:'dd/MM/yyyy HH:mm' }}</span>
+              <span class="mdm-info-value">{{ ms.fechaRegistro | date: 'dd/MM/yyyy HH:mm' }}</span>
             </div>
           </div>
           <div class="mdm-info-item mdm-info-item--full" *ngIf="ms.observacion">
@@ -292,19 +341,23 @@
                 <td>{{ detalle.cod_prod }}</td>
                 <td>{{ detalle.desc_prod }}</td>
                 <td>{{ detalle.cantidad }}</td>
-                <td>S/ {{ detalle.pre_unit | number:'1.2-2' }}</td>
+                <td>S/ {{ detalle.pre_unit | number: '1.2-2' }}</td>
               </tr>
             </ng-template>
           </p-table>
         </div>
 
         <div class="mdm-footer">
-          <p-button label="Cerrar" icon="pi pi-times"
-            severity="secondary" [outlined]="true"
-            styleClass="mdm-btn-close" (onClick)="cerrarModalDetalle()">
+          <p-button
+            label="Cerrar"
+            icon="pi pi-times"
+            severity="secondary"
+            [outlined]="true"
+            styleClass="mdm-btn-close"
+            (onClick)="cerrarModalDetalle()"
+          >
           </p-button>
         </div>
-
       </div>
     </ng-container>
   </p-dialog>

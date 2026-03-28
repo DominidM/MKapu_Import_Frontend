@@ -1,7 +1,137 @@
-/* Reutiliza exactamente los mismos estilos del registro */
-@import url('../mermas-registro/mermas-registro.css');
+:host {
+  display: block;
+}
 
+/* ── Header card ─────────────────────────────────────────────────────────── */
+.registro-title-icon {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #e8a424;
+  color: #1f2937;
+  font-size: 18px;
+}
 
+.registro-kicker {
+  margin: 0;
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.registro-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+/* ── Section header ──────────────────────────────────────────────────────── */
+.section-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.section-number {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: #f5c34d;
+  color: #1f2937;
+  font-weight: 700;
+  font-size: 0.85rem;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.section-title {
+  margin: 0 0 0.2rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.section-subtitle {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #94a3b8;
+}
+
+/* ── Field labels ────────────────────────────────────────────────────────── */
+.field-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
+  margin-bottom: 0.4rem;
+}
+
+.required-asterisk {
+  color: #ef4444;
+  margin-left: 2px;
+}
+
+.field-hint {
+  display: block;
+  font-size: 0.72rem;
+  color: #94a3b8;
+  margin-top: 0.3rem;
+}
+
+/* ── Info card (solo lectura) ────────────────────────────────────────────── */
+.producto-info-card {
+  background: rgba(0,0,0,0.02);
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.producto-info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  gap: 0.5rem;
+}
+
+.info-label {
+  color: #64748b;
+  font-weight: 600;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.info-value {
+  color: #1f2937;
+  font-size: 0.88rem;
+  text-align: right;
+}
+
+.stock-value {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #f59e0b;
+  font-weight: 600;
+}
+
+/* ── Productos readonly list ─────────────────────────────────────────────── */
 .productos-readonly-list {
   display: flex;
   flex-direction: column;
@@ -25,7 +155,87 @@
   font-size: 0.85rem;
 }
 
-/* Dark mode */
+.codigo-producto {
+  background: rgba(245,195,77,0.12);
+  color: #b45309;
+  border: 1px solid rgba(245,195,77,0.3);
+  border-radius: 4px;
+  padding: 0.15rem 0.45rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.cantidad-badge {
+  background: rgba(59,130,246,0.08);
+  color: #2563eb;
+  border: 1px solid rgba(59,130,246,0.2);
+  border-radius: 999px;
+  padding: 0.15rem 0.6rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* ── Cards PrimeNG ───────────────────────────────────────────────────────── */
+:host ::ng-deep .registro-header-card {
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06) !important;
+  margin-bottom: 0 !important;
+}
+
+:host ::ng-deep .registro-header-card .p-card-body {
+  padding: 1rem 1.25rem !important;
+}
+
+:host ::ng-deep .form-card {
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06) !important;
+  margin-bottom: 0 !important;
+}
+
+:host ::ng-deep .form-card .p-card-body {
+  padding: 1.25rem 1.5rem !important;
+}
+
+:host ::ng-deep .form-card .p-card-content {
+  padding: 0 !important;
+}
+
+:host ::ng-deep .actions-card {
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06) !important;
+}
+
+:host ::ng-deep .actions-card .p-card-body {
+  padding: 1rem 1.5rem !important;
+}
+
+:host ::ng-deep .actions-card .p-card-content {
+  padding: 0 !important;
+}
+
+/* ── Dark mode ───────────────────────────────────────────────────────────── */
+:host-context(.app-dark) .registro-title   { color: #f8fafc; }
+:host-context(.app-dark) .registro-kicker  { color: #a1a1aa; }
+:host-context(.app-dark) .section-title    { color: #f8fafc; }
+:host-context(.app-dark) .section-subtitle { color: #71717a; }
+:host-context(.app-dark) .field-label      { color: #a1a1aa; }
+:host-context(.app-dark) .field-hint       { color: #52525b; }
+:host-context(.app-dark) .info-label       { color: #71717a; }
+:host-context(.app-dark) .info-value       { color: #f4f4f5; }
+
+:host-context(.app-dark) .section-header {
+  border-bottom-color: #27272a;
+}
+
+:host-context(.app-dark) .producto-info-card {
+  background: rgba(255,255,255,0.03);
+  border-color: #27272a;
+}
+
 :host-context(.app-dark) .productos-readonly-list {
   background: rgba(255,255,255,0.02);
   border-color: #27272a;
@@ -36,7 +246,74 @@
   border-color: #27272a;
 }
 
-:host ::ng-deep .form-card {
-  margin-bottom: 1.5rem !important;
+:host-context(.app-dark) .cantidad-badge {
+  background: rgba(59,130,246,0.12);
+  color: #60a5fa;
+  border-color: rgba(59,130,246,0.25);
 }
 
+:host-context(.app-dark) ::ng-deep .registro-header-card,
+:host-context(.app-dark) ::ng-deep .form-card,
+:host-context(.app-dark) ::ng-deep .actions-card {
+  background: #18181b !important;
+  border-color: #27272a !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4) !important;
+}
+
+:host-context(.app-dark) ::ng-deep .p-inputtext,
+:host-context(.app-dark) ::ng-deep .p-inputtextarea {
+  background: #09090b !important;
+  border-color: #27272a !important;
+  color: #f4f4f5 !important;
+}
+
+:host-context(.app-dark) ::ng-deep .p-inputtext:hover,
+:host-context(.app-dark) ::ng-deep .p-inputtextarea:hover {
+  border-color: #f5c34d !important;
+}
+
+:host-context(.app-dark) ::ng-deep .p-inputtext:focus,
+:host-context(.app-dark) ::ng-deep .p-inputtextarea:focus {
+  border-color: #f5c34d !important;
+  box-shadow: 0 0 0 2px rgba(245,195,77,0.18) !important;
+}
+
+:host-context(.app-dark) ::ng-deep .p-inputtext::placeholder,
+:host-context(.app-dark) ::ng-deep .p-inputtextarea::placeholder {
+  color: #52525b !important;
+}
+
+:host-context(.app-dark) ::ng-deep .p-select {
+  background: #09090b !important;
+  border-color: #27272a !important;
+}
+
+:host-context(.app-dark) ::ng-deep .p-select:hover {
+  border-color: #f5c34d !important;
+}
+
+:host-context(.app-dark) ::ng-deep .p-select .p-select-label {
+  color: #f4f4f5 !important;
+}
+
+:host-context(.app-dark) ::ng-deep .p-select .p-select-label.p-placeholder {
+  color: #52525b !important;
+}
+
+:host-context(.app-dark) ::ng-deep .p-select .p-select-trigger {
+  color: #a1a1aa !important;
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  :host ::ng-deep .form-card .p-card-body  { padding: 1rem !important; }
+  :host ::ng-deep .actions-card .p-card-body { padding: 0.75rem 1rem !important; }
+  .section-title   { font-size: 0.88rem; }
+  .registro-title  { font-size: 0.95rem; }
+  .registro-kicker { font-size: 0.55rem; }
+}
+
+@media (max-width: 600px) {
+  .producto-info-row { flex-direction: column; align-items: flex-start; }
+  .info-value        { text-align: left; }
+}

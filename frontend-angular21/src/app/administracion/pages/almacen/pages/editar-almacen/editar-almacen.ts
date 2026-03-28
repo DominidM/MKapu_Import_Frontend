@@ -1,5 +1,14 @@
 import { CommonModule } from '@angular/common';
-import { Component, ViewChild, inject, OnInit, Directive, HostListener, ElementRef, signal } from '@angular/core';
+import {
+  Component,
+  ViewChild,
+  inject,
+  OnInit,
+  Directive,
+  HostListener,
+  ElementRef,
+  signal,
+} from '@angular/core';
 import { FormsModule, NgForm, AbstractControl } from '@angular/forms';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -31,19 +40,28 @@ export class NoNumbersDirective {
     const regex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]$/;
     const allowedKeys = ['Backspace', 'Tab', 'Delete', 'ArrowLeft', 'ArrowRight'];
     if (allowedKeys.includes(event.key)) return true;
-    if (!regex.test(event.key)) { event.preventDefault(); return false; }
+    if (!regex.test(event.key)) {
+      event.preventDefault();
+      return false;
+    }
     return true;
   }
 
   @HostListener('paste', ['$event'])
   onPaste(event: ClipboardEvent): boolean {
     const pastedText = event.clipboardData?.getData('text') || '';
-    if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]*$/.test(pastedText)) { event.preventDefault(); return false; }
+    if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]*$/.test(pastedText)) {
+      event.preventDefault();
+      return false;
+    }
     return true;
   }
 }
 
-interface Provincia { nombre: string; distritos: string[]; }
+interface Provincia {
+  nombre: string;
+  distritos: string[];
+}
 
 @Component({
   selector: 'app-editar-almacen',
@@ -60,8 +78,8 @@ interface Provincia { nombre: string; distritos: string[]; }
     ToastModule,
     AutoCompleteModule,
     MessageModule,
-    SelectModule,  
-    TagModule,   
+    SelectModule,
+    TagModule,
     NoNumbersDirective,
   ],
   providers: [ConfirmationService, MessageService],
@@ -84,6 +102,8 @@ export class AlmacenEditar implements OnInit, CanComponentDeactivate {
     telefono: '' as string | null,
     direccion: '',
   };
+
+  almacenTelefonoStr = '';
 
   // ── Sede ──────────────────────────────────────────────────────────────────
   readonly sedesDisponibles = signal<any[]>([]);
@@ -109,14 +129,18 @@ export class AlmacenEditar implements OnInit, CanComponentDeactivate {
   constructor(
     private confirmationService: ConfirmationService,
     private messageService: MessageService,
-    private router: Router
+    private router: Router,
   ) {}
 
   ngOnInit(): void {
     this.route.paramMap.subscribe((params) => {
       const idStr = params.get('id') ?? this.route.snapshot.queryParamMap.get('id');
       if (!idStr) {
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se recibió el ID del almacén.' });
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se recibió el ID del almacén.',
+        });
         setTimeout(() => this.router.navigate(['/admin/almacen']), 1000);
         return;
       }
@@ -151,6 +175,21 @@ export class AlmacenEditar implements OnInit, CanComponentDeactivate {
         // Si falla, igual mostramos el form sin sede
       },
     });
+  }
+
+  onlyLetters(event: KeyboardEvent): boolean {
+    const regex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]$/;
+    return regex.test(event.key) || event.key === 'Backspace' || event.key === 'Tab';
+  }
+
+  onlyNumbers(event: KeyboardEvent): boolean {
+    return /^[0-9]$/.test(event.key) || event.key === 'Backspace' || event.key === 'Tab';
+  }
+
+  onTelefonoInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    input.value = input.value.replace(/\D/g, '').slice(0, 9);
+    this.almacenTelefonoStr = input.value;
   }
 
   guardarSede(): void {
@@ -203,10 +242,16 @@ export class AlmacenEditar implements OnInit, CanComponentDeactivate {
           telefono: data.telefono ?? '',
           direccion: data.direccion ?? '',
         };
+        this.almacenTelefonoStr = String(data.telefono ?? '');
+        this.initializeProvinciaFromCiudad();
         this.initializeProvinciaFromCiudad();
       },
       error: (err: HttpErrorResponse) => {
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: this.extractServerMessage(err) });
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: this.extractServerMessage(err),
+        });
       },
     });
   }
@@ -215,44 +260,40 @@ export class AlmacenEditar implements OnInit, CanComponentDeactivate {
     const dept = this.almacen.departamento;
     const ciudad = this.almacen.ciudad;
     const provinciasData: Provincia[] = DEPARTAMENTOS_PROVINCIAS[dept] || [];
-    const found = provinciasData.find(p => p.distritos.includes(ciudad));
+    const found = provinciasData.find((p) => p.distritos.includes(ciudad));
     if (found) {
       this.almacen.provincia = found.nombre;
-      this.provincias = provinciasData.map(p => p.nombre);
+      this.provincias = provinciasData.map((p) => p.nombre);
       this.distritos = found.distritos;
     } else {
-      this.provincias = provinciasData.map(p => p.nombre);
+      this.provincias = provinciasData.map((p) => p.nombre);
       this.distritos = [];
     }
   }
 
   toUpperCase(field: 'codigo' | 'nombre' | 'direccion'): void {
-    this.almacen[field] = (this.almacen[field] ?? '').toString().toUpperCase();
-  }
-
-  onlyLetters(event: KeyboardEvent): boolean {
-    const regex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]$/;
-    return regex.test(event.key) || event.key === 'Backspace' || event.key === 'Tab';
+    const val = this.almacen[field];
+    this.almacen[field] = val != null ? String(val).toUpperCase() : '';
   }
 
   filterDepartamentos(event: { query: string }): void {
     const q = (event.query ?? '').toLowerCase();
-    this.filteredDepartamentos = this.departamentos.filter(d => d.toLowerCase().includes(q));
+    this.filteredDepartamentos = this.departamentos.filter((d) => d.toLowerCase().includes(q));
   }
 
   filterProvincias(event: { query: string }): void {
     const q = (event.query ?? '').toLowerCase();
-    this.filteredProvincias = this.provincias.filter(p => p.toLowerCase().includes(q));
+    this.filteredProvincias = this.provincias.filter((p) => p.toLowerCase().includes(q));
   }
 
   filterDistritos(event: { query: string }): void {
     const q = (event.query ?? '').toLowerCase();
-    this.filteredDistritos = this.distritos.filter(d => d.toLowerCase().includes(q));
+    this.filteredDistritos = this.distritos.filter((d) => d.toLowerCase().includes(q));
   }
 
   onDepartamentoSelect(): void {
     const provinciasData: Provincia[] = DEPARTAMENTOS_PROVINCIAS[this.almacen.departamento] || [];
-    this.provincias = provinciasData.map(p => p.nombre);
+    this.provincias = provinciasData.map((p) => p.nombre);
     this.almacen.provincia = '';
     this.almacen.ciudad = '';
     this.distritos = [];
@@ -260,7 +301,7 @@ export class AlmacenEditar implements OnInit, CanComponentDeactivate {
 
   onProvinciaSelect(): void {
     const provinciasData: Provincia[] = DEPARTAMENTOS_PROVINCIAS[this.almacen.departamento] || [];
-    const found = provinciasData.find(p => p.nombre === this.almacen.provincia);
+    const found = provinciasData.find((p) => p.nombre === this.almacen.provincia);
     this.distritos = found?.distritos || [];
     this.almacen.ciudad = '';
   }
@@ -270,22 +311,62 @@ export class AlmacenEditar implements OnInit, CanComponentDeactivate {
       if (!err) return 'Error desconocido';
       if (err.error) {
         if (typeof err.error === 'string') return err.error;
-        if (err.error.message) return Array.isArray(err.error.message) ? err.error.message.join(', ') : String(err.error.message);
+        if (err.error.message)
+          return Array.isArray(err.error.message)
+            ? err.error.message.join(', ')
+            : String(err.error.message);
         return JSON.stringify(err.error);
       }
       return err.message ?? 'Error del servidor';
-    } catch { return 'Error procesando la respuesta'; }
+    } catch {
+      return 'Error procesando la respuesta';
+    }
   }
 
   updateAlmacen(): void {
     this.submitted = true;
-    if (!this.almacenId) { this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se encontró el ID del almacén.' }); return; }
-    if (!this.departamentos.includes(this.almacen.departamento)) { this.messageService.add({ severity: 'warn', summary: 'Departamento inválido', detail: 'Seleccione un departamento de la lista.' }); return; }
-    if (!this.provincias.includes(this.almacen.provincia)) { this.messageService.add({ severity: 'warn', summary: 'Provincia inválida', detail: 'Seleccione una provincia de la lista.' }); return; }
-    if (!this.distritos.includes(this.almacen.ciudad)) { this.messageService.add({ severity: 'warn', summary: 'Distrito inválido', detail: 'Seleccione un distrito de la lista.' }); return; }
+    if (!this.almacenId) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'No se encontró el ID del almacén.',
+      });
+      return;
+    }
+    if (!this.departamentos.includes(this.almacen.departamento)) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Departamento inválido',
+        detail: 'Seleccione un departamento de la lista.',
+      });
+      return;
+    }
+    if (!this.provincias.includes(this.almacen.provincia)) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Provincia inválida',
+        detail: 'Seleccione una provincia de la lista.',
+      });
+      return;
+    }
+    if (!this.distritos.includes(this.almacen.ciudad)) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Distrito inválido',
+        detail: 'Seleccione un distrito de la lista.',
+      });
+      return;
+    }
 
     const telefonoStr = String(this.almacen.telefono ?? '').trim();
-    if (telefonoStr.length !== 9 || !/^\d{9}$/.test(telefonoStr)) { this.messageService.add({ severity: 'warn', summary: 'Teléfono inválido', detail: 'El teléfono debe tener exactamente 9 dígitos numéricos.' }); return; }
+    if (telefonoStr.length !== 9 || !/^\d{9}$/.test(telefonoStr)) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Teléfono inválido',
+        detail: 'El teléfono debe tener exactamente 9 dígitos numéricos.',
+      });
+      return;
+    }
 
     const payload = {
       codigo: this.almacen.codigo.trim().toUpperCase(),
@@ -300,18 +381,35 @@ export class AlmacenEditar implements OnInit, CanComponentDeactivate {
     this.almacenService.updateAlmacen(this.almacenId, payload, 'Administrador').subscribe({
       next: () => {
         this.allowNavigate = true;
-        this.messageService.add({ severity: 'success', summary: 'Almacén actualizado', detail: 'El almacén se actualizó correctamente.', life: 3000 });
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Almacén actualizado',
+          detail: 'El almacén se actualizó correctamente.',
+          life: 3000,
+        });
         setTimeout(() => this.router.navigate(['/admin/almacen']), 1200);
       },
       error: (err: HttpErrorResponse) => {
-        this.messageService.add({ severity: err.status === 400 ? 'warn' : 'error', summary: err.status === 400 ? 'Validación' : 'Error', detail: this.extractServerMessage(err) });
+        this.messageService.add({
+          severity: err.status === 400 ? 'warn' : 'error',
+          summary: err.status === 400 ? 'Validación' : 'Error',
+          detail: this.extractServerMessage(err),
+        });
       },
     });
   }
 
   confirmCancel(): void {
-    if (!this.almacenForm?.dirty) { this.navigateWithToast(); return; }
-    this.confirmDiscardChanges().subscribe((confirmed) => { if (confirmed) { this.allowNavigate = true; this.navigateWithToast(); } });
+    if (!this.almacenForm?.dirty) {
+      this.navigateWithToast();
+      return;
+    }
+    this.confirmDiscardChanges().subscribe((confirmed) => {
+      if (confirmed) {
+        this.allowNavigate = true;
+        this.navigateWithToast();
+      }
+    });
   }
 
   canDeactivate(): boolean | Observable<boolean> {
@@ -329,14 +427,25 @@ export class AlmacenEditar implements OnInit, CanComponentDeactivate {
       rejectLabel: 'Continuar',
       acceptButtonProps: { severity: 'danger' },
       rejectButtonProps: { severity: 'secondary', outlined: true },
-      accept: () => { this.allowNavigate = true; result.next(true); result.complete(); },
-      reject: () => { result.next(false); result.complete(); },
+      accept: () => {
+        this.allowNavigate = true;
+        result.next(true);
+        result.complete();
+      },
+      reject: () => {
+        result.next(false);
+        result.complete();
+      },
     });
     return result.asObservable();
   }
 
   private navigateWithToast(): void {
-    this.messageService.add({ severity: 'info', summary: 'Cancelado', detail: 'Se canceló la edición del almacén.' });
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Cancelado',
+      detail: 'Se canceló la edición del almacén.',
+    });
     setTimeout(() => this.router.navigate(['/admin/almacen']), 1200);
   }
 }
