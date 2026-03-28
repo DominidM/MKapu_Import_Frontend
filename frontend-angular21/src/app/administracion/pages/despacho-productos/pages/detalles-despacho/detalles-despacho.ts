@@ -1,41 +1,25 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { CommonModule } from '@angular/common';
-import { Location } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { Subscription } from 'rxjs';
 
 import { Card } from 'primeng/card';
 import { Button } from 'primeng/button';
-import { Divider } from 'primeng/divider';
 import { Tag } from 'primeng/tag';
 import { TableModule } from 'primeng/table';
 import { Skeleton } from 'primeng/skeleton';
 import { Tooltip } from 'primeng/tooltip';
 
-import { VentasService, ComprobanteVenta } from '../../../../../core/services/ventas.service';
-import { PosService, Pago } from '../../../../../core/services/pos.service';
-import { ClientesService, Cliente } from '../../../../../core/services/clientes.service';
-import { SedeService, Sede } from '../../../../../core/services/sede.service';
-import { PromocionesService, Promocion } from '../../../../../core/services/promociones.service';
-import { ProductosService, Producto } from '../../../../../core/services/productos.service';
-import { EmpleadosService, Empleado } from '../../../../../core/services/empleados.service';
+import { DispatchService, EnrichedDispatch } from '../../../../services/dispatch.service';
+import { UsuarioService } from '../../../../services/usuario.service';
+import { UsuarioInterfaceResponse } from '../../../../interfaces/usuario.interface';
 
 interface DetalleProductoRow {
-  codigo: string;
-  descripcion: string;
-  cantidad: number;
+  codigo:         string;
+  descripcion:    string;
+  cantidad:       number;
   precioUnitario: number;
-  total: number;
-  sede: string;
-  stock: number | null;
-  familia: string;
-}
-
-interface DespachoInfo {
-  salida: string;
-  ubicacion: string;
-  agencia: string;
-  hora: string;
+  total:          number;
 }
 
 @Component({
@@ -46,230 +30,218 @@ interface DespachoInfo {
   styleUrl: './detalles-despacho.css',
 })
 export class DetallesDespacho implements OnInit, OnDestroy {
-  comprobante: ComprobanteVenta | null = null;
-  cliente: Cliente | null = null;
-  pagos: Pago[] = [];
-  sedes: Sede[] = [];
-  promocion: Promocion | null = null;
+
+  despacho: EnrichedDispatch | null = null;
   detalleProductos: DetalleProductoRow[] = [];
 
   despachador = 'Sin asignar';
-  asesor = 'Sin asignar';
-  despachoInfo: DespachoInfo = {
-    salida: 'PROVINCIA',
-    ubicacion: 'LIMA',
-    agencia: 'SHALOM',
-    hora: '09:45',
-  };
+  asesor      = 'Sin asignar';
 
-  loading: boolean = true;
-  returnUrl: string = '/admin/despacho-productos';
+  loading   = true;
+  errorMsg: string | null = null;
 
-  tituloKicker = 'ADMINISTRACIÓN - DESPACHO - DETALLE';
+  tituloKicker    = 'ADMINISTRACIÓN - DESPACHO - DETALLE';
   subtituloKicker = 'DETALLE DE DESPACHO';
-  iconoCabecera = 'pi pi-truck';
+  iconoCabecera   = 'pi pi-truck';
 
-  private routeSubscription: Subscription | null = null;
-  private ventaId: string | null = null;
-  private empleados: Empleado[] = [];
-
-  private readonly baseDespachos: DespachoInfo[] = [
-    { salida: 'PROVINCIA', ubicacion: 'TRUJILLO', agencia: 'SHALOM', hora: '09:45' },
-    { salida: 'PROVINCIA', ubicacion: 'CUSCO', agencia: 'MARVISUR', hora: '09:46' },
-    { salida: 'PROVINCIA', ubicacion: 'AREQUIPA', agencia: 'MARVISUR', hora: '09:46' },
-    { salida: 'PROVINCIA', ubicacion: 'FERRENAFE', agencia: 'SHALOM', hora: '11:43' },
-    { salida: 'PROVINCIA', ubicacion: 'RICA', agencia: 'SHALOM', hora: '10:17' },
-    { salida: 'PROVINCIA', ubicacion: 'CHINCHA', agencia: 'SHALOM', hora: '11:47' },
-    { salida: 'PROVINCIA', ubicacion: 'LIMA', agencia: 'SHALOM', hora: '14:46' },
-  ];
+  private routeSub: Subscription | null = null;
 
   constructor(
-    private route: ActivatedRoute,
-    private router: Router,
-    private location: Location,
-    private ventasService: VentasService,
-    private posService: PosService,
-    private clientesService: ClientesService,
-    private sedeService: SedeService,
-    private promocionesService: PromocionesService,
-    private productosService: ProductosService,
-    private empleadosService: EmpleadosService,
+    private readonly route:           ActivatedRoute,
+    private readonly router:          Router,
+    private readonly location:        Location,
+    private readonly dispatchService: DispatchService,
+    private readonly usuarioService:  UsuarioService,
   ) {}
 
   ngOnInit(): void {
-    this.cargarSedes();
-    this.cargarEmpleados();
+    this.cargarUsuarios();
 
-    this.routeSubscription = this.route.paramMap.subscribe((params) => {
+    this.routeSub = this.route.paramMap.subscribe(params => {
       const id = params.get('id');
-      if (id) {
-        this.ventaId = id;
-        this.cargarDetalle(id);
-      } else {
-        this.volver();
-      }
+      if (id) this.cargarDetalle(+id);
+      else    this.volver();
     });
   }
 
   ngOnDestroy(): void {
-    if (this.routeSubscription) {
-      this.routeSubscription.unsubscribe();
-    }
+    this.routeSub?.unsubscribe();
   }
 
-  cargarSedes(): void {
-    this.sedeService.getSedes().subscribe({
-      next: (sedes: Sede[]) => {
-        this.sedes = sedes;
+  private cargarUsuarios(): void {
+    this.usuarioService.getAllUsuarios().subscribe({
+      next: (lista) => {
+        this.despachador = this.obtenerNombreUsuario(lista, 'ALMACENERO');
+        this.asesor      = this.obtenerNombreUsuario(lista, 'VENTAS');
       },
-      error: (err: any) => {
-        console.error('Error al cargar sedes:', err);
-      },
+      error: () => {},
     });
   }
 
-  private cargarEmpleados(): void {
-    this.empleadosService.getEmpleados().subscribe({
-      next: (empleados) => {
-        this.empleados = empleados;
-        this.despachador = this.obtenerNombreEmpleado('ALMACENERO');
-        this.asesor = this.obtenerNombreEmpleado('VENTAS');
-      },
-      error: () => {
-        this.empleados = [];
-        this.despachador = 'Sin asignar';
-        this.asesor = 'Sin asignar';
-      },
-    });
-  }
-
-  cargarDetalle(id: string): void {
-    this.loading = true;
-
-    this.comprobante = null;
-    this.cliente = null;
-    this.pagos = [];
-    this.promocion = null;
+  cargarDetalle(id: number): void {
+    this.loading  = true;
+    this.errorMsg = null;
+    this.despacho = null;
     this.detalleProductos = [];
 
-    const resultado = this.ventasService.getComprobantePorId(id);
-    this.comprobante = resultado || null;
-
-    if (!this.comprobante) {
-      console.error('Comprobante no encontrado');
-      this.loading = false;
-      this.volver();
-      return;
-    }
-
-    const ventas = this.ventasService.getComprobantes();
-    const index = ventas.findIndex((venta) => venta.id_comprobante === this.comprobante?.id_comprobante);
-    const mockIndex = index >= 0 ? index : 0;
-    this.despachoInfo = this.baseDespachos[mockIndex % this.baseDespachos.length];
-
-    this.cliente = this.clientesService.getClientePorId(this.comprobante.id_cliente) || null;
-    this.pagos = this.posService.getPagosPorComprobante(this.comprobante.id_comprobante);
-
-    if (this.comprobante.id_promocion) {
-      this.promocion = this.promocionesService.getPromocionPorId(this.comprobante.id_promocion);
-    } else if (this.comprobante.codigo_promocion) {
-      this.promocion = this.promocionesService.buscarPorCodigo(this.comprobante.codigo_promocion);
-    }
-
-    this.detalleProductos = this.comprobante.detalles.map((detalle) => {
-      const productos = this.productosService.getProductosPorCodigo(detalle.cod_prod);
-      const producto = productos[0] || null;
-      const precioUnitario = detalle.pre_uni ?? detalle.valor_unit ?? 0;
-      return {
-        codigo: detalle.cod_prod,
-        descripcion: detalle.descripcion,
-        cantidad: detalle.cantidad,
-        precioUnitario,
-        total: this.calcularTotalItem(detalle.cantidad, precioUnitario),
-        sede: producto?.sede || 'N/A',
-        stock: producto?.stock ?? null,
-        familia: producto?.familia || 'N/A',
-      };
+    this.dispatchService.getDispatchById(id).subscribe({
+      next: (d) => {
+        this.despacho         = d as EnrichedDispatch;
+        this.detalleProductos = this.mapearProductos(d as EnrichedDispatch);
+        this.loading          = false;
+      },
+      error: () => {
+        this.errorMsg = 'No se pudo cargar el despacho.';
+        this.loading  = false;
+      },
     });
-
-    this.loading = false;
   }
 
-  volver(): void {
-    this.location.back();
+  private mapearProductos(d: EnrichedDispatch): DetalleProductoRow[] {
+    if (d.productosDetalle?.length) {
+      return d.productosDetalle.map(p => ({
+        codigo:         p.cod_prod,
+        descripcion:    p.descripcion,
+        cantidad:       p.cantidad,
+        precioUnitario: p.precio_unit,
+        total:          p.total,
+      }));
+    }
+
+    return (d.detalles ?? []).map(det => ({
+      codigo:         `#${det.id_producto}`,
+      descripcion:    `Producto #${det.id_producto}`,
+      cantidad:       det.cantidad_solicitada,
+      precioUnitario: 0,
+      total:          0,
+    }));
   }
 
-  irListadoDespacho(): void {
-    this.router.navigate(['/admin/despacho-productos']);
+  // ── Helpers ─────────────────────────────────
+
+  get numeroComprobante(): string {
+    return (this.despacho as any)?.comprobante ?? `#${this.despacho?.id_venta_ref ?? '—'}`;
   }
 
-  getSede(comprobante: ComprobanteVenta): string {
-    const sede = this.sedes.find((s) => s.id_sede === comprobante.id_sede);
-    return sede ? sede.nombre : 'N/A';
+  get tipoComprobanteLabel(): string {
+    const num = this.numeroComprobante;
+    if (num.startsWith('F')) return 'FACTURA';
+    if (num.startsWith('B')) return 'BOLETA';
+    return 'COMPROBANTE';
   }
 
-  getTipoComprobanteLabel(): string {
-    return this.comprobante?.tipo_comprobante === '03' ? 'BOLETA' : 'FACTURA';
+  get tipoComprobanteIcon(): string {
+    return this.tipoComprobanteLabel === 'FACTURA' ? 'pi pi-file-edit' : 'pi pi-file';
   }
 
-  getTipoComprobanteIcon(): string {
-    return this.comprobante?.tipo_comprobante === '03' ? 'pi pi-file' : 'pi pi-file-edit';
-  }
-
-  getEstadoSeverity(): 'success' | 'danger' {
-    return this.comprobante?.estado ? 'success' : 'danger';
+  getEstadoSeverity(): 'success' | 'warn' | 'danger' | 'secondary' | 'info' {
+    switch (this.despacho?.estado) {
+      case 'ENTREGADO':      return 'success';
+      case 'EN_TRANSITO':    return 'warn';
+      case 'CANCELADO':      return 'danger';
+      case 'EN_PREPARACION': return 'info';
+      default:               return 'secondary';
+    }
   }
 
   getEstadoLabel(): string {
-    return this.comprobante?.estado ? 'DESPACHADO' : 'SIN DESPACHAR';
+    const labels: Record<string, string> = {
+      GENERADO:       'Generado',
+      EN_PREPARACION: 'En preparación',
+      EN_TRANSITO:    'En tránsito',
+      ENTREGADO:      'Entregado',
+      CANCELADO:      'Cancelado',
+    };
+    return labels[this.despacho?.estado ?? ''] ?? (this.despacho?.estado ?? '—');
+  }
+
+  get totalItems(): number {
+    return this.detalleProductos.reduce((acc, p) => acc + p.cantidad, 0);
+  }
+
+  volver(): void { this.location.back(); }
+  irListadoDespacho(): void { this.router.navigate(['/admin/despacho-productos']); }
+
+  private obtenerNombreUsuario(lista: UsuarioInterfaceResponse[], rolNombre: string): string {
+    const u = lista.find(
+      u => (u.rolNombre ?? u.rol_nombre ?? u.rol ?? '').toUpperCase() === rolNombre.toUpperCase()
+        && u.activo
+    );
+    return u ? `${u.usu_nom} ${u.ape_pat} ${u.ape_mat}`.trim() : 'Sin asignar';
+  }
+
+  // ── 🔥 AGREGADOS PARA QUE EL HTML FUNCIONE ─────────────────
+
+  get comprobante(): any {
+    return (this.despacho as any)?.comprobante ?? {};
+  }
+
+  get cliente(): any {
+    return {
+      direccion: this.comprobante?.direccion,
+      email: this.comprobante?.email,
+      telefono: this.comprobante?.telefono,
+    };
+  }
+
+  get pagos(): any[] {
+    return (this.despacho as any)?.pagos ?? [];
+  }
+
+  get despachoInfo(): any {
+    return {
+      salida: this.despacho?.fecha_salida ?? '—',
+      ubicacion: (this.despacho as any)?.ubicacion ?? '—',
+      agencia: (this.despacho as any)?.agencia ?? '—',
+      hora: (this.despacho as any)?.hora ?? '—',
+    };
+  }
+
+  getTipoComprobanteLabel(): string {
+    return this.tipoComprobanteLabel;
+  }
+
+  getTipoComprobanteIcon(): string {
+    return this.tipoComprobanteIcon;
+  }
+
+  formatearSerieNumero(serie: string, numero: string): string {
+    if (!serie || !numero) return '—';
+    return `${serie}-${numero}`;
   }
 
   getTipoDocumento(): string {
-    return this.cliente?.tipo_doc || (this.comprobante?.tipo_comprobante === '03' ? 'DNI' : 'RUC');
+    const doc = this.comprobante?.cliente_doc ?? '';
+    return doc.length === 11 ? 'RUC' : 'DNI';
+  }
+
+  getSede(comp: any): string {
+    return comp?.sede ?? 'Principal';
   }
 
   getIconoMedioPago(medio: string): string {
-    const iconos: { [key: string]: string } = {
-      EFECTIVO: 'pi pi-money-bill',
-      TARJETA: 'pi pi-credit-card',
-      YAPE: 'pi pi-mobile',
-      PLIN: 'pi pi-mobile',
-      TRANSFERENCIA: 'pi pi-arrow-right-arrow-left',
-    };
-    return iconos[medio] || 'pi pi-wallet';
-  }
-
-  formatearSerieNumero(serie: string, numero: number): string {
-    return `${serie}-${numero.toString().padStart(8, '0')}`;
-  }
-
-  calcularTotalItem(cantidad: number, precio: number): number {
-    return cantidad * precio;
+    switch ((medio ?? '').toLowerCase()) {
+      case 'efectivo': return 'pi pi-money-bill';
+      case 'tarjeta':  return 'pi pi-credit-card';
+      case 'yape':
+      case 'plin':     return 'pi pi-mobile';
+      default:         return 'pi pi-wallet';
+    }
   }
 
   tienePromocion(): boolean {
-    return !!(
-      this.comprobante?.codigo_promocion &&
-      this.comprobante?.descuento_promocion &&
-      this.comprobante.descuento_promocion > 0
-    );
+    return !!(this.despacho as any)?.promocion;
   }
 
   getCodigoPromocion(): string {
-    return this.promocion?.codigo || this.comprobante?.codigo_promocion || 'N/A';
+    return (this.despacho as any)?.promocion?.codigo ?? '';
   }
 
   getDescripcionPromocion(): string {
-    return this.promocion?.descripcion || this.comprobante?.descripcion_promocion || 'Promoción aplicada';
+    return (this.despacho as any)?.promocion?.descripcion ?? '';
   }
 
   getDescuentoPromocion(): number {
-    return this.comprobante?.descuento_promocion || 0;
-  }
-
-  private obtenerNombreEmpleado(cargo: Empleado['cargo']): string {
-    const empleado = this.empleados.find((item) => item.cargo === cargo && item.estado);
-    if (!empleado) return 'Sin asignar';
-    return `${empleado.nombres} ${empleado.apellidos}`.trim();
+    return (this.despacho as any)?.promocion?.descuento ?? 0;
   }
 }
