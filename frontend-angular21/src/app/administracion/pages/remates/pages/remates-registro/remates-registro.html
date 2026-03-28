@@ -222,6 +222,7 @@
                 [(ngModel)]="codigoRemate"
                 [disabled]="generarCodigoAuto"
                 class="w-full"
+                maxlength="20"
                 [placeholder]="
                   generarCodigoAuto ? 'Se generará automáticamente' : 'Ej: RMT-2026-001'
                 "
@@ -276,6 +277,7 @@
               rows="4"
               class="w-full"
               placeholder="Observaciones (opcional)"
+              maxlength="150"
             >
             </textarea>
           </div>
