@@ -500,3 +500,53 @@
     border-color: #ef4444;
     transform: translateY(-1px);
   }
+  
+  /* ── PAGINACIÓN SERVER-SIDE ─────────────────────────────── */
+  .despacho-paginacion {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.85rem 1.25rem;
+    border-top: 1px solid var(--surface-border);
+    background: var(--surface-card);
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+  .pag-info {
+    font-size: 0.82rem;
+    color: var(--text-color-secondary);
+  }
+  .pag-controles {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .pag-btn {
+    width: 32px; height: 32px;
+    border-radius: 6px;
+    border: 1px solid var(--surface-border);
+    background: var(--surface-card);
+    color: var(--text-color);
+    cursor: pointer;
+    display: grid; place-items: center;
+    transition: all 0.15s;
+    font-size: 0.85rem;
+  }
+  .pag-btn:hover:not(:disabled) {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: #fff;
+  }
+  .pag-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+  .pag-paginas {
+    font-size: 0.82rem;
+    color: var(--text-color);
+    padding: 0 0.5rem;
+    white-space: nowrap;
+  }
+  .pag-limit-select {
+    width: 80px !important;
+  }
