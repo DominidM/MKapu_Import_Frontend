@@ -51,8 +51,6 @@ export const ADMIN_ROUTES: Routes = [
 
   {
     path: 'usuarios',
-    canActivate: [roleGuard],
-    data: { permiso: 'CREAR_USUARIOS' },
     children: [
       {
         path: '',
@@ -60,6 +58,8 @@ export const ADMIN_ROUTES: Routes = [
           import('./pages/usuarios/pages/administracion-crear-usuario/administracion-crear-usuario').then(
             (m) => m.AdministracionCrearUsuario,
           ),
+        canActivate: [roleGuard],
+        data: { permiso: 'VER_USUARIOS' },
       },
       {
         path: 'crear-usuario',
@@ -67,6 +67,8 @@ export const ADMIN_ROUTES: Routes = [
           import('./pages/usuarios/pages/administracion/administracion').then(
             (m) => m.Administracion,
           ),
+        canActivate: [roleGuard],
+        data: { permiso: 'CREAR_USUARIOS' },
       },
       {
         path: 'editar-usuario/:id',
@@ -74,19 +76,21 @@ export const ADMIN_ROUTES: Routes = [
           import('./pages/usuarios/pages/administracion-editar-usuario/administracion-editar-usuario').then(
             (m) => m.AdministracionEditarUsuario,
           ),
+        canActivate: [roleGuard],
+        data: { permiso: 'EDITAR_USUARIOS' },
       },
     ],
   },
 
   {
     path: 'almacen',
-    canActivate: [roleGuard],
-    data: { permiso: 'CREAR_ALMACEN' },
     children: [
       {
         path: '',
         loadComponent: () =>
           import('./pages/almacen/pages/listar-almacen/almacen').then((m) => m.AlmacenListado),
+        canActivate: [roleGuard],
+        data: { permiso: 'VER_ALMACEN' },
       },
       {
         path: 'crear-almacen',
@@ -94,6 +98,8 @@ export const ADMIN_ROUTES: Routes = [
           import('./pages/almacen/pages/agregar-almacen/agregar-almacen').then(
             (m) => m.AlmacenCrear,
           ),
+        canActivate: [roleGuard],
+        data: { permiso: 'CREAR_ALMACEN' },
       },
       {
         path: 'editar-almacen/:id',
@@ -101,43 +107,47 @@ export const ADMIN_ROUTES: Routes = [
           import('./pages/almacen/pages/editar-almacen/editar-almacen').then(
             (m) => m.AlmacenEditar,
           ),
+        canActivate: [roleGuard],
+        data: { permiso: 'EDITAR_ALMACEN' },
       },
     ],
   },
 
   {
     path: 'sedes',
-    canActivate: [roleGuard],
-    data: { permiso: 'CREAR_SEDES' },
     children: [
       {
         path: '',
         loadComponent: () => import('./pages/sedes/pages/sedes/sedes').then((m) => m.Sedes),
+        canActivate: [roleGuard],
+        data: { permiso: 'VER_SEDES' },
       },
       {
         path: 'agregar-sede',
         loadComponent: () =>
           import('./pages/sedes/pages/agregar-sede/agregar-sede').then((m) => m.AgregarSede),
-        canDeactivate: [pendingChangesGuard],
+        canActivate: [roleGuard],
+        data: { permiso: 'CREAR_SEDES' },
       },
       {
         path: 'editar-sede',
         loadComponent: () =>
           import('./pages/sedes/pages/editar-sede/editar-sede').then((m) => m.EditarSede),
-        canDeactivate: [pendingChangesGuard],
+        canActivate: [roleGuard],
+        data: { permiso: 'EDITAR_SEDES' },
       },
     ],
   },
 
   {
     path: 'categoria',
-    canActivate: [roleGuard],
-    data: { permiso: 'CREAR_CATEGORIAS' },
     children: [
       {
         path: '',
         loadComponent: () =>
           import('./pages/categoria/pages/categoria/categoria').then((m) => m.CategoriaListado),
+        canActivate: [roleGuard],
+        data: { permiso: 'VER_CATEGORIAS' },
       },
       {
         path: 'agregar-categoria',
@@ -145,7 +155,8 @@ export const ADMIN_ROUTES: Routes = [
           import('./pages/categoria/pages/agregar-categoria/agregar-categoria').then(
             (m) => m.AgregarCategoria,
           ),
-        canDeactivate: [pendingChangesGuard],
+        canActivate: [roleGuard],
+        data: { permiso: 'CREAR_CATEGORIAS' },
       },
       {
         path: 'editar-categoria/:id',
@@ -153,7 +164,8 @@ export const ADMIN_ROUTES: Routes = [
           import('./pages/categoria/pages/editar-categoria/editar-categoria').then(
             (m) => m.EditarCategoria,
           ),
-        canDeactivate: [pendingChangesGuard],
+        canActivate: [roleGuard],
+        data: { permiso: 'EDITAR_CATEGORIAS' },
       },
     ],
   },
@@ -237,13 +249,13 @@ export const ADMIN_ROUTES: Routes = [
 
   {
     path: 'clientes',
-    canActivate: [roleGuard],
-    data: { permiso: 'CREAR_CLIENTE' },
     children: [
       {
         path: '',
         loadComponent: () =>
           import('./pages/clientes/pages/clientes/clientes').then((m) => m.Clientes),
+        canActivate: [roleGuard],
+        data: { permiso: 'VER_CLIENTE' },
       },
       {
         path: 'agregar-cliente',
@@ -251,6 +263,8 @@ export const ADMIN_ROUTES: Routes = [
           import('./pages/clientes/pages/agregar-cliente/agregar-cliente').then(
             (m) => m.AgregarCliente,
           ),
+        canActivate: [roleGuard],
+        data: { permiso: 'CREAR_CLIENTE' },
       },
       {
         path: 'editar-cliente/:id',
@@ -258,6 +272,8 @@ export const ADMIN_ROUTES: Routes = [
           import('./pages/clientes/pages/editar-cliente/editar-cliente').then(
             (m) => m.EditarCliente,
           ),
+        canActivate: [roleGuard],
+        data: { permiso: 'EDITAR_CLIENTE' },
       },
       {
         path: 'seguimiento-cliente/:id',
@@ -265,25 +281,32 @@ export const ADMIN_ROUTES: Routes = [
           import('./pages/clientes/pages/cliente-seguimiento/cliente-seguimiento').then(
             (m) => m.ClienteSeguimiento,
           ),
+        canActivate: [roleGuard],
+        data: { permiso: 'SEGUIMIENTO-CLIENTE' },
       },
     ],
   },
 
   {
     path: 'proveedores',
-    loadComponent: () =>
-      import('./pages/gestion-proveedor/proveedor-listado/proveedor-listado').then(
-        (m) => m.ProveedorListado,
-      ),
-    canActivate: [roleGuard],
-    data: { permiso: 'CREAR_PROVEEDORES' },
     children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/gestion-proveedor/proveedor-listado/proveedor-listado').then(
+            (m) => m.ProveedorListado,
+          ),
+        canActivate: [roleGuard],
+        data: { permiso: 'VER_PROVEEDORES' },
+      },
       {
         path: 'crear',
         loadComponent: () =>
           import('./pages/gestion-proveedor/proveedor-formulario/proveedor-formulario').then(
             (m) => m.ProveedorFormulario,
           ),
+        canActivate: [roleGuard],
+        data: { permiso: 'CREAR_PROVEEDORES' },
       },
       {
         path: 'editar/:id',
@@ -291,6 +314,8 @@ export const ADMIN_ROUTES: Routes = [
           import('./pages/gestion-proveedor/proveedor-formulario/proveedor-formulario').then(
             (m) => m.ProveedorFormulario,
           ),
+        canActivate: [roleGuard],
+        data: { permiso: 'EDITAR_PROVEEDORES' },
       },
       {
         path: 'ver-detalle/:id',
@@ -298,14 +323,14 @@ export const ADMIN_ROUTES: Routes = [
           import('./pages/gestion-proveedor/proveedor-detalles/proveedor-detalles').then(
             (m) => m.ProveedorDetalles,
           ),
+        canActivate: [roleGuard],
+        data: { permiso: 'VER_PROVEEDORES' },
       },
     ],
   },
 
   {
     path: 'gestion-productos',
-    canActivate: [roleGuard],
-    data: { permiso: 'CREAR_PRODUCTOS' },
     children: [
       {
         path: '',
@@ -313,6 +338,8 @@ export const ADMIN_ROUTES: Routes = [
           import('./pages/gestion-productos/productos-listado/gestion-listado').then(
             (m) => m.GestionListado,
           ),
+        canActivate: [roleGuard],
+        data: { permiso: 'VER_PRODUCTOS' },
       },
       {
         path: 'crear-producto',
@@ -320,6 +347,8 @@ export const ADMIN_ROUTES: Routes = [
           import('./pages/gestion-productos/productos-formulario/productos-formulario').then(
             (m) => m.ProductosFormulario,
           ),
+        canActivate: [roleGuard],
+        data: { permiso: 'CREAR_PRODUCTOS' },
       },
       {
         path: 'editar-producto/:id',
@@ -327,6 +356,8 @@ export const ADMIN_ROUTES: Routes = [
           import('./pages/gestion-productos/productos-formulario/productos-formulario').then(
             (m) => m.ProductosFormulario,
           ),
+        canActivate: [roleGuard],
+        data: { permiso: 'EDITAR_PRODUCTOS' },
       },
       {
         path: 'ver-detalle-producto/:id',
@@ -334,19 +365,21 @@ export const ADMIN_ROUTES: Routes = [
           import('./pages/gestion-productos/productos-detalles/productos-detalles').then(
             (m) => m.ProductosDetalles,
           ),
+        canActivate: [roleGuard],
+        data: { permiso: 'VER_PRODUCTOS' },
       },
     ],
   },
 
   {
     path: 'transferencia',
-    canActivate: [roleGuard],
-    data: { permiso: 'CREAR_TRANSFERENCIA' },
     children: [
       {
         path: '',
         loadComponent: () =>
           import('./pages/reportes/pages/transferencia/transferencia').then((m) => m.Transferencia),
+          canActivate: [roleGuard],
+          data: { permiso: 'VER_TRANSFERENCIA' },
       },
       {
         path: 'nueva-transferencia',
@@ -354,6 +387,8 @@ export const ADMIN_ROUTES: Routes = [
           import('./pages/reportes/pages/nueva-transferencia/nueva-transferencia').then(
             (m) => m.NuevaTransferencia,
           ),
+          canActivate: [roleGuard],
+          data: { permiso: 'CREAR_TRANSFERENCIA' },
       },
       {
         path: 'solicitud-transferencia/:id',
@@ -361,6 +396,8 @@ export const ADMIN_ROUTES: Routes = [
           import('./pages/reportes/pages/detalle-transferencia/detalle-transferencia').then(
             (m) => m.DetalleTransferencia,
           ),
+          canActivate: [roleGuard],
+          data: { permiso: 'VER_TRANSFERENCIA' },
       },
     ],
   },
@@ -416,20 +453,20 @@ export const ADMIN_ROUTES: Routes = [
   },
   {
     path: 'nota-credito',
-    //canActivate: [roleGuard],
-    //data: { permiso: 'CREAR_NOTA_CREDITO' },
     children: [
       {
         path: '',
         loadComponent: () =>
           import('./pages/nota-credito/nota-credito').then((m) => m.NotasCreditoComponent),
+          //canActivate: [roleGuard],
+          //data: { permiso: 'VER_NOTA_CREDITO' },
       },
       {
         path: 'crear',
         loadComponent: () =>
-          import('./pages/nota-credito/agregar-nota-credito/agregar-nota-credito').then(
-            (m) => m.AgregarNotaCreditoComponent,
-          ),
+          import('./pages/nota-credito/agregar-nota-credito/agregar-nota-credito').then((m) => m.AgregarNotaCreditoComponent,),
+          //canActivate: [roleGuard],
+          //data: { permiso: 'CREAR_NOTA_CREDITO' },
       },
     ],
   },
@@ -546,8 +583,6 @@ export const ADMIN_ROUTES: Routes = [
 
   {
     path: 'promociones',
-    canActivate: [roleGuard],
-    data: { permiso: 'CREAR_PROMOCION' },
     children: [
       {
         path: '',
@@ -555,6 +590,8 @@ export const ADMIN_ROUTES: Routes = [
           import('./pages/gestion-promociones/promociones-listado/promociones-listado').then(
             (m) => m.PromocionesListado,
           ),
+          canActivate: [roleGuard],
+          data: { permiso: 'VER_PROMOCION' },
       },
       {
         path: 'crear',
@@ -562,6 +599,8 @@ export const ADMIN_ROUTES: Routes = [
           import('./pages/gestion-promociones/promociones-formulario/promociones-formulario').then(
             (m) => m.PromocionesFormulario,
           ),
+          canActivate: [roleGuard],
+          data: { permiso: 'CREAR_PROMOCION' },
       },
       {
         path: 'editar/:id',
@@ -569,6 +608,8 @@ export const ADMIN_ROUTES: Routes = [
           import('./pages/gestion-promociones/promociones-formulario/promociones-formulario').then(
             (m) => m.PromocionesFormulario,
           ),
+          canActivate: [roleGuard],
+          data: { permiso: 'EDITAR_PROMOCION' },
       },
       {
         path: 'ver-detalle/:id',
@@ -576,19 +617,21 @@ export const ADMIN_ROUTES: Routes = [
           import('./pages/gestion-promociones/promociones-detalles/promociones-detalles').then(
             (m) => m.PromocionesDetalles,
           ),
+          canActivate: [roleGuard],
+          data: { permiso: 'VER_PROMOCION' },
       },
     ],
   },
 
   {
     path: 'descuentos',
-    canActivate: [roleGuard],
-    data: { permiso: 'CREAR_DESCUENTO' },
     children: [
       {
         path: '',
         loadComponent: () =>
           import('./pages/descuento/pages/descuento/descuento').then((m) => m.DescuentoPage),
+          canActivate: [roleGuard],
+          data: { permiso: 'VER_DESCUENTO' },
       },
       {
         path: 'agregar-descuento',
@@ -596,7 +639,8 @@ export const ADMIN_ROUTES: Routes = [
           import('./pages/descuento/pages/agregar-descuento/agregar-descuento').then(
             (m) => m.AgregarDescuento,
           ),
-        canDeactivate: [pendingChangesGuard],
+          canActivate: [roleGuard],
+          data: { permiso: 'CREAR_DESCUENTO' },
       },
       {
         path: 'editar-descuento/:id',
@@ -604,24 +648,27 @@ export const ADMIN_ROUTES: Routes = [
           import('./pages/descuento/pages/editar-descuento/editar-descuento').then(
             (m) => m.EditarDescuento,
           ),
-        canDeactivate: [pendingChangesGuard],
+          canActivate: [roleGuard],
+          data: { permiso: 'EDITAR_DESCUENTO' },    
       },
     ],
   },
 
   {
     path: 'comision',
-    canActivate: [roleGuard],
-    data: { permiso: 'CREAR_COMISIONES' },
     children: [
       {
         path: '',
         loadComponent: () => import('./pages/comision/comision').then((m) => m.Comision),
+          canActivate: [roleGuard],
+          data: { permiso: 'VER_COMISIONES' },
       },
       {
         path: 'regla',
         loadComponent: () =>
           import('./pages/comision/comision-regla/comisionregla').then((m) => m.ComisionRegla),
+          canActivate: [roleGuard],
+          data: { permiso: 'CREAR_COMISIONES' },
       },
       {
         path: 'reportes',
@@ -629,11 +676,15 @@ export const ADMIN_ROUTES: Routes = [
           import('./pages/comision/comision-reportes/comisionreportes').then(
             (m) => m.ComisionReportes,
           ),
+          canActivate: [roleGuard],
+          data: { permiso: 'VER_COMISIONES' },
       },
       {
         path: 'regla/:id',
         loadComponent: () =>
           import('./pages/comision/editar-comision/comisionregla').then((m) => m.ComisionRegla),
+          canActivate: [roleGuard],
+          data: { permiso: 'EDITAR_COMISIONES' },
       },
     ],
   },
@@ -642,13 +693,13 @@ export const ADMIN_ROUTES: Routes = [
 
   {
     path: 'mermas',
-    canActivate: [roleGuard],
-    data: { permiso: 'CREAR_MERMAS' },
     children: [
       {
         path: '',
         loadComponent: () =>
           import('./pages/mermas/pages/mermas-pr/mermas-pr').then((m) => m.MermasPr),
+          canActivate: [roleGuard],
+          data: { permiso: 'VER_MERMAS' },
       },
       {
         path: 'registro-merma',
@@ -656,24 +707,28 @@ export const ADMIN_ROUTES: Routes = [
           import('./pages/mermas/pages/mermas-registro/mermas-registro').then(
             (m) => m.MermasRegistro,
           ),
+          canActivate: [roleGuard],
+          data: { permiso: 'CREAR_MERMAS' },
       },
       {
         path: 'edicion-merma/:id',
         loadComponent: () =>
           import('./pages/mermas/pages/mermas-listado/mermas-editar').then((m) => m.MermasEditar),
+          canActivate: [roleGuard],
+          data: { permiso: 'EDITAR_MERMAS' },
       },
     ],
   },
 
   {
     path: 'remates',
-    canActivate: [roleGuard],
-    data: { permiso: 'CREAR_REMATES' },
     children: [
       {
         path: '',
         loadComponent: () =>
           import('./pages/remates/pages/remates-pr/remates-pr').then((m) => m.RematesPr),
+          canActivate: [roleGuard],
+          data: { permiso: 'VER_REMATES' },
       },
       {
         path: 'registro-remate',
@@ -681,6 +736,8 @@ export const ADMIN_ROUTES: Routes = [
           import('./pages/remates/pages/remates-registro/remates-registro').then(
             (m) => m.RematesRegistro,
           ),
+          canActivate: [roleGuard],
+          data: { permiso: 'CREAR_REMATES' },
       },
       {
         path: 'editar-remate/:id',
@@ -688,6 +745,8 @@ export const ADMIN_ROUTES: Routes = [
           import('./pages/remates/pages/remates-list/editar-remate').then(
             (m) => m.EditarRemateComponent,
           ),
+          canActivate: [roleGuard],
+          data: { permiso: 'EDITAR_REMATES' },
       },
     ],
   },
@@ -699,7 +758,7 @@ export const ADMIN_ROUTES: Routes = [
         (m) => m.DocumentoContador,
       ),
     canActivate: [roleGuard],
-    //data: { permiso: 'AGREGAR_DOCUMENTO' }
+    data: { permiso: 'AGREGAR_DOCUMENTO' }
   },
 
   {
@@ -747,10 +806,10 @@ export const ADMIN_ROUTES: Routes = [
     canActivate: [roleGuard],
     data: { permiso: 'CREAR_DESPACHO' },
   },
+
+
   {
     path: 'conteo-inventario',
-    canActivate: [roleGuard],
-    data: { permiso: 'CONTEO_INVENTARIO' },
     children: [
       {
         path: '',
@@ -758,16 +817,22 @@ export const ADMIN_ROUTES: Routes = [
           import('../logistica/pages/conteo-inventario/conteoinventario').then(
             (m) => m.ConteoInventarios,
           ),
+          canActivate: [roleGuard],
+          data: { permiso: 'CONTEO_INVENTARIO' },
       },
       {
         path: 'crear',
         loadComponent: () =>
           import('../logistica/pages/conteo-crear/conteocrear').then((m) => m.ConteoCrear),
+          canActivate: [roleGuard],
+          data: { permiso: 'CREAR_CONTEO_INVENTARIO' },
       },
       {
         path: 'detalle/:id',
         loadComponent: () =>
           import('../logistica/pages/conteo-detalle/conteodetalle').then((m) => m.ConteoDetalle),
+          canActivate: [roleGuard],
+          data: { permiso: 'CONTEO_INVENTARIO' },
       },
     ],
   },
@@ -777,8 +842,6 @@ export const ADMIN_ROUTES: Routes = [
 
   {
     path: 'reclamos-listado',
-    canActivate: [roleGuard],
-    data: { permiso: 'CREAR_RECLAMO' },
     children: [
       {
         path: '',
@@ -786,6 +849,8 @@ export const ADMIN_ROUTES: Routes = [
           import('../ventas/pages/reclamos-garantia/reclamos-listado/reclamos-listado').then(
             (m) => m.ReclamosListado,
           ),
+          canActivate: [roleGuard],
+          data: { permiso: 'VER_RECLAMO' },
       },
       {
         path: 'crear',
@@ -793,6 +858,8 @@ export const ADMIN_ROUTES: Routes = [
           import('../ventas/pages/reclamos-garantia/reclamos-crear/reclamos-crear').then(
             (m) => m.ReclamosCrear,
           ),
+          canActivate: [roleGuard],
+          data: { permiso: 'CREAR_RECLAMO' },
       },
       {
         path: 'editar/:id',
@@ -800,6 +867,8 @@ export const ADMIN_ROUTES: Routes = [
           import('../ventas/pages/reclamos-garantia/reclamos-editar/reclamos-editar').then(
             (m) => m.ReclamosEditar,
           ),
+          canActivate: [roleGuard],
+          data: { permiso: 'EDITAR_RECLAMO' },
       },
       {
         path: 'detalle/:id',
@@ -807,10 +876,12 @@ export const ADMIN_ROUTES: Routes = [
           import('../ventas/pages/reclamos-garantia/reclamos-detalles/reclamos-detalles').then(
             (m) => m.ReclamosDetalles,
           ),
+          canActivate: [roleGuard],
+          data: { permiso: 'VER_RECLAMO' },
       },
     ],
   },
-    
+
   {
     path: 'terminos-condiciones',
     loadComponent: () =>
@@ -828,7 +899,6 @@ export const ADMIN_ROUTES: Routes = [
       ),
   },
 
-  
   {
     path: 'gestion-delivery',
     canActivate: [roleGuard],

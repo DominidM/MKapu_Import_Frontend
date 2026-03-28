@@ -67,9 +67,9 @@ export class Sedes implements OnInit {
 
   readonly visibleSedes = computed(() => {
     const mode = this.viewMode();
-    const all  = this.sedes();
-    if (mode === 'activas')   return all.filter(s => s.activo === true);
-    if (mode === 'inactivas') return all.filter(s => s.activo === false);
+    const all  = this.sedes().filter(s => s && s.id_sede);
+    if (mode === 'activas')   return all.filter(s => s?.activo === true);
+    if (mode === 'inactivas') return all.filter(s => s?.activo === false);
     return all;
   });
 

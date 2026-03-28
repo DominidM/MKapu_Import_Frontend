@@ -170,7 +170,7 @@ export class GestionCotizacionesComponent implements OnInit, OnDestroy {
       estado:  this.estadoSeleccionado(),
       tipo:    this.TIPO_FIJO,
       id_sede: this.sedeSeleccionada(),
-      search,                          // ← este valor debe llegar al backend
+      search,                        
       page:    this.currentPage(),
       limit:   this.rows(),
     }).subscribe();
@@ -457,7 +457,7 @@ export class GestionCotizacionesComponent implements OnInit, OnDestroy {
       rejectButtonStyleClass: 'p-button-secondary p-button-outlined',
       accept: () => {
         this.router.navigate(
-          ['/admin/cotizaciones-venta/generar-ventas-administracion'],
+          ['/admin/generar-ventas-administracion'],
           { queryParams: { cotizacion: id, tipo: 'contado', tipoCot } }
         );
       },

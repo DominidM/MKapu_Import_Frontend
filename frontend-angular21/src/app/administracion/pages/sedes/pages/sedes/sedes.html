@@ -161,10 +161,10 @@
             <div *ngIf="sede.almacenes && sede.almacenes.length > 0" class="flex flex-wrap gap-1">
               <span *ngFor="let alm of sede.almacenes.slice(0, 2)"
                 class="sedes-almacen-chip"
-                [class.sedes-almacen-chip--inactive]="!alm.activo"
-                [pTooltip]="alm.nombre + ' · ' + (alm.ciudad ?? '')"
+                [class.sedes-almacen-chip--inactive]="!alm?.activo"
+                [pTooltip]="alm?.nombre + ' · ' + (alm?.ciudad ?? '')"
                 tooltipPosition="top">
-                <i class="pi pi-warehouse" style="font-size: 0.65rem"></i>{{ alm.codigo }}
+                <i class="pi pi-warehouse" style="font-size: 0.65rem"></i>{{ alm?.codigo }}
               </span>
               <span *ngIf="sede.almacenes.length > 2"
                 class="sedes-almacen-chip sedes-almacen-chip--more"

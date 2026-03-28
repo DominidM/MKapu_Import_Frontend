@@ -354,34 +354,35 @@
 />
 
 <p-dialog
+  [visible]="wspDialogVisible()"
+  (visibleChange)="wspDialogVisible.set($event)"
   header="Enviar por WhatsApp"
-  [(visible)]="wspDialogVisible"
   [modal]="true"
   [closable]="true"
   [style]="{ width: '380px' }"
   (onHide)="cerrarDialogWsp()"
 >
-  <ng-container *ngIf="wspConsultando">
+  <ng-container *ngIf="wspConsultando()">
     <div class="flex flex-column align-items-center gap-3 py-4">
       <i class="pi pi-spin pi-spinner text-4xl text-green-500"></i>
       <span class="font-semibold text-sm">Conectando con WhatsApp...</span>
       <span class="text-color-secondary text-xs text-center">
-        Esto puede tardar hasta 2 minutos la primera vez
+        Si demora más de 10 segundos, el servicio puede no estar disponible.
       </span>
     </div>
   </ng-container>
 
-  <ng-container *ngIf="!wspConsultando && !wspReady && !wspQr">
+  <ng-container *ngIf="!wspConsultando() && !wspReady() && !wspQr()">
     <div class="flex flex-column align-items-center gap-3 py-4">
       <i class="pi pi-spin pi-spinner text-4xl text-green-500"></i>
       <span class="text-color-secondary text-sm">Iniciando sesión de WhatsApp...</span>
     </div>
   </ng-container>
 
-  <ng-container *ngIf="!wspConsultando && !wspReady && wspQr">
+  <ng-container *ngIf="!wspConsultando() && !wspReady() && wspQr()">
     <div class="flex flex-column align-items-center gap-3 py-3">
       <span class="font-semibold text-sm">Escanea el código QR con tu WhatsApp</span>
-      <img [src]="wspQr" alt="WhatsApp QR" style="width: 220px; height: 220px" />
+      <img [src]="wspQr()" alt="WhatsApp QR" style="width: 220px; height: 220px" />
       <span class="text-color-secondary text-xs text-center">
         Abre WhatsApp → Dispositivos vinculados → Vincular dispositivo
       </span>
@@ -392,13 +393,13 @@
     </div>
   </ng-container>
 
-  <ng-container *ngIf="!wspConsultando && wspReady">
+  <ng-container *ngIf="!wspConsultando() && wspReady()">
     <div class="flex flex-column align-items-center gap-3 py-3">
       <i class="pi pi-check-circle text-5xl text-green-500"></i>
       <span class="font-semibold">WhatsApp conectado</span>
       <span class="text-color-secondary text-sm text-center">
         Se enviará el comprobante
-        <strong>{{ wspComprobanteActual ? getNumeroFormateado(wspComprobanteActual) : '' }}</strong>
+        <strong>{{ wspComprobanteActual() ? getNumeroFormateado(wspComprobanteActual()!) : '' }}</strong>
         al número registrado del cliente.
       </span>
     </div>
@@ -410,7 +411,7 @@
       label="Enviar"
       icon="pi pi-whatsapp"
       severity="success"
-      [disabled]="!wspReady || wspConsultando"
+      [disabled]="!wspReady() || wspConsultando()"
       (onClick)="confirmarEnvioWsp()"
     />
   </ng-template>

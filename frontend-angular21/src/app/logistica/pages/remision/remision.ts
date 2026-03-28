@@ -20,6 +20,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { LoadingOverlayComponent } from '../../../shared/components/loading-overlay/loading-overlay.component';
 import { PaginadorComponent } from '../../../shared/components/paginador/paginador.components';
+import { SedeService } from '../../../administracion/services/sede.service';
 
 // Utils
 import {
@@ -63,6 +64,7 @@ export class Remision implements OnInit {
   private readonly ventasService = inject(VentasAdminService);
   private readonly messageService = inject(MessageService);
   private readonly confirmationService = inject(ConfirmationService);
+  private readonly sedeService = inject(SedeService);
   private searchSubject = new Subject<string>();
 
   // ── Auth / Sede ───────────────────────────────────────────────────
@@ -93,7 +95,7 @@ export class Remision implements OnInit {
 
   // ── Filtros ───────────────────────────────────────────────────────
   filtroTexto = signal<string>('');
-  filtroEstado = signal<string | null>(null);
+  filtroEstado = signal<string | null>('EMITIDO');
   filtroFechaInicio = signal<Date | null>(getLunesSemanaActualPeru());
   filtroFechaFin = signal<Date | null>(getDomingoSemanaActualPeru());
   filtroSede = signal<number | null>(null);
@@ -116,18 +118,19 @@ export class Remision implements OnInit {
 
   // ── Lifecycle ─────────────────────────────────────────────────────
   ngOnInit(): void {
+    this.filtroSede.set(this.sedePropiaId);
+
     if (this.esAdmin) {
-      this.filtroSede.set(null); 
       this.cargarSedes();
-    } else {
-      this.filtroSede.set(this.sedePropiaId);
-      this.cargarDatos();
-      this.cargarResumen();
+      this.sedeService.loadSedes().subscribe();
     }
-    this.searchSubject.pipe(debounceTime(400), distinctUntilChanged()).subscribe((searchTerm) => {
-      this.filtroTexto.set(searchTerm);
-      this.aplicarFiltros();
-    });
+
+    this.searchSubject
+      .pipe(debounceTime(400), distinctUntilChanged())
+      .subscribe((searchTerm) => {
+        this.filtroTexto.set(searchTerm);
+        this.aplicarFiltros();
+      });
   }
 
   // ── Carga de sedes ────────────────────────────────────────────────
@@ -228,7 +231,7 @@ export class Remision implements OnInit {
 
   aplicarFiltros(): void {
     if (!this.esAdmin) {
-      this.filtroSede.set(this.sedePropiaId);
+      this.filtroSede.set(this.sedePropiaId); // ✅ Bloquea la sede para no-admin
     }
     this.paginaActual.set(1);
     this.cargarDatos();
@@ -241,14 +244,12 @@ export class Remision implements OnInit {
     this.filtroFechaInicio.set(getLunesSemanaActualPeru());
     this.filtroFechaFin.set(getDomingoSemanaActualPeru());
     if (this.esAdmin) {
-      this.filtroSede.set(null);
+      this.filtroSede.set(null); // Admin ve todas las sedes
     } else {
-      this.filtroSede.set(this.sedePropiaId);
+      this.filtroSede.set(this.sedePropiaId); // No admin vuelve a su sede
     }
-    this.filtroSede.set(null);
     this.paginaActual.set(1);
-    this.cargarDatos();
-    this.cargarResumen();
+    // El effect dispara cargarDatos y cargarResumen automáticamente
   }
 
   // ── Navegación y Acciones ─────────────────────────────────────────

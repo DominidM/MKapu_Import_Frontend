@@ -6,7 +6,8 @@ import { SelectModule } from 'primeng/select';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, of } from 'rxjs';
+import { timeout, catchError } from 'rxjs/operators';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmDialog, ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DialogModule } from 'primeng/dialog';
@@ -26,9 +27,8 @@ import {
   AccountReceivableStatus,
 } from '../../../services/account-receivable.service';
 import {
-  getLunesSemanaActualPeru,
-  getDomingoSemanaActualPeru,
-  getHoyPeru,
+  getUltimoDiaMesActualPeru,
+  getPrimerDiaMesActualPeru,
 } from '../../../../shared/utils/date-peru.utils';
 import {
   AccionesComprobanteDialogComponent,
@@ -57,7 +57,7 @@ import {
     DialogModule,
     AccionesComprobanteDialogComponent,
     PaginadorComponent,
-    LoadingOverlayComponent
+    LoadingOverlayComponent,
   ],
   templateUrl: './ventas-por-cobrar-listado.html',
   styleUrl: './ventas-por-cobrar-listado.css',
@@ -79,8 +79,8 @@ export class VentasPorCobrarListadoComponent implements OnInit, OnDestroy {
   estadoSeleccionado = signal<AccountReceivableStatus | null>('PENDIENTE');
   sedeSeleccionada   = signal<number | null>(null);
   rows               = signal<number>(5);
-  fechaInicio        = signal<Date | null>(getLunesSemanaActualPeru());
-  fechaFin           = signal<Date | null>(getDomingoSemanaActualPeru());
+  fechaInicio        = signal<Date | null>(getPrimerDiaMesActualPeru());
+  fechaFin           = signal<Date | null>(getUltimoDiaMesActualPeru());
   paginaActual       = signal<number>(1);
 
   totalPaginas = computed(() => {
@@ -101,16 +101,16 @@ export class VentasPorCobrarListadoComponent implements OnInit, OnDestroy {
       if (q && !a.userRef.toLowerCase().includes(q) && !String(a.salesReceiptId).includes(q))
         return false;
       const fec = new Date(a.issueDate);
-      if (inicio) { const d = new Date(inicio); d.setHours(0,0,0,0); if (fec < d) return false; }
-      if (fin)    { const d = new Date(fin);    d.setHours(23,59,59,999); if (fec > d) return false; }
+      if (inicio) { const d = new Date(inicio); d.setHours(0, 0, 0, 0); if (fec < d) return false; }
+      if (fin)    { const d = new Date(fin);    d.setHours(23, 59, 59, 999); if (fec > d) return false; }
       return true;
     });
   });
 
-  totalPorCobrar     = computed(() => this.arService.kpiTotal());
-  totalPendientes    = computed(() => this.arService.kpiPendientes());
-  totalVencidos      = computed(() => this.arService.kpiVencidos());
-  totalCancelados    = computed(() => this.arService.kpiCancelados());
+  totalPorCobrar  = computed(() => this.arService.kpiTotal());
+  totalPendientes = computed(() => this.arService.kpiPendientes());
+  totalVencidos   = computed(() => this.arService.kpiVencidos());
+  totalCancelados = computed(() => this.arService.kpiCancelados());
 
   estadosOptions = [
     { label: 'Todos',     value: null },
@@ -121,18 +121,18 @@ export class VentasPorCobrarListadoComponent implements OnInit, OnDestroy {
     { label: 'Cancelado', value: 'CANCELADO' },
   ];
 
-  // ── Dialog de acciones (shared) ───────────────────────────────────
+  // ── Dialog de acciones ────────────────────────────────────────────
   accionesVisible = false;
   accionCargando: string | null = null;
   accionesConfig: AccionesComprobanteConfig | null = null;
   private cuentaAcciones: AccountReceivableResponse | null = null;
 
-  // ── Dialog WhatsApp ───────────────────────────────────────────────
-  mostrarDialogWsp  = false;
-  enviandoWsp       = false;
-  wspReady          = false;
-  wspQr: string | null = null;
-  cuentaWsp: AccountReceivableResponse | null = null;
+  // ── Dialog WhatsApp — usando signals para detección reactiva ──────
+  mostrarDialogWsp = signal<boolean>(false);
+  enviandoWsp      = signal<boolean>(false);
+  wspReady         = signal<boolean>(false);
+  wspQr            = signal<string | null>(null);
+  cuentaWsp        = signal<AccountReceivableResponse | null>(null);
   private pollingInterval: any = null;
 
   // ── Lifecycle ─────────────────────────────────────────────────────
@@ -156,13 +156,20 @@ export class VentasPorCobrarListadoComponent implements OnInit, OnDestroy {
 
   // ── Abrir dialog de acciones ──────────────────────────────────────
   abrirAcciones(a: AccountReceivableResponse): void {
-    this.cuentaAcciones = a;
-    this.accionesConfig = {
+    this.cuentaAcciones  = a;
+    this.accionCargando  = null;
+    this.accionesConfig  = {
       titulo:    `#${a.salesReceiptId}`,
       subtitulo: a.userRef,
     };
-    this.accionCargando  = null;
     this.accionesVisible = true;
+  }
+
+  // ── Cerrar dialog de acciones ─────────────────────────────────────
+  onDialogCerrar(): void {
+    this.accionesVisible = false;
+    this.accionCargando  = null;
+    this.cuentaAcciones  = null;
   }
 
   // ── Dispatch de acciones ──────────────────────────────────────────
@@ -171,13 +178,12 @@ export class VentasPorCobrarListadoComponent implements OnInit, OnDestroy {
 
     switch (accion) {
 
-      // ── WhatsApp — abre el dialog propio de WSP ─────────────────
       case 'wsp':
         this.accionesVisible = false;
+        this.accionCargando  = null;
         this.abrirDialogWsp(a);
         break;
 
-      // ── Email ────────────────────────────────────────────────────
       case 'email':
         this.accionCargando = 'email';
         this.arService.sendByEmail(a.id).subscribe({
@@ -203,114 +209,56 @@ export class VentasPorCobrarListadoComponent implements OnInit, OnDestroy {
         });
         break;
 
-      // ── PDF imprimir — abre blob y dispara print automático ──────
+      // ── PDF / Voucher — abren pestaña o descarga, sin spinner ─────
       case 'pdf-imprimir':
-        this.accionCargando = 'pdf-imprimir';
-        this.arService.printPdf(a.id).subscribe({
-          next: () => {
-            this.accionCargando  = null;
-            this.accionesVisible = false;
-          },
-          error: () => {
-            this.accionCargando  = null;
-            this.accionesVisible = false;
-            this.messageService.add({
-              severity: 'error', summary: 'Error',
-              detail: 'No se pudo abrir el PDF para imprimir', life: 3000,
-            });
-          },
-        });
+        this.arService.printPdf(a.id).subscribe();
         break;
 
-      // ── PDF descargar ─────────────────────────────────────────────
       case 'pdf-descargar':
-        this.accionCargando = 'pdf-descargar';
-        this.arService.downloadPdf(a.id).subscribe({
-          next: () => {
-            this.accionCargando  = null;
-            this.accionesVisible = false;
-          },
-          error: () => {
-            this.accionCargando  = null;
-            this.accionesVisible = false;
-            this.messageService.add({
-              severity: 'error', summary: 'Error',
-              detail: 'No se pudo descargar el PDF', life: 3000,
-            });
-          },
-        });
+        this.arService.downloadPdf(a.id).subscribe();
         break;
 
-      // ── Voucher imprimir ─────────────────────────────────────────
       case 'voucher-imprimir':
-        this.accionCargando = 'voucher-imprimir';
-        this.arService.printVoucher(a.id).subscribe({
-          next: () => {
-            this.accionCargando  = null;
-            this.accionesVisible = false;
-          },
-          error: () => {
-            this.accionCargando  = null;
-            this.accionesVisible = false;
-            this.messageService.add({
-              severity: 'info', summary: 'Próximamente',
-              detail: 'El endpoint de voucher térmico está en desarrollo', life: 3000,
-            });
-          },
-        });
+        this.arService.printVoucher(a.id).subscribe();
         break;
 
-      // ── Voucher descargar ────────────────────────────────────────
       case 'voucher-descargar':
-        this.accionCargando = 'voucher-descargar';
-        this.arService.downloadVoucher(a.id).subscribe({
-          next: () => {
-            this.accionCargando  = null;
-            this.accionesVisible = false;
-          },
-          error: () => {
-            this.accionCargando  = null;
-            this.accionesVisible = false;
-            this.messageService.add({
-              severity: 'info', summary: 'Próximamente',
-              detail: 'El endpoint de voucher térmico está en desarrollo', life: 3000,
-            });
-          },
-        });
+        this.arService.downloadVoucher(a.id).subscribe();
         break;
     }
   }
 
   // ── WhatsApp dialog ───────────────────────────────────────────────
   abrirDialogWsp(a: AccountReceivableResponse): void {
-    this.cuentaWsp        = a;
-    this.mostrarDialogWsp = true;
-    this.wspReady         = false;
-    this.wspQr            = null;
+    this.cuentaWsp.set(a);
+    this.mostrarDialogWsp.set(true);
+    this.wspReady.set(false);
+    this.wspQr.set(null);
     this.verificarEstadoWsp();
   }
 
   cerrarDialogWsp(): void {
-    this.mostrarDialogWsp = false;
-    this.cuentaWsp        = null;
-    if (this.pollingInterval) { clearInterval(this.pollingInterval); this.pollingInterval = null; }
+    this.mostrarDialogWsp.set(false);
+    this.enviandoWsp.set(false);
+    this.cuentaWsp.set(null);
+    this.wspReady.set(false);
+    this.wspQr.set(null);
+    if (this.pollingInterval) {
+      clearInterval(this.pollingInterval);
+      this.pollingInterval = null;
+    }
   }
 
   private verificarEstadoWsp(): void {
-    this.arService.getWhatsAppStatus().subscribe({
+    this.arService.getWhatsAppStatus().pipe(
+      timeout(5000),
+      catchError(() => of({ ready: false, qr: null })),
+    ).subscribe({
       next: (res) => {
-        this.wspReady = res.ready;
-        this.wspQr    = res.qr ?? null;
+        this.wspReady.set(res.ready);
+        this.wspQr.set(res.qr ?? null);
         if (!res.ready) {
-          this.pollingInterval = setInterval(() => {
-            this.arService.getWhatsAppStatus().subscribe({
-              next: (r) => {
-                this.wspReady = r.ready;
-                this.wspQr    = r.qr ?? null;
-                if (r.ready) { clearInterval(this.pollingInterval); this.pollingInterval = null; }
-              },
-            });
-          }, 3000);
+          this.iniciarPollingWsp();
         }
       },
       error: () =>
@@ -321,20 +269,40 @@ export class VentasPorCobrarListadoComponent implements OnInit, OnDestroy {
     });
   }
 
+  private iniciarPollingWsp(): void {
+    if (this.pollingInterval) return; // evita duplicados
+    this.pollingInterval = setInterval(() => {
+      this.arService.getWhatsAppStatus().pipe(
+        timeout(4000),
+        catchError(() => of({ ready: false, qr: null })),
+      ).subscribe({
+        next: (r) => {
+          this.wspReady.set(r.ready);
+          this.wspQr.set(r.qr ?? null);
+          if (r.ready) {
+            clearInterval(this.pollingInterval);
+            this.pollingInterval = null;
+          }
+        },
+      });
+    }, 3000);
+  }
+
   enviarPorWsp(): void {
-    if (!this.cuentaWsp) return;
-    this.enviandoWsp = true;
-    this.arService.sendByWhatsApp(this.cuentaWsp.id).subscribe({
+    const cuenta = this.cuentaWsp();
+    if (!cuenta) return;
+    this.enviandoWsp.set(true);
+    this.arService.sendByWhatsApp(cuenta.id).subscribe({
       next: (res) => {
-        this.enviandoWsp = false;
+        this.enviandoWsp.set(false);
         this.cerrarDialogWsp();
         this.messageService.add({
           severity: 'success', summary: '¡Enviado!',
-          detail: `Cuenta #${this.cuentaWsp?.salesReceiptId} enviada a ${res.sentTo}`, life: 5000,
+          detail: `Cuenta #${cuenta.salesReceiptId} enviada a ${res.sentTo}`, life: 5000,
         });
       },
       error: (err) => {
-        this.enviandoWsp = false;
+        this.enviandoWsp.set(false);
         this.messageService.add({
           severity: 'error', summary: 'Error',
           detail: err?.error?.message ?? 'No se pudo enviar por WhatsApp.', life: 5000,
@@ -345,12 +313,14 @@ export class VentasPorCobrarListadoComponent implements OnInit, OnDestroy {
 
   // ── Filtros y paginación ──────────────────────────────────────────
   async onEstadoChange(v: AccountReceivableStatus | null) {
-    this.estadoSeleccionado.set(v); this.paginaActual.set(1);
+    this.estadoSeleccionado.set(v);
+    this.paginaActual.set(1);
     await this.arService.getAll(1, this.rows(), this.sedeSeleccionada() ?? undefined, v);
   }
 
   async onSedeChange(sedeId: number | null) {
-    this.sedeSeleccionada.set(sedeId); this.paginaActual.set(1);
+    this.sedeSeleccionada.set(sedeId);
+    this.paginaActual.set(1);
     await this.arService.getAll(1, this.rows(), sedeId ?? undefined, this.estadoSeleccionado());
   }
 
@@ -360,35 +330,40 @@ export class VentasPorCobrarListadoComponent implements OnInit, OnDestroy {
   }
 
   async onLimitChange(limit: number) {
-    this.rows.set(limit); this.paginaActual.set(1);
+    this.rows.set(limit);
+    this.paginaActual.set(1);
     await this.arService.getAll(1, limit, this.sedeSeleccionada() ?? undefined, this.estadoSeleccionado());
   }
 
-  limpiarFiltros() {
-    this.buscarValue.set(''); this.sugerencias.set([]);
-    this.fechaInicio.set(null); this.fechaFin.set(null);
-    this.sedeSeleccionada.set(null); this.estadoSeleccionado.set(null);
+  limpiarFiltros(): void {
+    this.buscarValue.set('');
+    this.sugerencias.set([]);
+    this.fechaInicio.set(getPrimerDiaMesActualPeru());
+    this.fechaFin.set(getUltimoDiaMesActualPeru());
+    this.estadoSeleccionado.set(null);
+    const sedeDefault = this.getSedeUsuarioActual();
+    this.sedeSeleccionada.set(sedeDefault);
     this.paginaActual.set(1);
-    this.arService.getAll(1, this.rows(), undefined, null);
+    this.arService.getAll(1, this.rows(), sedeDefault ?? undefined, null);
   }
 
-  searchCuenta(event: any) {
+  searchCuenta(event: any): void {
     const q = event.query?.toLowerCase() ?? '';
     if (!q || q.length < 2) { this.sugerencias.set([]); return; }
     this.sugerencias.set(
       this.arService.accounts().filter(
-        (a) => a.userRef.toLowerCase().includes(q) || String(a.salesReceiptId).includes(q)
+        (a) => a.userRef.toLowerCase().includes(q) || String(a.salesReceiptId).includes(q),
       ),
     );
   }
 
-  seleccionarSugerencia(event: any) {
+  seleccionarSugerencia(event: any): void {
     const a = event.value as AccountReceivableResponse;
     if (a) this.buscarValue.set(a.userRef);
   }
 
-  onFechaChange() { /* filtro local */ }
-  limpiarBusqueda() { this.buscarValue.set(''); this.sugerencias.set([]); }
+  onFechaChange(): void { /* filtro local reactivo via computed */ }
+  limpiarBusqueda(): void { this.buscarValue.set(''); this.sugerencias.set([]); }
 
   exportarExcel(): void {
     const datos = this.ventasFiltradas();
@@ -397,10 +372,16 @@ export class VentasPorCobrarListadoComponent implements OnInit, OnDestroy {
       return;
     }
     const datosExcel = datos.map((a) => ({
-      'N° Comprobante': `#${a.salesReceiptId}`, Cliente: a.userRef,
-      Observación: a.observation ?? '', 'Fecha Emisión': this.formatDate(a.issueDate),
-      'Fecha Vencim.': this.formatDate(a.dueDate), Días: this.getDiasBadgeLabel(a.dueDate),
-      Moneda: a.currencyCode, 'Monto Total': a.totalAmount, 'Saldo Pendiente': a.pendingBalance, Estado: a.status,
+      'N° Comprobante':  `#${a.salesReceiptId}`,
+      Cliente:           a.userRef,
+      Observación:       a.observation ?? '',
+      'Fecha Emisión':   this.formatDate(a.issueDate),
+      'Fecha Vencim.':   this.formatDate(a.dueDate),
+      Días:              this.getDiasBadgeLabel(a.dueDate),
+      Moneda:            a.currencyCode,
+      'Monto Total':     a.totalAmount,
+      'Saldo Pendiente': a.pendingBalance,
+      Estado:            a.status,
     }));
     const nombreArchivo = ExcelUtils.generarNombreConFecha('ventas-por-cobrar');
     ExcelUtils.exportarAExcel(datosExcel, nombreArchivo, 'Cuentas por Cobrar');
@@ -410,8 +391,10 @@ export class VentasPorCobrarListadoComponent implements OnInit, OnDestroy {
   // ── Helpers visuales ──────────────────────────────────────────────
   getTagClass(status: AccountReceivableStatus): string {
     const map: Record<string, string> = {
-      PENDIENTE: 'cotizaciones-tag-amarillo', PARCIAL: 'cotizaciones-tag-parcial',
-      PAGADO: 'cotizaciones-tag-aprobada',    VENCIDO: 'cotizaciones-tag-vencido',
+      PENDIENTE: 'cotizaciones-tag-amarillo',
+      PARCIAL:   'cotizaciones-tag-parcial',
+      PAGADO:    'cotizaciones-tag-aprobada',
+      VENCIDO:   'cotizaciones-tag-vencido',
       CANCELADO: 'cotizaciones-tag-rechazada',
     };
     return map[status] ?? 'cotizaciones-tag-amarillo';
@@ -434,8 +417,8 @@ export class VentasPorCobrarListadoComponent implements OnInit, OnDestroy {
   }
 
   private calcDias(dueDate: string): number {
-    const hoy = new Date(); hoy.setHours(0,0,0,0);
-    const v   = new Date(dueDate); v.setHours(0,0,0,0);
+    const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+    const v   = new Date(dueDate); v.setHours(0, 0, 0, 0);
     return Math.round((v.getTime() - hoy.getTime()) / 86_400_000);
   }
 
@@ -443,15 +426,17 @@ export class VentasPorCobrarListadoComponent implements OnInit, OnDestroy {
     return new Date(iso).toLocaleDateString('es-PE');
   }
 
-  irAgregarVentaPorCobrar(id: number) { this.router.navigate(['/admin/ventas-por-cobrar/pagar', id]); }
-  verDetalle(id: number)               { this.router.navigate(['/admin/ventas-por-cobrar/detalles', id]); }
+  irAgregarVentaPorCobrar(id: number): void { this.router.navigate(['/admin/ventas-por-cobrar/pagar', id]); }
+  verDetalle(id: number): void              { this.router.navigate(['/admin/ventas-por-cobrar/detalles', id]); }
 
-  rechazarCotizacion(id: number) {
+  rechazarCotizacion(id: number): void {
     const cuenta = this.arService.accounts().find((a) => a.id === id);
     this.confirmationService.confirm({
-      message: `¿Cancelar esta venta por cobrar? <br><small class="text-400">También se anulará el comprobante de venta #${cuenta?.salesReceiptId ?? ''}.</small>`,
-      header: 'Confirmar Cancelación', icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'Sí, cancelar todo', rejectLabel: 'No',
+      message:     `¿Cancelar esta venta por cobrar? <br><small class="text-400">También se anulará el comprobante de venta #${cuenta?.salesReceiptId ?? ''}.</small>`,
+      header:      'Confirmar Cancelación',
+      icon:        'pi pi-exclamation-triangle',
+      acceptLabel: 'Sí, cancelar todo',
+      rejectLabel: 'No',
       accept: async () => {
         const res = await this.arService.cancel({ accountReceivableId: id, reason: 'Cancelado desde listado' });
         if (!res) {
