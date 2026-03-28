@@ -65,16 +65,26 @@
         </div>
         <div class="filtro-item filtro-compacto">
           <label>SEDE</label>
+
           <p-select
-            [ngModel]="sedeFiltro()"
-            (ngModelChange)="sedeFiltro.set($event); page.set(1)"
+            *ngIf="esAdmin"
             [options]="sedesOpciones()"
+            [ngModel]="sedeFiltro()"
+            (ngModelChange)="sedeFiltro.set($event)"
             optionLabel="label"
             optionValue="value"
             placeholder="Todas las sedes"
+            styleClass="w-full"
             [showClear]="true"
-            styleClass="w-full">
-          </p-select>
+          ></p-select>
+
+          <div
+            *ngIf="!esAdmin"
+            class="flex align-items-center gap-2 px-3 py-2 border-round"
+            style="background: var(--surface-100); border: 1px solid var(--surface-border); height: 42px">
+            <i class="pi pi-map-marker" style="color: #FFA726"></i>
+            <span class="font-semibold">{{ sedeNombre }}</span>
+          </div>
         </div>
         <div class="filtro-item filtro-boton-limpiar">
           <label>&nbsp;</label>

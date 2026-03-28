@@ -116,14 +116,27 @@
 
       <div class="filtros-linea-2">
         <div class="filtro-item filtro-compacto">
-          <label>Sede</label>
+          <label>SEDE</label>
+
           <p-select
+            *ngIf="esAdmin"
             [options]="sedesOptions()"
             [ngModel]="sedeSeleccionada()"
             (ngModelChange)="onSedeChange($event)"
-            optionLabel="label" optionValue="value"
-            placeholder="Todas" [showClear]="true" styleClass="w-full">
-          </p-select>
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Todas las sedes"
+            styleClass="w-full"
+            [showClear]="true"
+          ></p-select>
+
+          <div
+            *ngIf="!esAdmin"
+            class="flex align-items-center gap-2 px-3 py-2 border-round"
+            style="background: var(--surface-100); border: 1px solid var(--surface-border); height: 42px">
+            <i class="pi pi-map-marker" style="color: #FFA726"></i>
+            <span class="font-semibold">{{ sedeNombre }}</span>
+          </div>
         </div>
         <div class="filtro-item filtro-compacto">
           <label>Estado</label>
@@ -328,7 +341,7 @@
     <ng-container *ngIf="wspReady">
       <i class="pi pi-check-circle" style="font-size:3rem; color:#25D366"></i>
       <p style="text-align:center; color:var(--text-muted); font-size:0.9rem; line-height:1.6">
-        WhatsApp conectado ✅<br>
+        WhatsApp conectado <br>
         <ng-container *ngIf="cotizacionWsp">
           Se enviará la cotización <strong>{{ cotizacionWsp.codigo }}</strong>
         </ng-container>

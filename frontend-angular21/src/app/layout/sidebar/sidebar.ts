@@ -48,47 +48,43 @@ export class Sidebar implements OnInit {
 
   // ── Mapa permiso → datos del item (única fuente de verdad) ────────────────
   private readonly ITEM: Record<string, Omit<MenuItem, 'permiso'>> = {
+    // General
+    VER_DASHBOARD_ADMIN:        { path: '/admin/dashboard-admin',                 label: 'Dashboard',         icon: 'pi pi-home' },
     // Ventas Admin
-
-    VER_DASHBOARD_ADMIN:     { path: '/admin/dashboard-admin',                 label: 'Dashboard',         icon: 'pi pi-home' },
-    VER_CAJA:                { path: '/admin/caja',                            label: 'Caja',              icon: 'pi pi-money-bill' },
-    CREAR_VENTA_ADMIN:       { path: '/admin/generar-ventas-administracion',   label: 'Crear Venta',       icon: 'pi pi-plus-circle' },
-    VER_VENTAS_ADMIN:        { path: '/admin/historial-ventas-administracion', label: 'Historial Ventas',  icon: 'pi pi-list' },
-    CREAR_NC:                { path: '/admin/nota-credito',                    label: 'Notas de Crédito',  icon: 'pi pi-credit-card' },
-    VER_DESCUENTO:         { path: '/admin/descuentos',                      label: 'Descuentos',        icon: 'pi pi-tag' },
-    VER_PROMOCION:         { path: '/admin/promociones',                     label: 'Promociones',       icon: 'pi pi-percentage' },
-    CREAR_VENTA_POR_COBRAR:  { path: '/admin/ventas-por-cobrar',               label: 'Ventas por Cobrar', icon: 'pi pi-wallet' },
-    VER_CLIENTE:              { path: '/admin/clientes',                        label: 'Clientes',              icon: 'pi pi-users' },
-    CREAR_COTIZACIONES:         { path: '/admin/cotizaciones-venta',              label: 'Cotizaciones Venta',    icon: 'pi pi-id-card' },
-    CREAR_COTIZACIONES_COMPRA:  { path: '/admin/cotizaciones-compra',             label: 'Cotizaciones Compra',   icon: 'pi pi-id-card' },
-    VER_RECLAMO:              { path: '/admin/reclamos-listado',                label: 'Reclamos',              icon: 'pi pi-exclamation-circle' },
+    VER_CAJA:                   { path: '/admin/caja',                            label: 'Caja',              icon: 'pi pi-money-bill' },
+    CREAR_VENTA_ADMIN:          { path: '/admin/generar-ventas-administracion',   label: 'Crear Venta',       icon: 'pi pi-plus-circle' },
+    VER_VENTAS_ADMIN:           { path: '/admin/historial-ventas-administracion', label: 'Historial Ventas',  icon: 'pi pi-list' },
+    CREAR_NC:                   { path: '/admin/nota-credito',                    label: 'Notas de Crédito',  icon: 'pi pi-credit-card' },
+    VER_DESCUENTO:              { path: '/admin/descuentos',                      label: 'Descuentos',        icon: 'pi pi-tag' },
+    VER_PROMOCION:              { path: '/admin/promociones',                     label: 'Promociones',       icon: 'pi pi-percentage' },
+    CREAR_VENTA_POR_COBRAR:     { path: '/admin/ventas-por-cobrar',               label: 'Ventas por Cobrar', icon: 'pi pi-wallet' },
+    VER_CLIENTE:                { path: '/admin/clientes',                        label: 'Clientes',              icon: 'pi pi-users' },
+    VER_COTIZACIONES_VENTA:     { path: '/admin/cotizaciones-venta',              label: 'Cotizaciones Venta',    icon: 'pi pi-id-card' },
+    VER_COTIZACIONES_COMPRA:    { path: '/admin/cotizaciones-compra',             label: 'Cotizaciones Compra',   icon: 'pi pi-id-card' },
+    VER_RECLAMO:                { path: '/admin/reclamos-listado',                label: 'Reclamos',              icon: 'pi pi-exclamation-circle' },
+   
     // Almacén
-    VER_DASHBOARD_ALMACEN:   { path: '/admin/dashboard-almacen',              label: 'Dashboard Almacén', icon: 'pi pi-chart-bar' },
-    VER_ALMACEN:           { path: '/admin/almacen',                         label: 'Almacén',           icon: 'pi pi-box' },
-    CREAR_REMISION:          { path: '/logistica/remision',                    label: 'Remisión',          icon: 'pi pi-truck' },
-    CONTEO_INVENTARIO:       { path: '/admin/conteo-inventario',               label: 'Conteo Inventario', icon: 'pi pi-folder' },
-    CREAR_MOV_INVENTARIO:    { path: '/logistica/movimiento-inventario',           label: 'Mov. Inventario',   icon: 'pi pi-database' },
-    CREAR_AJUSTE_INVENTARIO: { path: '/logistica/ajuste-inventario',               label: 'Ajuste Inventario', icon: 'pi pi-cog' },
+    VER_DASHBOARD_ALMACEN:      { path: '/admin/dashboard-almacen',               label: 'Dashboard Almacén', icon: 'pi pi-chart-bar' },
+    VER_ALMACEN:                { path: '/admin/almacen',                         label: 'Almacén',           icon: 'pi pi-box' },
+    CREAR_REMISION:             { path: '/logistica/remision',                    label: 'Remisión',          icon: 'pi pi-truck' },
+    CONTEO_INVENTARIO:          { path: '/admin/conteo-inventario',               label: 'Conteo Inventario', icon: 'pi pi-folder' },
+    CREAR_MOV_INVENTARIO:       { path: '/logistica/movimiento-inventario',       label: 'Mov. Inventario',   icon: 'pi pi-database' },
+    CREAR_AJUSTE_INVENTARIO:    { path: '/logistica/ajuste-inventario',           label: 'Ajuste Inventario', icon: 'pi pi-cog' },
+    
     // Administración
-    VER_TRANSFERENCIA:     { path: '/admin/transferencia',                   label: 'Transferencias',    icon: 'pi pi-arrows-h' },
-    CREAR_DESPACHO:          { path: '/admin/despacho-productos',              label: 'Despacho',          icon: 'pi pi-truck' },
-    VER_USUARIOS:          { path: '/admin/usuarios',                        label: 'Empleados',         icon: 'pi pi-user-plus' },
-    VER_PRODUCTOS:         { path: '/admin/gestion-productos',               label: 'Productos',         icon: 'pi pi-tags' },
-    VER_CATEGORIAS:        { path: '/admin/categoria',                       label: 'Categorías',        icon: 'pi pi-list' },
-    VER_SEDES:             { path: '/admin/sedes',                           label: 'Sedes',             icon: 'pi pi-building' },
-    VER_COMISIONES:        { path: '/admin/comision',                        label: 'Comisiones',        icon: 'pi pi-wallet' },
-    VER_MERMAS:            { path: '/admin/mermas',                          label: 'Mermas',            icon: 'pi pi-exclamation-triangle' },
-    VER_REMATES:           { path: '/admin/remates',                         label: 'Remates',           icon: 'pi pi-tag' },
-    VER_PROVEEDORES:         { path: '/admin/proveedores',                     label: 'Proveedores',       icon: 'pi pi-truck' },
-    AGREGAR_DOCUMENTO:       { path: '/admin/documento-contador',              label: 'Documentos',        icon: 'pi pi-file' },
-    CREAR_PERMISOS:          { path: '/admin/roles-permisos',                  label: 'Permisos',          icon: 'pi pi-key' },
-    ASIGNAR_DELIVERY:        { path: '/admin/gestion-delivery',                label: 'Control Delivery',  icon: 'pi pi-car' },
-
-    // Ventas usuario — mismas rutas /admin/, el permiso limita el acceso
-    //borrarVER_DASHBOARD_VENTAS:    { path: '/admin/dashboard-admin',                 label: 'Dashboard',         icon: 'pi pi-chart-line' },
-    //borrarCREAR_VENTA:             { path: '/admin/generar-ventas-administracion',   label: 'Generar Venta',     icon: 'pi pi-plus-circle' },
-    //borrarVER_VENTAS:              { path: '/admin/historial-ventas-administracion', label: 'Historial Ventas',  icon: 'pi pi-list' },
-    //borrarVER_MOVIMIENTOS:         { path: '/admin/movimiento-inventario',           label: 'Movimientos',       icon: 'pi pi-book' },
+    VER_TRANSFERENCIA:          { path: '/admin/transferencia',                   label: 'Transferencias',    icon: 'pi pi-arrows-h' },
+    CREAR_DESPACHO:             { path: '/admin/despacho-productos',              label: 'Despacho',          icon: 'pi pi-truck' },
+    VER_USUARIOS:               { path: '/admin/usuarios',                        label: 'Empleados',         icon: 'pi pi-user-plus' },
+    VER_PRODUCTOS:              { path: '/admin/gestion-productos',               label: 'Productos',         icon: 'pi pi-tags' },
+    VER_CATEGORIAS:             { path: '/admin/categoria',                       label: 'Categorías',        icon: 'pi pi-list' },
+    VER_SEDES:                  { path: '/admin/sedes',                           label: 'Sedes',             icon: 'pi pi-building' },
+    VER_COMISIONES:             { path: '/admin/comision',                        label: 'Comisiones',        icon: 'pi pi-wallet' },
+    VER_MERMAS:                 { path: '/admin/mermas',                          label: 'Mermas',            icon: 'pi pi-exclamation-triangle' },
+    VER_REMATES:                { path: '/admin/remates',                         label: 'Remates',           icon: 'pi pi-tag' },
+    VER_PROVEEDORES:            { path: '/admin/proveedores',                     label: 'Proveedores',       icon: 'pi pi-truck' },
+    AGREGAR_DOCUMENTO:          { path: '/admin/documento-contador',              label: 'Documentos',        icon: 'pi pi-file' },
+    CREAR_PERMISOS:             { path: '/admin/roles-permisos',                  label: 'Permisos',          icon: 'pi pi-key' },
+    ASIGNAR_DELIVERY:           { path: '/admin/gestion-delivery',                label: 'Control Delivery',  icon: 'pi pi-car' },
   };
 
   // ── Secciones fijas: definen qué permisos pertenecen a cada categoría ─────
@@ -97,7 +93,7 @@ export class Sidebar implements OnInit {
       label: 'VENTAS', icon: 'pi pi-shopping-cart', permisoSeccion: 'VENTAS',
       permisos: ['VER_DASHBOARD_ADMIN','VER_CAJA','CREAR_VENTA_ADMIN','VER_VENTAS_ADMIN',
                  'CREAR_NC','VER_PROMOCION','CREAR_VENTA_POR_COBRAR',
-                 'VER_CLIENTE','CREAR_COTIZACIONES','CREAR_COTIZACIONES_COMPRA','VER_RECLAMO'],
+                 'VER_CLIENTE','VER_COTIZACIONES_VENTA','VER_COTIZACIONES_COMPRA','VER_RECLAMO'],
     },
     {
       label: 'ALMACÉN', icon: 'pi pi-box', permisoSeccion: 'ALMACEN',

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, signal, computed, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, computed, inject, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TableModule } from 'primeng/table';
@@ -15,12 +15,14 @@ import { AutoComplete } from 'primeng/autocomplete';
 import { TooltipModule } from 'primeng/tooltip';
 import { DatePickerModule } from 'primeng/datepicker';
 import { SedeService } from '../../../services/sede.service';
-import { QuoteListItem } from '../../../interfaces/quote.interface';
 import { QuoteService } from '../../../services/quote.service';
 import { ProveedorService } from '../../../services/proveedor.service';
+import { UserRole } from '../../../../core/constants/roles.constants';
+import { QuoteListItem } from '../../../interfaces/quote.interface';
 import { getDomingoSemanaActualPeru, getLunesSemanaActualPeru } from '../../../../shared/utils/date-peru.utils';
 import { AccionesComprobanteDialogComponent, AccionesComprobanteConfig, AccionComprobante } from '../../../../shared/components/acciones-comprobante-dialog/acciones-comprobante';
 import { SharedTableContainerComponent } from '../../../../shared/components/table.componente/shared-table-container.component';
+import { AuthService } from '../../../../auth/services/auth.service';
 
 @Component({
   selector: 'app-gestion-compras',
@@ -48,6 +50,13 @@ export class GestionComprasComponent implements OnInit, OnDestroy {
   private proveedorService    = inject(ProveedorService);
   private confirmationService = inject(ConfirmationService);
   private messageService      = inject(MessageService);
+  private authService         = inject(AuthService);
+  private router              = inject(Router);
+
+  // ── Auth ──────────────────────────────────────────────────────────
+  readonly esAdmin:      boolean;
+  readonly sedeNombre:   string;
+  readonly sedePropiaId: string;
 
   buscarValue           = signal<string>('');
   cotizacionSugerencias = signal<QuoteListItem[]>([]);
@@ -69,10 +78,13 @@ export class GestionComprasComponent implements OnInit, OnDestroy {
     { label: 'Vencida',   value: 'VENCIDA'   },
   ];
 
-  sedesOptions = computed(() => this.sedeService.sedes().map(sede => ({
-    label: sede.nombre,
-    value: sede.id_sede,
-  })));
+  sedesOptions = computed(() => [
+    { label: 'Todas las sedes', value: '' },
+    ...this.sedeService.sedes().map(sede => ({
+      label: sede.nombre,
+      value: String(sede.id_sede),
+    })),
+  ]);
 
   // ── FIX error 2339: usa quotes() mientras el servicio nuevo no esté reemplazado ──
   // Una vez reemplaces quote.service.ts cambia a: this.quoteService.quotesCompra()
@@ -146,11 +158,25 @@ export class GestionComprasComponent implements OnInit, OnDestroy {
   cotizacionWsp: QuoteListItem | null = null;
   private pollingInterval: any        = null;
 
-  constructor(private router: Router) {}
+  constructor() {
+    const user = this.authService.getCurrentUser();
+
+    // ✅ Detecta rol y sede propia
+    this.esAdmin      = this.authService.getRoleId() === UserRole.ADMIN;
+    this.sedeNombre   = user?.sedeNombre ?? 'Mi sede';
+    this.sedePropiaId = String(user?.idSede ?? '');
+
+    // ✅ Inicializar sedeSeleccionada: admin sin filtro, no-admin con su sede
+    this.sedeSeleccionada.set(this.esAdmin ? null : Number(this.sedePropiaId));
+
+    // ✅ Cargar cotizaciones cuando cambia sede
+    effect(() => {
+      const sede = this.sedeSeleccionada();
+      this.cargarCotizacion();
+    });
+  }
 
   ngOnInit() {
-    const sedeDefaultId = this.getSedeUsuarioActual();
-    if (sedeDefaultId) this.sedeSeleccionada.set(sedeDefaultId);
     this.cargarCotizacion();
     this.sedeService.loadSedes().subscribe({
       error: (err) => console.error('Error cargando sedes', err),
@@ -171,17 +197,6 @@ export class GestionComprasComponent implements OnInit, OnDestroy {
     if (this.pollingInterval) clearInterval(this.pollingInterval);
   }
 
-  private getSedeUsuarioActual(): number | null {
-    try {
-      const userString = localStorage.getItem('user');
-      if (userString) {
-        const user = JSON.parse(userString);
-        return user.idSede ?? null;
-      }
-    } catch (e) { console.error('Error parseando usuario', e); }
-    return null;
-  }
-
   cargarCotizacion() {
     this.quoteService.loadQuotes({
       estado:  this.estadoSeleccionado(),
@@ -196,7 +211,6 @@ export class GestionComprasComponent implements OnInit, OnDestroy {
   onSedeChange(nuevaSedeId: number | null) {
     this.sedeSeleccionada.set(nuevaSedeId);
     this.currentPage.set(1);
-    this.cargarCotizacion();
   }
 
   onEstadoChange(estado: string | null) {
@@ -212,8 +226,9 @@ export class GestionComprasComponent implements OnInit, OnDestroy {
     this.cotizacionSugerencias.set([]);
     this.fechaInicio.set(null);
     this.fechaFin.set(null);
-    this.sedeSeleccionada.set(null);
-    this.estadoSeleccionado.set(null);
+    // ✅ Si no es admin restaura su sede, si es admin limpia a vacío
+    this.sedeSeleccionada.set(this.esAdmin ? null : Number(this.sedePropiaId));
+    this.estadoSeleccionado.set('PENDIENTE');
     this.currentPage.set(1);
     this.cargarCotizacion();
   }

@@ -108,9 +108,12 @@
           </p-select>
         </div>
 
+        <!-- ✅ Sede: admin puede cambiar, no-admin ve su sede fija -->
         <div class="filtro-item filtro-compacto">
           <label>Sede</label>
+
           <p-select
+            *ngIf="esAdmin()"
             [options]="sedesOptions()"
             [ngModel]="idSedeActual()"
             (ngModelChange)="onSedeChange($event)"
@@ -120,6 +123,14 @@
             [showClear]="true"
             styleClass="w-full">
           </p-select>
+
+          <div
+            *ngIf="!esAdmin()"
+            class="flex align-items-center gap-2 px-3 py-2 border-round"
+            style="background: var(--surface-100); border: 1px solid var(--surface-border); height: 42px">
+            <i class="pi pi-map-marker" style="color: #FFA726"></i>
+            <span class="font-semibold">{{ sedeNombre() }}</span>
+          </div>
         </div>
 
         <div class="filtro-item filtro-boton-limpiar">

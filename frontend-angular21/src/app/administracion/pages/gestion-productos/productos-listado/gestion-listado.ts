@@ -20,6 +20,8 @@ import { ProductoAutocomplete, ProductoStock } from '../../../interfaces/product
 import { SedeService } from '../../../services/sede.service';
 import { CategoriaService } from '../../../services/categoria.service';
 import { SharedTableContainerComponent } from '../../../../shared/components/table.componente/shared-table-container.component';
+import { AuthService } from '../../../../auth/services/auth.service';
+import { UserRole } from '../../../../core/constants/roles.constants';
 
 @Component({
   selector: 'app-gestion-productos',
@@ -42,6 +44,11 @@ export class GestionListado implements OnInit {
   private categoriaService    = inject(CategoriaService);
   private confirmationService = inject(ConfirmationService);
   private messageService      = inject(MessageService);
+  private authService         = inject(AuthService); 
+
+  // ── Auth ──────────────────────────────────────────────────────────
+  esAdmin    = signal<boolean>(false); 
+  sedeNombre = signal<string>('Mi sede'); 
 
   productos    = signal<ProductoStock[]>([]);
   loading      = signal<boolean>(false);
@@ -76,6 +83,7 @@ export class GestionListado implements OnInit {
   );
 
   constructor() {
+    this.esAdmin.set(this.authService.getRoleId() === UserRole.ADMIN);
     this.obtenerSedeDeUsuario();
   }
 
@@ -101,14 +109,14 @@ export class GestionListado implements OnInit {
       const userString = localStorage.getItem('user');
       if (userString) {
         const user = JSON.parse(userString);
-        if (user.idSede) this.idSedeActual.set(user.idSede);
+        if (user.idSede)     this.idSedeActual.set(user.idSede);
+        if (user.sedeNombre) this.sedeNombre.set(user.sedeNombre);
       }
     } catch (e) {
       console.error('Error parseando usuario', e);
     }
   }
 
-  /** Resuelve el id_sede a partir del nombre de sede que viene en cada fila */
   private resolverIdSedePorNombre(sedeNombre: string): number | null {
     const match = this.sedesOptions().find(s => s.label === sedeNombre);
     return match?.value ?? this.idSedeActual();
@@ -139,6 +147,7 @@ export class GestionListado implements OnInit {
   }
 
   onSedeChange(nuevaSedeId: number | null) {
+    if (!this.esAdmin()) return;
     this.idSedeActual.set(nuevaSedeId);
     this.currentPage.set(1);
     if (nuevaSedeId) {
@@ -162,6 +171,10 @@ export class GestionListado implements OnInit {
     this.buscarValue.set(null);
     this.categoriaSeleccionada.set(null);
     this.currentPage.set(1);
+    if (!this.esAdmin()) {
+      this.cargarProductos();
+      return;
+    }
     this.cargarProductos();
   }
 
@@ -219,7 +232,6 @@ export class GestionListado implements OnInit {
     });
   }
 
-  /** Navega al detalle pasando el id_sede resuelto desde el nombre de sede del producto */
   irDetalle(idProducto: number, sedeNombre: string) {
     const idSede = this.resolverIdSedePorNombre(sedeNombre);
     this.router.navigate(

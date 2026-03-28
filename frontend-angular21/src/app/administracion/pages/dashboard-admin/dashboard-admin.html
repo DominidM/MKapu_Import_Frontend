@@ -12,7 +12,9 @@
 
       <div class="flex align-items-center gap-2">
         <span class="font-medium text-700">Sede:</span>
+
         <p-select
+          *ngIf="esAdmin()"
           [options]="sedesOptions()"
           optionLabel="nombre"
           optionValue="id_sede"
@@ -22,6 +24,13 @@
           [showClear]="true"
           styleClass="w-15rem">
         </p-select>
+        <div
+          *ngIf="!esAdmin()"
+          class="flex align-items-center gap-2 px-3 py-2 border-round"
+          style="background: var(--surface-100); border: 1px solid var(--surface-border)">
+          <i class="pi pi-map-marker" style="color: #FFA726"></i>
+          <span class="font-semibold">{{ getNombreSede() }}</span>
+        </div>
       </div>
     </div>
 

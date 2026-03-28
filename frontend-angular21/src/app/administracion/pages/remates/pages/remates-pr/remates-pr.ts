@@ -16,6 +16,7 @@ import { CommonModule } from '@angular/common';
 import { AuctionService, AuctionResponseDto } from '../../../../services/auction.service';
 import { SedeService } from '../../../../services/sede.service';
 import { AuthService } from '../../../../../auth/services/auth.service';
+import { UserRole } from '../../../../../core/constants/roles.constants';
 import { SharedTableContainerComponent } from '../../../../../shared/components/table.componente/shared-table-container.component';
 
 interface RemateUI {
@@ -58,15 +59,18 @@ export class RematesPr implements OnInit {
   private readonly sedeService         = inject(SedeService);
   private readonly authService         = inject(AuthService);
 
+  // ── Auth ──────────────────────────────────────────────────────────
+  readonly esAdmin:      boolean;
+  readonly sedeNombre:   string;
+  readonly sedePropiaId: string;
+
   cargando = this.auctionService.loading;
 
   busqueda     = signal('');
   estadoFiltro = signal<EstadoFiltro>('ACTIVO');
-  sedeFiltro   = signal(
-    String(this.authService.getCurrentUser()?.idSede ?? '')
-  );
-  page  = signal(1);
-  limit = signal(5);
+  sedeFiltro   = signal('');
+  page         = signal(1);
+  limit        = signal(5);
 
   dialogVisible      = false;
   remateSeleccionado = signal<RemateUI | null>(null);
@@ -86,12 +90,19 @@ export class RematesPr implements OnInit {
     })),
   ]);
 
-  // ── Constructor con effect para filtro de sede ────────────────────────────
   constructor() {
+    const user = this.authService.getCurrentUser();
+
+    this.esAdmin      = this.authService.getRoleId() === UserRole.ADMIN;
+    this.sedeNombre   = user?.sedeNombre ?? 'Mi sede';
+    this.sedePropiaId = String(user?.idSede ?? '');
+
+    this.sedeFiltro.set(this.esAdmin ? '' : this.sedePropiaId);
+
     effect(() => {
       const sede   = this.sedeFiltro();
       const idSede = sede ? Number(sede) : 0;
-      this.auctionService.loadAuctions(1, 50, idSede).subscribe();
+      this.auctionService.loadAuctions(1, this.limit(), idSede).subscribe();
       this.page.set(1);
     });
   }
@@ -174,8 +185,12 @@ export class RematesPr implements OnInit {
   limpiarFiltros(): void {
     this.busqueda.set('');
     this.estadoFiltro.set('TODOS');
-    this.sedeFiltro.set('');
+    this.sedeFiltro.set(this.esAdmin ? '' : this.sedePropiaId);
     this.page.set(1);
+    this.messageService.add({
+      severity: 'info', summary: 'Filtros limpiados',
+      detail: 'Se muestran todos los remates', life: 2000,
+    });
   }
 
   onPageChange(p: number):  void { this.page.set(p); }

@@ -56,9 +56,12 @@
           </p-select>
         </div>
 
+        <!-- ✅ Sede: admin puede cambiar, no-admin ve su sede fija -->
         <div class="filtro-item filtro-compacto">
           <label>Sede</label>
+
           <p-select
+            *ngIf="esAdmin"
             [options]="Sede"
             optionLabel="label"
             optionValue="value"
@@ -67,6 +70,14 @@
             styleClass="w-full"
             placeholder="Sede">
           </p-select>
+
+          <div
+            *ngIf="!esAdmin"
+            class="flex align-items-center gap-2 px-3 py-2 border-round"
+            style="background: var(--surface-100); border: 1px solid var(--surface-border); height: 42px">
+            <i class="pi pi-map-marker" style="color: #FFA726"></i>
+            <span class="font-semibold">{{ sedeNombre }}</span>
+          </div>
         </div>
 
         <div class="filtro-item filtro-compacto">
@@ -215,8 +226,7 @@
 
   </app-shared-table-container>
 
-
-  <!-- MODAL DETALLE USUARIO (sin cambios) -->
+  <!-- MODAL DETALLE USUARIO -->
   <p-dialog
     [(visible)]="dialogVisible"
     [modal]="true" [draggable]="false"
@@ -274,10 +284,7 @@
     </ng-container>
   </p-dialog>
 
-
-  <!-- ═══════════════════════════════════════════
-       MODAL — Cambiar credenciales de cuenta
-       ═══════════════════════════════════════════ -->
+  <!-- MODAL Cambiar credenciales -->
   <p-dialog
     [(visible)]="showCredModal"
     [modal]="true" [draggable]="false" [closable]="false"
@@ -288,12 +295,8 @@
     <ng-template pTemplate="header"><span></span></ng-template>
 
     <div class="usuario-detail-modal">
-
-      <!-- Banner -->
       <div class="usuario-banner">
-        <div class="usuario-banner-icon">
-          <i class="pi pi-key"></i>
-        </div>
+        <div class="usuario-banner-icon"><i class="pi pi-key"></i></div>
         <div class="usuario-banner-info">
           <span class="usuario-kicker">CREDENCIALES DE ACCESO</span>
           <h3 class="usuario-nombre">{{ credUsuarioNombre }}</h3>
@@ -303,7 +306,6 @@
         </button>
       </div>
 
-      <!-- Usuario actual -->
       <div class="usuario-info-grid" style="border-bottom: 1px solid rgba(255,255,255,0.06); padding: 0.75rem 1.5rem;">
         <div class="usuario-info-item" style="grid-column: 1 / -1; display:flex; align-items:center; gap:0.5rem;">
           <i class="pi pi-user" style="color:#64748b; font-size:0.8rem;"></i>
@@ -314,9 +316,7 @@
         </div>
       </div>
 
-      <!-- Formulario -->
       <div style="display:flex; flex-direction:column; gap:1rem; padding:1.25rem 1.5rem;">
-
         <div class="flex flex-column gap-1">
           <label style="font-size:0.65rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:#64748b;">
             Nombre de usuario
@@ -365,10 +365,8 @@
             Las contraseñas no coinciden
           </small>
         </div>
-
       </div>
 
-      <!-- Footer -->
       <div class="usuario-footer flex justify-content-end gap-2">
         <p-button
           label="Cancelar" icon="pi pi-times"
@@ -385,7 +383,6 @@
           (onClick)="saveCredentials()">
         </p-button>
       </div>
-
     </div>
   </p-dialog>
 

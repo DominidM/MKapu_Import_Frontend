@@ -519,8 +519,7 @@ export const ADMIN_ROUTES: Routes = [
 
   {
     path: 'cotizaciones-compra',
-    canActivate: [roleGuard],
-    data: { permiso: 'CREAR_COTIZACIONES' },
+
     children: [
       {
         path: '',
@@ -528,6 +527,8 @@ export const ADMIN_ROUTES: Routes = [
           import('./pages/gestion-cotizacion-compra/gestion-listado/gestion-compras-listado').then(
             (m) => m.GestionComprasComponent,
           ),
+          canActivate: [roleGuard],
+          data: { permiso: 'VER_COTIZACIONES_COMPRA' },
       },
       {
         path: 'agregar-cotizaciones',
@@ -535,6 +536,8 @@ export const ADMIN_ROUTES: Routes = [
           import('./pages/gestion-cotizacion-compra/gestion-formulario/cotizacion-compra-formulario').then(
             (m) => m.CotizacionCompraFormulario,
           ),
+          canActivate: [roleGuard],
+          data: { permiso: 'CREAR_COTIZACIONES_COMPRA' },
       },
       {
         path: 'ver-detalle-cotizacion/:id',
@@ -542,13 +545,13 @@ export const ADMIN_ROUTES: Routes = [
           import('./pages/gestion-cotizacion-compra/detalle-gestion-formulario/detalle-cotizacion-formulario').then(
             (m) => m.DetalleCotizacionComponent,
           ),
+          canActivate: [roleGuard],
+          data: { permiso: 'VER_COTIZACIONES_COMPRA' },
       },
     ],
   },
   {
     path: 'cotizaciones-venta',
-    canActivate: [roleGuard],
-    data: { permiso: 'CREAR_COTIZACIONES' },
     children: [
       {
         path: '',
@@ -556,6 +559,8 @@ export const ADMIN_ROUTES: Routes = [
           import('./pages/gestion-cotizacion-venta/gestion-listado/gestion-listado').then(
             (m) => m.GestionCotizacionesComponent,
           ),
+          canActivate: [roleGuard],
+          data: { permiso: 'VER_COTIZACIONES_VENTA' },
       },
       {
         path: 'agregar-cotizaciones',
@@ -563,6 +568,8 @@ export const ADMIN_ROUTES: Routes = [
           import('./pages/gestion-cotizacion-venta/gestion-formulario/cotizacion-formulario').then(
             (m) => m.CotizacionFormulario,
           ),
+          canActivate: [roleGuard],
+          data: { permiso: 'CREAR_COTIZACIONES_VENTA' },
       },
       {
         path: 'ver-detalle-cotizacion/:id',
@@ -570,6 +577,8 @@ export const ADMIN_ROUTES: Routes = [
           import('./pages/gestion-cotizacion-venta/detalle-gestion-formulario/detalle-cotizacion-formulario').then(
             (m) => m.DetalleCotizacionComponent,
           ),
+          canActivate: [roleGuard],
+          data: { permiso: 'VER_COTIZACIONES_VENTA' },
       },
     ],
   },
