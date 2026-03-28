@@ -319,7 +319,6 @@
   (cerrar)="onDialogCerrar()"
 ></app-acciones-comprobante-dialog>
 
-<!-- ✅ Dialog WhatsApp — todo con signals () -->
 <p-dialog
   [visible]="mostrarDialogWsp()"
   (visibleChange)="mostrarDialogWsp.set($event)"
@@ -362,7 +361,7 @@
     <ng-container *ngIf="wspReady()">
       <i class="pi pi-check-circle" style="font-size: 3rem; color: #25d366"></i>
       <p style="text-align: center; color: var(--text-muted); font-size: 0.9rem; line-height: 1.6">
-        WhatsApp conectado ✅<br />
+        WhatsApp conectado <br />
         <ng-container *ngIf="cuentaWsp()">
           Se enviará la cuenta por cobrar del comprobante
           <strong>#{{ cuentaWsp()!.salesReceiptId }}</strong><br />

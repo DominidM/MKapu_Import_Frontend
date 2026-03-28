@@ -155,7 +155,6 @@ export class ComisionReportes implements OnInit {
     this.cargar();
   }
 
-  // ✅ limpiarFiltros: resetea al rango del mes actual (no a null)
   limpiarFiltros() {
     this.filtroBusqueda.set('');
     this.filtroEstado.set(null);
@@ -167,7 +166,6 @@ export class ComisionReportes implements OnInit {
   }
 
   private cargar() {
-    // ✅ Siempre usa las fechas del signal — nunca null gracias al default del mes
     const desde = this.fechaInicio() ?? getPrimerDiaMesActualPeru();
     const hasta = this.fechaFin()    ?? getUltimoDiaMesActualPeru();
     const d = new Date(desde); d.setHours(0, 0, 0, 0);

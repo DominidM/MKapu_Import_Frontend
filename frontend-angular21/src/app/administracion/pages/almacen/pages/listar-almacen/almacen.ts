@@ -18,6 +18,8 @@ import { SharedTableContainerComponent } from '../../../../../shared/components/
 import { AlmacenService } from '../../../../services/almacen.service';
 import { Headquarter } from '../../../../interfaces/almacen.interface';
 import { TooltipModule } from 'primeng/tooltip';
+import { AuthService } from '../../../../../auth/services/auth.service';
+import { UserRole } from '../../../../../core/constants/roles.constants';
 
 type ViewMode = 'todas' | 'activas' | 'inactivas';
 
@@ -29,7 +31,7 @@ type ViewMode = 'todas' | 'activas' | 'inactivas';
     DialogModule, CardModule, ButtonModule,
     AutoCompleteModule, TableModule, TagModule,
     ToastModule, ConfirmDialogModule, MessageModule,
-    SelectModule,TooltipModule,
+    SelectModule, TooltipModule,
     SharedTableContainerComponent,
   ],
   providers: [ConfirmationService, MessageService],
@@ -40,6 +42,7 @@ export class AlmacenListado implements OnInit {
   private readonly almacenService      = inject(AlmacenService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly messageService      = inject(MessageService);
+  private readonly authService         = inject(AuthService);
 
   readonly loading = this.almacenService.loading;
   readonly error   = this.almacenService.error;
@@ -53,6 +56,13 @@ export class AlmacenListado implements OnInit {
 
   readonly paginaActual = signal<number>(1);
   readonly limitePagina = signal<number>(5);
+
+  // ── Permisos ──────────────────────────────────────────────────────
+  esAdmin            = false;
+  puedeCrearAlmacen  = false; // CREAR_ALMACEN  → botón "Agregar Almacén"
+  puedeEditarAlmacen = false; // EDITAR_ALMACEN → botón editar (lápiz) + editar en modal
+  puedeVerDetalle    = false; // VER_ALMACEN    → botón ojo
+  // desactivar/activar → solo esAdmin
 
   readonly viewOptions: { label: string; value: ViewMode }[] = [
     { label: 'Todos',     value: 'todas'     },
@@ -91,6 +101,12 @@ export class AlmacenListado implements OnInit {
   readonly almacenSuggestions = computed(() => this.filteredAlmacenes());
 
   ngOnInit(): void {
+    // ── Resolver permisos ─────────────────────────────────────────
+    this.esAdmin            = this.authService.getRoleId() === UserRole.ADMIN;
+    this.puedeCrearAlmacen  = this.authService.hasPermiso('CREAR_ALMACEN');
+    this.puedeEditarAlmacen = this.authService.hasPermiso('EDITAR_ALMACEN');
+    this.puedeVerDetalle    = this.authService.hasPermiso('VER_ALMACEN');
+
     this.almacenService.loadAlmacen('Administrador').subscribe({
       error: (err: any) => {
         this.messageService.add({

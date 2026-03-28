@@ -399,7 +399,7 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
   // ── Dialog acciones ───────────────────────────────────────────────
   abrirDialogAcciones(comprobante: SalesReceiptSummaryAdmin): void {
     this.comprobanteDialogActual = comprobante;
-    this.dialogAccionCargando    = null; // ✅ limpia al abrir
+    this.dialogAccionCargando    = null;
     this.dialogConfig = {
       titulo:         this.getNumeroFormateado(comprobante),
       subtitulo:      comprobante.clienteNombre,

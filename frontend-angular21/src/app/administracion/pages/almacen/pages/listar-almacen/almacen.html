@@ -10,8 +10,10 @@
           <h2 class="sedes-title">GESTIÓN DE ALMACÉN</h2>
         </div>
       </div>
+      <!-- Botón "Agregar Almacén" — solo si tiene CREAR_ALMACEN -->
       <div class="flex justify-items-end gap-2">
         <p-button
+          *ngIf="puedeCrearAlmacen"
           label="Agregar Almacén"
           icon="pi pi-plus"
           styleClass="sedes-pill"
@@ -98,10 +100,8 @@
     [limitePorPagina]="limitePagina()"
     [mostrarExportar]="false"
     (pageChange)="onPageChange($event)"
-    (limitChange)="onLimitChange($event)"
-  >
+    (limitChange)="onLimitChange($event)">
 
-    <!-- Tag contador en slot de acciones -->
     <div slot="acciones">
       <p-tag
         [value]="filteredAlmacenes().length + ' almacenes'"
@@ -176,20 +176,29 @@
           </td>
           <td class="text-center">
             <div class="acciones-tabla">
+
+              <!-- VER DETALLE — requiere VER_ALMACEN -->
               <p-button
+                *ngIf="puedeVerDetalle"
                 icon="pi pi-eye"
                 [rounded]="true" [text]="true" severity="secondary"
                 pTooltip="Ver detalle" tooltipPosition="top"
                 (onClick)="verDetalle(almacen)">
               </p-button>
+
+              <!-- EDITAR — requiere EDITAR_ALMACEN -->
               <p-button
+                *ngIf="puedeEditarAlmacen"
                 icon="pi pi-pencil"
                 [rounded]="true" [text]="true" severity="secondary"
                 pTooltip="Editar almacén" tooltipPosition="top"
                 [routerLink]="['/admin/almacen/editar-almacen', (almacen.id_almacen ?? almacen.id)]"
                 [disabled]="!(almacen.id_almacen ?? almacen.id)">
               </p-button>
+
+              <!-- ACTIVAR / DESACTIVAR — solo ADMIN -->
               <p-button
+                *ngIf="esAdmin"
                 [icon]="almacen.activo ? 'pi pi-times' : 'pi pi-check'"
                 [rounded]="true" [text]="true"
                 [severity]="almacen.activo ? 'danger' : 'success'"
@@ -197,6 +206,7 @@
                 tooltipPosition="top"
                 (onClick)="confirmToggleStatus(almacen)">
               </p-button>
+
             </div>
           </td>
         </tr>
@@ -305,7 +315,9 @@
             styleClass="adm-btn-close"
             (onClick)="dialogVisible = false">
           </p-button>
+          <!-- Editar dentro del modal — mismo permiso EDITAR_ALMACEN -->
           <p-button
+            *ngIf="puedeEditarAlmacen"
             label="Editar Almacén" icon="pi pi-pencil"
             styleClass="adm-btn-edit"
             [routerLink]="['/admin/almacen/editar-almacen', (a.id_almacen ?? a.id)]"

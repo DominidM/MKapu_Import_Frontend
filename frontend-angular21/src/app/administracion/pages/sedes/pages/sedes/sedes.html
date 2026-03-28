@@ -10,8 +10,10 @@
           <h2 class="sedes-title">LISTADO DE SEDES</h2>
         </div>
       </div>
+      <!-- Botón "Agregar Sede" — solo si tiene CREAR_SEDES -->
       <div class="flex justify-items-end gap-2">
         <p-button
+          *ngIf="puedeCrearSede"
           label="Agregar Sede"
           icon="pi pi-plus"
           styleClass="sedes-pill"
@@ -98,10 +100,8 @@
     [limitePorPagina]="limitePagina()"
     [mostrarExportar]="false"
     (pageChange)="onPageChange($event)"
-    (limitChange)="onLimitChange($event)"
-  >
+    (limitChange)="onLimitChange($event)">
 
-    <!-- Tag contador en slot de acciones -->
     <div slot="acciones">
       <p-tag
         [value]="filteredSedes().length + ' sedes'"
@@ -181,20 +181,29 @@
           </td>
           <td class="text-center">
             <div class="acciones-tabla">
+
+              <!-- VER DETALLE — requiere VER_SEDES -->
               <p-button
+                *ngIf="puedeVerDetalle"
                 icon="pi pi-eye"
                 [rounded]="true" [text]="true" severity="secondary"
                 pTooltip="Ver detalle" tooltipPosition="top"
                 (onClick)="verDetalle(sede)">
               </p-button>
+
+              <!-- EDITAR — requiere EDITAR_SEDES -->
               <p-button
+                *ngIf="puedeEditarSede"
                 icon="pi pi-pencil"
                 [rounded]="true" [text]="true" severity="secondary"
                 pTooltip="Editar sede" tooltipPosition="top"
                 [routerLink]="['/admin/sedes/editar-sede']"
                 [queryParams]="{ id: sede.id_sede }">
               </p-button>
+
+              <!-- ACTIVAR / DESACTIVAR — solo ADMIN -->
               <p-button
+                *ngIf="esAdmin"
                 [icon]="sede.activo ? 'pi pi-times' : 'pi pi-check'"
                 [rounded]="true" [text]="true"
                 [severity]="sede.activo ? 'danger' : 'success'"
@@ -202,6 +211,7 @@
                 tooltipPosition="top"
                 (onClick)="confirmToggleStatus(sede)">
               </p-button>
+
             </div>
           </td>
         </tr>
@@ -325,7 +335,9 @@
             styleClass="sdm-btn-close"
             (onClick)="dialogVisible = false">
           </p-button>
+          <!-- Editar dentro del modal — mismo permiso EDITAR_SEDES -->
           <p-button
+            *ngIf="puedeEditarSede"
             label="Editar Sede" icon="pi pi-pencil"
             styleClass="sdm-btn-edit"
             [routerLink]="['/admin/sedes/editar-sede']"

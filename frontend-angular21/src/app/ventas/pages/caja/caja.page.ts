@@ -147,7 +147,6 @@ export class CajaPage implements OnInit, OnDestroy {
     this.cashboxService.openCashbox(this.idSede, this.montoInicial() ?? undefined).subscribe({
       next: () => {
         this.montoInicial.set(null);
-        // ✅ checkActiveSession DENTRO del next() — secuencial, no paralelo
         this.cashboxSocket.checkActiveSession(this.idSede!).then(() => {
           if (this.cashboxSocket.caja()) {
             this.cargarCajaDesdeDB();
@@ -187,7 +186,6 @@ export class CajaPage implements OnInit, OnDestroy {
 
     this.cashboxService.closeCashbox(detalle.id_caja).subscribe({
       next: () => {
-        // ✅ Limpieza DENTRO del next() — solo cuando el backend confirma
         this.cajaDetalle.set(null);
         this.chartInstance?.destroy();
         this.chartInstance = null;

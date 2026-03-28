@@ -231,7 +231,7 @@ export class Remision implements OnInit {
 
   aplicarFiltros(): void {
     if (!this.esAdmin) {
-      this.filtroSede.set(this.sedePropiaId); // ✅ Bloquea la sede para no-admin
+      this.filtroSede.set(this.sedePropiaId); 
     }
     this.paginaActual.set(1);
     this.cargarDatos();

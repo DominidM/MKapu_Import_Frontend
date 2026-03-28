@@ -12,8 +12,10 @@
           <h2 class="usuarios-title">LISTADO DE EMPLEADOS</h2>
         </div>
       </div>
+      <!-- Botón "Nuevo Usuario" — solo si tiene CREAR_USUARIOS -->
       <div class="usuarios-header-actions flex w-full md:w-auto md:justify-content-end">
         <p-button
+          *ngIf="puedeCrearUsuario"
           label="Nuevo Usuario"
           icon="pi pi-user-plus"
           styleClass="usuarios-pill w-full md:w-auto"
@@ -56,10 +58,8 @@
           </p-select>
         </div>
 
-        <!-- ✅ Sede: admin puede cambiar, no-admin ve su sede fija -->
         <div class="filtro-item filtro-compacto">
           <label>Sede</label>
-
           <p-select
             *ngIf="esAdmin"
             [options]="Sede"
@@ -70,7 +70,6 @@
             styleClass="w-full"
             placeholder="Sede">
           </p-select>
-
           <div
             *ngIf="!esAdmin"
             class="flex align-items-center gap-2 px-3 py-2 border-round"
@@ -172,31 +171,46 @@
           </td>
           <td class="text-center">
             <div class="acciones-tabla">
+
+              <!-- VER DETALLE — requiere VER_USUARIOS -->
               <p-button
+                *ngIf="puedeVerDetalle"
                 icon="pi pi-eye"
                 [rounded]="true" [text]="true" severity="secondary"
                 pTooltip="Ver detalle" tooltipPosition="top"
                 (onClick)="verDetalle(user)">
               </p-button>
+
+              <!-- EDITAR — requiere EDITAR_USUARIOS -->
               <p-button
+                *ngIf="puedeEditarUsuario"
                 icon="pi pi-pencil"
                 [rounded]="true" [text]="true" severity="secondary"
                 pTooltip="Editar usuario" tooltipPosition="top"
                 [routerLink]="['/admin/usuarios/editar-usuario', user.id_usuario]">
               </p-button>
+
+              <!-- SEGUIMIENTO — requiere SEGUIMIENTO_EMPLEADO -->
               <p-button
+                *ngIf="puedeSeguimiento"
                 icon="pi pi-chart-line"
                 [rounded]="true" [text]="true" severity="info"
                 pTooltip="Ver seguimiento" tooltipPosition="top"
                 [routerLink]="['/admin/empleados', user.id_usuario, 'seguimiento']">
               </p-button>
+
+              <!-- CAMBIAR CREDENCIALES — solo ADMIN -->
               <p-button
+                *ngIf="puedeCambiarCredenciales"
                 icon="pi pi-key"
                 [rounded]="true" [text]="true" severity="warn"
                 pTooltip="Cambiar credenciales" tooltipPosition="top"
                 (onClick)="openCredModal(user)">
               </p-button>
+
+              <!-- ACTIVAR / DESACTIVAR — solo ADMIN -->
               <p-button
+                *ngIf="esAdmin"
                 [icon]="user.activo ? 'pi pi-times' : 'pi pi-check'"
                 [rounded]="true" [text]="true"
                 [severity]="user.activo ? 'danger' : 'success'"
@@ -204,6 +218,7 @@
                 tooltipPosition="top"
                 (onClick)="confirmToggleStatus(user)">
               </p-button>
+
             </div>
           </td>
         </tr>
@@ -272,7 +287,9 @@
             class="user-btn-close"
             (onClick)="dialogVisible = false">
           </p-button>
+          <!-- Editar dentro del modal — mismo permiso -->
           <p-button
+            *ngIf="puedeEditarUsuario"
             label="Editar Usuario" icon="pi pi-pencil"
             class="user-btn-edit"
             [routerLink]="['/admin/usuarios/editar-usuario']"

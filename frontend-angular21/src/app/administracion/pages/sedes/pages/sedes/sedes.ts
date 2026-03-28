@@ -19,9 +19,9 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 
 import { SedeService } from '../../../../services/sede.service';
 import { Headquarter } from '../../../../interfaces/sedes.interface';
-import { LoadingOverlayComponent } from '../../../../../shared/components/loading-overlay/loading-overlay.component';
-import { PaginadorComponent } from '../../../../../shared/components/paginador/paginador.components';
 import { SharedTableContainerComponent } from '../../../../../shared/components/table.componente/shared-table-container.component';
+import { AuthService } from '../../../../../auth/services/auth.service';
+import { UserRole } from '../../../../../core/constants/roles.constants';
 
 type ViewMode = 'todas' | 'activas' | 'inactivas';
 
@@ -44,12 +44,13 @@ export class Sedes implements OnInit {
   private readonly sedeService         = inject(SedeService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly messageService      = inject(MessageService);
+  private readonly authService         = inject(AuthService);
 
   readonly loadingAlmacenes = this.sedeService.loadingAlmacenes;
   readonly loading          = this.sedeService.loading;
   readonly error            = this.sedeService.error;
 
-  dialogVisible         = false;
+  dialogVisible             = false;
   readonly sedeSeleccionada = signal<Headquarter | null>(null);
 
   readonly searchTerm = signal<string>('');
@@ -58,6 +59,13 @@ export class Sedes implements OnInit {
 
   readonly paginaActual = signal<number>(1);
   readonly limitePagina = signal<number>(5);
+
+  // ── Permisos ──────────────────────────────────────────────────────
+  esAdmin          = false;
+  puedeCrearSede   = false; // CREAR_SEDES   → botón "Agregar Sede"
+  puedeEditarSede  = false; // EDITAR_SEDES  → botón lápiz + editar en modal
+  puedeVerDetalle  = false; // VER_SEDES     → botón ojo
+  // desactivar/activar → solo esAdmin
 
   readonly viewOptions: { label: string; value: ViewMode }[] = [
     { label: 'Todos',     value: 'todas'     },
@@ -96,6 +104,12 @@ export class Sedes implements OnInit {
   readonly sedeSuggestions = computed(() => this.filteredSedes());
 
   ngOnInit(): void {
+    // ── Resolver permisos ─────────────────────────────────────────
+    this.esAdmin         = this.authService.getRoleId() === UserRole.ADMIN;
+    this.puedeCrearSede  = this.authService.hasPermiso('CREAR_SEDES');
+    this.puedeEditarSede = this.authService.hasPermiso('EDITAR_SEDES');
+    this.puedeVerDetalle = this.authService.hasPermiso('VER_SEDES');
+
     this.sedeService.loadSedes('Administrador').pipe(
       switchMap((res) => {
         const sedes = res.headquarters ?? [];

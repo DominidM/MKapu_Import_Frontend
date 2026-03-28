@@ -64,9 +64,18 @@ export class AdministracionCrearUsuario implements OnInit {
   filtroRol: string | null     = null;
 
   // ── Auth ──────────────────────────────────────────────────────────
-  esAdmin        = false;         // ✅ nuevo
-  sedeNombre     = 'Mi sede';     // ✅ nuevo
-  sedePropiaId: number | null = null; // ✅ nuevo
+  esAdmin        = false;
+  sedeNombre     = 'Mi sede';
+  sedePropiaId: number | null = null;
+
+  // ── Permisos individuales ─────────────────────────────────────────
+  puedeCrearUsuario    = false; 
+  puedeEditarUsuario   = false; 
+  puedeSeguimiento     = false; 
+  puedeVerDetalle      = false; 
+
+  // ── Credenciales — solo ADMIN puede cambiarlas ────────────────────
+  get puedeCambiarCredenciales(): boolean { return this.esAdmin; }
 
   paginaActual = signal<number>(1);
   limitePagina = signal<number>(5);
@@ -111,7 +120,7 @@ export class AdministracionCrearUsuario implements OnInit {
     return this.usuariosFiltrados.slice(inicio, inicio + this.limitePagina());
   }
 
-  get totalusers():  number { return this.usuariosFiltrados.length; }
+  get totalusers():   number { return this.usuariosFiltrados.length; }
   get totalPaginas(): number { return Math.ceil(this.usuariosFiltrados.length / this.limitePagina()); }
 
   onPageChange(page: number):   void { this.paginaActual.set(page); }
@@ -132,13 +141,21 @@ export class AdministracionCrearUsuario implements OnInit {
     this.cargandoUsuarios = true;
     const currentUser = this.authService.getCurrentUser();
 
-    // ✅ detecta rol y sede propia
-    this.esAdmin     = this.authService.getRoleId() === UserRole.ADMIN;
+    this.esAdmin      = this.authService.getRoleId() === UserRole.ADMIN;
     this.sedePropiaId = currentUser?.idSede ?? null;
-    this.sedeNombre  = currentUser?.sedeNombre ?? 'Mi sede';
+    this.sedeNombre   = currentUser?.sedeNombre ?? 'Mi sede';
 
-    // ✅ si no es admin, fija su sede en el filtro
-    this.filtroSede = this.esAdmin ? null : this.sedePropiaId;
+    // ── Resolver permisos desde el usuario logeado ────────────────
+    this.puedeCrearUsuario  = this.authService.hasPermiso('CREAR_USUARIOS');
+    this.puedeEditarUsuario = this.authService.hasPermiso('EDITAR_USUARIOS');
+    this.puedeSeguimiento   = this.authService.hasPermiso('SEGUIMIENTO_EMPLEADO');
+    this.puedeVerDetalle    = this.authService.hasPermiso('VER_USUARIOS');
+
+    // ✅ Obtener sede seleccionada del localStorage (si existe)
+    const sedeGuardada = localStorage.getItem('filtroSedeUsuarios');
+    this.filtroSede = sedeGuardada 
+      ? Number(sedeGuardada) 
+      : (this.esAdmin ? this.sedePropiaId : this.sedePropiaId);
 
     forkJoin({
       sedes:    this.sedeService.getSedes(),
@@ -146,17 +163,23 @@ export class AdministracionCrearUsuario implements OnInit {
       roles:    this.roleService.loadRoles(),
     }).subscribe({
       next: ({ sedes, usuarios, roles }) => {
+        // ✅ Poner la sede propia primero, luego las otras
+        const sedePropia = sedes.headquarters.find(s => s.id_sede === this.sedePropiaId);
+        const otrosSedes = sedes.headquarters.filter(s => s.id_sede !== this.sedePropiaId);
+
         this.Sede = [
           { label: 'Todas', value: null },
-          ...sedes.headquarters.map((s) => ({ label: s.nombre, value: s.id_sede })),
+          ...(sedePropia ? [{ label: `${sedePropia.nombre}`, value: sedePropia.id_sede }] : []),
+          ...otrosSedes.map((s) => ({ label: s.nombre, value: s.id_sede })),
         ];
+
         this.Rol = [
           { label: 'Todos', value: null },
           ...roles
             .filter((r) => r.activo)
             .map((r) => ({ label: r.nombre.toUpperCase(), value: r.nombre.toUpperCase() })),
         ];
-        this.allUsers        = usuarios.users;
+        this.allUsers         = usuarios.users;
         this.cargandoUsuarios = false;
         this.cdr.detectChanges();
       },
@@ -189,23 +212,18 @@ export class AdministracionCrearUsuario implements OnInit {
   }
 
   onSedeChange(): void {
-    // ✅ no-admin no puede cambiar su sede
-    if (!this.esAdmin) {
-      this.filtroSede = this.sedePropiaId;
-      return;
-    }
+    if (!this.esAdmin) { this.filtroSede = this.sedePropiaId; return; }
     this.paginaActual.set(1);
   }
 
-  onRolChange():     void { this.paginaActual.set(1); }
-  aplicarFiltros():  void { this.paginaActual.set(1); }
+  onRolChange():    void { this.paginaActual.set(1); }
+  aplicarFiltros(): void { this.paginaActual.set(1); }
 
   limpiarFiltro(): void {
     this.filtroDni    = '';
     this.filtroEstado = null;
     this.filtroRol    = null;
-    // ✅ si no es admin restaura su sede, si es admin limpia a null
-    this.filtroSede = this.esAdmin ? null : this.sedePropiaId;
+    this.filtroSede   = this.esAdmin ? null : this.sedePropiaId;
     this.paginaActual.set(1);
     this.onEstadoChange();
   }
@@ -275,7 +293,7 @@ export class AdministracionCrearUsuario implements OnInit {
   }
 
   saveCredentials(): void {
-    const nom_usu         = this.credNomUsu.trim();
+    const nom_usu          = this.credNomUsu.trim();
     const nueva_contraseña = this.credPassword.trim();
     const confirmar        = this.credConfirm.trim();
 

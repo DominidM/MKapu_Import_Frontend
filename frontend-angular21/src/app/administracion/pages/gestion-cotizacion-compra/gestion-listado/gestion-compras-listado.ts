@@ -161,15 +161,12 @@ export class GestionComprasComponent implements OnInit, OnDestroy {
   constructor() {
     const user = this.authService.getCurrentUser();
 
-    // ✅ Detecta rol y sede propia
     this.esAdmin      = this.authService.getRoleId() === UserRole.ADMIN;
     this.sedeNombre   = user?.sedeNombre ?? 'Mi sede';
     this.sedePropiaId = String(user?.idSede ?? '');
 
-    // ✅ Inicializar sedeSeleccionada: admin sin filtro, no-admin con su sede
     this.sedeSeleccionada.set(this.esAdmin ? null : Number(this.sedePropiaId));
 
-    // ✅ Cargar cotizaciones cuando cambia sede
     effect(() => {
       const sede = this.sedeSeleccionada();
       this.cargarCotizacion();
@@ -226,7 +223,6 @@ export class GestionComprasComponent implements OnInit, OnDestroy {
     this.cotizacionSugerencias.set([]);
     this.fechaInicio.set(null);
     this.fechaFin.set(null);
-    // ✅ Si no es admin restaura su sede, si es admin limpia a vacío
     this.sedeSeleccionada.set(this.esAdmin ? null : Number(this.sedePropiaId));
     this.estadoSeleccionado.set('PENDIENTE');
     this.currentPage.set(1);

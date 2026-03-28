@@ -29,8 +29,6 @@ export const ADMIN_ROUTES: Routes = [
     path: 'dashboard-admin',
     loadComponent: () =>
       import('./pages/dashboard-admin/dashboard-admin').then((m) => m.DashboardAdmin),
-    canActivate: [roleGuard],
-    data: { permiso: 'VER_DASHBOARD_ADMIN' },
   },
   {
     path: 'dashboard-almacen',

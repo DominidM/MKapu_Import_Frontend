@@ -14,6 +14,10 @@ export const roleGuard: CanActivateFn = (
   const router = inject(Router);
   const roleService = inject(RoleService);
 
+  if (state.url === '/admin/dashboard-admin') {
+    return true;
+  }
+
   const permisos = roleService.getPermisos();
 
   if (!permisos.length) {
