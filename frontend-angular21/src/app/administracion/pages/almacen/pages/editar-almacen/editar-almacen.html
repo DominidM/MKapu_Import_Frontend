@@ -1,5 +1,5 @@
 <div class="p-2">
-  <p-toast position="top-right"></p-toast>
+
   <p-confirmDialog appendTo="body"></p-confirmDialog>
 
   <p-card styleClass="sedes-header-card mb-4 ventas-header-bordered">
@@ -39,7 +39,7 @@
             readonly
           />
           <p-message
-            *ngIf="(almacenForm.submitted) && (almacenForm.controls['codigo']?.errors?.['server'])"
+            *ngIf="almacenForm.submitted && almacenForm.controls['codigo']?.errors?.['server']"
             severity="error"
             [text]="almacenForm.controls['codigo']?.errors?.['server']"
           ></p-message>
@@ -58,7 +58,7 @@
             required
             #nombre="ngModel"
             (input)="toUpperCase('nombre')"
-            (keypress)="onlyLetters($event)"
+            (keypress)="onlyNumbers($event)"
             [ngClass]="{ 'p-invalid': (almacenForm.submitted || nombre.touched) && nombre.invalid }"
           />
           <p-message
@@ -85,8 +85,10 @@
             [forceSelection]="true"
             [minLength]="1"
             appNoNumbers
-            (onClear)="almacen.provincia=''; almacen.ciudad=''; provincias=[]; distritos=[]"
-            [ngClass]="{ 'p-invalid': (almacenForm.submitted || departamento.touched) && departamento.invalid }"
+            (onClear)="almacen.provincia = ''; almacen.ciudad = ''; provincias = []; distritos = []"
+            [ngClass]="{
+              'p-invalid': (almacenForm.submitted || departamento.touched) && departamento.invalid,
+            }"
             styleClass="w-full"
           />
           <p-message
@@ -114,8 +116,10 @@
             [forceSelection]="true"
             [minLength]="1"
             appNoNumbers
-            (onClear)="almacen.ciudad=''; distritos=[]"
-            [ngClass]="{ 'p-invalid': (almacenForm.submitted || provincia.touched) && provincia.invalid }"
+            (onClear)="almacen.ciudad = ''; distritos = []"
+            [ngClass]="{
+              'p-invalid': (almacenForm.submitted || provincia.touched) && provincia.invalid,
+            }"
             styleClass="w-full"
           />
           <p-message
@@ -152,26 +156,28 @@
           />
         </div>
 
-        <!-- Teléfono -->
         <div class="col-12 md:col-6">
           <label class="field-label" for="telefono">TELÉFONO</label>
-          <p-inputnumber
+          <input
+            id="telefono"
+            pInputText
             class="w-full"
-            [(ngModel)]="almacen.telefono"
-            inputId="telefono"
-            placeholder="Ingrese 9 dígitos"
-            [useGrouping]="false"
-            [min]="100000000"
-            [max]="999999999"
+            [(ngModel)]="almacenTelefonoStr"
             name="telefono"
+            placeholder="Ingrese 9 dígitos"
             required
+            maxlength="9"
             #telefono="ngModel"
-            [inputStyleClass]="(almacenForm.submitted || telefono.touched) && telefono.invalid ? 'p-invalid' : ''"
+            (keypress)="onlyNumbers($event)"
+            (input)="onTelefonoInput($event)"
+            [ngClass]="{
+              'p-invalid': (almacenForm.submitted || telefono.touched) && telefono.invalid,
+            }"
           />
           <p-message
             *ngIf="(almacenForm.submitted || telefono.touched) && telefono.invalid"
             severity="error"
-            text="El teléfono es obligatorio y debe tener 9 dígitos."
+            text="El teléfono debe tener exactamente 9 dígitos."
           />
         </div>
 
@@ -188,7 +194,9 @@
             required
             #direccion="ngModel"
             (input)="toUpperCase('direccion')"
-            [ngClass]="{ 'p-invalid': (almacenForm.submitted || direccion.touched) && direccion.invalid }"
+            [ngClass]="{
+              'p-invalid': (almacenForm.submitted || direccion.touched) && direccion.invalid,
+            }"
           />
           <p-message
             *ngIf="(almacenForm.submitted || direccion.touched) && direccion.invalid"
@@ -274,7 +282,7 @@
         </small>
       </div>
 
-      <div class="col-12 md:col-4 flex align-items-end">
+      <div class="col-12 md:col-4 flex align-items-end justify-content-end">
         <p-button
           label="Guardar sede"
           icon="pi pi-save"
@@ -287,7 +295,6 @@
     </div>
   </p-card>
 
-    <p-toast position="top-right" />
+  <p-toast position="top-right" />
   <p-confirmdialog />
-   <p-toast></p-toast>
 </div>

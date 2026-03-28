@@ -465,7 +465,7 @@ export class AlmacenCrear implements CanComponentDeactivate, OnInit {
     if (!payload.codigo) {
       this.messageService.add({
         severity: 'warn',
-        summary: 'C?digo requerido',
+        summary: 'Codigo requerido',
         detail: 'El campo c?digo es obligatorio.',
       });
       const codigoCtrl = this.sedeForm?.controls['codigo'] as

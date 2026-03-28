@@ -150,11 +150,11 @@
     <!-- BOTONES -->
     <div class="col-12">
       <p-card styleClass="actions-card">
-        <div class="flex justify-content-center gap-3">
+        <div class="flex justify-content-end gap-3">
           <p-button label="Cancelar" icon="pi pi-times" [outlined]="true"
             severity="secondary" (onClick)="cancelar()">
           </p-button>
-          <p-button label="Guardar Cambios" icon="pi pi-check" severity="info"
+          <p-button label="Guardar Cambios" icon="pi pi-check" severity="primary"
             (onClick)="guardar()"
             [disabled]="!motivoEdit || !tipoMermaEdit"
             [loading]="guardando()">

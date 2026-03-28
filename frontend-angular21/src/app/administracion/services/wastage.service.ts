@@ -4,6 +4,7 @@ import { Observable, throwError } from 'rxjs';
 import { catchError, finalize, tap } from 'rxjs/operators';
 import { environment } from '../../../enviroments/enviroment';
 
+
 export interface CreateWastageDto {
   id_usuario_ref: number;
   id_sede_ref:    number;
@@ -34,8 +35,9 @@ export interface WastageResponseDto {
   responsable:      string;
   tipo_merma_id:    number;
   tipo_merma_label: string;
-  id_sede_ref:      number;   
+  id_sede_ref:      number;
 }
+
 export interface WastagePaginatedResponse {
   data:       WastageResponseDto[];
   total:      number;
@@ -44,13 +46,23 @@ export interface WastagePaginatedResponse {
   totalPages: number;
 }
 
-// ── DTO que devuelve GET /catalog/wastage/tipos ───────────────────────────────
 export interface WastageTypeDto {
   id_tipo:      number;
   tipo:         string;
   motivo_merma: string;
   estado:       boolean;
 }
+
+// ── DTO que devuelve GET /catalog/wastage/search ──────────────────────────────
+export interface WastageSuggestionDto {
+  id_merma:   number;
+  codigo:     string;  // "MER-0032"
+  motivo:     string;
+  tipo_merma: string;
+  descripcion: string; // "3 productos · Jeremy Antón"
+  fec_merma:  string;
+}
+
 
 @Injectable({ providedIn: 'root' })
 export class WastageService {
@@ -61,15 +73,14 @@ export class WastageService {
   private readonly _wastages     = signal<WastageResponseDto[]>([]);
   private readonly _totalPages   = signal(1);
   private readonly _currentPage  = signal(1);
-  private readonly _tiposMerma   = signal<WastageTypeDto[]>([]); 
-
+  private readonly _tiposMerma   = signal<WastageTypeDto[]>([]);
 
   readonly loading     = computed(() => this._loading());
   readonly error       = computed(() => this._error());
   readonly wastages    = computed(() => this._wastages());
   readonly totalPages  = computed(() => this._totalPages());
   readonly currentPage = computed(() => this._currentPage());
-  readonly tiposMerma  = computed(() => this._tiposMerma());       
+  readonly tiposMerma  = computed(() => this._tiposMerma());
 
   constructor(private http: HttpClient) {}
 
@@ -151,7 +162,7 @@ export class WastageService {
       );
   }
 
-  // ── Actualizar merma (solo datos descriptivos, sin tocar stock) ───────────
+  // ── Actualizar merma ──────────────────────────────────────────────────────
   updateWastage(
     id:      number,
     payload: { motivo?: string; id_tipo_merma?: number; observacion?: string },
@@ -168,7 +179,6 @@ export class WastageService {
       )
       .pipe(
         tap(updated => {
-          // Actualiza el registro en caché si existe
           this._wastages.update(prev =>
             prev.map(w => w.id_merma === id ? { ...w, ...updated } : w)
           );
@@ -180,8 +190,8 @@ export class WastageService {
         finalize(() => this._loading.set(false)),
       );
   }
-  
-  // ── Obtener tipos de merma desde la BD ───────────────────────────────────
+
+  // ── Obtener tipos de merma ────────────────────────────────────────────────
   loadTiposMerma(role = 'Administrador'): Observable<WastageTypeDto[]> {
     return this.http
       .get<WastageTypeDto[]>(`${this.api}/logistics/catalog/wastage/tipos`, {
@@ -191,6 +201,33 @@ export class WastageService {
         tap(tipos => this._tiposMerma.set(tipos)),
         catchError(err => {
           this._error.set('No se pudo cargar los tipos de merma.');
+          return throwError(() => err);
+        }),
+      );
+  }
+
+  searchWastages(
+    q:       string,
+    id_sede  = 0,
+    limit    = 8,
+    role     = 'Administrador',
+  ): Observable<WastageSuggestionDto[]> {
+    let params = new HttpParams()
+      .set('q',     q)
+      .set('limit', limit.toString());
+
+    if (id_sede > 0) {
+      params = params.set('id_sede', id_sede.toString());
+    }
+
+    return this.http
+      .get<WastageSuggestionDto[]>(`${this.api}/logistics/catalog/wastage/search`, {
+        headers: this.buildHeaders(role),
+        params,
+      })
+      .pipe(
+        catchError(err => {
+          this._error.set('No se pudo buscar mermas.');
           return throwError(() => err);
         }),
       );
