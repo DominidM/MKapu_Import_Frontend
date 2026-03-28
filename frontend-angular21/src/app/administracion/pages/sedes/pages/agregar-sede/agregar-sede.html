@@ -37,6 +37,7 @@
             placeholder="Ingrese código"
             [(ngModel)]="sede.codigo"
             name="codigo"
+            maxlength="20"
             required
             #codigo="ngModel"
             (input)="toUpperCase('codigo')"
@@ -59,6 +60,7 @@
             placeholder="Ingrese nombre"
             [(ngModel)]="sede.nombre"
             name="nombre"
+            maxlength="50"
             required
             #nombre="ngModel"
             (input)="toUpperCase('nombre')"
@@ -193,6 +195,7 @@
             placeholder="Ingrese dirección"
             [(ngModel)]="sede.direccion"
             name="direccion"
+            maxlength="100"
             required
             #direccion="ngModel"
             (input)="toUpperCase('direccion')"
