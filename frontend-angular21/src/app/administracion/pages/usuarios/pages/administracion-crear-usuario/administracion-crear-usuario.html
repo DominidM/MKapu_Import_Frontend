@@ -1,8 +1,9 @@
 <div class="p-2">
-
   <!-- CABECERA -->
   <p-card class="usuarios-header-card">
-    <div class="usuarios-header-row flex flex-column md:flex-row md:align-items-center md:justify-content-between gap-3">
+    <div
+      class="usuarios-header-row flex flex-column md:flex-row md:align-items-center md:justify-content-between gap-3"
+    >
       <div class="usuarios-header-title flex align-items-center gap-3 w-full md:w-auto">
         <span class="usuarios-title-icon">
           <i class="pi pi-users"></i>
@@ -19,7 +20,8 @@
           label="Nuevo Usuario"
           icon="pi pi-user-plus"
           styleClass="usuarios-pill w-full md:w-auto"
-          (onClick)="nuevoUsuario()">
+          (onClick)="nuevoUsuario()"
+        >
         </p-button>
       </div>
     </div>
@@ -40,24 +42,12 @@
             placeholder="Ingrese DNI (8 dígitos)..."
             [(ngModel)]="filtroDni"
             (input)="aplicarFiltros()"
-            class="w-full">
+            class="w-full"
+          />
         </div>
       </div>
 
       <div class="filtros-linea-2">
-        <div class="filtro-item filtro-compacto">
-          <label>Estado</label>
-          <p-select
-            [options]="estados"
-            optionLabel="label"
-            optionValue="value"
-            [(ngModel)]="filtroEstado"
-            (onChange)="onEstadoChange()"
-            styleClass="w-full"
-            placeholder="Estado">
-          </p-select>
-        </div>
-
         <div class="filtro-item filtro-compacto">
           <label>Sede</label>
           <p-select
@@ -68,15 +58,34 @@
             [(ngModel)]="filtroSede"
             (onChange)="onSedeChange()"
             styleClass="w-full"
-            placeholder="Sede">
+            placeholder="Sede"
+          >
           </p-select>
           <div
             *ngIf="!esAdmin"
             class="flex align-items-center gap-2 px-3 py-2 border-round"
-            style="background: var(--surface-100); border: 1px solid var(--surface-border); height: 42px">
-            <i class="pi pi-map-marker" style="color: #FFA726"></i>
+            style="
+              background: var(--surface-100);
+              border: 1px solid var(--surface-border);
+              height: 42px;
+            "
+          >
+            <i class="pi pi-map-marker" style="color: #ffa726"></i>
             <span class="font-semibold">{{ sedeNombre }}</span>
           </div>
+        </div>
+        <div class="filtro-item filtro-compacto">
+          <label>Estado</label>
+          <p-select
+            [options]="estados"
+            optionLabel="label"
+            optionValue="value"
+            [(ngModel)]="filtroEstado"
+            (onChange)="onEstadoChange()"
+            styleClass="w-full"
+            placeholder="Estado"
+          >
+          </p-select>
         </div>
 
         <div class="filtro-item filtro-compacto">
@@ -88,7 +97,8 @@
             [(ngModel)]="filtroRol"
             (onChange)="onRolChange()"
             styleClass="w-full"
-            placeholder="Rol">
+            placeholder="Rol"
+          >
           </p-select>
         </div>
 
@@ -99,7 +109,8 @@
             icon="pi pi-filter-slash"
             (onClick)="limpiarFiltro()"
             severity="danger"
-            styleClass="btn-limpiar-filtros">
+            styleClass="btn-limpiar-filtros"
+          >
           </p-button>
         </div>
       </div>
@@ -109,8 +120,10 @@
   <!-- ERROR -->
   <p-message
     *ngIf="!cargandoUsuarios && errorUsuarios"
-    severity="error" [text]="errorUsuarios"
-    class="mb-3 block">
+    severity="error"
+    [text]="errorUsuarios"
+    class="mb-3 block"
+  >
   </p-message>
 
   <!-- TABLA -->
@@ -125,22 +138,18 @@
     [limitePorPagina]="limitePagina()"
     [mostrarExportar]="false"
     (pageChange)="onPageChange($event)"
-    (limitChange)="onLimitChange($event)">
-
+    (limitChange)="onLimitChange($event)"
+  >
     <div slot="acciones">
-      <p-tag
-        *ngIf="totalusers > 0"
-        [value]="totalusers + ' usuarios'"
-        severity="info">
-      </p-tag>
+      <p-tag *ngIf="totalusers > 0" [value]="totalusers + ' usuarios'" severity="info"> </p-tag>
     </div>
 
     <p-table
       [value]="usuariosPaginados"
       responsiveLayout="scroll"
       styleClass="p-datatable-striped"
-      [paginator]="false">
-
+      [paginator]="false"
+    >
       <ng-template pTemplate="header">
         <tr>
           <th>Usuario</th>
@@ -166,59 +175,76 @@
           <td>
             <p-tag
               [value]="user.activo ? 'Activo' : 'Inactivo'"
-              [severity]="user.activo ? 'success' : 'danger'">
+              [severity]="user.activo ? 'success' : 'danger'"
+            >
             </p-tag>
           </td>
           <td class="text-center">
             <div class="acciones-tabla">
-
               <!-- VER DETALLE — requiere VER_USUARIOS -->
               <p-button
                 *ngIf="puedeVerDetalle"
                 icon="pi pi-eye"
-                [rounded]="true" [text]="true" severity="secondary"
-                pTooltip="Ver detalle" tooltipPosition="top"
-                (onClick)="verDetalle(user)">
+                [rounded]="true"
+                [text]="true"
+                severity="secondary"
+                pTooltip="Ver detalle"
+                tooltipPosition="top"
+                (onClick)="verDetalle(user)"
+              >
               </p-button>
 
               <!-- EDITAR — requiere EDITAR_USUARIOS -->
               <p-button
                 *ngIf="puedeEditarUsuario"
                 icon="pi pi-pencil"
-                [rounded]="true" [text]="true" severity="secondary"
-                pTooltip="Editar usuario" tooltipPosition="top"
-                [routerLink]="['/admin/usuarios/editar-usuario', user.id_usuario]">
+                [rounded]="true"
+                [text]="true"
+                severity="secondary"
+                pTooltip="Editar usuario"
+                tooltipPosition="top"
+                [routerLink]="['/admin/usuarios/editar-usuario', user.id_usuario]"
+              >
               </p-button>
 
               <!-- SEGUIMIENTO — requiere SEGUIMIENTO_EMPLEADO -->
               <p-button
                 *ngIf="puedeSeguimiento"
                 icon="pi pi-chart-line"
-                [rounded]="true" [text]="true" severity="info"
-                pTooltip="Ver seguimiento" tooltipPosition="top"
-                [routerLink]="['/admin/empleados', user.id_usuario, 'seguimiento']">
+                [rounded]="true"
+                [text]="true"
+                severity="info"
+                pTooltip="Ver seguimiento"
+                tooltipPosition="top"
+                [routerLink]="['/admin/empleados', user.id_usuario, 'seguimiento']"
+              >
               </p-button>
 
               <!-- CAMBIAR CREDENCIALES — solo ADMIN -->
               <p-button
                 *ngIf="puedeCambiarCredenciales"
                 icon="pi pi-key"
-                [rounded]="true" [text]="true" severity="warn"
-                pTooltip="Cambiar credenciales" tooltipPosition="top"
-                (onClick)="openCredModal(user)">
+                [rounded]="true"
+                [text]="true"
+                severity="warn"
+                pTooltip="Cambiar credenciales"
+                tooltipPosition="top"
+                (onClick)="openCredModal(user)"
+              >
               </p-button>
 
               <!-- ACTIVAR / DESACTIVAR — solo ADMIN -->
               <p-button
                 *ngIf="esAdmin"
                 [icon]="user.activo ? 'pi pi-times' : 'pi pi-check'"
-                [rounded]="true" [text]="true"
+                [rounded]="true"
+                [text]="true"
                 [severity]="user.activo ? 'danger' : 'success'"
                 [pTooltip]="user.activo ? 'Desactivar usuario' : 'Activar usuario'"
                 tooltipPosition="top"
-                (onClick)="confirmToggleStatus(user)">
+                (onClick)="confirmToggleStatus(user)"
+              >
               </p-button>
-
             </div>
           </td>
         </tr>
@@ -234,21 +260,20 @@
           </td>
         </tr>
       </ng-template>
-
     </p-table>
 
     <p-confirmdialog />
-
   </app-shared-table-container>
 
   <!-- MODAL DETALLE USUARIO -->
   <p-dialog
     [(visible)]="dialogVisible"
-    [modal]="true" [draggable]="false"
+    [modal]="true"
+    [draggable]="false"
     [style]="{ width: '480px', 'border-radius': '16px', overflow: 'hidden' }"
     [contentStyle]="{ padding: '0' }"
-    (onHide)="dialogVisible = false">
-
+    (onHide)="dialogVisible = false"
+  >
     <ng-template pTemplate="header">
       <span>Detalle de Usuario</span>
     </ng-template>
@@ -276,25 +301,31 @@
             <b>Estado:</b>
             <p-tag
               [value]="u.activo ? 'Activo' : 'Inactivo'"
-              [severity]="u.activo ? 'success' : 'danger'">
+              [severity]="u.activo ? 'success' : 'danger'"
+            >
             </p-tag>
           </div>
         </div>
         <div class="usuario-footer flex justify-content-end gap-2">
           <p-button
-            label="Cerrar" icon="pi pi-times"
-            severity="secondary" [outlined]="true"
+            label="Cerrar"
+            icon="pi pi-times"
+            severity="secondary"
+            [outlined]="true"
             class="user-btn-close"
-            (onClick)="dialogVisible = false">
+            (onClick)="dialogVisible = false"
+          >
           </p-button>
           <!-- Editar dentro del modal — mismo permiso -->
           <p-button
             *ngIf="puedeEditarUsuario"
-            label="Editar Usuario" icon="pi pi-pencil"
+            label="Editar Usuario"
+            icon="pi pi-pencil"
             class="user-btn-edit"
             [routerLink]="['/admin/usuarios/editar-usuario']"
             [queryParams]="{ id: u.id_usuario }"
-            (onClick)="dialogVisible = false">
+            (onClick)="dialogVisible = false"
+          >
           </p-button>
         </div>
       </div>
@@ -304,11 +335,13 @@
   <!-- MODAL Cambiar credenciales -->
   <p-dialog
     [(visible)]="showCredModal"
-    [modal]="true" [draggable]="false" [closable]="false"
+    [modal]="true"
+    [draggable]="false"
+    [closable]="false"
     [style]="{ width: '440px', 'border-radius': '16px', overflow: 'hidden' }"
     [contentStyle]="{ padding: '0' }"
-    (onHide)="closeCredModal()">
-
+    (onHide)="closeCredModal()"
+  >
     <ng-template pTemplate="header"><span></span></ng-template>
 
     <div class="usuario-detail-modal">
@@ -323,19 +356,33 @@
         </button>
       </div>
 
-      <div class="usuario-info-grid" style="border-bottom: 1px solid rgba(255,255,255,0.06); padding: 0.75rem 1.5rem;">
-        <div class="usuario-info-item" style="grid-column: 1 / -1; display:flex; align-items:center; gap:0.5rem;">
-          <i class="pi pi-user" style="color:#64748b; font-size:0.8rem;"></i>
-          <span style="font-size:0.75rem; color:#64748b;">Usuario actual:</span>
-          <span style="font-size:0.85rem; font-weight:600;">
-            {{ credLoading ? 'Cargando...' : (credNomUsu || 'Sin cuenta') }}
+      <div
+        class="usuario-info-grid"
+        style="border-bottom: 1px solid rgba(255, 255, 255, 0.06); padding: 0.75rem 1.5rem"
+      >
+        <div
+          class="usuario-info-item"
+          style="grid-column: 1 / -1; display: flex; align-items: center; gap: 0.5rem"
+        >
+          <i class="pi pi-user" style="color: #64748b; font-size: 0.8rem"></i>
+          <span style="font-size: 0.75rem; color: #64748b">Usuario actual:</span>
+          <span style="font-size: 0.85rem; font-weight: 600">
+            {{ credLoading ? 'Cargando...' : credNomUsu || 'Sin cuenta' }}
           </span>
         </div>
       </div>
 
-      <div style="display:flex; flex-direction:column; gap:1rem; padding:1.25rem 1.5rem;">
+      <div style="display: flex; flex-direction: column; gap: 1rem; padding: 1.25rem 1.5rem">
         <div class="flex flex-column gap-1">
-          <label style="font-size:0.65rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:#64748b;">
+          <label
+            style="
+              font-size: 0.65rem;
+              font-weight: 700;
+              letter-spacing: 0.1em;
+              text-transform: uppercase;
+              color: #64748b;
+            "
+          >
             Nombre de usuario
           </label>
           <input
@@ -343,11 +390,20 @@
             [(ngModel)]="credNomUsu"
             placeholder="Ej: jeremy_admin"
             [disabled]="credLoading"
-            style="width:100%; border-radius:8px;" />
+            style="width: 100%; border-radius: 8px"
+          />
         </div>
 
         <div class="flex flex-column gap-1">
-          <label style="font-size:0.65rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:#64748b;">
+          <label
+            style="
+              font-size: 0.65rem;
+              font-weight: 700;
+              letter-spacing: 0.1em;
+              text-transform: uppercase;
+              color: #64748b;
+            "
+          >
             Nueva contraseña
           </label>
           <p-password
@@ -358,12 +414,21 @@
             [disabled]="credLoading"
             styleClass="w-full"
             inputStyleClass="w-full"
-            style="width:100%;">
+            style="width: 100%"
+          >
           </p-password>
         </div>
 
         <div class="flex flex-column gap-1">
-          <label style="font-size:0.65rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:#64748b;">
+          <label
+            style="
+              font-size: 0.65rem;
+              font-weight: 700;
+              letter-spacing: 0.1em;
+              text-transform: uppercase;
+              color: #64748b;
+            "
+          >
             Confirmar contraseña
           </label>
           <p-password
@@ -374,11 +439,13 @@
             [disabled]="credLoading"
             styleClass="w-full"
             inputStyleClass="w-full"
-            style="width:100%;">
+            style="width: 100%"
+          >
           </p-password>
           <small
             *ngIf="credPassword && credConfirm && credPassword !== credConfirm"
-            style="color:#f87171; font-size:0.75rem;">
+            style="color: #f87171; font-size: 0.75rem"
+          >
             Las contraseñas no coinciden
           </small>
         </div>
@@ -386,23 +453,27 @@
 
       <div class="usuario-footer flex justify-content-end gap-2">
         <p-button
-          label="Cancelar" icon="pi pi-times"
-          severity="secondary" [outlined]="true"
+          label="Cancelar"
+          icon="pi pi-times"
+          severity="secondary"
+          [outlined]="true"
           class="user-btn-close"
           [disabled]="credLoading"
-          (onClick)="closeCredModal()">
+          (onClick)="closeCredModal()"
+        >
         </p-button>
         <p-button
-          label="Guardar cambios" icon="pi pi-save"
+          label="Guardar cambios"
+          icon="pi pi-save"
           class="user-btn-edit"
           [loading]="credLoading"
           [disabled]="credLoading"
-          (onClick)="saveCredentials()">
+          (onClick)="saveCredentials()"
+        >
         </p-button>
       </div>
     </div>
   </p-dialog>
-
 </div>
 
 <p-toast></p-toast>

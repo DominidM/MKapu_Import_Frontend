@@ -9,7 +9,12 @@
         </div>
       </div>
       <div class="flex align-items-center gap-2">
-        <p-button (onClick)="abrirRegistro()" label="Registrar Remate" icon="pi pi-plus" styleClass="clientes-pill"></p-button>
+        <p-button
+          (onClick)="abrirRegistro()"
+          label="Registrar Remate"
+          icon="pi pi-plus"
+          styleClass="clientes-pill"
+        ></p-button>
       </div>
     </div>
   </p-card>
@@ -34,7 +39,7 @@
           <i class="pi pi-chart-line stat-icon"></i>
           <div>
             <p class="stat-label">VALOR TOTAL</p>
-            <h3 class="stat-value">S/ {{ valorTotalRemates() | number:'1.2-2' }}</h3>
+            <h3 class="stat-value">S/ {{ valorTotalRemates() | number: '1.2-2' }}</h3>
             <p class="stat-change">Precio de remate acumulado</p>
           </div>
         </div>
@@ -50,19 +55,18 @@
       <div class="filtros-linea-1">
         <div class="filtro-item filtro-cliente-50">
           <label>Buscar Remate</label>
-          <input pInputText type="text" placeholder="Buscar por código o producto..."
-            class="w-full" [ngModel]="busqueda()" (ngModelChange)="onBusquedaChange($event)">
+          <input
+            pInputText
+            type="text"
+            placeholder="Buscar por código o producto..."
+            class="w-full"
+            [ngModel]="busqueda()"
+            (ngModelChange)="onBusquedaChange($event)"
+          />
         </div>
       </div>
 
       <div class="filtros-linea-2">
-        <div class="filtro-item filtro-compacto">
-          <label>Estado</label>
-          <p-select [ngModel]="estadoFiltro()" (ngModelChange)="onEstadoChange($event)"
-            [options]="estadoOptions" placeholder="Todos"
-            optionLabel="label" optionValue="value"
-            [showClear]="true" styleClass="w-full" />
-        </div>
         <div class="filtro-item filtro-compacto">
           <label>SEDE</label>
 
@@ -81,16 +85,40 @@
           <div
             *ngIf="!esAdmin"
             class="flex align-items-center gap-2 px-3 py-2 border-round"
-            style="background: var(--surface-100); border: 1px solid var(--surface-border); height: 42px">
-            <i class="pi pi-map-marker" style="color: #FFA726"></i>
+            style="
+              background: var(--surface-100);
+              border: 1px solid var(--surface-border);
+              height: 42px;
+            "
+          >
+            <i class="pi pi-map-marker" style="color: #ffa726"></i>
             <span class="font-semibold">{{ sedeNombre }}</span>
           </div>
         </div>
+        <div class="filtro-item filtro-compacto">
+          <label>Estado</label>
+          <p-select
+            [ngModel]="estadoFiltro()"
+            (ngModelChange)="onEstadoChange($event)"
+            [options]="estadoOptions"
+            placeholder="Todos"
+            optionLabel="label"
+            optionValue="value"
+            [showClear]="true"
+            styleClass="w-full"
+          />
+        </div>
+
         <div class="filtro-item filtro-boton-limpiar">
           <label>&nbsp;</label>
-          <p-button label="Limpiar Filtros" icon="pi pi-filter-slash"
-            severity="danger" styleClass="btn-limpiar-filtros"
-            type="button" (click)="limpiarFiltros()">
+          <p-button
+            label="Limpiar Filtros"
+            icon="pi pi-filter-slash"
+            severity="danger"
+            styleClass="btn-limpiar-filtros"
+            type="button"
+            (click)="limpiarFiltros()"
+          >
           </p-button>
         </div>
       </div>
@@ -99,35 +127,51 @@
 
   <!-- TABLA -->
   <app-shared-table-container
-    titulo="Remates Registrados" iconoTitulo="pi pi-list"
-    mensajeCarga="Cargando remates..." [loading]="cargando()"
-    [paginaActual]="page()" [totalPaginas]="totalPages()"
-    [totalRegistros]="productosFiltrados().length" [limitePorPagina]="limit()"
+    titulo="Remates Registrados"
+    iconoTitulo="pi pi-list"
+    mensajeCarga="Cargando remates..."
+    [loading]="cargando()"
+    [paginaActual]="page()"
+    [totalPaginas]="totalPages()"
+    [totalRegistros]="productosFiltrados().length"
+    [limitePorPagina]="limit()"
     [mostrarExportar]="false"
-    (pageChange)="onPageChange($event)" (limitChange)="onLimitChange($event)">
-
+    (pageChange)="onPageChange($event)"
+    (limitChange)="onLimitChange($event)"
+  >
     <div slot="acciones">
-      <p-tag *ngIf="productosFiltrados().length > 0"
+      <p-tag
+        *ngIf="productosFiltrados().length > 0"
         [value]="productosFiltrados().length + ' remates'"
-        [severity]="estadoFiltro() === 'ACTIVO' ? 'success'
-                  : estadoFiltro() === 'FINALIZADO' ? 'secondary'
-                  : estadoFiltro() === 'CANCELADO'  ? 'danger' : 'info'">
+        [severity]="
+          estadoFiltro() === 'ACTIVO'
+            ? 'success'
+            : estadoFiltro() === 'FINALIZADO'
+              ? 'secondary'
+              : estadoFiltro() === 'CANCELADO'
+                ? 'danger'
+                : 'info'
+        "
+      >
       </p-tag>
     </div>
 
-    <p-table [value]="rematesPaginados()" [tableStyle]="{ 'min-width': '100%' }"
-      styleClass="p-datatable-striped" [paginator]="false">
-
+    <p-table
+      [value]="rematesPaginados()"
+      [tableStyle]="{ 'min-width': '100%' }"
+      styleClass="p-datatable-striped"
+      [paginator]="false"
+    >
       <ng-template pTemplate="header">
         <tr>
-          <th style="width:10%">CÓDIGO</th>
-          <th style="width:25%">PRODUCTO</th>
-          <th style="width:12%">SEDE</th>
-          <th style="width:10%">CANTIDAD</th>
-          <th style="width:13%">PRECIO REMATE</th>
-          <th style="width:8%">DESCUENTO</th>
-          <th style="width:10%">ESTADO</th>
-          <th style="width:8%" class="text-center">ACCIONES</th>
+          <th style="width: 10%">CÓDIGO</th>
+          <th style="width: 25%">PRODUCTO</th>
+          <th style="width: 12%">SEDE</th>
+          <th style="width: 10%">CANTIDAD</th>
+          <th style="width: 13%">PRECIO REMATE</th>
+          <th style="width: 8%">DESCUENTO</th>
+          <th style="width: 10%">ESTADO</th>
+          <th style="width: 8%" class="text-center">ACCIONES</th>
         </tr>
       </ng-template>
 
@@ -147,8 +191,12 @@
           </td>
           <td>
             <div class="flex flex-column gap-1">
-              <span class="precio-remate font-bold">S/ {{ remate.precioRemate | number:'1.2-2' }}</span>
-              <small class="text-500">Original: S/ {{ remate.precioOriginal | number:'1.2-2' }}</small>
+              <span class="precio-remate font-bold"
+                >S/ {{ remate.precioRemate | number: '1.2-2' }}</span
+              >
+              <small class="text-500"
+                >Original: S/ {{ remate.precioOriginal | number: '1.2-2' }}</small
+              >
             </div>
           </td>
           <td>
@@ -159,19 +207,47 @@
           </td>
           <td class="text-center">
             <div class="acciones-tabla">
-              <p-button icon="pi pi-eye" [rounded]="true" [text]="true" severity="secondary"
-                pTooltip="Ver detalle" tooltipPosition="top" (onClick)="verDetalle(remate)">
+              <p-button
+                icon="pi pi-eye"
+                [rounded]="true"
+                [text]="true"
+                severity="secondary"
+                pTooltip="Ver detalle"
+                tooltipPosition="top"
+                (onClick)="verDetalle(remate)"
+              >
               </p-button>
-              <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="secondary"
-                pTooltip="Editar remate" tooltipPosition="top" (onClick)="editarRemate(remate)">
+              <p-button
+                icon="pi pi-pencil"
+                [rounded]="true"
+                [text]="true"
+                severity="secondary"
+                pTooltip="Editar remate"
+                tooltipPosition="top"
+                (onClick)="editarRemate(remate)"
+              >
               </p-button>
-              <p-button *ngIf="remate.estado === 'ACTIVO'"
-                icon="pi pi-times" [rounded]="true" [text]="true" severity="danger"
-                pTooltip="Finalizar remate" tooltipPosition="top" (onClick)="confirmarCambioEstado(remate)">
+              <p-button
+                *ngIf="remate.estado === 'ACTIVO'"
+                icon="pi pi-times"
+                [rounded]="true"
+                [text]="true"
+                severity="danger"
+                pTooltip="Finalizar remate"
+                tooltipPosition="top"
+                (onClick)="confirmarCambioEstado(remate)"
+              >
               </p-button>
-              <p-button *ngIf="remate.estado === 'FINALIZADO'"
-                icon="pi pi-refresh" [rounded]="true" [text]="true" severity="success"
-                pTooltip="Reactivar remate" tooltipPosition="top" (onClick)="confirmarCambioEstado(remate)">
+              <p-button
+                *ngIf="remate.estado === 'FINALIZADO'"
+                icon="pi pi-refresh"
+                [rounded]="true"
+                [text]="true"
+                severity="success"
+                pTooltip="Reactivar remate"
+                tooltipPosition="top"
+                (onClick)="confirmarCambioEstado(remate)"
+              >
               </p-button>
             </div>
           </td>
@@ -192,15 +268,18 @@
   </app-shared-table-container>
 
   <!-- MODAL DETALLE -->
-  <p-dialog [(visible)]="dialogVisible" [modal]="true" [draggable]="false"
+  <p-dialog
+    [(visible)]="dialogVisible"
+    [modal]="true"
+    [draggable]="false"
     [style]="{ width: '520px', 'border-radius': '16px', overflow: 'hidden' }"
-    [contentStyle]="{ padding: '0' }" (onHide)="cerrarModalDetalle()">
-
+    [contentStyle]="{ padding: '0' }"
+    (onHide)="cerrarModalDetalle()"
+  >
     <ng-template pTemplate="header"><span></span></ng-template>
 
     <ng-container *ngIf="remateSeleccionado() as r">
       <div class="remate-detail-modal">
-
         <div class="rdm-banner">
           <div class="rdm-banner-icon"><i class="pi pi-tag"></i></div>
           <div class="rdm-banner-info">
@@ -214,10 +293,12 @@
 
         <div class="rdm-code-row">
           <span class="rdm-code-badge"><i class="pi pi-barcode"></i>{{ r.codigo }}</span>
-          <span class="rdm-status-badge"
+          <span
+            class="rdm-status-badge"
             [class.rdm-status--activo]="r.estado === 'ACTIVO'"
             [class.rdm-status--finalizado]="r.estado === 'FINALIZADO'"
-            [class.rdm-status--cancelado]="r.estado === 'CANCELADO'">
+            [class.rdm-status--cancelado]="r.estado === 'CANCELADO'"
+          >
             <span class="rdm-status-dot"></span>{{ r.estado }}
           </span>
         </div>
@@ -248,14 +329,16 @@
             <span class="rdm-info-icon"><i class="pi pi-wallet"></i></span>
             <div class="rdm-info-content">
               <span class="rdm-info-label">Precio original</span>
-              <span class="rdm-info-value">S/ {{ r.precioOriginal | number:'1.2-2' }}</span>
+              <span class="rdm-info-value">S/ {{ r.precioOriginal | number: '1.2-2' }}</span>
             </div>
           </div>
           <div class="rdm-info-item">
             <span class="rdm-info-icon"><i class="pi pi-dollar"></i></span>
             <div class="rdm-info-content">
               <span class="rdm-info-label">Precio remate</span>
-              <span class="rdm-info-value font-bold text-primary">S/ {{ r.precioRemate | number:'1.2-2' }}</span>
+              <span class="rdm-info-value font-bold text-primary"
+                >S/ {{ r.precioRemate | number: '1.2-2' }}</span
+              >
             </div>
           </div>
           <div class="rdm-info-item rdm-info-item--full" *ngIf="r.observacion">
@@ -268,18 +351,33 @@
         </div>
 
         <div class="rdm-footer">
-          <p-button label="Cerrar" icon="pi pi-times" severity="secondary" [outlined]="true"
-            styleClass="rdm-btn-close" (onClick)="cerrarModalDetalle()">
+          <p-button
+            label="Cerrar"
+            icon="pi pi-times"
+            severity="secondary"
+            [outlined]="true"
+            styleClass="rdm-btn-close"
+            (onClick)="cerrarModalDetalle()"
+          >
           </p-button>
-          <p-button *ngIf="r.estado === 'ACTIVO'"
-            label="Finalizar Remate" icon="pi pi-check" severity="danger" [outlined]="true"
-            styleClass="rdm-btn-toggle" (onClick)="confirmarCambioEstado(r)">
+          <p-button
+            *ngIf="r.estado === 'ACTIVO'"
+            label="Finalizar Remate"
+            icon="pi pi-check"
+            severity="danger"
+            [outlined]="true"
+            styleClass="rdm-btn-toggle"
+            (onClick)="confirmarCambioEstado(r)"
+          >
           </p-button>
-          <p-button label="Editar Remate" icon="pi pi-pencil"
-            styleClass="rdm-btn-edit" (onClick)="editarRemate(r)">
+          <p-button
+            label="Editar Remate"
+            icon="pi pi-pencil"
+            styleClass="rdm-btn-edit"
+            (onClick)="editarRemate(r)"
+          >
           </p-button>
         </div>
-
       </div>
     </ng-container>
   </p-dialog>

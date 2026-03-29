@@ -95,20 +95,6 @@
       </div>
       <div class="filtros-linea-2">
         <div class="filtro-item filtro-compacto">
-          <label>TIPO</label>
-          <p-select
-            [options]="tiposMermaOpciones()"
-            [ngModel]="tipoMermaFiltro()"
-            (ngModelChange)="tipoMermaFiltro.set($event); recargarConFiltros()"
-            optionLabel="label"
-            optionValue="value"
-            placeholder="Todos los tipos"
-            styleClass="w-full"
-            [showClear]="true"
-          >
-          </p-select>
-        </div>
-        <div class="filtro-item filtro-compacto">
           <label>SEDE</label>
 
           <p-select
@@ -126,11 +112,31 @@
           <div
             *ngIf="!esAdmin"
             class="flex align-items-center gap-2 px-3 py-2 border-round"
-            style="background: var(--surface-100); border: 1px solid var(--surface-border); height: 42px">
-            <i class="pi pi-map-marker" style="color: #FFA726"></i>
+            style="
+              background: var(--surface-100);
+              border: 1px solid var(--surface-border);
+              height: 42px;
+            "
+          >
+            <i class="pi pi-map-marker" style="color: #ffa726"></i>
             <span class="font-semibold">{{ sedeNombre }}</span>
           </div>
         </div>
+        <div class="filtro-item filtro-compacto">
+          <label>TIPO</label>
+          <p-select
+            [options]="tiposMermaOpciones()"
+            [ngModel]="tipoMermaFiltro()"
+            (ngModelChange)="tipoMermaFiltro.set($event); recargarConFiltros()"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Todos los tipos"
+            styleClass="w-full"
+            [showClear]="true"
+          >
+          </p-select>
+        </div>
+
         <div class="filtro-item filtro-boton-limpiar">
           <label>&nbsp;</label>
           <p-button
