@@ -151,7 +151,6 @@ export class AdministracionCrearUsuario implements OnInit {
     this.puedeSeguimiento   = this.authService.hasPermiso('SEGUIMIENTO_EMPLEADO');
     this.puedeVerDetalle    = this.authService.hasPermiso('VER_USUARIOS');
 
-    // ✅ Obtener sede seleccionada del localStorage (si existe)
     const sedeGuardada = localStorage.getItem('filtroSedeUsuarios');
     this.filtroSede = sedeGuardada 
       ? Number(sedeGuardada) 
@@ -163,7 +162,6 @@ export class AdministracionCrearUsuario implements OnInit {
       roles:    this.roleService.loadRoles(),
     }).subscribe({
       next: ({ sedes, usuarios, roles }) => {
-        // ✅ Poner la sede propia primero, luego las otras
         const sedePropia = sedes.headquarters.find(s => s.id_sede === this.sedePropiaId);
         const otrosSedes = sedes.headquarters.filter(s => s.id_sede !== this.sedePropiaId);
 

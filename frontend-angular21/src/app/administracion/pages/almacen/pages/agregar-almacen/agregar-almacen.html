@@ -116,15 +116,48 @@
         <!-- Teléfono -->
         <div class="col-12 md:col-6">
           <label for="telefono">TELÉFONO</label>
-          <p-inputnumber class="w-full" [(ngModel)]="sede.telefono" inputId="telefono" placeholder="Ingrese 9 dígitos" [useGrouping]="false" [min]="100000000" [max]="999999999" name="telefono" required #telefono="ngModel" [inputStyleClass]="(sedeForm.submitted || telefono.touched) && telefono.invalid ? 'p-invalid' : ''" />
-          <p-message *ngIf="(sedeForm.submitted || telefono.touched) && telefono.invalid" severity="error" text="El teléfono es obligatorio y debe tener 9 dígitos." />
+          <input
+            id="telefono"
+            pInputText
+            class="w-full"
+            [(ngModel)]="sede.telefono"
+            (input)="sede.telefono = sede.telefono.replace(/[^0-9]/g, '').slice(0, 9)"
+            placeholder="Ingrese 9 dígitos"
+            name="telefono"
+            required
+            maxlength="9"
+            appOnlyNumbers
+            #telefono="ngModel"
+            [ngClass]="(sedeForm?.submitted || telefono.touched) && !validateTelefono() ? 'ng-invalid ng-touched' : ''"
+          />
+          <p-message
+            *ngIf="(sedeForm?.submitted || telefono.touched) && !validateTelefono()"
+            severity="error"
+            [text]="getTelefonoErrorText()"
+          />
         </div>
 
         <!-- Dirección -->
         <div class="col-12">
           <label for="direccion">DIRECCIÓN</label>
-          <input id="direccion" pInputText class="w-full" placeholder="Ingrese dirección" [(ngModel)]="sede.direccion" name="direccion" required #direccion="ngModel" (input)="toUpperCase('direccion')" />
-          <p-message *ngIf="(sedeForm.submitted || direccion.touched) && direccion.invalid" severity="error" text="La dirección es obligatoria." />
+          <input
+            id="direccion"
+            pInputText
+            class="w-full"
+            placeholder="Ingrese dirección"
+            [(ngModel)]="sede.direccion"
+            name="direccion"
+            required
+            (input)="toUpperCase('direccion')"
+            appValidDireccion
+            #direccion="ngModel"
+            [ngClass]="(sedeForm?.submitted || direccion.touched) && !validateDireccion() ? 'ng-invalid ng-touched' : ''"
+          />
+          <p-message
+            *ngIf="(sedeForm?.submitted || direccion.touched) && !validateDireccion()"
+            severity="error"
+            [text]="getDireccionErrorText()"
+          />
         </div>
       </div>
 

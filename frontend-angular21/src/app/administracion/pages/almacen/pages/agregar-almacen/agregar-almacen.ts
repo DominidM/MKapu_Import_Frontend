@@ -10,7 +10,7 @@ import {
   computed,
   signal,
 } from '@angular/core';
-import { FormsModule, NgForm, AbstractControl } from '@angular/forms';
+import { FormsModule, NgForm, AbstractControl, ValidatorFn, AbstractControlOptions } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
@@ -32,7 +32,6 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { SedeService } from '../../../../services/sede.service';
 import { SedeAlmacenService } from '../../../../services/sede-almacen.service';
 
-// Directiva para bloquear números en autocomplete
 @Directive({
   selector: '[appNoNumbers]',
   standalone: true
@@ -56,6 +55,65 @@ export class NoNumbersDirective {
   onPaste(event: ClipboardEvent): boolean {
     const pastedText = event.clipboardData?.getData('text') || '';
     const regex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]*$/;
+    if (!regex.test(pastedText)) {
+      event.preventDefault();
+      return false;
+    }
+    return true;
+  }
+}
+
+@Directive({
+  selector: '[appOnlyNumbers]',
+  standalone: true
+})
+export class OnlyNumbersDirective {
+  @HostListener('keypress', ['$event'])
+  onKeyPress(event: KeyboardEvent): boolean {
+    const regex = /^[0-9]$/;
+    const allowedKeys = ['Backspace', 'Tab', 'Delete', 'ArrowLeft', 'ArrowRight'];
+    if (allowedKeys.includes(event.key)) return true;
+    if (!regex.test(event.key)) {
+      event.preventDefault();
+      return false;
+    }
+    return true;
+  }
+
+  @HostListener('paste', ['$event'])
+  onPaste(event: ClipboardEvent): boolean {
+    const pastedText = event.clipboardData?.getData('text') || '';
+    const regex = /^[0-9]*$/;
+    if (!regex.test(pastedText)) {
+      event.preventDefault();
+      return false;
+    }
+    return true;
+  }
+}
+
+@Directive({
+  selector: '[appValidDireccion]',
+  standalone: true
+})
+export class ValidDireccionDirective {
+  @HostListener('keypress', ['$event'])
+  onKeyPress(event: KeyboardEvent): boolean {
+    // Permite: letras, números, espacios, punto, coma, guion
+    const regex = /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s.,\-#°]$/;
+    const allowedKeys = ['Backspace', 'Tab', 'Delete', 'ArrowLeft', 'ArrowRight'];
+    if (allowedKeys.includes(event.key)) return true;
+    if (!regex.test(event.key)) {
+      event.preventDefault();
+      return false;
+    }
+    return true;
+  }
+
+  @HostListener('paste', ['$event'])
+  onPaste(event: ClipboardEvent): boolean {
+    const pastedText = event.clipboardData?.getData('text') || '';
+    const regex = /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s.,\-#°]*$/;
     if (!regex.test(pastedText)) {
       event.preventDefault();
       return false;
@@ -103,6 +161,8 @@ interface AssignWarehouseError {
     MessageModule,
     SelectModule,
     NoNumbersDirective,
+    OnlyNumbersDirective,
+    ValidDireccionDirective,
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './agregar-almacen.html',
@@ -120,7 +180,7 @@ export class AlmacenCrear implements CanComponentDeactivate, OnInit {
     departamento: '',
     provincia: '',
     ciudad: '',
-    telefono: null as number | null,
+    telefono: '', 
     direccion: '',
   };
 
@@ -238,15 +298,16 @@ export class AlmacenCrear implements CanComponentDeactivate, OnInit {
     return regex.test(event.key) || event.key === 'Backspace' || event.key === 'Tab';
   }
 
-  onlyNumbers(event: KeyboardEvent): boolean {
-    const regex = /^[0-9]$/;
-    const allowedKeys = ['Backspace', 'Tab', 'Delete', 'ArrowLeft', 'ArrowRight'];
-    if (allowedKeys.includes(event.key)) return true;
-    if (!regex.test(event.key)) {
-      event.preventDefault();
-      return false;
-    }
-    return true;
+  validateTelefono(): boolean {
+    const telefonoStr = (this.sede.telefono ?? '').trim();
+    return telefonoStr.length === 9 && /^\d{9}$/.test(telefonoStr);
+  }
+
+  validateDireccion(): boolean {
+    const direccion = (this.sede.direccion ?? '').trim();
+    // Permite: letras, números, espacios, punto, coma, guion, #, °
+    const regex = /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s.,\-#°]+$/;
+    return regex.test(direccion) && direccion.length > 0;
   }
 
   filterDepartamentos(event: { query: string }): void {
@@ -336,7 +397,6 @@ export class AlmacenCrear implements CanComponentDeactivate, OnInit {
     return candidate.step === 'assign' && typeof candidate.message === 'string';
   }
 
-  // ----- Helpers para limpiar errores del control Código -----
   onCodigoInput(): void {
     this.messageService.clear();
 
@@ -381,12 +441,38 @@ export class AlmacenCrear implements CanComponentDeactivate, OnInit {
     }
   }
 
-  // Getter used by template to avoid complex expressions in the template
   getCodigoErrorText(): string {
     const codigoCtrl = this.sedeForm?.controls?.['codigo'] as AbstractControl | undefined;
     const serverErr = codigoCtrl?.errors?.['server'];
     if (serverErr) return String(serverErr);
     return 'El código es obligatorio.';
+  }
+
+  getTelefonoErrorText(): string {
+    const telefonoCtrl = this.sedeForm?.controls?.['telefono'] as AbstractControl | undefined;
+    if (!telefonoCtrl) return 'El teléfono es obligatorio.';
+    
+    const value = (this.sede.telefono ?? '').trim();
+    if (!value) return 'El teléfono es obligatorio.';
+    if (value.length !== 9) return 'El teléfono debe tener exactamente 9 dígitos.';
+    if (!/^\d{9}$/.test(value)) return 'El teléfono solo puede contener números.';
+    
+    return '';
+  }
+
+  getDireccionErrorText(): string {
+    const direccionCtrl = this.sedeForm?.controls?.['direccion'] as AbstractControl | undefined;
+    if (!direccionCtrl) return 'La dirección es obligatoria.';
+    
+    const value = (this.sede.direccion ?? '').trim();
+    if (!value) return 'La dirección es obligatoria.';
+    
+    const regex = /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s.,\-#°]+$/;
+    if (!regex.test(value)) {
+      return 'La dirección contiene caracteres especiales no permitidos.';
+    }
+    
+    return '';
   }
 
   saveSede(form: NgForm): void {
@@ -400,15 +486,39 @@ export class AlmacenCrear implements CanComponentDeactivate, OnInit {
       this.messageService.add({
         severity: 'warn',
         summary: 'Campos incompletos',
-        detail: 'Completa los campos obligatorios para registrar el almac?n.',
+        detail: 'Completa los campos obligatorios para registrar el almacén.',
       });
+      return;
+    }
+
+    if (!this.validateTelefono()) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Teléfono inválido',
+        detail: 'El teléfono debe tener exactamente 9 dígitos.',
+      });
+      const telefonoCtrl = this.sedeForm?.controls['telefono'] as AbstractControl | undefined;
+      telefonoCtrl?.setErrors({ invalid: true });
+      telefonoCtrl?.markAsTouched();
+      return;
+    }
+
+    if (!this.validateDireccion()) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Dirección inválida',
+        detail: 'La dirección contiene caracteres especiales no permitidos.',
+      });
+      const direccionCtrl = this.sedeForm?.controls['direccion'] as AbstractControl | undefined;
+      direccionCtrl?.setErrors({ invalid: true });
+      direccionCtrl?.markAsTouched();
       return;
     }
 
     if (!this.departamentos.includes(this.sede.departamento)) {
       this.messageService.add({
         severity: 'warn',
-        summary: 'Departamento inv?lido',
+        summary: 'Departamento inválido',
         detail: 'Seleccione un departamento de la lista.',
       });
       return;
@@ -417,7 +527,7 @@ export class AlmacenCrear implements CanComponentDeactivate, OnInit {
     if (!this.provincias.includes(this.sede.provincia)) {
       this.messageService.add({
         severity: 'warn',
-        summary: 'Provincia inv?lida',
+        summary: 'Provincia inválida',
         detail: 'Seleccione una provincia de la lista.',
       });
       return;
@@ -426,7 +536,7 @@ export class AlmacenCrear implements CanComponentDeactivate, OnInit {
     if (!this.distritos.includes(this.sede.ciudad)) {
       this.messageService.add({
         severity: 'warn',
-        summary: 'Distrito inv?lido',
+        summary: 'Distrito inválido',
         detail: 'Seleccione un distrito de la lista.',
       });
       return;
@@ -437,17 +547,7 @@ export class AlmacenCrear implements CanComponentDeactivate, OnInit {
       this.messageService.add({
         severity: 'warn',
         summary: 'Sede requerida',
-        detail: 'Selecciona una sede para asignar el almac?n.',
-      });
-      return;
-    }
-
-    const telefonoStr = String(this.sede.telefono ?? '');
-    if (telefonoStr.length !== 9) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Tel?fono inv?lido',
-        detail: 'El tel?fono debe tener exactamente 9 d?gitos.',
+        detail: 'Selecciona una sede para asignar el almacén.',
       });
       return;
     }
@@ -459,18 +559,16 @@ export class AlmacenCrear implements CanComponentDeactivate, OnInit {
       departamento: (this.sede.departamento ?? '').trim(),
       provincia: (this.sede.provincia ?? '').trim(),
       direccion: (this.sede.direccion ?? '').trim().toUpperCase(),
-      telefono: telefonoStr,
+      telefono: (this.sede.telefono ?? '').trim(),
     };
 
     if (!payload.codigo) {
       this.messageService.add({
         severity: 'warn',
         summary: 'Codigo requerido',
-        detail: 'El campo c?digo es obligatorio.',
+        detail: 'El campo código es obligatorio.',
       });
-      const codigoCtrl = this.sedeForm?.controls['codigo'] as
-        | AbstractControl
-        | undefined;
+      const codigoCtrl = this.sedeForm?.controls['codigo'] as AbstractControl | undefined;
       codigoCtrl?.setErrors({ required: true });
       codigoCtrl?.markAsTouched();
       return;
@@ -487,7 +585,7 @@ export class AlmacenCrear implements CanComponentDeactivate, OnInit {
             return throwError(
               () =>
                 new Error(
-                  'El almac?n se cre?, pero no se recibi? un identificador v?lido.',
+                  'El almacén se creó, pero no se recibió un identificador válido.',
                 ),
             );
           }
@@ -520,8 +618,8 @@ export class AlmacenCrear implements CanComponentDeactivate, OnInit {
           this.allowNavigate = true;
           this.messageService.add({
             severity: 'success',
-            summary: 'Almac?n registrado',
-            detail: `Se registr? el almac?n ${created.nombre} (${created.codigo}) y se asign? correctamente a la sede.`,
+            summary: 'Almacén registrado',
+            detail: `Se registró el almacén ${created.nombre} (${created.codigo}) y se asignó correctamente a la sede.`,
             life: 3000,
           });
           setTimeout(() => {
@@ -535,8 +633,8 @@ export class AlmacenCrear implements CanComponentDeactivate, OnInit {
             );
             this.messageService.add({
               severity: 'warn',
-              summary: 'Asignaci?n pendiente',
-              detail: `El almac?n se cre? (ID ${fallbackWarehouseId}), pero no se pudo asignar a la sede seleccionada. ${err.message}`,
+              summary: 'Asignación pendiente',
+              detail: `El almacén se creó (ID ${fallbackWarehouseId}), pero no se pudo asignar a la sede seleccionada. ${err.message}`,
               life: 5000,
             });
             return;
@@ -552,9 +650,7 @@ export class AlmacenCrear implements CanComponentDeactivate, OnInit {
             ? duplicateCodeMessage
             : serverMsg;
 
-          const codigoCtrl = this.sedeForm?.controls['codigo'] as
-            | AbstractControl
-            | undefined;
+          const codigoCtrl = this.sedeForm?.controls['codigo'] as AbstractControl | undefined;
           if (
             isDuplicateCodeError ||
             normalizedServerMessage.includes('codigo') ||

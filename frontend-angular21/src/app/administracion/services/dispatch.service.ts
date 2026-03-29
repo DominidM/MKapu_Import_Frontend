@@ -51,6 +51,9 @@ export interface LoadDispatchParams {
   limit?:      number;
   fechaDesde?: string;
   fechaHasta?: string;
+  id_sede?:    number;     
+  estado?:     string;    
+  search?:     string;     
 }
 
 @Injectable({ providedIn: 'root' })
@@ -85,6 +88,9 @@ export class DispatchService {
 
     if (params?.fechaDesde) qp = qp.set('fechaDesde', params.fechaDesde);
     if (params?.fechaHasta) qp = qp.set('fechaHasta', params.fechaHasta);
+    if (params?.id_sede)    qp = qp.set('id_sede', String(params.id_sede));
+    if (params?.estado)     qp = qp.set('estado', params.estado);
+    if (params?.search)     qp = qp.set('search', params.search);
 
     return this.http
       .get<DispatchPageResult>(this.baseUrl, {

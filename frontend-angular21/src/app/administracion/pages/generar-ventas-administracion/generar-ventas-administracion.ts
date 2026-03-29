@@ -109,7 +109,7 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
   private readonly SIZE_PAGE = 10;
   private readonly COMISION_TARJETA = 0.05;
   private readonly COD_SUNAT_TARJETAS = ['005', '006'];
-  private readonly COD_SUNAT_CON_BANCO = ['005', '006']; // ✅ SOLO TARJETAS - Quitamos '003'
+  private readonly COD_SUNAT_CON_BANCO = ['005', '006']; 
   private searchTimeout: any = null;
 
   sidebarClienteVisible = false;
@@ -1426,7 +1426,6 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
       });
       return;
     }
-    // ✅ CAMBIO: Solo pide banco si NO es crédito Y el método requiere banco
     if (this.tipoPagoOrigen() !== 'credito' && this.metodoPagoRequiereBanco() && !this.bancoSeleccionado()) {
       this.messageService.add({
         severity: 'warn',
