@@ -104,11 +104,12 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
 
   readonly esAdmin: boolean;
   readonly sedeNombreVentas: string;
+  readonly loading = signal(false);
 
   private readonly SIZE_PAGE = 10;
   private readonly COMISION_TARJETA = 0.05;
   private readonly COD_SUNAT_TARJETAS = ['005', '006'];
-  private readonly COD_SUNAT_CON_BANCO = ['005', '006', '003'];
+  private readonly COD_SUNAT_CON_BANCO = ['005', '006']; // ✅ SOLO TARJETAS - Quitamos '003'
   private searchTimeout: any = null;
 
   sidebarClienteVisible = false;
@@ -194,7 +195,6 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
   montoRecibido = signal(0);
   numeroOperacion = signal('');
   comprobanteGenerado = signal<RegistroVentaAdminResponse | null>(null);
-  loading = signal(false);
   snapshotCliente = signal<ClienteBusquedaAdminResponse | null>(null);
   snapshotSede = signal<string>('');
   snapshotMetodoPago = signal<string>('');
@@ -1426,11 +1426,12 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
       });
       return;
     }
-    if (this.metodoPagoRequiereBanco() && !this.bancoSeleccionado()) {
+    // ✅ CAMBIO: Solo pide banco si NO es crédito Y el método requiere banco
+    if (this.tipoPagoOrigen() !== 'credito' && this.metodoPagoRequiereBanco() && !this.bancoSeleccionado()) {
       this.messageService.add({
         severity: 'warn',
         summary: 'Banco Requerido',
-        detail: 'Selecciona el banco emisor de la tarjeta',
+        detail: 'Selecciona el banco emisor de tu tarjeta (débito o crédito)',
       });
       return;
     }

@@ -350,7 +350,7 @@ export class GestionComprasComponent implements OnInit, OnDestroy {
       titulo:       c.codigo,
       subtitulo:    this.getNombreProveedor(c),
       labelPdf:     'PDF Cotización',
-      labelVoucher: 'Voucher',
+      mostrarVoucher: false,  
     };
     this.accionCargando  = null;
     this.accionesVisible = true;

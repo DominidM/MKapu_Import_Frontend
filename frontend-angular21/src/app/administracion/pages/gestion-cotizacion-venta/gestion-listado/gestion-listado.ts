@@ -331,7 +331,7 @@ export class GestionCotizacionesComponent implements OnInit, OnDestroy {
       titulo:       c.codigo,
       subtitulo:    c.cliente_nombre,
       labelPdf:     'PDF Cotización',
-      labelVoucher: 'Voucher',
+      mostrarVoucher  : false,
     };
     this.accionCargando  = null;
     this.accionesVisible = true;

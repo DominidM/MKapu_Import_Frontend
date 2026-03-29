@@ -33,7 +33,11 @@
   </p-card>
 </div>
 
-<app-loading-overlay [visible]="isLoading()" mensaje="Cargando..." modo="inline" />
+<!-- ✅ OVERLAY GRANDE — Solo cuando procesa la venta -->
+<app-loading-overlay 
+  [visible]="loading()"
+  mensaje="Procesando venta..."
+  modo="overlay" />
 
 <div class="p-2">
   <div class="pos-body">
