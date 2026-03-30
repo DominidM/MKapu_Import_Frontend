@@ -84,6 +84,12 @@ export class MermasPr implements OnInit {
   readonly sedeNombre:   string;
   readonly sedePropiaId: string;
 
+  // ── Permisos ──────────────────────────────────────────────────────
+  puedeCrearMermas  = false; // CREAR_MERMAS  → botón "Registrar Merma"
+  puedeEditarMermas = false; // EDITAR_MERMAS → botón editar
+  puedeVerMermas    = false; // VER_MERMAS    → visualización de mermas
+  // desactivar/activar → solo esAdmin
+
   mesActual = signal(this.obtenerMesActual());
   cargando  = this.wastageService.loading;
 
@@ -172,6 +178,11 @@ export class MermasPr implements OnInit {
 
   // ── Lifecycle ─────────────────────────────────────────────────────
   ngOnInit(): void {
+    // ── Resolver permisos ─────────────────────────────────────────
+    this.puedeCrearMermas  = this.authService.hasPermiso('CREAR_MERMAS');
+    this.puedeEditarMermas = this.authService.hasPermiso('EDITAR_MERMAS');
+    this.puedeVerMermas    = this.authService.hasPermiso('VER_MERMAS');
+
     this.cargarTiposMerma();
     this.sedeService.loadSedes().subscribe();
   }

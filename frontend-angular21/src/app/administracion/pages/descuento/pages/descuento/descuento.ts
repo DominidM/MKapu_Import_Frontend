@@ -16,6 +16,8 @@ import { TooltipModule } from 'primeng/tooltip';
 import { DiscountService } from '../../../../services/discount.service';
 import { Discount } from '../../../../interfaces/discount.interface';
 import { SharedTableContainerComponent } from '../../../../../shared/components/table.componente/shared-table-container.component';
+import { AuthService } from '../../../../../auth/services/auth.service';
+import { UserRole } from '../../../../../core/constants/roles.constants';
 
 type ViewMode = 'todas' | 'activas' | 'inactivas';
 
@@ -36,6 +38,7 @@ export class DescuentoPage implements OnInit {
   private readonly discountService     = inject(DiscountService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly messageService      = inject(MessageService);
+  private readonly authService         = inject(AuthService);
 
   readonly loading = this.discountService.loading;
   readonly error   = this.discountService.error;
@@ -44,6 +47,13 @@ export class DescuentoPage implements OnInit {
   readonly searchTerm = signal<string>('');
   dialogVisible = false;
   readonly descuentoSeleccionado = signal<Discount | null>(null);
+
+  // ── Permisos ──────────────────────────────────────────────────────
+  esAdmin               = false;
+  puedeCrearDescuento   = false; // CREAR_DESCUENTO  → botón "Agregar Descuento"
+  puedeEditarDescuento  = false; // EDITAR_DESCUENTO → botón lápiz
+  puedeVerDescuento     = false; // VER_DESCUENTO    → visualización de descuentos
+  // desactivar/activar → solo esAdmin
 
   readonly descuentos = computed(() => this.discountService.descuentos());
 
@@ -82,7 +92,15 @@ export class DescuentoPage implements OnInit {
     { label: 'Inactivos', value: 'inactivas' },
   ];
 
-  ngOnInit(): void { this.discountService.loadDescuentos().subscribe(); }
+  ngOnInit(): void {
+    // ── Resolver permisos ─────────────────────────────────────────
+    this.esAdmin              = this.authService.getRoleId() === UserRole.ADMIN;
+    this.puedeCrearDescuento  = this.authService.hasPermiso('CREAR_DESCUENTO');
+    this.puedeEditarDescuento = this.authService.hasPermiso('EDITAR_DESCUENTO');
+    this.puedeVerDescuento    = this.authService.hasPermiso('VER_DESCUENTO');
+
+    this.discountService.loadDescuentos().subscribe();
+  }
 
   onViewModeChange(mode: ViewMode): void { this.viewMode.set(mode); this.paginaActual.set(1); }
   onSearch(event: { query: string }): void { this.searchTerm.set(event.query); this.paginaActual.set(1); }

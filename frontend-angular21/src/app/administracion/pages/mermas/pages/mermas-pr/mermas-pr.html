@@ -10,7 +10,9 @@
           <h2 class="clientes-title">GESTIÓN DE MERMAS</h2>
         </div>
       </div>
+      <!-- Botón "Registrar Merma" — solo si tiene CREAR_MERMAS -->
       <p-button
+        *ngIf="puedeCrearMermas"
         (onClick)="irRegistro()"
         label="Registrar Merma"
         icon="pi pi-plus"
@@ -243,7 +245,9 @@
                 (onClick)="verDetalleMerma(merma)"
               >
               </p-button>
+              <!-- EDITAR — requiere EDITAR_MERMAS -->
               <p-button
+                *ngIf="puedeEditarMermas"
                 icon="pi pi-pencil"
                 [rounded]="true"
                 [text]="true"

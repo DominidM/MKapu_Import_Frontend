@@ -10,8 +10,10 @@
           <h2 class="sedes-title">GESTION DE DESCUENTOS</h2>
         </div>
       </div>
+      <!-- Botón "Agregar descuento" — solo si tiene CREAR_DESCUENTO -->
       <div class="flex gap-2">
         <p-button
+          *ngIf="puedeCrearDescuento"
           label="Agregar descuento"
           icon="pi pi-plus"
           styleClass="sedes-pill"
@@ -153,7 +155,9 @@
           </td>
           <td class="text-center">
             <div class="acciones-tabla">
+              <!-- EDITAR — requiere EDITAR_DESCUENTO -->
               <p-button
+                *ngIf="puedeEditarDescuento"
                 icon="pi pi-pencil"
                 [rounded]="true"
                 [text]="true"
@@ -162,7 +166,10 @@
                 tooltipPosition="top"
                 [routerLink]="['/admin/descuentos/editar-descuento', descuento.idDescuento]">
               </p-button>
+
+              <!-- ACTIVAR / DESACTIVAR — solo ADMIN -->
               <p-button
+                *ngIf="esAdmin"
                 [icon]="descuento.activo ? 'pi pi-times' : 'pi pi-check'"
                 [rounded]="true"
                 [text]="true"

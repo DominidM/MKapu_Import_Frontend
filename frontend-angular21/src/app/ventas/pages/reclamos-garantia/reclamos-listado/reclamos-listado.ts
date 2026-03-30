@@ -107,6 +107,12 @@ export class ReclamosListado implements OnInit, OnDestroy {
   readonly sedeNombre:   string;
   private readonly sedePropiaId: number | null;
 
+  // ── Permisos específicos ─────────────────────────────────────────
+  puedeVerReclamos    = false; // VER_RECLAMOS (implícito en acceso a página)
+  puedeCrearReclamos  = false; // CREAR_RECLAMOS → botón "Nuevo Reclamo"
+  puedeEditarReclamos = false; // EDITAR_RECLAMOS (si existe)
+  puedeGestionarReclamos = false; // para acciones avanzadas
+
   // ── Filtros ──────────────────────────────────────────────────────
   filtroEstado: ClaimStatus | null = null;
   filtroMotivo: string | null      = null;
@@ -148,6 +154,12 @@ export class ReclamosListado implements OnInit, OnDestroy {
 
   // ── Lifecycle ────────────────────────────────────────────────────
   async ngOnInit(): Promise<void> {
+    // ── Resolver permisos ─────────────────────────────────────────
+    this.puedeVerReclamos     = true; // Acceso a la página implica que puede ver
+    this.puedeCrearReclamos   = this.authService.hasPermiso('CREAR_RECLAMO');
+    this.puedeEditarReclamos  = this.authService.hasPermiso('EDITAR_RECLAMO');
+    this.puedeGestionarReclamos = this.authService.hasPermiso('VER_RECLAMO');
+
     if (this.esAdmin) {
       await this.cargarSedes();
     } else {

@@ -58,6 +58,12 @@ export class GestionComprasComponent implements OnInit, OnDestroy {
   readonly sedeNombre:   string;
   readonly sedePropiaId: string;
 
+  // ── Permisos ──────────────────────────────────────────────────────
+  puedeVerCotizacionesCompra    = false; // VER_COTIZACIONES_COMPRA
+  puedeCrearCotizacionesCompra  = false; // CREAR_COTIZACIONES_COMPRA → botón "Agregar Cotización Compra"
+  puedeEditarCotizacionesCompra = false; // EDITAR_COTIZACIONES_COMPRA (si existe)
+  // rechazar solo puede ver el admin
+
   buscarValue           = signal<string>('');
   cotizacionSugerencias = signal<QuoteListItem[]>([]);
   estadoSeleccionado    = signal<string | null>('PENDIENTE');
@@ -174,6 +180,11 @@ export class GestionComprasComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
+    // ── Resolver permisos ─────────────────────────────────────────
+    this.puedeVerCotizacionesCompra    = true; // Acceso a la página implica que puede ver
+    this.puedeCrearCotizacionesCompra  = this.authService.hasPermiso('CREAR_COTIZACIONES_COMPRA');
+    this.puedeEditarCotizacionesCompra = this.authService.hasPermiso('EDITAR_COTIZACIONES_COMPRA');
+
     this.cargarCotizacion();
     this.sedeService.loadSedes().subscribe({
       error: (err) => console.error('Error cargando sedes', err),
@@ -263,6 +274,16 @@ export class GestionComprasComponent implements OnInit, OnDestroy {
   }
 
   rechazarCotizacion(id: number) {
+    // ── Validar que es ADMIN ──
+    if (!this.esAdmin) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Acción no permitida',
+        detail: 'Solo administradores pueden rechazar cotizaciones.',
+      });
+      return;
+    }
+
     this.confirmationService.confirm({
       message: '¿Estás seguro de rechazar esta cotización de compra?',
       header: 'Confirmar rechazo', icon: 'pi pi-exclamation-triangle',

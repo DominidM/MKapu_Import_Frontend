@@ -73,6 +73,12 @@ export class RematesPr implements OnInit {
   readonly sedeNombre: string;
   readonly sedePropiaId: string;
 
+  // ── Permisos ──────────────────────────────────────────────────────
+  puedeCrearRemates  = false; // CREAR_REMATES  → botón "Registrar Remate"
+  puedeEditarRemates = false; // EDITAR_REMATES → botón editar
+  puedeVerRemates    = false; // VER_REMATES    → visualización de remates
+  // desactivar/activar → solo esAdmin
+
   cargando = this.auctionService.loading;
 
   busqueda = signal('');
@@ -149,6 +155,11 @@ export class RematesPr implements OnInit {
 
   // ── Lifecycle ─────────────────────────────────────────────────────────────
   ngOnInit(): void {
+    // ── Resolver permisos ─────────────────────────────────────────
+    this.puedeCrearRemates  = this.authService.hasPermiso('CREAR_REMATES');
+    this.puedeEditarRemates = this.authService.hasPermiso('EDITAR_REMATES');
+    this.puedeVerRemates    = this.authService.hasPermiso('VER_REMATES');
+
     this.sedeService.loadSedes().subscribe();
     // el effect dispara la carga inicial automáticamente
   }
@@ -231,7 +242,7 @@ export class RematesPr implements OnInit {
     this.router.navigate(['/admin', 'remates', 'editar-remate', remate.id_remate]);
   }
 
-  // ── Estado ────────────────────────────────────────────────────────────────
+  // ── Estado ─────────────��──────────────────────────────────────────────────
   confirmarCambioEstado(remate: RemateUI): void {
     const esActivo = remate.estado === 'ACTIVO';
     this.confirmationService.confirm({

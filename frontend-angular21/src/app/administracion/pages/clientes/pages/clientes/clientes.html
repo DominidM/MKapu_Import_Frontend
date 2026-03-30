@@ -11,7 +11,9 @@
           <h2 class="clientes-title">GESTIÓN DE CLIENTES</h2>
         </div>
       </div>
+      <!-- Botón "Agregar Cliente" — solo si tiene CREAR_CLIENTE -->
       <p-button
+        *ngIf="puedeCrearCliente"
         label="Agregar Cliente"
         icon="pi pi-plus"
         styleClass="clientes-pill"
@@ -177,42 +179,45 @@
           </td>
           <td class="text-center">
             <div class="acciones-tabla">
+
+              <!-- VER DETALLE — requiere VER_CLIENTE -->
               <p-button
+                *ngIf="puedeVerDetalle"
                 icon="pi pi-eye"
-                [rounded]="true"
-                [text]="true"
-                severity="secondary"
-                pTooltip="Ver detalle"
-                tooltipPosition="top"
+                [rounded]="true" [text]="true" severity="secondary"
+                pTooltip="Ver detalle" tooltipPosition="top"
                 (onClick)="openDetails(cliente)">
               </p-button>
+
+              <!-- EDITAR — requiere EDITAR_CLIENTE -->
               <p-button
+                *ngIf="puedeEditarCliente"
                 icon="pi pi-pencil"
-                [rounded]="true"
-                [text]="true"
-                severity="secondary"
-                pTooltip="Editar cliente"
-                tooltipPosition="top"
+                [rounded]="true" [text]="true" severity="secondary"
+                pTooltip="Editar cliente" tooltipPosition="top"
                 [routerLink]="['editar-cliente', cliente.customerId]">
               </p-button>
+
+              <!-- SEGUIMIENTO — requiere SEGUIMIENTO-CLIENTE -->
               <p-button
+                *ngIf="puedeSeguimiento"
                 icon="pi pi-chart-line"
-                [rounded]="true"
-                [text]="true"
-                severity="info"
-                pTooltip="Ver seguimiento"
-                tooltipPosition="top"
+                [rounded]="true" [text]="true" severity="info"
+                pTooltip="Ver seguimiento" tooltipPosition="top"
                 [routerLink]="['seguimiento-cliente', cliente.customerId]">
               </p-button>
+
+              <!-- ACTIVAR / DESACTIVAR — solo ADMIN -->
               <p-button
+                *ngIf="esAdmin"
                 [icon]="cliente.status ? 'pi pi-times' : 'pi pi-check'"
-                [rounded]="true"
-                [text]="true"
+                [rounded]="true" [text]="true"
                 [severity]="cliente.status ? 'danger' : 'success'"
                 [pTooltip]="cliente.status ? 'Desactivar' : 'Activar'"
                 tooltipPosition="top"
                 (onClick)="confirmToggleStatus(cliente)">
               </p-button>
+
             </div>
           </td>
         </tr>
@@ -310,7 +315,9 @@
               styleClass="cdm-btn-close"
               (onClick)="closeDetails()">
             </p-button>
+            <!-- Editar en modal — mismo permiso EDITAR_CLIENTE -->
             <p-button
+              *ngIf="puedeEditarCliente"
               label="Editar Cliente"
               icon="pi pi-pencil"
               styleClass="cdm-btn-edit"

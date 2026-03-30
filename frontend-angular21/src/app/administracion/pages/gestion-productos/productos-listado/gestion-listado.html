@@ -11,12 +11,13 @@
         </div>
       </div>
       <div class="flex gap-2">
+        <!-- Botón "Agregar Producto" — solo si tiene CREAR_PRODUCTOS -->
         <p-button
+          *ngIf="puedeCrearProducto"
           label="Agregar Producto"
           icon="pi pi-plus"
           styleClass="productos-pill productos-pill-warning"
-          (onClick)="irCrear()"
-        >
+          (onClick)="irCrear()">
         </p-button>
       </div>
     </div>
@@ -79,18 +80,14 @@
             field="nombre"
             optionLabel="nombre"
             [showClear]="true"
-            styleClass="w-full autocomplete-productos"
-          >
+            styleClass="w-full autocomplete-productos">
             <ng-template let-item pTemplate="item">
               <div class="autocomplete-item-custom p-2">
                 <div class="flex flex-column gap-1">
                   <span class="font-bold text-900">{{ item.nombre }}</span>
                   <small class="text-600 flex align-items-center gap-2">
                     <span><i class="pi pi-tag mr-1 text-primary"></i>{{ item.codigo }}</span>
-                    <span
-                      ><i class="pi pi-box mr-1 text-primary"></i>Stock:
-                      {{ item.stock }} unid.</span
-                    >
+                    <span><i class="pi pi-box mr-1 text-primary"></i>Stock: {{ item.stock }} unid.</span>
                   </small>
                 </div>
               </div>
@@ -112,19 +109,13 @@
             optionValue="value"
             placeholder="Seleccione una sede"
             [showClear]="true"
-            styleClass="w-full"
-          >
+            styleClass="w-full">
           </p-select>
 
           <div
             *ngIf="!esAdmin()"
             class="flex align-items-center gap-2 px-3 py-2 border-round"
-            style="
-              background: var(--surface-100);
-              border: 1px solid var(--surface-border);
-              height: 42px;
-            "
-          >
+            style="background: var(--surface-100); border: 1px solid var(--surface-border); height: 42px;">
             <i class="pi pi-map-marker" style="color: #ffa726"></i>
             <span class="font-semibold">{{ sedeNombre() }}</span>
           </div>
@@ -138,8 +129,7 @@
             (ngModelChange)="onCategoriaChange($event)"
             placeholder="Filtrar por categoría"
             [showClear]="true"
-            styleClass="w-full"
-          >
+            styleClass="w-full">
           </p-select>
         </div>
 
@@ -150,8 +140,7 @@
             icon="pi pi-filter-slash"
             severity="danger"
             styleClass="btn-limpiar-filtros"
-            (onClick)="limpiarFiltros()"
-          >
+            (onClick)="limpiarFiltros()">
           </p-button>
         </div>
       </div>
@@ -170,18 +159,18 @@
     [limitePorPagina]="rows()"
     [mostrarExportar]="false"
     (pageChange)="onPageChange($event)"
-    (limitChange)="onLimitChange($event)"
-  >
+    (limitChange)="onLimitChange($event)">
+
     <div slot="acciones">
-      <p-tag [value]="totalRecords() + ' productos'" severity="info"> </p-tag>
+      <p-tag [value]="totalRecords() + ' productos'" severity="info"></p-tag>
     </div>
 
     <p-table
       [value]="productos()"
       [paginator]="false"
       styleClass="p-datatable-striped productos-table-hover"
-      [tableStyle]="{ 'min-width': '50rem' }"
-    >
+      [tableStyle]="{ 'min-width': '50rem' }">
+
       <ng-template pTemplate="header">
         <tr>
           <th style="width: 15%">CÓDIGO</th>
@@ -205,41 +194,38 @@
             <p-tag
               [value]="p.stock + ' unid.'"
               [severity]="p.stock === 0 ? 'danger' : p.stock < 10 ? 'warn' : 'success'"
-              styleClass="font-bold"
-            />
+              styleClass="font-bold" />
           </td>
           <td class="text-center">
             <div class="acciones-tabla">
+
+              <!-- VER DETALLE — requiere VER_PRODUCTOS -->
               <p-button
+                *ngIf="puedeVerDetalle"
                 icon="pi pi-eye"
-                [rounded]="true"
-                [text]="true"
-                severity="secondary"
-                pTooltip="Ver Detalles"
-                tooltipPosition="top"
-                (onClick)="irDetalle(p.id_producto, p.sede)"
-              >
+                [rounded]="true" [text]="true" severity="secondary"
+                pTooltip="Ver Detalles" tooltipPosition="top"
+                (onClick)="irDetalle(p.id_producto, p.sede)">
               </p-button>
+
+              <!-- EDITAR — requiere EDITAR_PRODUCTOS -->
               <p-button
+                *ngIf="puedeEditarProducto"
                 icon="pi pi-pencil"
-                [rounded]="true"
-                [text]="true"
-                severity="secondary"
-                pTooltip="Editar Producto"
-                tooltipPosition="top"
-                (onClick)="irEditar(p.id_producto)"
-              >
+                [rounded]="true" [text]="true" severity="secondary"
+                pTooltip="Editar Producto" tooltipPosition="top"
+                (onClick)="irEditar(p.id_producto)">
               </p-button>
+
+              <!-- ELIMINAR — solo ADMIN -->
               <p-button
+                *ngIf="esAdmin()"
                 icon="pi pi-trash"
-                [rounded]="true"
-                [text]="true"
-                severity="danger"
-                pTooltip="Eliminar Producto"
-                tooltipPosition="top"
-                (onClick)="confirmarEliminar(p.id_producto)"
-              >
+                [rounded]="true" [text]="true" severity="danger"
+                pTooltip="Eliminar Producto" tooltipPosition="top"
+                (onClick)="confirmarEliminar(p.id_producto)">
               </p-button>
+
             </div>
           </td>
         </tr>

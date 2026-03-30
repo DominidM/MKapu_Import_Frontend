@@ -11,7 +11,9 @@
         </div>
       </div>
       <div class="flex gap-2">
+        <!-- Botón "Nuevo Reclamo" — solo si tiene CREAR_RECLAMOS -->
         <p-button
+          *ngIf="puedeCrearReclamos"
           label="Nuevo Reclamo"
           icon="pi pi-plus"
           (onClick)="nuevoReclamo()"
@@ -232,7 +234,9 @@
                 pTooltip="Documentos" tooltipPosition="top"
                 (onClick)="abrirAcciones(reclamo)">
               </p-button>
+              <!-- EDITAR — requiere EDITAR_RECLAMOS -->
               <p-button
+                *ngIf="puedeEditarReclamos"
                 icon="pi pi-pencil"
                 [rounded]="true" [text]="true" severity="secondary"
                 pTooltip="Editar reclamo" tooltipPosition="top"

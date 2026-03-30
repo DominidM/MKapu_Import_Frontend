@@ -9,7 +9,9 @@
         </div>
       </div>
       <div class="flex align-items-center gap-2">
+        <!-- Botón "Registrar Remate" — solo si tiene CREAR_REMATES -->
         <p-button
+          *ngIf="puedeCrearRemates"
           (onClick)="abrirRegistro()"
           label="Registrar Remate"
           icon="pi pi-plus"
@@ -217,7 +219,9 @@
                 (onClick)="verDetalle(remate)"
               >
               </p-button>
+              <!-- EDITAR — requiere EDITAR_REMATES -->
               <p-button
+                *ngIf="puedeEditarRemates"
                 icon="pi pi-pencil"
                 [rounded]="true"
                 [text]="true"
@@ -227,8 +231,9 @@
                 (onClick)="editarRemate(remate)"
               >
               </p-button>
+              <!-- CAMBIAR ESTADO — solo ADMIN -->
               <p-button
-                *ngIf="remate.estado === 'ACTIVO'"
+                *ngIf="esAdmin && remate.estado === 'ACTIVO'"
                 icon="pi pi-times"
                 [rounded]="true"
                 [text]="true"
@@ -239,7 +244,7 @@
               >
               </p-button>
               <p-button
-                *ngIf="remate.estado === 'FINALIZADO'"
+                *ngIf="esAdmin && remate.estado === 'FINALIZADO'"
                 icon="pi pi-refresh"
                 [rounded]="true"
                 [text]="true"
@@ -360,8 +365,9 @@
             (onClick)="cerrarModalDetalle()"
           >
           </p-button>
+          <!-- CAMBIAR ESTADO — solo ADMIN -->
           <p-button
-            *ngIf="r.estado === 'ACTIVO'"
+            *ngIf="esAdmin && r.estado === 'ACTIVO'"
             label="Finalizar Remate"
             icon="pi pi-check"
             severity="danger"
@@ -370,7 +376,9 @@
             (onClick)="confirmarCambioEstado(r)"
           >
           </p-button>
+          <!-- EDITAR — requiere EDITAR_REMATES -->
           <p-button
+            *ngIf="puedeEditarRemates"
             label="Editar Remate"
             icon="pi pi-pencil"
             styleClass="rdm-btn-edit"

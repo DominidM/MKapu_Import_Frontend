@@ -17,10 +17,10 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 
 import { CategoriaService } from '../../../../services/categoria.service';
 import { Categoria } from '../../../../interfaces/categoria.interface';
-import { LoadingOverlayComponent } from '../../../../../shared/components/loading-overlay/loading-overlay.component';
-import { PaginadorComponent } from '../../../../../shared/components/paginador/paginador.components';
 import { TooltipModule } from 'primeng/tooltip';
 import { SharedTableContainerComponent } from '../../../../../shared/components/table.componente/shared-table-container.component';
+import { AuthService } from '../../../../../auth/services/auth.service';
+import { UserRole } from '../../../../../core/constants/roles.constants';
 
 type ViewMode = 'todas' | 'activas' | 'inactivas';
 
@@ -34,7 +34,7 @@ type ViewMode = 'todas' | 'activas' | 'inactivas';
     ToastModule, ConfirmDialogModule, MessageModule,
     SelectModule,
     SharedTableContainerComponent,
-    TooltipModule, 
+    TooltipModule,
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './categoria.html',
@@ -44,6 +44,7 @@ export class CategoriaListado implements OnInit {
   private readonly categoriaService    = inject(CategoriaService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly messageService      = inject(MessageService);
+  private readonly authService         = inject(AuthService);
 
   readonly loading = this.categoriaService.loading;
   readonly error   = this.categoriaService.error;
@@ -57,6 +58,13 @@ export class CategoriaListado implements OnInit {
 
   readonly paginaActual = signal<number>(1);
   readonly limitePagina = signal<number>(5);
+
+  // ── Permisos ──────────────────────────────────────────────────────
+  esAdmin              = false;
+  puedeCrearCategoria  = false; // CREAR_CATEGORIAS → botón "Agregar Categoría"
+  puedeEditarCategoria = false; // EDITAR_CATEGORIAS → botón lápiz + editar en modal
+  puedeVerDetalle      = false; // VER_CATEGORIAS   → botón ojo
+  // desactivar/activar → solo esAdmin
 
   readonly viewOptions: { label: string; value: ViewMode }[] = [
     { label: 'Todos',     value: 'todas'     },
@@ -93,6 +101,12 @@ export class CategoriaListado implements OnInit {
   readonly categoriaSuggestions = computed(() => this.filteredCategorias());
 
   ngOnInit(): void {
+    // ── Resolver permisos ─────────────────────────────────────────
+    this.esAdmin              = this.authService.getRoleId() === UserRole.ADMIN;
+    this.puedeCrearCategoria  = this.authService.hasPermiso('CREAR_CATEGORIAS');
+    this.puedeEditarCategoria = this.authService.hasPermiso('EDITAR_CATEGORIAS');
+    this.puedeVerDetalle      = this.authService.hasPermiso('VER_CATEGORIAS');
+
     this.categoriaService.loadCategorias('Administrador').subscribe();
   }
 

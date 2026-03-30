@@ -44,11 +44,17 @@ export class GestionListado implements OnInit {
   private categoriaService    = inject(CategoriaService);
   private confirmationService = inject(ConfirmationService);
   private messageService      = inject(MessageService);
-  private authService         = inject(AuthService); 
+  private authService         = inject(AuthService);
 
   // ── Auth ──────────────────────────────────────────────────────────
-  esAdmin    = signal<boolean>(false); 
-  sedeNombre = signal<string>('Mi sede'); 
+  esAdmin    = signal<boolean>(false);
+  sedeNombre = signal<string>('Mi sede');
+
+  // ── Permisos ──────────────────────────────────────────────────────
+  puedeCrearProducto  = false; // CREAR_PRODUCTOS  → botón "Agregar Producto"
+  puedeEditarProducto = false; // EDITAR_PRODUCTOS → botón lápiz
+  puedeVerDetalle     = false; // VER_PRODUCTOS    → botón ojo
+  // eliminar → solo esAdmin
 
   productos    = signal<ProductoStock[]>([]);
   loading      = signal<boolean>(false);
@@ -88,6 +94,11 @@ export class GestionListado implements OnInit {
   }
 
   ngOnInit() {
+    // ── Resolver permisos ─────────────────────────────────────────
+    this.puedeCrearProducto  = this.authService.hasPermiso('CREAR_PRODUCTOS');
+    this.puedeEditarProducto = this.authService.hasPermiso('EDITAR_PRODUCTOS');
+    this.puedeVerDetalle     = this.authService.hasPermiso('VER_PRODUCTOS');
+
     this.sedeService.loadSedes().subscribe({
       error: (err) => console.error('Error cargando sedes', err),
     });
@@ -171,10 +182,6 @@ export class GestionListado implements OnInit {
     this.buscarValue.set(null);
     this.categoriaSeleccionada.set(null);
     this.currentPage.set(1);
-    if (!this.esAdmin()) {
-      this.cargarProductos();
-      return;
-    }
     this.cargarProductos();
   }
 
@@ -224,9 +231,8 @@ export class GestionListado implements OnInit {
     this.cargarProductos();
   }
 
-  irCrear() { this.router.navigate(['/admin/gestion-productos/crear-producto']); }
-
-  irEditar(id: number) {
+  irCrear()              { this.router.navigate(['/admin/gestion-productos/crear-producto']); }
+  irEditar(id: number)   {
     this.router.navigate(['/admin/gestion-productos/editar-producto', id], {
       queryParams: { idSede: this.idSedeActual() },
     });
@@ -242,9 +248,9 @@ export class GestionListado implements OnInit {
 
   confirmarEliminar(id: number) {
     this.confirmationService.confirm({
-      message:    '¿Estás seguro de que deseas eliminar este producto?',
-      header:     'Confirmar Eliminación',
-      icon:       'pi pi-exclamation-triangle',
+      message:     '¿Estás seguro de que deseas eliminar este producto?',
+      header:      'Confirmar Eliminación',
+      icon:        'pi pi-exclamation-triangle',
       acceptLabel: 'Sí, eliminar',
       rejectLabel: 'No, cancelar',
       accept: () => this.eliminarProducto(id),

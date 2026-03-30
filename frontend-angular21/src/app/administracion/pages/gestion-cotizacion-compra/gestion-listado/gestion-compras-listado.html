@@ -9,7 +9,9 @@
         </div>
       </div>
       <div class="flex gap-2">
+        <!-- Botón "Agregar Cotización Compra" — solo si tiene CREAR_COTIZACIONES_COMPRA -->
         <p-button
+          *ngIf="puedeCrearCotizacionesCompra"
           label="Agregar Cotización Compra"
           icon="pi pi-plus"
           styleClass="cotizaciones-pill cotizaciones-pill-warning"
@@ -257,7 +259,8 @@
                 pTooltip="Documentos" tooltipPosition="top"
                 (onClick)="abrirAcciones(c)">
               </p-button>
-              <ng-container *ngIf="c.estado === 'PENDIENTE'">
+              <!-- RECHAZAR — solo ADMIN, estado PENDIENTE -->
+              <ng-container *ngIf="c.estado === 'PENDIENTE' && esAdmin">
                 <p-button
                   icon="pi pi-times"
                   [rounded]="true" [text]="true" severity="danger"
