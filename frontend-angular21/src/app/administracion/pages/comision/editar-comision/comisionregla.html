@@ -195,8 +195,31 @@
         </small>
       </div>
 
+      <!-- ══ ALERTAS DE FECHA ════════════════════════════════════ -->
+      <div class="col-12 mb-3" *ngIf="fechasInvertidas || fechaFinVencida">
+
+        <!-- Error: fechas invertidas — bloquea guardar -->
+        <div *ngIf="fechasInvertidas" class="alerta-fecha alerta-error">
+          <i class="pi pi-times-circle"></i>
+          <div>
+            <strong>Fechas inválidas</strong>
+            <p class="mb-0">La fecha de inicio no puede ser posterior a la fecha de fin.</p>
+          </div>
+        </div>
+
+        <!-- Warning: fecha fin ya venció — solo informa -->
+        <div *ngIf="fechaFinVencida && !fechasInvertidas" class="alerta-fecha alerta-warn">
+          <i class="pi pi-exclamation-triangle"></i>
+          <div>
+            <strong>Fecha de fin vencida</strong>
+            <p class="mb-0">Esta fecha ya pasó. La regla se desactivará automáticamente.</p>
+          </div>
+        </div>
+
+      </div>
+
       <!-- ══ RESUMEN PREVIO ══════════════════════════════════════ -->
-      <div *ngIf="form.valid" class="col-12 mb-4">
+      <div *ngIf="form.valid && !fechasInvertidas" class="col-12 mb-4">
         <p-card styleClass="cliente-info-card">
           <div class="flex align-items-center gap-2 mb-3">
             <i class="pi pi-check-circle" style="color:var(--gold); font-size:0.9rem;"></i>
@@ -240,7 +263,7 @@
           type="submit"
           [label]="esModoEdicion() ? 'Guardar Cambios' : 'Guardar Regla'"
           [icon]="isSubmitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"
-          [disabled]="form.invalid || isSubmitting()"
+          [disabled]="form.invalid || isSubmitting() || fechasInvertidas"
           styleClass="sedes-pill sedes-pill-warning" />
       </div>
 

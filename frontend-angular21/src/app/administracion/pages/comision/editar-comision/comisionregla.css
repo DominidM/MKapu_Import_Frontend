@@ -4173,3 +4173,36 @@
   background: rgba(246,175,51,0.05) !important;
   border-color: rgba(246,175,51,0.18) !important;
 }
+
+.alerta-fecha {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.alerta-fecha i {
+  font-size: 1.1rem;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.alerta-fecha strong {
+  display: block;
+  margin-bottom: 2px;
+}
+
+.alerta-error {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #f87171;
+}
+
+.alerta-warn {
+  background: rgba(234, 179, 8, 0.1);
+  border: 1px solid rgba(234, 179, 8, 0.35);
+  color: #facc15;
+}

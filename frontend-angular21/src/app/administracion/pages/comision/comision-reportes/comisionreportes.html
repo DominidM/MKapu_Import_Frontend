@@ -1,4 +1,5 @@
 <p-toast />
+<p-confirmdialog />
 
 <div class="p-2">
   <p-card class="sedes-header-card mb-4 ventas-header-bordered">
@@ -224,19 +225,46 @@
           <td>
             <p-tag [value]="r.estado" [severity]="getSeverity(r.estado)" />
           </td>
+
+          <!-- ── ACCIONES ─────────────────────────────────────────── -->
           <td class="text-center">
-            @if (r.estado === 'PENDIENTE') {
-              <p-button
-                label="Atender"
-                icon="pi pi-check"
-                severity="success"
-                size="small"
-                [loading]="atendiendo() === r.id_comision"
-                (onClick)="atender(r)" />
-            } @else {
+            @if (r.estado === 'ANULADA') {
+              <!-- Anulada: sin acciones -->
               <span class="text-xs text-color-secondary">—</span>
+            } @else {
+              <div class="flex gap-1 justify-content-center">
+
+                <!-- Liquidar: solo si PENDIENTE -->
+                @if (r.estado === 'PENDIENTE') {
+                  <p-button
+                    icon="pi pi-check"
+                    pTooltip="Liquidar comisión"
+                    tooltipPosition="top"
+                    severity="success"
+                    [rounded]="true"
+                    [text]="true"
+                    [loading]="atendiendo() === r.id_comision"
+                    [disabled]="anulando() === r.id_comision"
+                    (onClick)="atender(r)" />
+                }
+
+                <!-- Anular: si PENDIENTE o LIQUIDADA -->
+                <p-button
+                  icon="pi pi-times"
+                  pTooltip="Anular comisión"
+                  tooltipPosition="top"
+                  severity="danger"
+                  [rounded]="true"
+                  [text]="true"
+                  [loading]="anulando() === r.id_comision"
+                  [disabled]="atendiendo() === r.id_comision"
+                  (onClick)="anular(r)" />
+
+              </div>
             }
           </td>
+          <!-- ──────────────────────────────────────────────────────── -->
+
         </tr>
       </ng-template>
 
