@@ -419,8 +419,6 @@ export const ADMIN_ROUTES: Routes = [
   {
     path: 'caja',
     loadComponent: () => import('../ventas/pages/caja/caja.page').then((m) => m.CajaPage),
-    canActivate: [roleGuard],
-    data: { permiso: 'VER_CAJA' },
   },
   {
     path: 'generar-ventas-administracion',
@@ -429,7 +427,7 @@ export const ADMIN_ROUTES: Routes = [
         (m) => m.GenerarVentasAdministracion,
       ),
     canActivate: [roleGuard, CashboxAdminGuard],
-    data: { permiso: 'CREAR_VENTA_ADMIN' },
+    data: { permiso: 'CREAR_VENTA' },
   },
   {
     path: 'historial-ventas-administracion',
@@ -438,7 +436,7 @@ export const ADMIN_ROUTES: Routes = [
         (m) => m.HistorialVentasAdministracion,
       ),
     canActivate: [roleGuard],
-    data: { permiso: 'VER_VENTAS_ADMIN' },
+    data: { permiso: 'VER_VENTAS' },
   },
   {
     path: 'detalles-ventas-administracion/:id',
@@ -447,7 +445,7 @@ export const ADMIN_ROUTES: Routes = [
         (m) => m.DetallesVentasAdministracion,
       ),
     canActivate: [roleGuard],
-    data: { permiso: 'VER_VENTAS_ADMIN' },
+    data: { permiso: 'VER_VENTAS' },
   },
   {
     path: 'nota-credito',

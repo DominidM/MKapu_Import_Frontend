@@ -4,6 +4,8 @@ export interface PermissionInRoleDto {
   nombre:      string;
   descripcion: string;
   activo:      boolean;
+  modulo:      string;       
+  depende_de:  number | null; 
 }
 
 // ── Rol con sus permisos (respuesta principal) ────────────────────
@@ -45,8 +47,7 @@ export interface RemovePermissionRequest {
   permissionId: number;
 }
 
-
-// ── Role simple (para CRUD independiente) ────────────────────────
+// ── Role simple ───────────────────────────────────────────────────
 export interface Role {
   id_rol:      number;
   nombre:      string;
@@ -72,16 +73,25 @@ export interface Permission {
   nombre:      string;
   descripcion: string;
   activo:      boolean;
+  modulo:      string;        
+  depende_de:  number | null; 
 }
 
 export interface RegisterPermissionRequest {
   nombre:       string;
   descripcion?: string;
   activo?:      boolean;
+  modulo?:      string;        
+  depende_de?:  number | null; 
 }
 
 export interface UpdatePermissionRequest {
   nombre?:      string;
   descripcion?: string;
   activo?:      boolean;
+  modulo?:      string;       
+  depende_de?:  number | null; 
 }
+
+// ── Tier inferido en frontend ─────────────────────────────────────
+export type PermissionTier = 'ver' | 'crear' | 'editar' | 'especial';

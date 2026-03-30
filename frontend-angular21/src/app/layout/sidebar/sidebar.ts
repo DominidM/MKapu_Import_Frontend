@@ -39,30 +39,41 @@ export class Sidebar implements OnInit {
   private cashboxSocket  = inject(CashboxSocketService);
   private cdr            = inject(ChangeDetectorRef);
   private empresaService = inject(EmpresaService);
+  private authService    = inject(AuthService);
   empresa = this.empresaService.empresaActual;
 
-  // ── Dashboard item — siempre visible, sin permiso requerido ──────
-  private readonly DASHBOARD_ITEM: MenuItem = {
-    path:    '/admin/dashboard-admin',
-    label:   'Dashboard',
-    icon:    'pi pi-home',
-    permiso: '', 
-  };
+  // ── Items especiales que siempre aparecen en INICIO ─────────────────
+  // Dashboard y Caja son PÚBLICOS — no requieren permisos
+  private readonly INICIO_ITEMS: MenuItem[] = [
+    {
+      path:    '/admin/dashboard-admin',
+      label:   'Dashboard',
+      icon:    'pi pi-home',
+      permiso: '', // PÚBLICO — sin permiso requerido
+    },
+    {
+      path:    '/admin/caja',
+      label:   'Caja',
+      icon:    'pi pi-money-bill',
+      permiso: '', // PÚBLICO — sin permiso requerido (solo botón cerrar necesita CERRAR_CAJA)
+    },
+  ];
 
   // ── Permisos que existen en BD pero NO tienen página frontend ─────
   private readonly SIN_PAGINA = new Set([
     'VENTAS', 'ALMACEN', 'PRINCIPAL',
     'VER_LIBRO_VENTAS', 'VER_REPORTES', 'VER_NOTAS_CREDITO',
     'CREAR_NOTA_CREDITO',
-    'VER_DASHBOARD_ADMIN', // ← ya no es un permiso funcional, es el home global
+    'VER_DASHBOARD_ADMIN', // ← Dashboard Admin es PÚBLICO
+    'VER_CAJA',            // ← Caja es PÚBLICO
+    'CERRAR_CAJA',         // ← Permiso solo para el botón, no para la página
   ]);
 
   // ── Mapa permiso → datos del item ────────────────────────────────
   private readonly ITEM: Record<string, Omit<MenuItem, 'permiso'>> = {
     // Ventas Admin
-    VER_CAJA:                { path: '/admin/caja',                            label: 'Caja',               icon: 'pi pi-money-bill' },
-    CREAR_VENTA_ADMIN:       { path: '/admin/generar-ventas-administracion',   label: 'Crear Venta',        icon: 'pi pi-plus-circle' },
-    VER_VENTAS_ADMIN:        { path: '/admin/historial-ventas-administracion', label: 'Historial Ventas',   icon: 'pi pi-list' },
+    CREAR_VENTA:             { path: '/admin/generar-ventas-administracion',   label: 'Crear Venta',        icon: 'pi pi-plus-circle' },
+    VER_VENTAS:              { path: '/admin/historial-ventas-administracion', label: 'Historial Ventas',   icon: 'pi pi-list' },
     CREAR_NC:                { path: '/admin/nota-credito',                    label: 'Notas de Crédito',   icon: 'pi pi-credit-card' },
     VER_DESCUENTO:           { path: '/admin/descuentos',                      label: 'Descuentos',         icon: 'pi pi-tag' },
     VER_PROMOCION:           { path: '/admin/promociones',                     label: 'Promociones',        icon: 'pi pi-percentage' },
@@ -103,7 +114,7 @@ export class Sidebar implements OnInit {
     {
       label: 'VENTAS', icon: 'pi pi-shopping-cart', permisoSeccion: 'VENTAS',
       permisos: [
-        'VER_CAJA', 'CREAR_VENTA_ADMIN', 'VER_VENTAS_ADMIN',
+        'CREAR_VENTA', 'VER_VENTAS_ADMIN',
         'CREAR_NC', 'VER_PROMOCION', 'CREAR_VENTA_POR_COBRAR',
         'VER_CLIENTE', 'VER_COTIZACIONES_VENTA', 'VER_COTIZACIONES_COMPRA', 'VER_RECLAMO',
       ],
@@ -144,7 +155,6 @@ export class Sidebar implements OnInit {
     private confirmationService: ConfirmationService,
     private messageService: MessageService,
     private router: Router,
-    private authService: AuthService,
     private roleService: RoleService,
   ) {}
 
@@ -185,15 +195,16 @@ export class Sidebar implements OnInit {
     const permisosRaw: string[] = user?.permisos || [];
     const roleName: string      = user?.roleName  || 'Invitado';
 
-    // ── Sección INICIO — siempre visible, sin restricción de permiso ──
+    // ── Sección INICIO — siempre visible, SIN restricción de permisos ──
+    // Dashboard y Caja son PÚBLICOS para todos
     const seccionInicio: MenuSection = {
       label:         'INICIO',
       icon:          'pi pi-home',
       permisoSeccion: 'INICIO',
-      items:         [this.DASHBOARD_ITEM],
+      items:         this.INICIO_ITEMS,
     };
 
-    // Sin permisos → solo Dashboard
+    // Sin permisos → solo Dashboard y Caja (ambos públicos)
     if (!permisosRaw.length) {
       this.menuSections = [seccionInicio];
       return;

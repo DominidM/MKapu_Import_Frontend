@@ -675,3 +675,15 @@
   background: rgba(255,255,255,0.06) !important;
 }
 
+.tier-dot {
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  margin-top: 5px;
+  display: inline-block;
+}
+
+.tier-ver     { background: #1D9E75; border-radius: 50%; }
+.tier-crear   { background: #378ADD; border-radius: 2px; }
+.tier-editar  { background: #BA7517; border-radius: 2px; transform: rotate(45deg); }
+.tier-especial{ background: var(--surface-400); border-radius: 50%; }

@@ -35,7 +35,9 @@
               [outlined]="true"
               (onClick)="imprimirResumenActual()">
             </p-button>
+            <!-- Botón Cerrar Caja — solo si tiene permiso CERRAR_CAJA -->
             <p-button
+              *ngIf="puedeCerrarCaja"
               label="Cerrar Caja"
               icon="pi pi-lock"
               severity="danger"
