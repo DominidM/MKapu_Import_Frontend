@@ -186,6 +186,7 @@
                 (onClick)="verDetalle(rol)">
               </p-button>
               <p-button
+                *ngIf="rol.id_rol !== 1"
                 icon="pi pi-pencil"
                 [rounded]="true" [text]="true" severity="secondary"
                 pTooltip="Editar rol" tooltipPosition="top"

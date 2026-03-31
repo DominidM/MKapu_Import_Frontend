@@ -74,10 +74,11 @@ export class Sidebar implements OnInit {
     // Ventas Admin
     CREAR_VENTA:             { path: '/admin/generar-ventas-administracion',   label: 'Crear Venta',        icon: 'pi pi-plus-circle' },
     VER_VENTAS:              { path: '/admin/historial-ventas-administracion', label: 'Historial Ventas',   icon: 'pi pi-list' },
-    CREAR_NC:                { path: '/admin/nota-credito',                    label: 'Notas de Crédito',   icon: 'pi pi-credit-card' },
+    VER_NC:                { path: '/admin/nota-credito',                    label: 'Notas de Crédito',   icon: 'pi pi-credit-card' },
     VER_DESCUENTO:           { path: '/admin/descuentos',                      label: 'Descuentos',         icon: 'pi pi-tag' },
     VER_PROMOCION:           { path: '/admin/promociones',                     label: 'Promociones',        icon: 'pi pi-percentage' },
-    CREAR_VENTA_POR_COBRAR:  { path: '/admin/ventas-por-cobrar',               label: 'Ventas por Cobrar',  icon: 'pi pi-wallet' },
+    
+    VER_VENTA_POR_COBRAR:  { path: '/admin/ventas-por-cobrar',               label: 'Ventas por Cobrar',  icon: 'pi pi-wallet' },
     VER_CLIENTE:             { path: '/admin/clientes',                        label: 'Clientes',           icon: 'pi pi-users' },
     VER_COTIZACIONES_VENTA:  { path: '/admin/cotizaciones-venta',              label: 'Cotizaciones Venta', icon: 'pi pi-id-card' },
     VER_COTIZACIONES_COMPRA: { path: '/admin/cotizaciones-compra',             label: 'Cotizaciones Compra',icon: 'pi pi-id-card' },
@@ -93,7 +94,7 @@ export class Sidebar implements OnInit {
 
     // Administración
     VER_TRANSFERENCIA:       { path: '/admin/transferencia',                   label: 'Transferencias',     icon: 'pi pi-arrows-h' },
-    CREAR_DESPACHO:          { path: '/admin/despacho-productos',              label: 'Despacho',           icon: 'pi pi-truck' },
+    VER_DESPACHO:          { path: '/admin/despacho-productos',              label: 'Despacho',           icon: 'pi pi-truck' },
     VER_USUARIOS:            { path: '/admin/usuarios',                        label: 'Empleados',          icon: 'pi pi-user-plus' },
     VER_PRODUCTOS:           { path: '/admin/gestion-productos',               label: 'Productos',          icon: 'pi pi-tags' },
     VER_CATEGORIAS:          { path: '/admin/categoria',                       label: 'Categorías',         icon: 'pi pi-list' },
@@ -116,6 +117,7 @@ export class Sidebar implements OnInit {
       permisos: [
         'CREAR_VENTA', 'VER_VENTAS_ADMIN', 'VER_VENTAS',
         'CREAR_NC', 'VER_PROMOCION', 'CREAR_VENTA_POR_COBRAR',
+        'VER_NC', 'VER_VENTA_POR_COBRAR',
         'VER_CLIENTE', 'VER_COTIZACIONES_VENTA', 'VER_COTIZACIONES_COMPRA', 'VER_RECLAMO',
       ],
     },
@@ -129,7 +131,7 @@ export class Sidebar implements OnInit {
     {
       label: 'ADMINISTRADOR', icon: 'pi pi-cog', permisoSeccion: 'ADMINISTRACION',
       permisos: [
-        'CREAR_PERMISOS', 'VER_TRANSFERENCIA', 'CREAR_DESPACHO', 'VER_PRODUCTOS',
+        'CREAR_PERMISOS', 'VER_TRANSFERENCIA', 'VER_DESPACHO', 'VER_PRODUCTOS',
         'VER_CATEGORIAS', 'VER_SEDES', 'VER_MERMAS',
         'VER_REMATES', 'SEGUIMIENTO_EMPLEADO', 'VER_PROVEEDORES',
         'EDITAR_TERMINOS_CONDICIONES', 'ADMINISTRACION', 'MODIFICAR_EMPRESA',

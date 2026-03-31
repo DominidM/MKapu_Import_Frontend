@@ -1,8 +1,9 @@
-<div class="delivery-page flex flex-column gap-3 w-full px-3 md:px-0 pt-5 md:pt-0">
-
-  <!-- HEADER -->
+<!-- HEADER -->
+<div class="p-2 mb-4">
   <p-card styleClass="delivery-header-card">
-    <div class="flex flex-column md:flex-row md:align-items-center md:justify-content-between gap-3">
+    <div
+      class="flex flex-column md:flex-row md:align-items-center md:justify-content-between gap-3"
+    >
       <div class="flex align-items-center gap-3">
         <span class="delivery-title-icon">
           <i class="pi pi-truck"></i>
@@ -22,94 +23,103 @@
       ></p-button>
     </div>
   </p-card>
+</div>
 
-  <!-- KPIs -->
-  <div class="delivery-kpi-grid">
-    <div class="delivery-kpi-card">
-      <span class="delivery-kpi-icon delivery-kpi-icon--total"><i class="pi pi-list"></i></span>
-      <div class="delivery-kpi-info">
-        <span class="delivery-kpi-label">TOTAL</span>
-        <span class="delivery-kpi-value">{{ kpiTotal }}</span>
+<!-- KPIs -->
+<div class="p-2 mb-4">
+  <div class="seccion-estadisticas">
+    <div class="estadistica-card">
+      <i class="pi pi-list"></i>
+      <div>
+        <p class="estadistica-label">TOTAL</p>
+        <span class="estadistica-valor">{{ kpiTotal }}</span>
       </div>
     </div>
-    <div class="delivery-kpi-card">
-      <span class="delivery-kpi-icon delivery-kpi-icon--pendiente"><i class="pi pi-clock"></i></span>
-      <div class="delivery-kpi-info">
-        <span class="delivery-kpi-label">PENDIENTES</span>
-        <span class="delivery-kpi-value">{{ kpiPendientes }}</span>
+    <div class="estadistica-card">
+      <i class="pi pi-clock"></i>
+      <div>
+        <p class="estadistica-label">PENDIENTES</p>
+        <span class="estadistica-valor">{{ kpiPendientes }}</span>
       </div>
     </div>
-    <div class="delivery-kpi-card">
-      <span class="delivery-kpi-icon delivery-kpi-icon--camino"><i class="pi pi-truck"></i></span>
-      <div class="delivery-kpi-info">
-        <span class="delivery-kpi-label">EN CAMINO</span>
-        <span class="delivery-kpi-value">{{ kpiEnCamino }}</span>
+    <div class="estadistica-card">
+      <i class="pi pi-truck"></i>
+      <div>
+        <p class="estadistica-label">EN CAMINO</p>
+        <span class="estadistica-valor">{{ kpiEnCamino }}</span>
       </div>
     </div>
-    <div class="delivery-kpi-card">
-      <span class="delivery-kpi-icon delivery-kpi-icon--entregado"><i class="pi pi-check-circle"></i></span>
-      <div class="delivery-kpi-info">
-        <span class="delivery-kpi-label">ENTREGADOS</span>
-        <span class="delivery-kpi-value">{{ kpiEntregados }}</span>
+    <div class="estadistica-card">
+      <i class="pi pi-check-circle"></i>
+      <div>
+        <p class="estadistica-label">ENTREGADOS</p>
+        <span class="estadistica-valor">{{ kpiEntregados }}</span>
       </div>
     </div>
   </div>
+</div>
 
-  <!-- FILTROS -->
+<!-- FILTROS -->
+<div class="p-2 mb-3">
   <p-card styleClass="delivery-filter-card">
-    <div class="flex flex-column md:flex-row md:align-items-end gap-3">
-      <div class="flex flex-column gap-2 flex-1">
-        <span class="delivery-search-label">Buscar delivery</span>
-        <p-autoComplete
-          styleClass="delivery-search-input w-full"
-          [(ngModel)]="searchTerm"
-          [suggestions]="sugerencias"
-          field="id"
-          placeholder="ID, comprobante o cliente..."
-          [inputStyle]="{ width: '100%', background: 'transparent', color: 'var(--text-color)' }"
-          (onSelect)="aplicarFiltros()"
-          (onClear)="aplicarFiltros()"
-        ></p-autoComplete>
-      </div>
-      <div class="flex flex-column gap-2 w-full md:w-11rem">
-        <span class="delivery-search-label">Tipo</span>
-        <p-select
-          [options]="tipoOptions"
-          [(ngModel)]="filtroTipo"
-          optionLabel="label"
-          optionValue="value"
-          styleClass="w-full"
-          (onChange)="aplicarFiltros()"
-        ></p-select>
-      </div>
-      <div class="flex flex-column gap-2 w-full md:w-11rem">
-        <span class="delivery-search-label">Estado</span>
-        <p-select
-          [options]="estadoOptions"
-          [(ngModel)]="filtroEstado"
-          optionLabel="label"
-          optionValue="value"
-          styleClass="w-full"
-          (onChange)="aplicarFiltros()"
-        ></p-select>
-      </div>
-      <div class="flex align-items-end">
-        <p-button
-          label="Limpiar filtros"
-          icon="pi pi-filter-slash"
-          severity="danger"
-          styleClass="delivery-pill delivery-pill-danger w-full md:w-auto"
-          (click)="limpiarFiltros()"
-        ></p-button>
+    <div class="filtros-container" style="box-shadow: none; padding: 0">
+      <div class="filtros-fila">
+        <div class="filtro-item filtro-busqueda">
+          <label>Buscar delivery</label>
+          <p-autoComplete
+            [(ngModel)]="searchTerm"
+            [suggestions]="sugerencias"
+            field="id"
+            placeholder="ID, comprobante o cliente..."
+            styleClass="w-full"
+            (onSelect)="aplicarFiltros()"
+            (onClear)="aplicarFiltros()"
+          />
+        </div>
+        <div class="filtro-item filtro-compacto">
+          <label>Tipo</label>
+          <p-select
+            [options]="tipoOptions"
+            [(ngModel)]="filtroTipo"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+            (onChange)="aplicarFiltros()"
+          />
+        </div>
+        <div class="filtro-item filtro-compacto">
+          <label>Estado</label>
+          <p-select
+            [options]="estadoOptions"
+            [(ngModel)]="filtroEstado"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+            (onChange)="aplicarFiltros()"
+          />
+        </div>
+        <div class="filtro-boton-limpiar">
+          <p-button
+            label="Limpiar filtros"
+            icon="pi pi-filter-slash"
+            severity="danger"
+            styleClass="btn-limpiar-filtros"
+            (click)="limpiarFiltros()"
+          />
+        </div>
       </div>
     </div>
   </p-card>
+</div>
 
-  <p-toast position="top-right" />
+<p-toast position="top-right" />
 
-  <!-- TABLA -->
+<!-- TABLA -->
+<div class="p-2 mb-3">
   <p-card>
-    <div class="flex flex-column md:flex-row align-items-start md:align-items-center justify-content-between gap-2 mb-3">
+    <div
+      class="flex flex-column md:flex-row align-items-start md:align-items-center justify-content-between gap-2 mb-3"
+    >
       <div class="flex align-items-center gap-2">
         <span class="delivery-section-icon">
           <i class="pi pi-send"></i>
@@ -117,7 +127,12 @@
         <span class="text-sm font-semibold text-700">LISTADO DE DELIVERIES</span>
         <p-tag [value]="'[' + filasFiltradas.length + '] registros'" severity="info"></p-tag>
       </div>
-      <p-button icon="pi pi-sliders-h" text severity="secondary" styleClass="delivery-icon-btn"></p-button>
+      <p-button
+        icon="pi pi-sliders-h"
+        text
+        severity="secondary"
+        styleClass="delivery-icon-btn"
+      ></p-button>
     </div>
 
     <div class="delivery-table-scroll">
@@ -178,7 +193,7 @@
               </div>
             </td>
             <td>
-              <span class="delivery-monto">S/ {{ fila.monto | number:'1.2-2' }}</span>
+              <span class="delivery-monto">S/ {{ fila.monto | number: '1.2-2' }}</span>
             </td>
             <td>
               <span
@@ -226,7 +241,9 @@
               <div class="delivery-empty-inner">
                 <div class="delivery-empty-icon"><i class="pi pi-inbox"></i></div>
                 <div class="delivery-empty-title">No se encontraron deliveries</div>
-                <div class="delivery-empty-text">Ajusta los filtros o prueba con otro término de búsqueda.</div>
+                <div class="delivery-empty-text">
+                  Ajusta los filtros o prueba con otro término de búsqueda.
+                </div>
                 <p-button
                   label="Limpiar filtros"
                   icon="pi pi-filter-slash"
@@ -242,5 +259,4 @@
     </div>
     <p-confirmdialog />
   </p-card>
-
 </div>

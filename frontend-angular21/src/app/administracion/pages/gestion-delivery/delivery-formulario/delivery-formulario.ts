@@ -93,13 +93,49 @@ export class DeliveryFormulario implements OnInit {
   };
 
   readonly personal: Personal[] = [
-    { id: 1, nombre: 'Carlos Mendoza',  cargo: 'REPARTIDOR',   telefono: '999-001-001', disponible: true  },
-    { id: 2, nombre: 'Luis Quispe',     cargo: 'REPARTIDOR',   telefono: '999-001-002', disponible: true  },
-    { id: 3, nombre: 'Ana Torres',      cargo: 'COORDINADORA', telefono: '999-001-003', disponible: true  },
-    { id: 4, nombre: 'Jorge Castillo',  cargo: 'REPARTIDOR',   telefono: '999-001-004', disponible: false },
-    { id: 5, nombre: 'María Sánchez',   cargo: 'SUPERVISOR',   telefono: '999-001-005', disponible: true  },
-    { id: 6, nombre: 'Pedro Huanca',    cargo: 'RECOGEDOR',    telefono: '999-001-006', disponible: true  },
-    { id: 7, nombre: 'Rosa Mamani',     cargo: 'RECOGEDOR',    telefono: '999-001-007', disponible: true  },
+    {
+      id: 1,
+      nombre: 'Carlos Mendoza',
+      cargo: 'REPARTIDOR',
+      telefono: '999-001-001',
+      disponible: true,
+    },
+    {
+      id: 2,
+      nombre: 'Luis Quispe',
+      cargo: 'REPARTIDOR',
+      telefono: '999-001-002',
+      disponible: true,
+    },
+    {
+      id: 3,
+      nombre: 'Ana Torres',
+      cargo: 'COORDINADORA',
+      telefono: '999-001-003',
+      disponible: true,
+    },
+    {
+      id: 4,
+      nombre: 'Jorge Castillo',
+      cargo: 'REPARTIDOR',
+      telefono: '999-001-004',
+      disponible: false,
+    },
+    {
+      id: 5,
+      nombre: 'María Sánchez',
+      cargo: 'SUPERVISOR',
+      telefono: '999-001-005',
+      disponible: true,
+    },
+    {
+      id: 6,
+      nombre: 'Pedro Huanca',
+      cargo: 'RECOGEDOR',
+      telefono: '999-001-006',
+      disponible: true,
+    },
+    { id: 7, nombre: 'Rosa Mamani', cargo: 'RECOGEDOR', telefono: '999-001-007', disponible: true },
   ];
 
   personalOptions: { label: string; value: number; cargo: string; disponible: boolean }[] = [];
@@ -107,14 +143,14 @@ export class DeliveryFormulario implements OnInit {
 
   tipoOptions = [
     { label: 'Venta / Delivery', value: 'VENTA_DELIVERY' },
-    { label: 'Compra / Recojo',  value: 'COMPRA_RECOJO'  },
+    { label: 'Compra / Recojo', value: 'COMPRA_RECOJO' },
   ];
 
   estadoOptions = [
-    { label: 'Pendiente',  value: 'PENDIENTE'  },
-    { label: 'En camino',  value: 'EN_CAMINO'  },
-    { label: 'Entregado',  value: 'ENTREGADO'  },
-    { label: 'Cancelado',  value: 'CANCELADO'  },
+    { label: 'Pendiente', value: 'PENDIENTE' },
+    { label: 'En camino', value: 'EN_CAMINO' },
+    { label: 'Entregado', value: 'ENTREGADO' },
+    { label: 'Cancelado', value: 'CANCELADO' },
   ];
 
   get subtotal(): number {
@@ -135,17 +171,48 @@ export class DeliveryFormulario implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.personalOptions = this.personal.map(p => ({
+    this.personalOptions = this.personal.map((p) => ({
       label: `${p.nombre} — ${p.cargo}${p.disponible ? '' : ' (no disponible)'}`,
       value: p.id,
       cargo: p.cargo,
       disponible: p.disponible,
     }));
-    this.agregarProducto();
+
+    // ── Pre-carga de datos al ingresar ──────────────────
+    this.form = {
+      tipo: 'VENTA_DELIVERY',
+      comprobante: 'B001-00008060',
+      cliente: 'Cliente Ejemplo S.A.C.',
+      origen: 'Av. Principal 123, Lima',
+      destino: 'Jr. Los Pinos 456, Miraflores',
+      fechaEntrega: new Date(),
+      responsableId: 1,
+      estado: 'PENDIENTE',
+      observaciones: 'Entregar en horario de oficina.',
+      productos: [
+        {
+          _uid: this._uidCounter++,
+          codigo: 'PRD-001',
+          descripcion: 'Producto de ejemplo A',
+          cantidad: 2,
+          precio: 45.0,
+        },
+        {
+          _uid: this._uidCounter++,
+          codigo: 'PRD-002',
+          descripcion: 'Producto de ejemplo B',
+          cantidad: 1,
+          precio: 120.0,
+        },
+      ],
+    };
+
+    // Sincronizar el panel de responsable seleccionado
+    this.onResponsableChange();
   }
 
   onResponsableChange(): void {
-    this.personalSeleccionado = this.personal.find(p => p.id === this.form.responsableId) ?? null;
+    this.personalSeleccionado = this.personal.find((p) => p.id === this.form.responsableId) ?? null;
   }
 
   agregarProducto(): void {
@@ -159,7 +226,7 @@ export class DeliveryFormulario implements OnInit {
   }
 
   eliminarProducto(uid: number): void {
-    this.form.productos = this.form.productos.filter(p => p._uid !== uid);
+    this.form.productos = this.form.productos.filter((p) => p._uid !== uid);
   }
 
   guardar(): void {
@@ -198,10 +265,14 @@ export class DeliveryFormulario implements OnInit {
 
   getEstadoSeverity(estado: EstadoDelivery): 'success' | 'info' | 'warn' | 'danger' {
     switch (estado) {
-      case 'ENTREGADO': return 'success';
-      case 'EN_CAMINO': return 'info';
-      case 'PENDIENTE': return 'warn';
-      case 'CANCELADO': return 'danger';
+      case 'ENTREGADO':
+        return 'success';
+      case 'EN_CAMINO':
+        return 'info';
+      case 'PENDIENTE':
+        return 'warn';
+      case 'CANCELADO':
+        return 'danger';
     }
   }
 }

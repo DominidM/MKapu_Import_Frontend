@@ -33,7 +33,7 @@
   100% { background-position: -200% 0; }
 }
 
-/* ─── MAIN CARD ─── */
+/* ─── CARDS ─── */
 :host ::ng-deep .det-main-card .p-card,
 :host ::ng-deep .det-productos-card .p-card {
   border: 2px solid #e5e7eb; border-radius: 12px;
@@ -51,8 +51,7 @@
 .det-comp-header {
   display: flex; justify-content: space-between;
   align-items: center; margin-bottom: 1.5rem;
-  padding-bottom: 1.25rem;
-  border-bottom: 2px solid #fde68a;
+  padding-bottom: 1.25rem; border-bottom: 2px solid #fde68a;
 }
 
 .det-comp-tipo { display: flex; align-items: center; gap: 1.25rem; }
@@ -71,10 +70,8 @@
 .det-tipo-icon {
   width: 52px; height: 52px;
   display: grid; place-items: center;
-  border-radius: 999px;
-  background: #fef9e7;
-  color: #e8a424; font-size: 24px;
-  border: 2px solid #fde68a;
+  border-radius: 999px; background: #fef9e7;
+  color: #e8a424; font-size: 24px; border: 2px solid #fde68a;
 }
 
 /* ─── INFO GRID ─── */
@@ -99,9 +96,8 @@
 }
 
 .det-info-section h3 {
-  margin: 0 0 1rem; font-size: 0.9rem;
-  font-weight: 700; color: #1f2937;
-  display: flex; align-items: center; gap: 0.6rem;
+  margin: 0 0 1rem; font-size: 0.9rem; font-weight: 700;
+  color: #1f2937; display: flex; align-items: center; gap: 0.6rem;
   text-transform: uppercase; letter-spacing: 0.5px;
   padding-bottom: 0.75rem; border-bottom: 2px solid #fde68a;
 }
@@ -122,11 +118,9 @@
 }
 
 .det-value {
-  font-weight: 600; color: #1f2937;
-  text-align: right; display: flex;
-  align-items: center; justify-content: flex-end;
-  gap: 0.4rem; flex: 1; word-break: break-word;
-  font-size: 0.85rem;
+  font-weight: 600; color: #1f2937; text-align: right;
+  display: flex; align-items: center; justify-content: flex-end;
+  gap: 0.4rem; flex: 1; word-break: break-word; font-size: 0.85rem;
 }
 
 /* ─── ICONOS RUTA ─── */
@@ -144,14 +138,10 @@
 }
 
 /* ─── MONTO ─── */
-.det-monto-row {
-  border-top: 2px solid #fde68a;
-  margin-top: 0.5rem; padding-top: 0.75rem;
-}
-
+.det-monto-row { border-top: 2px solid #fde68a; margin-top: 0.5rem; padding-top: 0.75rem; }
 .det-monto-valor { color: #e8a424; font-size: 1.15rem; font-weight: 800; }
 
-/* ─── CARD HEADER PRODUCTOS ─── */
+/* ─── CARD HEADER PRODUCTOS / MAPA ─── */
 .det-card-header {
   border-radius: 12px 12px 0 0;
   display: flex; justify-content: space-between; align-items: center;
@@ -171,11 +161,97 @@
   font-size: 16px; border: 1px solid #fde68a;
 }
 
+/* ─── MAPA ─── */
+.det-mapa-header {
+  display: flex; justify-content: space-between;
+  align-items: center; margin-bottom: 1rem;
+  padding-bottom: 1rem; border-bottom: 2px solid #fde68a;
+  flex-wrap: wrap; gap: 0.75rem;
+}
+
+.det-mapa-header h3 {
+  margin: 0; font-size: 1.1rem; font-weight: 700;
+  color: #1f2937; display: flex; align-items: center; gap: 0.6rem;
+}
+
+.det-mapa-contenedor {
+  width: 100%;
+  height: 380px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 2px solid #e5e7eb;
+  z-index: 0; /* Evita que Leaflet tape modales/overlays de PrimeNG */
+}
+
+.det-mapa-leyenda {
+  display: flex; gap: 1.25rem;
+  align-items: center; flex-wrap: wrap;
+}
+
+.det-leyenda-item {
+  display: flex; align-items: center; gap: 0.4rem;
+  font-size: 0.82rem; font-weight: 600; color: #64748b;
+}
+
+.det-leyenda-pin {
+  width: 12px; height: 12px;
+  border-radius: 50%; display: inline-block;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+.det-leyenda-pin--origen  { background: #16a34a; }
+.det-leyenda-pin--destino { background: #dc2626; }
+
+.det-leyenda-linea {
+  display: inline-block; width: 28px; height: 3px;
+  background: repeating-linear-gradient(
+    90deg, #F6AF33 0, #F6AF33 6px, transparent 6px, transparent 12px
+  );
+  border-radius: 2px;
+}
+
+/* Info bajo el mapa */
+.det-mapa-info {
+  display: flex; align-items: center; gap: 0.75rem;
+  flex-wrap: wrap; margin-top: 1rem;
+  padding: 0.875rem 1rem; border-radius: 8px;
+  background: #fefce8; border: 1px solid #fde68a;
+}
+
+.det-mapa-info-item {
+  display: flex; align-items: center; gap: 0.4rem;
+  font-size: 0.85rem; color: #374151; flex: 1; min-width: 180px;
+}
+
+.det-mapa-info-item i { font-size: 0.7rem; }
+
+.det-mapa-arrow {
+  color: #F6AF33; font-size: 1rem; flex-shrink: 0;
+}
+
+/* Pines del mapa (HTML dentro de L.divIcon) */
+.det-map-pin {
+  width: 36px; height: 36px;
+  border-radius: 50% 50% 50% 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; transform: rotate(-45deg);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  border: 2px solid #fff;
+}
+
+.det-map-pin i { transform: rotate(45deg); }
+
+.det-map-pin--origen  { background: #16a34a; color: #fff; }
+.det-map-pin--destino { background: #dc2626; color: #fff; }
+
+/* Popup Leaflet */
+.det-popup { font-size: 0.82rem; line-height: 1.5; min-width: 160px; }
+
 /* ─── TABLE ─── */
 :host ::ng-deep .p-datatable .p-datatable-thead > tr > th {
-  background: #fefce8; color: #1f2937;
-  font-weight: 700; text-transform: uppercase;
-  font-size: 0.82rem; letter-spacing: 0.5px;
+  background: #fefce8; color: #1f2937; font-weight: 700;
+  text-transform: uppercase; font-size: 0.82rem; letter-spacing: 0.5px;
   border-bottom: 2px solid #F6AF33; padding: 1rem;
 }
 
@@ -191,32 +267,24 @@
 .det-cod-producto {
   font-family: 'Courier New', monospace;
   background: #fef9e7; padding: 0.3rem 0.65rem;
-  border-radius: 6px; font-size: 0.82rem;
-  font-weight: 700; color: #92400e;
-  border: 1px solid #fde68a; display: inline-block;
+  border-radius: 6px; font-size: 0.82rem; font-weight: 700;
+  color: #92400e; border: 1px solid #fde68a; display: inline-block;
 }
 
-.det-empty-msg {
-  text-align: center; padding: 2.5rem 1rem; color: #64748b;
-}
-
+.det-empty-msg { text-align: center; padding: 2.5rem 1rem; color: #64748b; }
 .det-empty-msg i { font-size: 2rem; margin-right: 0.5rem; color: #fde68a; }
 
 /* ─── TOTALES ─── */
-.det-totales-container {
-  display: flex; justify-content: flex-end; margin-top: 1.75rem;
-}
+.det-totales-container { display: flex; justify-content: flex-end; margin-top: 1.75rem; }
 
 .det-totales-grid {
   min-width: 380px; background: #fefce8;
-  padding: 1.5rem; border-radius: 12px;
-  border: 2px solid #fde68a;
+  padding: 1.5rem; border-radius: 12px; border: 2px solid #fde68a;
 }
 
 .det-total-row {
   display: flex; justify-content: space-between;
-  align-items: center; padding: 0.6rem 0;
-  border-bottom: 1px solid #fde68a;
+  align-items: center; padding: 0.6rem 0; border-bottom: 1px solid #fde68a;
 }
 
 .det-total-row:last-child { border-bottom: none; }
@@ -230,25 +298,22 @@
 }
 
 .det-total-final .det-total-label {
-  font-size: 1rem; font-weight: 800;
-  color: #1f2937; text-transform: uppercase;
+  font-size: 1rem; font-weight: 800; color: #1f2937; text-transform: uppercase;
 }
 
-.det-total-final-valor {
-  font-size: 1.4rem; font-weight: 800; color: #e8a424;
-}
+.det-total-final-valor { font-size: 1.4rem; font-weight: 800; color: #e8a424; }
 
 .det-tag { font-size: 0.75rem; }
 
 /* ─── DARK MODE ─── */
-:host-context(.app-dark) .det-kicker     { color: #a1a1aa; }
-:host-context(.app-dark) .det-title      { color: #f1f5f9; }
-:host-context(.app-dark) .det-title-icon { background: #e8a424; color: #1f2937; }
-:host-context(.app-dark) .det-tipo-icon  { background: #2a2218; color: #fbbf24; border-color: #78350f; }
-:host-context(.app-dark) .det-icon-cart  { background: #2a2218; color: #fbbf24; border-color: #78350f; }
-:host-context(.app-dark) .det-comp-tipo h2  { color: #f1f5f9; }
-:host-context(.app-dark) .det-comp-numero   { color: #fbbf24; }
-:host-context(.app-dark) .det-comp-header   { border-bottom-color: #3d2e1a; }
+:host-context(.app-dark) .det-kicker      { color: #a1a1aa; }
+:host-context(.app-dark) .det-title       { color: #f1f5f9; }
+:host-context(.app-dark) .det-title-icon  { background: #e8a424; color: #1f2937; }
+:host-context(.app-dark) .det-tipo-icon   { background: #2a2218; color: #fbbf24; border-color: #78350f; }
+:host-context(.app-dark) .det-icon-cart   { background: #2a2218; color: #fbbf24; border-color: #78350f; }
+:host-context(.app-dark) .det-comp-tipo h2   { color: #f1f5f9; }
+:host-context(.app-dark) .det-comp-numero    { color: #fbbf24; }
+:host-context(.app-dark) .det-comp-header    { border-bottom-color: #3d2e1a; }
 
 :host-context(.app-dark) :host ::ng-deep .det-main-card .p-card,
 :host-context(.app-dark) :host ::ng-deep .det-productos-card .p-card {
@@ -269,31 +334,36 @@
   box-shadow: 0 4px 12px rgba(246, 175, 51, 0.12);
 }
 
-:host-context(.app-dark) .det-info-section h3 { color: #f1f5f9; border-bottom-color: #3d2e1a; }
-:host-context(.app-dark) .det-info-section h3 i { color: #fbbf24; }
-:host-context(.app-dark) .det-info-row { border-bottom-color: #27272a; }
-:host-context(.app-dark) .det-label  { color: #a1a1aa; }
-:host-context(.app-dark) .det-value  { color: #f1f5f9; }
+:host-context(.app-dark) .det-info-section h3    { color: #f1f5f9; border-bottom-color: #3d2e1a; }
+:host-context(.app-dark) .det-info-section h3 i  { color: #fbbf24; }
+:host-context(.app-dark) .det-info-row           { border-bottom-color: #27272a; }
+:host-context(.app-dark) .det-label              { color: #a1a1aa; }
+:host-context(.app-dark) .det-value              { color: #f1f5f9; }
 :host-context(.app-dark) .det-responsable-nombre { color: #fbbf24; }
-:host-context(.app-dark) .det-cargo-badge { background: #2a2218; color: #fcd34d; border-color: #78350f; }
-:host-context(.app-dark) .det-monto-valor { color: #fbbf24; }
-:host-context(.app-dark) .det-monto-row   { border-top-color: #3d2e1a; }
+:host-context(.app-dark) .det-cargo-badge        { background: #2a2218; color: #fcd34d; border-color: #78350f; }
+:host-context(.app-dark) .det-monto-valor        { color: #fbbf24; }
+:host-context(.app-dark) .det-monto-row          { border-top-color: #3d2e1a; }
 
-:host-context(.app-dark) .det-card-header { background: #09090b; border-bottom-color: #3d2e1a; }
-:host-context(.app-dark) .det-card-header h3 { color: #f1f5f9; }
+:host-context(.app-dark) .det-card-header        { background: #09090b; border-bottom-color: #3d2e1a; }
+:host-context(.app-dark) .det-card-header h3     { color: #f1f5f9; }
 
-:host-context(.app-dark) .det-cod-producto {
-  background: #2a2218; color: #fcd34d; border-color: #78350f;
-}
+:host-context(.app-dark) .det-mapa-header        { border-bottom-color: #3d2e1a; }
+:host-context(.app-dark) .det-mapa-header h3     { color: #f1f5f9; }
+:host-context(.app-dark) .det-mapa-contenedor    { border-color: #27272a; }
+:host-context(.app-dark) .det-leyenda-item       { color: #a1a1aa; }
+:host-context(.app-dark) .det-mapa-info          { background: #09090b; border-color: #3d2e1a; }
+:host-context(.app-dark) .det-mapa-info-item     { color: #e4e4e7; }
+:host-context(.app-dark) .det-mapa-arrow         { color: #fbbf24; }
 
-:host-context(.app-dark) .det-empty-msg i { color: #78350f; }
+:host-context(.app-dark) .det-cod-producto       { background: #2a2218; color: #fcd34d; border-color: #78350f; }
+:host-context(.app-dark) .det-empty-msg i        { color: #78350f; }
 
-:host-context(.app-dark) .det-totales-grid { background: #09090b; border-color: #3d2e1a; }
-:host-context(.app-dark) .det-total-label  { color: #a1a1aa; }
-:host-context(.app-dark) .det-total-value  { color: #f1f5f9; }
-:host-context(.app-dark) .det-total-row    { border-bottom-color: #27272a; }
-:host-context(.app-dark) .det-total-final  { border-top-color: #F6AF33 !important; }
-:host-context(.app-dark) .det-total-final-valor { color: #fbbf24; }
+:host-context(.app-dark) .det-totales-grid       { background: #09090b; border-color: #3d2e1a; }
+:host-context(.app-dark) .det-total-label        { color: #a1a1aa; }
+:host-context(.app-dark) .det-total-value        { color: #f1f5f9; }
+:host-context(.app-dark) .det-total-row          { border-bottom-color: #27272a; }
+:host-context(.app-dark) .det-total-final        { border-top-color: #F6AF33 !important; }
+:host-context(.app-dark) .det-total-final-valor  { color: #fbbf24; }
 
 :host-context(.app-dark) :host ::ng-deep .p-datatable .p-datatable-thead > tr > th {
   background: #09090b; color: #f1f5f9; border-bottom-color: #F6AF33;
@@ -322,10 +392,14 @@
 }
 
 @media (max-width: 768px) {
-  .det-info-grid { grid-template-columns: 1fr; gap: 1rem; }
-  .det-comp-header { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+  .det-info-grid         { grid-template-columns: 1fr; gap: 1rem; }
+  .det-comp-header       { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+  .det-mapa-contenedor   { height: 260px; }
+  .det-mapa-header       { flex-direction: column; align-items: flex-start; }
+  .det-mapa-info         { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+  .det-mapa-arrow        { display: none; }
   .det-totales-container { padding: 0; }
-  .det-totales-grid { min-width: 100%; padding: 1.25rem; }
-  .det-card-header { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+  .det-totales-grid      { min-width: 100%; padding: 1.25rem; }
+  .det-card-header       { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
   .det-total-final-valor { font-size: 1.2rem; }
 }

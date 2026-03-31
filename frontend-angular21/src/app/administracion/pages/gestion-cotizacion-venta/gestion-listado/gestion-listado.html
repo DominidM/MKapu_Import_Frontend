@@ -136,29 +136,33 @@
       </div><!-- /filtros-linea-1 -->
 
       <div class="filtros-linea-2">
+
         <div class="filtro-item filtro-compacto">
-            <label>SEDE</label>
+          <label>SEDE</label>
 
-            <p-select
-              *ngIf="esAdmin"
-              [options]="sedesOptions()"
-              [ngModel]="sedeSeleccionada()"
-              (ngModelChange)="onSedeChange($event)"
-              optionLabel="label"
-              optionValue="value"
-              placeholder="Todas las sedes"
-              styleClass="w-full"
-              [showClear]="true"
-            ></p-select>
+          <!-- Admin: ve selector con sede propia preseleccionada, puede cambiarla o limpiar para ver todas -->
+          <p-select
+            *ngIf="esAdmin"
+            [options]="sedesOptions()"
+            [ngModel]="sedeSeleccionada()"
+            (ngModelChange)="onSedeChange($event)"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Todas las sedes"
+            [showClear]="true"
+            styleClass="w-full">
+          </p-select>
 
-            <div
-              *ngIf="!esAdmin"
-              class="flex align-items-center gap-2 px-3 py-2 border-round"
-              style="background: var(--surface-100); border: 1px solid var(--surface-border); height: 42px">
-              <i class="pi pi-map-marker" style="color: #FFA726"></i>
-              <span class="font-semibold">{{ sedeNombre }}</span>
-            </div>
+          <!-- No-admin: muestra badge fijo con su sede -->
+          <div
+            *ngIf="!esAdmin"
+            class="flex align-items-center gap-2 px-3 py-2 border-round"
+            style="background: var(--surface-100); border: 1px solid var(--surface-border); height: 42px">
+            <i class="pi pi-map-marker" style="color: #FFA726"></i>
+            <span class="font-semibold">{{ sedeNombre }}</span>
           </div>
+        </div>
+
         <div class="filtro-item filtro-compacto">
           <label>Estado</label>
           <p-select
@@ -183,6 +187,7 @@
             styleClass="btn-limpiar-filtros">
           </p-button>
         </div>
+
       </div><!-- /filtros-linea-2 -->
 
     </div><!-- /seccion-filtros -->
@@ -292,7 +297,8 @@
                 pTooltip="Documentos" tooltipPosition="top"
                 (onClick)="abrirAcciones(c)">
               </p-button>
-              <!-- ACCIONES PENDIENTE — solo si estado es PENDIENTE -->
+
+              <!-- ACCIONES PENDIENTE -->
               <ng-container *ngIf="c.estado === 'PENDIENTE'">
                 <p-button
                   icon="pi pi-shopping-cart"
@@ -306,7 +312,7 @@
                   pTooltip="Venta por Cobrar" tooltipPosition="top"
                   (onClick)="irAgregarVentaPorCobrar(c.id_cotizacion)">
                 </p-button>
-                <!-- RECHAZAR — solo ADMIN, estado PENDIENTE -->
+                <!-- RECHAZAR — solo ADMIN -->
                 <p-button
                   *ngIf="esAdmin"
                   icon="pi pi-times"
@@ -315,6 +321,7 @@
                   (onClick)="rechazarCotizacion(c.id_cotizacion)">
                 </p-button>
               </ng-container>
+
               <!-- ACCIONES RECHAZADA -->
               <ng-container *ngIf="c.estado === 'RECHAZADA'">
                 <p-button
@@ -330,6 +337,7 @@
                   (onClick)="eliminarCotizacion(c.id_cotizacion)">
                 </p-button>
               </ng-container>
+
             </div>
           </td>
         </tr>

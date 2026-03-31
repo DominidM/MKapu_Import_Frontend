@@ -116,6 +116,7 @@
         <div class="filtro-item filtro-compacto">
           <label>SEDE</label>
 
+          <!-- Admin: ve selector con sede propia preseleccionada, puede limpiar para ver todas -->
           <p-select
             *ngIf="esAdmin"
             [options]="sedesOptions()"
@@ -124,10 +125,11 @@
             optionLabel="label"
             optionValue="value"
             placeholder="Todas las sedes"
-            styleClass="w-full"
             [showClear]="true"
-          ></p-select>
+            styleClass="w-full">
+          </p-select>
 
+          <!-- No-admin: badge fijo con su sede -->
           <div
             *ngIf="!esAdmin"
             class="flex align-items-center gap-2 px-3 py-2 border-round"
@@ -136,6 +138,7 @@
             <span class="font-semibold">{{ sedeNombre }}</span>
           </div>
         </div>
+
         <div class="filtro-item filtro-compacto">
           <label>Estado</label>
           <p-select
@@ -146,6 +149,7 @@
             placeholder="Todos" [showClear]="true" styleClass="w-full">
           </p-select>
         </div>
+
         <div class="filtro-item filtro-boton-limpiar">
           <label>&nbsp;</label>
           <p-button
@@ -211,12 +215,12 @@
               <span>{{ getNombreProveedor(c) }}</span>
             </div>
           </td>
-         <td>
-          <div class="flex align-items-center gap-1">
-            <i class="pi pi-user" style="font-size:0.7rem; color:var(--text-muted)"></i>
-            <span class="text-sm">{{ c.nombre_responsable ?? c.id_responsable_ref ?? '—' }}</span>
-          </div>
-        </td>
+          <td>
+            <div class="flex align-items-center gap-1">
+              <i class="pi pi-user" style="font-size:0.7rem; color:var(--text-muted)"></i>
+              <span class="text-sm">{{ c.nombre_responsable ?? c.id_responsable_ref ?? '—' }}</span>
+            </div>
+          </td>
           <td>
             <div class="flex flex-column gap-1">
               <div class="flex align-items-center gap-1">
@@ -259,6 +263,7 @@
                 pTooltip="Documentos" tooltipPosition="top"
                 (onClick)="abrirAcciones(c)">
               </p-button>
+
               <!-- RECHAZAR — solo ADMIN, estado PENDIENTE -->
               <ng-container *ngIf="c.estado === 'PENDIENTE' && esAdmin">
                 <p-button
@@ -268,6 +273,8 @@
                   (onClick)="rechazarCotizacion(c.id_cotizacion)">
                 </p-button>
               </ng-container>
+
+              <!-- ACCIONES RECHAZADA -->
               <ng-container *ngIf="c.estado === 'RECHAZADA'">
                 <p-button
                   icon="pi pi-refresh"
@@ -282,6 +289,7 @@
                   (onClick)="eliminarCotizacion(c.id_cotizacion)">
                 </p-button>
               </ng-container>
+
             </div>
           </td>
         </tr>

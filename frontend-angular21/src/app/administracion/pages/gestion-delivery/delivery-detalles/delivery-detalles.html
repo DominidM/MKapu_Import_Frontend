@@ -40,9 +40,10 @@
   <div class="p-2">
     <p-card>
       <div class="det-skeleton-wrapper">
-        <p-skeleton width="100%" height="140px" styleClass="mb-3"></p-skeleton>
-        <p-skeleton width="100%" height="280px" styleClass="mb-3"></p-skeleton>
-        <p-skeleton width="100%" height="180px"></p-skeleton>
+        <p-skeleton width="100%" height="140px" styleClass="mb-3" />
+        <p-skeleton width="100%" height="280px" styleClass="mb-3" />
+        <p-skeleton width="100%" height="340px" styleClass="mb-3" />
+        <p-skeleton width="100%" height="180px" />
       </div>
     </p-card>
   </div>
@@ -55,7 +56,7 @@
   <div class="p-2">
     <p-card styleClass="det-main-card mb-4">
 
-      <!-- CABECERA DEL COMPROBANTE -->
+      <!-- CABECERA COMPROBANTE -->
       <div class="det-comp-header">
         <div class="det-comp-tipo">
           <span class="det-tipo-icon">
@@ -70,16 +71,19 @@
           [value]="detalle.estado"
           [severity]="getEstadoSeverity(detalle.estado)"
           [rounded]="true"
-        ></p-tag>
+        />
       </div>
 
-      <!-- GRILLA DE INFO -->
+      <!-- GRILLA INFO -->
       <div class="det-info-grid-wrapper">
         <div class="det-info-grid">
 
           <!-- CLIENTE / PROVEEDOR -->
           <div class="det-info-section">
-            <h3><i class="pi pi-user"></i> {{ detalle.tipo === 'VENTA_DELIVERY' ? 'Cliente' : 'Proveedor' }}</h3>
+            <h3>
+              <i class="pi pi-user"></i>
+              {{ detalle.tipo === 'VENTA_DELIVERY' ? 'Cliente' : 'Proveedor' }}
+            </h3>
             <div class="det-info-row">
               <span class="det-label">Nombre:</span>
               <span class="det-value">{{ detalle.cliente }}</span>
@@ -121,10 +125,12 @@
                 <i class="pi pi-map-marker det-icon-destino mr-1"></i>{{ detalle.destino }}
               </span>
             </div>
-            <div class="det-info-row" *ngIf="detalle.observaciones">
-              <span class="det-label">Observaciones:</span>
-              <span class="det-value">{{ detalle.observaciones }}</span>
-            </div>
+            @if (detalle.observaciones) {
+              <div class="det-info-row">
+                <span class="det-label">Observaciones:</span>
+                <span class="det-value">{{ detalle.observaciones }}</span>
+              </div>
+            }
           </div>
 
           <!-- RESPONSABLE -->
@@ -160,7 +166,7 @@
                   [value]="getTipoLabel(detalle.tipo)"
                   [severity]="getTipoSeverity(detalle.tipo)"
                   styleClass="det-tag"
-                ></p-tag>
+                />
               </span>
             </div>
             <div class="det-info-row det-monto-row">
@@ -170,6 +176,41 @@
           </div>
 
         </div>
+      </div>
+    </p-card>
+  </div>
+
+  <!-- MAPA DE RUTA -->
+  <div class="p-2">
+    <p-card styleClass="det-main-card mb-4">
+      <div class="det-mapa-header">
+        <h3>
+          <span class="det-icon-cart"><i class="pi pi-map"></i></span>
+          Mapa de Ruta
+        </h3>
+        <div class="det-mapa-leyenda">
+          <span class="det-leyenda-item">
+            <span class="det-leyenda-pin det-leyenda-pin--origen"></span> Origen
+          </span>
+          <span class="det-leyenda-item">
+            <span class="det-leyenda-pin det-leyenda-pin--destino"></span> Destino
+          </span>
+          <span class="det-leyenda-item">
+            <span class="det-leyenda-linea"></span> Ruta estimada
+          </span>
+        </div>
+      </div>
+      <div #mapaContainer class="det-mapa-contenedor"></div>
+      <div class="det-mapa-info">
+        <span class="det-mapa-info-item">
+          <i class="pi pi-circle-fill det-icon-origen"></i>
+          <strong>Origen:</strong> {{ detalle.origen }}
+        </span>
+        <i class="pi pi-arrow-right det-mapa-arrow"></i>
+        <span class="det-mapa-info-item">
+          <i class="pi pi-map-marker det-icon-destino"></i>
+          <strong>Destino:</strong> {{ detalle.destino }}
+        </span>
       </div>
     </p-card>
   </div>
@@ -187,7 +228,7 @@
             [value]="detalle.productos.length + ' items'"
             severity="success"
             [rounded]="true"
-          ></p-tag>
+          />
         </div>
       </ng-template>
 
@@ -226,7 +267,7 @@
         </ng-template>
       </p-table>
 
-      <!-- TOTAL FINAL -->
+      <!-- TOTALES -->
       <div class="det-totales-container">
         <div class="det-totales-grid">
           <div class="det-total-row">
