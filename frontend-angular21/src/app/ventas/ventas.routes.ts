@@ -73,7 +73,7 @@ export const VENTAS_ROUTES: Routes = [
   {
     path: 'ventas-por-cobrar',
     canActivate: [roleGuard],
-    data: { permiso: 'CREAR_VENTA_POR_COBRAR' },
+    data: { permiso: 'VER_VENTA_POR_COBRAR' },
     children: [
       {
         path: '',

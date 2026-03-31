@@ -50,54 +50,54 @@ export class GestionCotizacionesComponent implements OnInit, OnDestroy {
   private readonly TIPO_FIJO: 'VENTA' | 'COMPRA' = 'VENTA';
 
   // Servicios
-  private quoteService = inject(QuoteService);
-  private sedeService = inject(SedeService);
-  private messageService = inject(MessageService);
-  private confirmationService = inject(ConfirmationService);
-  private router = inject(Router);
-  private authService = inject(AuthService);
+  private quoteService         = inject(QuoteService);
+  private sedeService          = inject(SedeService);
+  private messageService       = inject(MessageService);
+  private confirmationService  = inject(ConfirmationService);
+  private router               = inject(Router);
+  private authService          = inject(AuthService);
 
   // ── Auth ──────────────────────────────────────────────────────────
   readonly esAdmin:      boolean;
   readonly sedeNombre:   string;
-  readonly sedePropiaId: string;
+  readonly sedePropiaId: number | null; // ← number (no string) para unificar tipos
 
   // ── Permisos ──────────────────────────────────────────────────────
-  puedeVerCotizacionesVenta    = false; // VER_COTIZACIONES_VENTA
+  puedeVerCotizacionesVenta    = false;
   puedeCrearCotizacionesVenta  = false; // CREAR_COTIZACIONES_VENTA → botón "Agregar Cotización"
-  puedeEditarCotizacionesVenta = false; // EDITAR_COTIZACIONES_VENTA (si existe)
-  // rechazar cotización solo puede ver el admin
+  puedeEditarCotizacionesVenta = false;
+  // rechazar cotización solo puede el admin
 
   // Signals de Estado
-  buscarValue = signal<string>('');
+  buscarValue           = signal<string>('');
   cotizacionSugerencias = signal<QuoteListItem[]>([]);
-  estadoSeleccionado = signal<string | null>('PENDIENTE');
-  sedeSeleccionada = signal<number | null>(null);
-  currentPage = signal<number>(1);
-  rows = signal<number>(5);
-  fechaFin = signal<Date | null>(getDomingoSemanaActualPeru());
-  fechaInicio = signal<Date | null>(getLunesSemanaActualPeru());
+  estadoSeleccionado    = signal<string | null>('PENDIENTE');
+  sedeSeleccionada      = signal<number | null>(null); // ← siempre number | null
+  currentPage           = signal<number>(1);
+  rows                  = signal<number>(5);
+  fechaFin              = signal<Date | null>(getDomingoSemanaActualPeru());
+  fechaInicio           = signal<Date | null>(getLunesSemanaActualPeru());
 
-  // Selectors y PrimeNG Options
+  // Selectors y PrimeNG Options — value como number para hacer match con sedeSeleccionada
   estadosOptions = [
-    { label: 'Todos',     value: null       },
+    { label: 'Todos',     value: null        },
     { label: 'Pendiente', value: 'PENDIENTE' },
     { label: 'Aprobada',  value: 'APROBADA'  },
     { label: 'Rechazada', value: 'RECHAZADA' },
     { label: 'Vencida',   value: 'VENCIDA'   },
   ];
 
+  // ← value es number (id_sede), coincide con sedeSeleccionada que es number | null
   sedesOptions = computed(() => [
-    { label: 'Todas las sedes', value: '' },
+    { label: 'Todas las sedes', value: null },
     ...this.sedeService.sedes().map(sede => ({
       label: sede.nombre,
-      value: String(sede.id_sede),
+      value: sede.id_sede,       // number
     })),
   ]);
 
   cotizaciones = computed(() => this.quoteService.quotes());
 
-  // Resolver cotizacionesFiltradas localmente por fechas
   cotizacionesFiltradas = computed(() => {
     const inicio = this.fechaInicio();
     const fin    = this.fechaFin();
@@ -122,22 +122,22 @@ export class GestionCotizacionesComponent implements OnInit, OnDestroy {
     });
   });
 
-  totalPages = computed(() => this.quoteService.totalPages());
-  loading = computed(() => this.quoteService.loading());
-  totalRecords = computed(() => this.quoteService.kpiTotal());
-  totalAprobadas = computed(() => this.quoteService.kpiAprobadas());
+  totalPages      = computed(() => this.quoteService.totalPages());
+  loading         = computed(() => this.quoteService.loading());
+  totalRecords    = computed(() => this.quoteService.kpiTotal());
+  totalAprobadas  = computed(() => this.quoteService.kpiAprobadas());
   totalPendientes = computed(() => this.quoteService.kpiPendientes());
 
   // Estado de Diálogos de Acciones (PDF, Email, Térmico)
-  accionesVisible = false;
+  accionesVisible  = false;
   accionCargando: string | null = null;
   accionesConfig: AccionesComprobanteConfig | null = null;
   private cotizacionAcciones: QuoteListItem | null = null;
 
   // Estado de Diálogo WhatsApp
-  mostrarDialogWsp = false;
-  enviandoWsp = false;
-  wspReady = false;
+  mostrarDialogWsp  = false;
+  enviandoWsp       = false;
+  wspReady          = false;
   wspQr: string | null = null;
   cotizacionWsp: QuoteListItem | null = null;
   private pollingInterval: any = null;
@@ -150,9 +150,10 @@ export class GestionCotizacionesComponent implements OnInit, OnDestroy {
 
     this.esAdmin      = this.authService.getRoleId() === UserRole.ADMIN;
     this.sedeNombre   = user?.sedeNombre ?? 'Mi sede';
-    this.sedePropiaId = String(user?.idSede ?? '');
+    this.sedePropiaId = user?.idSede ?? null; // ← number | null
 
-    this.sedeSeleccionada.set(this.esAdmin ? null : Number(this.sedePropiaId));
+    // Siempre inicia con la sede propia (admin también la ve primero)
+    this.sedeSeleccionada.set(this.sedePropiaId);
 
     effect(() => {
       const sede = this.sedeSeleccionada();
@@ -172,7 +173,7 @@ export class GestionCotizacionesComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     // ── Resolver permisos ─────────────────────────────────────────
-    this.puedeVerCotizacionesVenta    = true; // Acceso a la página implica que puede ver
+    this.puedeVerCotizacionesVenta    = true;
     this.puedeCrearCotizacionesVenta  = this.authService.hasPermiso('CREAR_COTIZACIONES_VENTA');
     this.puedeEditarCotizacionesVenta = this.authService.hasPermiso('EDITAR_COTIZACIONES_VENTA');
 
@@ -192,7 +193,7 @@ export class GestionCotizacionesComponent implements OnInit, OnDestroy {
       estado:  this.estadoSeleccionado(),
       tipo:    this.TIPO_FIJO,
       id_sede: this.sedeSeleccionada(),
-      search,                        
+      search,
       page:    this.currentPage(),
       limit:   this.rows(),
     }).subscribe();
@@ -211,7 +212,7 @@ export class GestionCotizacionesComponent implements OnInit, OnDestroy {
     this.cargarCotizacion();
   }
 
-  onFechaChange() { 
+  onFechaChange() {
     // Filtro local gestionado por la señal computada `cotizacionesFiltradas`
   }
 
@@ -220,7 +221,7 @@ export class GestionCotizacionesComponent implements OnInit, OnDestroy {
     this.cotizacionSugerencias.set([]);
     this.fechaInicio.set(null);
     this.fechaFin.set(null);
-    this.sedeSeleccionada.set(this.esAdmin ? null : Number(this.sedePropiaId));
+    this.sedeSeleccionada.set(this.sedePropiaId); // ← siempre vuelve a la sede propia
     this.estadoSeleccionado.set('PENDIENTE');
     this.currentPage.set(1);
     this.cargarCotizacion();
@@ -287,13 +288,8 @@ export class GestionCotizacionesComponent implements OnInit, OnDestroy {
   // --- Acciones sobre Cotizaciones ---
 
   rechazarCotizacion(id: number) {
-    // ── Validar que es ADMIN ──
     if (!this.esAdmin) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Acción no permitida',
-        detail: 'Solo administradores pueden rechazar cotizaciones.',
-      });
+      this.messageService.add({ severity: 'warn', summary: 'Acción no permitida', detail: 'Solo administradores pueden rechazar cotizaciones.' });
       return;
     }
 
@@ -349,10 +345,10 @@ export class GestionCotizacionesComponent implements OnInit, OnDestroy {
   abrirAcciones(c: QuoteListItem): void {
     this.cotizacionAcciones = c;
     this.accionesConfig = {
-      titulo:       c.codigo,
-      subtitulo:    c.cliente_nombre,
-      labelPdf:     'PDF Cotización',
-      mostrarVoucher  : false,
+      titulo:        c.codigo,
+      subtitulo:     c.cliente_nombre,
+      labelPdf:      'PDF Cotización',
+      mostrarVoucher: false,
     };
     this.accionCargando  = null;
     this.accionesVisible = true;
@@ -368,8 +364,8 @@ export class GestionCotizacionesComponent implements OnInit, OnDestroy {
       case 'email':
         this.accionCargando = 'email';
         this.quoteService.sendByEmail(c.id_cotizacion).subscribe({
-          next:  (res) => { this.accionCargando = null; this.accionesVisible = false; this.messageService.add({ severity: 'success', summary: 'Email enviado', detail: `Cotización enviada a su correo.`, life: 4000 }); },
-          error: ()    => { this.accionCargando = null; this.accionesVisible = false; this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo enviar. Verifique el email del cliente.', life: 3000 }); },
+          next:  () => { this.accionCargando = null; this.accionesVisible = false; this.messageService.add({ severity: 'success', summary: 'Email enviado', detail: 'Cotización enviada a su correo.', life: 4000 }); },
+          error: () => { this.accionCargando = null; this.accionesVisible = false; this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo enviar. Verifique el email del cliente.', life: 3000 }); },
         });
         break;
       case 'pdf-imprimir':
@@ -386,16 +382,16 @@ export class GestionCotizacionesComponent implements OnInit, OnDestroy {
   // --- WhatsApp Dialog ---
 
   abrirDialogWsp(c: QuoteListItem): void {
-    this.cotizacionWsp = c;
+    this.cotizacionWsp    = c;
     this.mostrarDialogWsp = true;
-    this.wspReady = false;
-    this.wspQr = null;
+    this.wspReady         = false;
+    this.wspQr            = null;
     this.verificarEstadoWsp();
   }
 
   cerrarDialogWsp(): void {
     this.mostrarDialogWsp = false;
-    this.cotizacionWsp = null;
+    this.cotizacionWsp    = null;
     if (this.pollingInterval) { clearInterval(this.pollingInterval); this.pollingInterval = null; }
   }
 
@@ -403,13 +399,13 @@ export class GestionCotizacionesComponent implements OnInit, OnDestroy {
     this.quoteService.getWhatsAppStatus().subscribe({
       next: (res) => {
         this.wspReady = res.ready;
-        this.wspQr = res.qr ?? null;
+        this.wspQr    = res.qr ?? null;
         if (!res.ready) {
           this.pollingInterval = setInterval(() => {
             this.quoteService.getWhatsAppStatus().subscribe({
               next: (r) => {
                 this.wspReady = r.ready;
-                this.wspQr = r.qr ?? null;
+                this.wspQr    = r.qr ?? null;
                 if (r.ready) { clearInterval(this.pollingInterval); this.pollingInterval = null; }
               },
             });
@@ -424,15 +420,8 @@ export class GestionCotizacionesComponent implements OnInit, OnDestroy {
     if (!this.cotizacionWsp) return;
     this.enviandoWsp = true;
     this.quoteService.sendByWhatsApp(this.cotizacionWsp.id_cotizacion).subscribe({
-      next: (res) => {
-        this.enviandoWsp = false;
-        this.cerrarDialogWsp();
-        this.messageService.add({ severity: 'success', summary: '¡Enviado!', detail: `Cotización enviada.`, life: 5000 });
-      },
-      error: (err) => {
-        this.enviandoWsp = false;
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo enviar por WhatsApp.', life: 5000 });
-      },
+      next:  () => { this.enviandoWsp = false; this.cerrarDialogWsp(); this.messageService.add({ severity: 'success', summary: '¡Enviado!', detail: 'Cotización enviada.', life: 5000 }); },
+      error: () => { this.enviandoWsp = false; this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo enviar por WhatsApp.', life: 5000 }); },
     });
   }
 
@@ -473,52 +462,42 @@ export class GestionCotizacionesComponent implements OnInit, OnDestroy {
   // --- Generación de Ventas Directas ---
 
   irAgregarVenta(id: number) {
-    const c = this.cotizacionesFiltradas().find((x: QuoteListItem) => x.id_cotizacion === id);
+    const c       = this.cotizacionesFiltradas().find((x: QuoteListItem) => x.id_cotizacion === id);
     const tipoCot = c?.tipo ?? 'VENTA';
     const impacto = '<br><br><span style="color:#f87171">↓ Restará stock a los productos</span>';
 
     this.confirmationService.confirm({
-      message:  `¿Confirmas generar una <strong>venta al contado</strong> a partir de esta cotización?${impacto}`,
-      header:   'Generar Venta (Contado)',
-      icon:     'pi pi-shopping-cart',
-      acceptLabel: 'Sí, continuar',
-      rejectLabel: 'Cancelar',
+      message: `¿Confirmas generar una <strong>venta al contado</strong> a partir de esta cotización?${impacto}`,
+      header: 'Generar Venta (Contado)', icon: 'pi pi-shopping-cart',
+      acceptLabel: 'Sí, continuar', rejectLabel: 'Cancelar',
       acceptButtonStyleClass: 'p-button-success',
       rejectButtonStyleClass: 'p-button-secondary p-button-outlined',
       accept: () => {
-        this.router.navigate(
-          ['/admin/generar-ventas-administracion'],
-          { queryParams: { cotizacion: id, tipo: 'contado', tipoCot } }
-        );
+        this.router.navigate(['/admin/generar-ventas-administracion'], { queryParams: { cotizacion: id, tipo: 'contado', tipoCot } });
       },
     });
   }
 
   irAgregarVentaPorCobrar(id: number) {
-    const c = this.cotizacionesFiltradas().find((x: QuoteListItem) => x.id_cotizacion === id);
+    const c       = this.cotizacionesFiltradas().find((x: QuoteListItem) => x.id_cotizacion === id);
     const tipoCot = c?.tipo ?? 'VENTA';
     const impacto = '<br><br><span style="color:#f87171">↓ Restará stock a los productos</span>';
 
     this.confirmationService.confirm({
-      message:  `¿Confirmas generar una <strong>venta a crédito</strong> a partir de esta cotización?${impacto}`,
-      header:   'Generar Venta (Crédito)',
-      icon:     'pi pi-credit-card',
-      acceptLabel: 'Sí, continuar',
-      rejectLabel: 'Cancelar',
+      message: `¿Confirmas generar una <strong>venta a crédito</strong> a partir de esta cotización?${impacto}`,
+      header: 'Generar Venta (Crédito)', icon: 'pi pi-credit-card',
+      acceptLabel: 'Sí, continuar', rejectLabel: 'Cancelar',
       acceptButtonStyleClass: 'p-button-success',
       rejectButtonStyleClass: 'p-button-secondary p-button-outlined',
       accept: () => {
-        this.router.navigate(
-          ['/admin/generar-ventas-administracion'],
-          { queryParams: { cotizacion: id, tipo: 'credito', tipoCot } }
-        );
+        this.router.navigate(['/admin/generar-ventas-administracion'], { queryParams: { cotizacion: id, tipo: 'credito', tipoCot } });
       },
     });
   }
 
   // --- Navegación ---
 
-  irCrear() { this.router.navigate(['/admin/cotizaciones-venta/agregar-cotizaciones'], { queryParams: { tipo: 'VENTA' } }); }
+  irCrear()             { this.router.navigate(['/admin/cotizaciones-venta/agregar-cotizaciones'], { queryParams: { tipo: 'VENTA' } }); }
   irEditar(id: number)  { this.router.navigate(['/admin/cotizaciones-venta/editar-cotizacion', id]); }
   irDetalle(id: number) { this.router.navigate(['/admin/cotizaciones-venta/ver-detalle-cotizacion', id]); }
 }

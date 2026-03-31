@@ -43,8 +43,7 @@ export const ADMIN_ROUTES: Routes = [
     path: 'notificaciones',
     loadComponent: () =>
       import('./pages/notificacion-admin/notificacion-admin').then((m) => m.NotificacionAdmin),
-    canActivate: [roleGuard],
-    data: { permiso: 'VER_DASHBOARD_ADMIN' },
+
   },
 
   {
@@ -454,22 +453,22 @@ export const ADMIN_ROUTES: Routes = [
         path: '',
         loadComponent: () =>
           import('./pages/nota-credito/nota-credito').then((m) => m.NotasCreditoComponent),
-          //canActivate: [roleGuard],
-          //data: { permiso: 'VER_NOTA_CREDITO' },
+          canActivate: [roleGuard],
+          data: { permiso: 'VER_NC' },
       },
       {
         path: 'crear',
         loadComponent: () =>
           import('./pages/nota-credito/agregar-nota-credito/agregar-nota-credito').then((m) => m.AgregarNotaCreditoComponent,),
-          //canActivate: [roleGuard],
-          //data: { permiso: 'CREAR_NOTA_CREDITO' },
+          canActivate: [roleGuard],
+          data: { permiso: 'VER_NC' },
       },
     ],
   },
   {
     path: 'ventas-por-cobrar',
     canActivate: [roleGuard],
-    data: { permiso: 'CREAR_VENTA_POR_COBRAR' },
+    data: { permiso: 'VER_VENTA_POR_COBRAR' },
     children: [
       {
         path: '',
@@ -766,6 +765,9 @@ export const ADMIN_ROUTES: Routes = [
     data: { permiso: 'AGREGAR_DOCUMENTO' }
   },
 
+
+
+
   {
     path: 'despacho-productos',
     loadComponent: () =>
@@ -773,7 +775,7 @@ export const ADMIN_ROUTES: Routes = [
         (m) => m.ListadoDespacho,
       ),
     canActivate: [roleGuard],
-    data: { permiso: 'CREAR_DESPACHO' },
+    data: { permiso: 'VER_DESPACHO' },
   },
   {
     path: 'despacho-productos/detalle-despacho/:id',
@@ -782,7 +784,7 @@ export const ADMIN_ROUTES: Routes = [
         (m) => m.DetallesDespacho,
       ),
     canActivate: [roleGuard],
-    data: { permiso: 'CREAR_DESPACHO' },
+    data: { permiso: 'VER_DESPACHO' },
   },
   {
     path: 'despacho-productos/agregar-despacho',
@@ -791,7 +793,7 @@ export const ADMIN_ROUTES: Routes = [
         (m) => m.AgregarDespacho,
       ),
     canActivate: [roleGuard],
-    data: { permiso: 'CREAR_DESPACHO' },
+    data: { permiso: 'VER_DESPACHO' },
   },
   {
     path: 'despacho-productos/confirmar-despacho',
@@ -800,7 +802,7 @@ export const ADMIN_ROUTES: Routes = [
         (m) => m.ConfirmarDespacho,
       ),
     canActivate: [roleGuard],
-    data: { permiso: 'CREAR_DESPACHO' },
+    data: { permiso: 'CONFIRMAR_DESPACHO' },
   },
   {
     path: 'despacho-productos/editar-despacho/:id',
@@ -809,8 +811,12 @@ export const ADMIN_ROUTES: Routes = [
         (m) => m.EditarDespacho,
       ),
     canActivate: [roleGuard],
-    data: { permiso: 'CREAR_DESPACHO' },
+    data: { permiso: 'EDITAR_DESPACHO' },
   },
+
+
+
+
 
 
   {

@@ -239,7 +239,7 @@ export class ListadoDespacho implements OnInit, OnDestroy {
         if (query.length < 2) return [];
         return this.dispatchService.loadDispatches('Administrador', {
           page: 1,
-          limit: 10,
+          limit: 5,
           search: query,
           id_sede: this.filtros().sedeSeleccionada ?? undefined,
         });
@@ -270,7 +270,7 @@ export class ListadoDespacho implements OnInit, OnDestroy {
   buscarSugerencias(event: any): void {
     const query = (event.query ?? '').trim();
     if (query.length < 2) {
-      this.sugerenciasBusqueda.set(this.todasLasSugerencias().slice(0, 10));
+      this.sugerenciasBusqueda.set(this.todasLasSugerencias().slice(0, 5));
       return;
     }
     this.busquedaSubject.next(query);

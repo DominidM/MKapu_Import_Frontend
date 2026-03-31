@@ -56,24 +56,23 @@ export class GestionComprasComponent implements OnInit, OnDestroy {
   // ── Auth ──────────────────────────────────────────────────────────
   readonly esAdmin:      boolean;
   readonly sedeNombre:   string;
-  readonly sedePropiaId: string;
+  readonly sedePropiaId: number | null; // ← number | null (no string)
 
   // ── Permisos ──────────────────────────────────────────────────────
-  puedeVerCotizacionesCompra    = false; // VER_COTIZACIONES_COMPRA
+  puedeVerCotizacionesCompra    = false;
   puedeCrearCotizacionesCompra  = false; // CREAR_COTIZACIONES_COMPRA → botón "Agregar Cotización Compra"
-  puedeEditarCotizacionesCompra = false; // EDITAR_COTIZACIONES_COMPRA (si existe)
-  // rechazar solo puede ver el admin
+  puedeEditarCotizacionesCompra = false;
+  // rechazar solo puede el admin
 
   buscarValue           = signal<string>('');
   cotizacionSugerencias = signal<QuoteListItem[]>([]);
   estadoSeleccionado    = signal<string | null>('PENDIENTE');
-  sedeSeleccionada      = signal<number | null>(null);
+  sedeSeleccionada      = signal<number | null>(null); // ← siempre number | null
   currentPage           = signal<number>(1);
   rows                  = signal<number>(5);
   fechaFin              = signal<Date | null>(getDomingoSemanaActualPeru());
   fechaInicio           = signal<Date | null>(getLunesSemanaActualPeru());
 
-  // Mapa id_proveedor → razon_social para resolución local
   proveedoresMap = signal<Map<number, string>>(new Map());
 
   estadosOptions = [
@@ -84,16 +83,15 @@ export class GestionComprasComponent implements OnInit, OnDestroy {
     { label: 'Vencida',   value: 'VENCIDA'   },
   ];
 
+  // ← value es number (id_sede), coincide con sedeSeleccionada que es number | null
   sedesOptions = computed(() => [
-    { label: 'Todas las sedes', value: '' },
+    { label: 'Todas las sedes', value: null },
     ...this.sedeService.sedes().map(sede => ({
       label: sede.nombre,
-      value: String(sede.id_sede),
+      value: sede.id_sede,       // number
     })),
   ]);
 
-  // ── FIX error 2339: usa quotes() mientras el servicio nuevo no esté reemplazado ──
-  // Una vez reemplaces quote.service.ts cambia a: this.quoteService.quotesCompra()
   cotizaciones = computed(() => this.quoteService.quotes());
 
   cotizacionesFiltradas = computed(() => {
@@ -122,27 +120,20 @@ export class GestionComprasComponent implements OnInit, OnDestroy {
 
   totalPages      = computed(() => this.quoteService.totalPages());
   loading         = computed(() => this.quoteService.loading());
-  // ── FIX KPIs: usa los compatibles con el servicio actual ──
-  // Una vez reemplaces quote.service.ts cambia a: kpiTotalCompra(), kpiAprobadasCompra(), kpiPendientesCompra()
   totalRecords    = computed(() => this.quoteService.kpiTotal());
   totalAprobadas  = computed(() => this.quoteService.kpiAprobadas());
   totalPendientes = computed(() => this.quoteService.kpiPendientes());
 
-  // ── FIX error 2339: getNombreProveedor definido en el componente ──
   getNombreProveedor(c: QuoteListItem): string {
-    // 1. El backend ya envía proveedor_nombre
     if (c.proveedor_nombre) return c.proveedor_nombre;
-    // 2. Mapa local
     if (c.id_proveedor) {
       const nombre = this.proveedoresMap().get(c.id_proveedor);
       if (nombre) return nombre;
       return `Proveedor #${c.id_proveedor}`;
     }
-    // 3. Fallback
     return c.cliente_nombre || '—';
   }
 
-  // ── FIX error 7006 línea 113-114: tipo explícito en proveedoresUnicos ──
   proveedoresUnicos = computed(() => {
     const nombres = new Set(
       this.cotizacionesFiltradas()
@@ -169,9 +160,10 @@ export class GestionComprasComponent implements OnInit, OnDestroy {
 
     this.esAdmin      = this.authService.getRoleId() === UserRole.ADMIN;
     this.sedeNombre   = user?.sedeNombre ?? 'Mi sede';
-    this.sedePropiaId = String(user?.idSede ?? '');
+    this.sedePropiaId = user?.idSede ?? null; // ← number | null
 
-    this.sedeSeleccionada.set(this.esAdmin ? null : Number(this.sedePropiaId));
+    // Siempre inicia con la sede propia (admin también la ve primero)
+    this.sedeSeleccionada.set(this.sedePropiaId);
 
     effect(() => {
       const sede = this.sedeSeleccionada();
@@ -181,7 +173,7 @@ export class GestionComprasComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     // ── Resolver permisos ─────────────────────────────────────────
-    this.puedeVerCotizacionesCompra    = true; // Acceso a la página implica que puede ver
+    this.puedeVerCotizacionesCompra    = true;
     this.puedeCrearCotizacionesCompra  = this.authService.hasPermiso('CREAR_COTIZACIONES_COMPRA');
     this.puedeEditarCotizacionesCompra = this.authService.hasPermiso('EDITAR_COTIZACIONES_COMPRA');
 
@@ -190,14 +182,13 @@ export class GestionComprasComponent implements OnInit, OnDestroy {
       error: (err) => console.error('Error cargando sedes', err),
     });
 
-    // Carga el mapa de proveedores para resolución local de nombres
     this.proveedorService.listSuppliers().subscribe({
       next: (resp) => {
         const map = new Map<number, string>();
         resp.suppliers.forEach(p => map.set(p.id_proveedor, p.razon_social));
         this.proveedoresMap.set(map);
       },
-      error: () => {}, // silencioso — es solo un fallback
+      error: () => {},
     });
   }
 
@@ -234,7 +225,7 @@ export class GestionComprasComponent implements OnInit, OnDestroy {
     this.cotizacionSugerencias.set([]);
     this.fechaInicio.set(null);
     this.fechaFin.set(null);
-    this.sedeSeleccionada.set(this.esAdmin ? null : Number(this.sedePropiaId));
+    this.sedeSeleccionada.set(this.sedePropiaId); // ← siempre vuelve a la sede propia
     this.estadoSeleccionado.set('PENDIENTE');
     this.currentPage.set(1);
     this.cargarCotizacion();
@@ -274,16 +265,10 @@ export class GestionComprasComponent implements OnInit, OnDestroy {
   }
 
   rechazarCotizacion(id: number) {
-    // ── Validar que es ADMIN ──
     if (!this.esAdmin) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Acción no permitida',
-        detail: 'Solo administradores pueden rechazar cotizaciones.',
-      });
+      this.messageService.add({ severity: 'warn', summary: 'Acción no permitida', detail: 'Solo administradores pueden rechazar cotizaciones.' });
       return;
     }
-
     this.confirmationService.confirm({
       message: '¿Estás seguro de rechazar esta cotización de compra?',
       header: 'Confirmar rechazo', icon: 'pi pi-exclamation-triangle',
@@ -334,16 +319,13 @@ export class GestionComprasComponent implements OnInit, OnDestroy {
   aprobarCompra(id: number) {
     const impacto = '<br><br><span style="color:#4ade80">↑ Sumará stock a los productos</span>';
     this.confirmationService.confirm({
-      message:  `¿Confirmas registrar esta compra como recibida?${impacto}`,
-      header:   'Registrar Compra', icon: 'pi pi-truck',
+      message: `¿Confirmas registrar esta compra como recibida?${impacto}`,
+      header: 'Registrar Compra', icon: 'pi pi-truck',
       acceptLabel: 'Sí, registrar', rejectLabel: 'Cancelar',
       acceptButtonStyleClass: 'p-button-success',
       rejectButtonStyleClass: 'p-button-secondary p-button-outlined',
       accept: () => {
-        this.router.navigate(
-          ['/admin/generar-ventas-administracion'],
-          { queryParams: { cotizacion: id, tipo: 'contado', tipoCot: 'COMPRA' } }
-        );
+        this.router.navigate(['/admin/generar-ventas-administracion'], { queryParams: { cotizacion: id, tipo: 'contado', tipoCot: 'COMPRA' } });
       },
     });
   }
@@ -351,16 +333,13 @@ export class GestionComprasComponent implements OnInit, OnDestroy {
   aprobarCompraCredito(id: number) {
     const impacto = '<br><br><span style="color:#4ade80">↑ Sumará stock a los productos</span>';
     this.confirmationService.confirm({
-      message:  `¿Confirmas registrar esta compra a <strong>crédito</strong>?${impacto}`,
-      header:   'Registrar Compra (Crédito)', icon: 'pi pi-truck',
+      message: `¿Confirmas registrar esta compra a <strong>crédito</strong>?${impacto}`,
+      header: 'Registrar Compra (Crédito)', icon: 'pi pi-truck',
       acceptLabel: 'Sí, registrar', rejectLabel: 'Cancelar',
       acceptButtonStyleClass: 'p-button-success',
       rejectButtonStyleClass: 'p-button-secondary p-button-outlined',
       accept: () => {
-        this.router.navigate(
-          ['/admin/generar-ventas-administracion'],
-          { queryParams: { cotizacion: id, tipo: 'credito', tipoCot: 'COMPRA' } }
-        );
+        this.router.navigate(['/admin/generar-ventas-administracion'], { queryParams: { cotizacion: id, tipo: 'credito', tipoCot: 'COMPRA' } });
       },
     });
   }
@@ -368,10 +347,10 @@ export class GestionComprasComponent implements OnInit, OnDestroy {
   abrirAcciones(c: QuoteListItem): void {
     this.cotizacionAcciones = c;
     this.accionesConfig = {
-      titulo:       c.codigo,
-      subtitulo:    this.getNombreProveedor(c),
-      labelPdf:     'PDF Cotización',
-      mostrarVoucher: false,  
+      titulo:         c.codigo,
+      subtitulo:      this.getNombreProveedor(c),
+      labelPdf:       'PDF Cotización',
+      mostrarVoucher: false,
     };
     this.accionCargando  = null;
     this.accionesVisible = true;
@@ -461,15 +440,8 @@ export class GestionComprasComponent implements OnInit, OnDestroy {
     if (!this.cotizacionWsp) return;
     this.enviandoWsp = true;
     this.quoteService.sendByWhatsApp(this.cotizacionWsp.id_cotizacion).subscribe({
-      next: (res) => {
-        this.enviandoWsp = false;
-        this.cerrarDialogWsp();
-        this.messageService.add({ severity: 'success', summary: '¡Enviado!', detail: `Enviado a ${res.sentTo}`, life: 5000 });
-      },
-      error: (err: { error?: { message?: string } }) => {
-        this.enviandoWsp = false;
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: err?.error?.message ?? 'No se pudo enviar.', life: 5000 });
-      },
+      next:  (res) => { this.enviandoWsp = false; this.cerrarDialogWsp(); this.messageService.add({ severity: 'success', summary: '¡Enviado!', detail: `Enviado a ${res.sentTo}`, life: 5000 }); },
+      error: (err: { error?: { message?: string } }) => { this.enviandoWsp = false; this.messageService.add({ severity: 'error', summary: 'Error', detail: err?.error?.message ?? 'No se pudo enviar.', life: 5000 }); },
     });
   }
 
@@ -505,13 +477,7 @@ export class GestionComprasComponent implements OnInit, OnDestroy {
     return 'var(--text-muted)';
   }
 
-  irCrear() {
-    this.router.navigate(
-      ['/admin/cotizaciones-compra/agregar-cotizaciones'],
-      { queryParams: { tipo: 'COMPRA' } }
-    );
-  }
-
+  irCrear()             { this.router.navigate(['/admin/cotizaciones-compra/agregar-cotizaciones'], { queryParams: { tipo: 'COMPRA' } }); }
   irEditar(id: number)  { this.router.navigate(['/admin/cotizaciones-compra/editar-cotizacion', id]); }
   irDetalle(id: number) { this.router.navigate(['/admin/cotizaciones-compra/ver-detalle-cotizacion', id]); }
 }

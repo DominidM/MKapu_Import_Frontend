@@ -79,28 +79,28 @@ interface FiltroVentasAdmin {
   styleUrl: './historial-ventas-administracion.css',
 })
 export class HistorialVentasAdministracion implements OnInit, OnDestroy {
-  private readonly router          = inject(Router);
-  private readonly ventasService   = inject(VentasAdminService);
-  private readonly authService     = inject(AuthService);
-  private readonly messageService  = inject(MessageService);
+  private readonly router              = inject(Router);
+  private readonly ventasService       = inject(VentasAdminService);
+  private readonly authService         = inject(AuthService);
+  private readonly messageService      = inject(MessageService);
   private readonly confirmationService = inject(ConfirmationService);
-  private readonly cdr             = inject(ChangeDetectorRef);
+  private readonly cdr                 = inject(ChangeDetectorRef);
 
   readonly tituloKicker    = 'VENTAS - HISTORIAL DE VENTAS';
   readonly subtituloKicker = 'CONSULTA Y GESTIÓN DE VENTAS';
   readonly iconoCabecera   = 'pi pi-list';
 
-  private subscriptions    = new Subscription();
-  private busquedaSubject  = new Subject<string>();
+  private subscriptions   = new Subscription();
+  private busquedaSubject = new Subject<string>();
   private readonly cancelCargar$ = new Subject<void>();
 
-  comprobantes: SalesReceiptSummaryAdmin[]         = [];
+  comprobantes: SalesReceiptSummaryAdmin[]          = [];
   comprobantesFiltrados: SalesReceiptSummaryAdmin[] = [];
 
-  sedes: SedeAdmin[]                                         = [];
+  sedes: SedeAdmin[]                                          = [];
   sedesOptions: { label: string; value: number | null }[]    = [];
   tiposComprobante: { label: string; value: number | null }[] = [{ label: 'Todos', value: null }];
-  metodosPago: { label: string; value: number | null }[]     = [{ label: 'Todos', value: null }];
+  metodosPago: { label: string; value: number | null }[]      = [{ label: 'Todos', value: null }];
 
   accionesCargando = signal<number | null>(null);
 
@@ -109,16 +109,16 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
   private readonly sedePropiaId: number | null;
 
   // ── Dialog acciones ───────────────────────────────────────────────
-  dialogVisible            = false;
-  dialogConfig: AccionesComprobanteConfig | null = null;
-  dialogAccionCargando: string | null = null;
+  dialogVisible                                    = false;
+  dialogConfig: AccionesComprobanteConfig | null   = null;
+  dialogAccionCargando: string | null              = null;
   private comprobanteDialogActual: SalesReceiptSummaryAdmin | null = null;
 
   // ── Dialog WhatsApp — signals ─────────────────────────────────────
-  wspDialogVisible   = signal<boolean>(false);
-  wspReady           = signal<boolean>(false);
-  wspQr              = signal<string | null>(null);
-  wspConsultando     = signal<boolean>(false);
+  wspDialogVisible     = signal<boolean>(false);
+  wspReady             = signal<boolean>(false);
+  wspQr                = signal<string | null>(null);
+  wspConsultando       = signal<boolean>(false);
   wspComprobanteActual = signal<SalesReceiptSummaryAdmin | null>(null);
   private wspPollingInterval: any = null;
 
@@ -143,15 +143,15 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
   sugerenciasBusqueda: string[] = [];
   todasLasSugerencias: string[] = [];
 
-  loading          = false;
-  paginaActual     = 1;
-  limitePorPagina  = 5;
-  totalRegistros   = 0;
-  totalPaginas     = 0;
-  totalVentas      = 0;
-  numeroVentas     = 0;
-  totalBoletas     = 0;
-  totalFacturas    = 0;
+  loading         = false;
+  paginaActual    = 1;
+  limitePorPagina = 5;
+  totalRegistros  = 0;
+  totalPaginas    = 0;
+  totalVentas     = 0;
+  numeroVentas    = 0;
+  totalBoletas    = 0;
+  totalFacturas   = 0;
 
   constructor() {
     const user = this.authService.getCurrentUser();
@@ -210,8 +210,8 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
           const nombre = c.clienteNombre?.trim();
           const doc    = c.clienteDocumento?.trim();
           if (nombre && doc) set.add(`${nombre} - ${doc}`);
-          else if (nombre) set.add(nombre);
-          else if (doc)    set.add(doc);
+          else if (nombre)   set.add(nombre);
+          else if (doc)      set.add(doc);
         });
         this.sugerenciasBusqueda = Array.from(set).slice(0, 15);
         this.cdr.markForCheck();
@@ -284,16 +284,16 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
     this.cancelCargar$.next();
 
     const query: SalesReceiptsQueryAdmin = {
-      page:          this.paginaActual,
-      limit:         this.limitePorPagina,
-      sedeId:        this.filtros.sedeSeleccionada ?? undefined,
-      receiptTypeId: this.filtros.tipoComprobante  ?? undefined,
-      status:        (this.filtros.estado as any)  ?? undefined,
-      paymentMethodId: this.filtros.tipoPago       ?? undefined,
-      dateFrom:      this.filtros.fechaInicio ? this.filtros.fechaInicio.toISOString().split('T')[0] : undefined,
-      dateTo:        this.filtros.fechaFin    ? this.filtros.fechaFin.toISOString().split('T')[0]    : undefined,
-      search:        this.filtros.busqueda.trim() || undefined,
-      _t:            Date.now(),
+      page:            this.paginaActual,
+      limit:           this.limitePorPagina,
+      sedeId:          this.filtros.sedeSeleccionada  ?? undefined,
+      receiptTypeId:   this.filtros.tipoComprobante   ?? undefined,
+      status:          (this.filtros.estado as any)   ?? undefined,
+      paymentMethodId: this.filtros.tipoPago          ?? undefined,
+      dateFrom:        this.filtros.fechaInicio ? this.filtros.fechaInicio.toISOString().split('T')[0] : undefined,
+      dateTo:          this.filtros.fechaFin    ? this.filtros.fechaFin.toISOString().split('T')[0]    : undefined,
+      search:          this.filtros.busqueda.trim() || undefined,
+      _t:              Date.now(),
     };
 
     const sub = this.ventasService.listarHistorialVentas(query)
@@ -301,7 +301,7 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
       .subscribe({
         next: (res: any) => {
           const data = res?.receipts ?? res?.data ?? res?.items ?? [];
-          this.comprobantes         = Array.isArray(data) ? data : [];
+          this.comprobantes          = Array.isArray(data) ? data : [];
           this.comprobantesFiltrados = [...this.comprobantes];
           this.cargarSugerenciasBusqueda();
           this.loading = false;
@@ -313,7 +313,7 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
         },
         error: () => {
           this.loading = false;
-          this.comprobantes = [];
+          this.comprobantes          = [];
           this.comprobantesFiltrados = [];
           this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo cargar el historial de ventas', life: 3000 });
         },
@@ -324,19 +324,19 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
   cargarKpis(): void {
     const f = this.filtros;
     const sub = this.ventasService.getKpiPorFiltros({
-      sedeId:          f.sedeSeleccionada ?? undefined,
+      sedeId:          f.sedeSeleccionada   ?? undefined,
       dateFrom:        f.fechaInicio ? f.fechaInicio.toISOString().split('T')[0] : undefined,
       dateTo:          f.fechaFin    ? f.fechaFin.toISOString().split('T')[0]    : undefined,
-      status:          f.estado      ?? undefined,
-      paymentMethodId: f.tipoPago    ?? undefined,
-      receiptTypeId:   f.tipoComprobante ?? undefined,
-      search:          f.busqueda.trim() || undefined,
+      status:          f.estado             ?? undefined,
+      paymentMethodId: f.tipoPago           ?? undefined,
+      receiptTypeId:   f.tipoComprobante    ?? undefined,
+      search:          f.busqueda.trim()    || undefined,
     }).subscribe({
       next: (kpi) => {
-        this.totalVentas  = kpi.total_ventas    ?? 0;
-        this.numeroVentas = kpi.cantidad_ventas  ?? 0;
-        this.totalBoletas = kpi.cantidad_boletas ?? 0;
-        this.totalFacturas= kpi.cantidad_facturas?? 0;
+        this.totalVentas   = kpi.total_ventas     ?? 0;
+        this.numeroVentas  = kpi.cantidad_ventas   ?? 0;
+        this.totalBoletas  = kpi.cantidad_boletas  ?? 0;
+        this.totalFacturas = kpi.cantidad_facturas ?? 0;
         this.cdr.markForCheck();
       },
       error: () => console.warn('No se pudieron cargar KPIs'),
@@ -347,7 +347,7 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
   private cargarSedes(): void {
     const sub = this.ventasService.obtenerSedes().subscribe({
       next: (data) => {
-        this.sedes       = data.filter((s) => s.activo);
+        this.sedes        = data.filter((s) => s.activo);
         this.sedesOptions = [
           { label: 'Todas las sedes', value: null },
           ...this.sedes.map((s) => ({ label: s.nombre, value: s.id_sede })),
@@ -390,8 +390,8 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
       const nombre = c.clienteNombre?.trim();
       const doc    = c.clienteDocumento?.trim();
       if (nombre && doc) set.add(`${nombre} - ${doc}`);
-      else if (nombre) set.add(nombre);
-      else if (doc)    set.add(doc);
+      else if (nombre)   set.add(nombre);
+      else if (doc)      set.add(doc);
     });
     this.todasLasSugerencias = Array.from(set).sort();
   }
@@ -401,14 +401,14 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
     this.comprobanteDialogActual = comprobante;
     this.dialogAccionCargando    = null;
     this.dialogConfig = {
-      titulo:         this.getNumeroFormateado(comprobante),
-      subtitulo:      comprobante.clienteNombre,
-      mostrarWsp:     true,
-      mostrarEmail:   true,
-      labelPdf:       'PDF',
-      labelVoucher:   'Voucher',
+      titulo:           this.getNumeroFormateado(comprobante),
+      subtitulo:        comprobante.clienteNombre,
+      mostrarWsp:       true,
+      mostrarEmail:     true,
+      labelPdf:         'PDF',
+      labelVoucher:     'Voucher',
       mostrarNotaVenta: true,
-      labelNotaVenta: 'Nota de Venta',
+      labelNotaVenta:   'Nota de Venta',
     };
     this.dialogVisible = true;
     this.cdr.markForCheck();
@@ -443,7 +443,6 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
         });
         break;
 
-      // ── PDF / Voucher / Nota — sin spinner, abren pestaña ─────────
       case 'pdf-imprimir':
         this.ventasService.verComprobantePdfEnPestana(comprobante.idComprobante).subscribe();
         break;
@@ -475,9 +474,9 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
   }
 
   onDialogCerrar(): void {
-    this.dialogVisible            = false;
-    this.dialogAccionCargando     = null;
-    this.comprobanteDialogActual  = null;
+    this.dialogVisible           = false;
+    this.dialogAccionCargando    = null;
+    this.comprobanteDialogActual = null;
     this.cdr.markForCheck();
   }
 
@@ -576,19 +575,21 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
     });
   }
 
+  // ── NOTA DE CRÉDITO ───────────────────────────────────────────────
+  /**
+   * Navega a la pantalla de nota de crédito pasando el idComprobante via state.
+   * El componente destino llama a CreditNoteService.detalle(id) directamente,
+   * sin ninguna búsqueda por correlativo (que generaba el 404).
+   */
   anularComprobante(comprobante: SalesReceiptSummaryAdmin): void {
     if (comprobante.estado !== 'EMITIDO') return;
-    this.confirmationService.confirm({
-      message:              `¿Está seguro de anular el comprobante ${this.getNumeroFormateado(comprobante)}?`,
-      header:               'Confirmar Anulación',
-      icon:                 'pi pi-exclamation-triangle',
-      acceptLabel:          'Sí, anular',
-      rejectLabel:          'Cancelar',
-      acceptButtonStyleClass: 'p-button-danger',
-      accept: () => {
-        comprobante.estado = 'ANULADO';
-        this.messageService.add({ severity: 'success', summary: 'Comprobante anulado', detail: `${this.getNumeroFormateado(comprobante)} fue anulado`, life: 3000 });
-        this.aplicarFiltros();
+
+    this.router.navigate(['/admin/nota-credito/crear'], {
+      state: {
+        autoCargar:       true,
+        idComprobante:    comprobante.idComprobante,          // ← ID numérico directo
+        serieCorrelativo: this.getNumeroFormateado(comprobante), // solo para mostrar en UI
+        rutaRetorno:      '/admin/historial-ventas-administracion',
       },
     });
   }
@@ -627,9 +628,9 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
   getTipoComprobanteLabel(tipo: string): string {
     if (!tipo) return 'N/A';
     const t = tipo.toUpperCase();
-    if (t.includes('BOLETA')  || tipo === '03') return 'Boleta';
-    if (t.includes('FACTURA') || tipo === '01') return 'Factura';
-    if (t.includes('NOTA DE VENTA'))            return 'Nota de Venta';
+    if (t.includes('BOLETA')       || tipo === '03') return 'Boleta';
+    if (t.includes('FACTURA')      || tipo === '01') return 'Factura';
+    if (t.includes('NOTA DE VENTA'))                 return 'Nota de Venta';
     return tipo;
   }
 
@@ -644,9 +645,9 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
   getSeverityTipoPago(metodo: string): 'success' | 'info' | 'warn' | 'secondary' {
     if (!metodo) return 'secondary';
     const m = metodo.toLowerCase();
-    if (m.includes('efectivo'))               return 'success';
-    if (m.includes('yape') || m.includes('plin')) return 'info';
-    if (m.includes('tarjeta'))                return 'warn';
+    if (m.includes('efectivo'))                       return 'success';
+    if (m.includes('yape') || m.includes('plin'))     return 'info';
+    if (m.includes('tarjeta'))                        return 'warn';
     return 'secondary';
   }
 }

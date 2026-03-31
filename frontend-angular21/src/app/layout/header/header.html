@@ -67,6 +67,34 @@
         </p-button>
       }
 
+      <!-- Accesibilidad -->
+      <p-button
+        class="mr-2"
+        text
+        severity="secondary"
+        pTooltip="Configurar accesibilidad"
+        tooltipPosition="bottom"
+        (click)="openAccessibilityModal()">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="5" r="2"/>
+          <path d="M12 8v8"/>
+          <path d="M8 12l-4 4"/>
+          <path d="M16 12l4 4"/>
+          <path d="M8 20h8"/>
+        </svg>
+      </p-button>
+
+      <!-- Soporte WhatsApp -->
+      <p-button
+        icon="pi pi-phone"
+        class="mr-2"
+        text
+        severity="secondary"
+        pTooltip="Soporte técnico"
+        tooltipPosition="bottom"
+        (click)="openSupportModal()">
+      </p-button>
+
       <p-button
         [icon]="themeService.isDark() ? 'pi pi-sun' : 'pi pi-moon'"
         text
@@ -76,3 +104,7 @@
     </ng-template>
   </p-toolbar>
 </div>
+
+<!-- Modales -->
+<app-accessibility-modal #accessibilityModal></app-accessibility-modal>
+<app-support-modal #supportModal></app-support-modal>

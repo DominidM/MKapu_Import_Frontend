@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, Output, EventEmitter, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, Output, EventEmitter, inject, ViewChild } from '@angular/core';
 import { Router, NavigationEnd, RouterLink } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { ButtonModule } from 'primeng/button';
@@ -11,11 +11,17 @@ import { ThemeService } from '../../core/services/theme.service';
 import { CommonModule } from '@angular/common';
 import { TransferNotificationRuntimeService } from '../../administracion/services/transfer-notification-runtime.service';
 import { TooltipModule } from 'primeng/tooltip';
+import { AccessibilityModalComponent } from '../../shared/components/accessibility-modal/accessibility-modal.component';
+import { SupportModalComponent } from '../../shared/components/support-modal/support-modal.component';
+
 
 @Component({
   selector: 'app-header',
-  imports: [CommonModule, ToolbarModule, ButtonModule, InputTextModule,
-            RouterLink, ToastModule, TooltipModule],
+  imports: [
+    CommonModule, ToolbarModule, ButtonModule, InputTextModule,
+    RouterLink, ToastModule, TooltipModule,
+    AccessibilityModalComponent, SupportModalComponent,
+  ],
   templateUrl: './header.html',
   styleUrl: './header.css',
   standalone: true,
@@ -27,14 +33,15 @@ export class Header implements OnInit, OnDestroy {
   protected themeService  = inject(ThemeService);
   private readonly transferNotificationRuntime = inject(TransferNotificationRuntimeService);
 
+  @ViewChild('accessibilityModal') accessibilityModal!: AccessibilityModalComponent;
+  @ViewChild('supportModal') supportModal!: SupportModalComponent;
+
   @Output() toggleSidebar = new EventEmitter<void>();
 
-  // Getter para que se re-evalúe cada vez que el template lo consulta
   get showCaja(): boolean {
-    return this.roleService.hasPermiso('VER_CAJA');
+    return this.roleService.hasPermiso('CREAR_VENTA');
   }
 
-  // Solo el administrador ve configuración de empresa y términos
   get isAdmin(): boolean {
     return this.roleService.getRoleName().toUpperCase() === 'ADMINISTRADOR';
   }
@@ -77,6 +84,14 @@ export class Header implements OnInit, OnDestroy {
 
   toggleTheme(): void {
     this.themeService.toggleTheme();
+  }
+
+  openAccessibilityModal(): void {
+    this.accessibilityModal?.openModal();
+  }
+
+  openSupportModal(): void {
+    this.supportModal?.openModal();
   }
 
   private loadNotifCount(): number {
