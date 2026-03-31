@@ -116,7 +116,8 @@ export class Sidebar implements OnInit {
       label: 'VENTAS', icon: 'pi pi-shopping-cart', permisoSeccion: 'VENTAS',
       permisos: [
         'CREAR_VENTA', 'VER_VENTAS_ADMIN', 'VER_VENTAS',
-        'VER_NC', 'VER_PROMOCION', 'VER_VENTA_POR_COBRAR',
+        'CREAR_NC', 'VER_PROMOCION', 'CREAR_VENTA_POR_COBRAR',
+        'VER_NC', 'VER_VENTA_POR_COBRAR',
         'VER_CLIENTE', 'VER_COTIZACIONES_VENTA', 'VER_COTIZACIONES_COMPRA', 'VER_RECLAMO',
       ],
     },

@@ -25,13 +25,13 @@
     <i class="pi pi-filter"></i> Filtros de búsqueda
   </h3>
 
-  <!-- Fila 1: Cliente (ancho) + Rango de Fechas -->
   <div class="filtros-flex-row">
     <div class="filtro-item filtro-cliente">
       <label>CLIENTE (NOMBRE / DNI / RUC)</label>
       <input
         pInputText
-        [(ngModel)]="filtroDoc"
+        [ngModel]="filtroNumDocRef()"
+        (ngModelChange)="filtroNumDocRef.set($event)"
         placeholder="Buscar por nombre, DNI o RUC..."
         (keyup.enter)="aplicarFiltros()"
         class="w-full"
@@ -42,7 +42,8 @@
       <label>RANGO DE FECHAS (EMISIÓN)</label>
       <div class="filtro-fechas-contenedor">
         <p-datepicker
-          [(ngModel)]="filtroFechaInicio"
+          [ngModel]="filtroFechaInicio()"
+          (ngModelChange)="filtroFechaInicio.set($event)"
           dateFormat="dd/mm/yy"
           placeholder="Inicio"
           (onSelect)="aplicarFiltros()"
@@ -52,7 +53,8 @@
         ></p-datepicker>
         <span class="filtro-fechas-separador">—</span>
         <p-datepicker
-          [(ngModel)]="filtroFechaFin"
+          [ngModel]="filtroFechaFin()"
+          (ngModelChange)="filtroFechaFin.set($event)"
           dateFormat="dd/mm/yy"
           placeholder="Fin"
           (onSelect)="aplicarFiltros()"
@@ -64,27 +66,27 @@
     </div>
   </div>
 
-  <!-- Fila 2: Serie | Sede | Estado | Limpiar -->
   <div class="filtros-flex-row filtros-segunda-linea">
 
     <div class="filtro-item filtro-correlativo">
       <label>SERIE / CORRELATIVO</label>
       <input
         pInputText
-        [(ngModel)]="filtroSerie"
+        [ngModel]="filtroSerie()"
+        (ngModelChange)="filtroSerie.set($event)"
         placeholder="Ej: FN01-0001"
         (keyup.enter)="aplicarFiltros()"
         class="w-full"
       />
     </div>
 
-    <!-- SEDE: admin ve selector, no-admin ve badge fijo -->
     <div class="filtro-item filtro-sede">
       <label>SEDE</label>
       <p-select
-        *ngIf="esAdmin"
-        [(ngModel)]="filtroSede"
-        [options]="sedesOpciones"
+        *ngIf="esAdmin()"
+        [ngModel]="filtroSede()"
+        (ngModelChange)="filtroSede.set($event)"
+        [options]="sedesOpciones()"
         placeholder="Todas las sedes"
         optionLabel="label"
         optionValue="value"
@@ -93,16 +95,17 @@
         styleClass="w-full"
       ></p-select>
 
-      <div *ngIf="!esAdmin" class="sede-fija-badge">
+      <div *ngIf="!esAdmin()" class="sede-fija-badge">
         <i class="pi pi-map-marker"></i>
-        <span>{{ sedeNombre }}</span>
+        <span>{{ sedeNombre() }}</span>
       </div>
     </div>
 
     <div class="filtro-item filtro-estado">
       <label>ESTADO</label>
       <p-select
-        [(ngModel)]="filtroEstado"
+        [ngModel]="filtroEstado()"
+        (ngModelChange)="filtroEstado.set($event)"
         [options]="estadosOpciones"
         placeholder="Todos"
         optionLabel="label"
@@ -132,11 +135,11 @@
     titulo="Listado de Notas de Crédito"
     iconoTitulo="pi pi-list"
     mensajeCarga="Cargando notas de crédito..."
-    [loading]="loading"
-    [paginaActual]="paginaActual"
-    [totalPaginas]="totalPaginas"
-    [totalRegistros]="totalRegistros"
-    [limitePorPagina]="limitePorPagina"
+    [loading]="loading()"
+    [paginaActual]="paginaActual()"
+    [totalPaginas]="totalPaginas()"
+    [totalRegistros]="totalRegistros()"
+    [limitePorPagina]="limitePorPagina()"
     [mostrarExportar]="false"
     (pageChange)="onPageChange($event)"
     (limitChange)="onLimitChange($event)"
@@ -155,7 +158,7 @@
     </div>
 
     <p-table
-      [value]="notas"
+      [value]="notas()"
       [paginator]="false"
       styleClass="p-datatable-striped"
       [tableStyle]="{ 'min-width': '65rem' }"
@@ -239,22 +242,22 @@
   </app-shared-table-container>
 </div>
 
-<!-- ── Dialog Detalle ─────────────────────────────────────────────── -->
 <p-dialog
   header="Detalle de Nota de Crédito"
-  [(visible)]="detalleVisible"
+  [visible]="detalleVisible()"
+  (visibleChange)="detalleVisible.set($event)"
   [modal]="true"
   [closable]="true"
   [style]="{ width: '700px' }"
   (onHide)="cerrarDetalle()"
 >
-  <ng-container *ngIf="detalleLoading">
+  <ng-container *ngIf="detalleLoading()">
     <div class="flex justify-content-center align-items-center py-5">
       <i class="pi pi-spin pi-spinner text-4xl text-primary"></i>
     </div>
   </ng-container>
 
-  <ng-container *ngIf="!detalleLoading && detalleActual">
+  <ng-container *ngIf="!detalleLoading() && detalleActual()">
     <div class="formgrid grid mb-3">
 
       <div class="col-12 md:col-6 p-2">
@@ -262,32 +265,32 @@
           <h4 class="mt-0 mb-3 text-lg"><i class="pi pi-file-edit text-primary mr-2"></i> Información General</h4>
           <div class="flex justify-content-between mb-2">
             <span class="text-color-secondary text-sm">Correlativo</span>
-            <strong class="text-color text-sm">{{ detalleActual.correlative }}</strong>
+            <strong class="text-color text-sm">{{ detalleActual()!.correlative }}</strong>
           </div>
           <div class="flex justify-content-between mb-2">
             <span class="text-color-secondary text-sm">Comprobante Ref.</span>
-            <span class="text-color text-sm">{{ detalleActual.serieRef }}-{{ detalleActual.numberDocRef }}</span>
+            <span class="text-color text-sm">{{ detalleActual()!.serieRef }}-{{ detalleActual()!.numberDocRef }}</span>
           </div>
           <div class="flex justify-content-between mb-2">
             <span class="text-color-secondary text-sm">Fecha Emisión</span>
-            <span class="text-color text-sm">{{ detalleActual.issueDate | date: 'dd/MM/yyyy HH:mm' }}</span>
+            <span class="text-color text-sm">{{ detalleActual()!.issueDate | date: 'dd/MM/yyyy HH:mm' }}</span>
           </div>
           <div class="flex flex-column mb-2">
             <span class="text-color-secondary text-sm mb-1">Cliente</span>
-            <span class="text-color text-sm font-semibold">{{ detalleActual.customerName }}</span>
+            <span class="text-color text-sm font-semibold">{{ detalleActual()!.customerName}}</span>
           </div>
           <div class="flex justify-content-between mb-2 align-items-center">
             <span class="text-color-secondary text-sm">Tipo Devolución</span>
             <p-tag
-              [value]="getLabelTipo(detalleActual.businessType)"
-              [severity]="getSeveridadTipo(detalleActual.businessType)"
+              [value]="getLabelTipo(detalleActual()!.businessType)"
+              [severity]="getSeveridadTipo(detalleActual()!.businessType)"
             ></p-tag>
           </div>
           <div class="flex justify-content-between align-items-center">
             <span class="text-color-secondary text-sm">Estado</span>
             <p-tag
-              [value]="detalleActual.status"
-              [severity]="getSeveridadEstado(detalleActual.status)"
+              [value]="detalleActual()!.status"
+              [severity]="getSeveridadEstado(detalleActual()!.status)"
             ></p-tag>
           </div>
         </div>
@@ -298,20 +301,20 @@
           <h4 class="mt-0 mb-3 text-lg"><i class="pi pi-calculator text-primary mr-2"></i> Desglose de Montos</h4>
           <div class="flex justify-content-between mb-2">
             <span class="text-color-secondary text-sm">Valor Venta</span>
-            <span class="text-color text-sm">{{ detalleActual.currency }} {{ detalleActual.saleValue | number: '1.2-2' }}</span>
+            <span class="text-color text-sm">{{ detalleActual()!.currency }} {{ detalleActual()!.saleValue | number: '1.2-2' }}</span>
           </div>
           <div class="flex justify-content-between mb-2">
             <span class="text-color-secondary text-sm">IGV (18%)</span>
-            <span class="text-color text-sm">{{ detalleActual.currency }} {{ detalleActual.igv | number: '1.2-2' }}</span>
+            <span class="text-color text-sm">{{ detalleActual()!.currency }} {{ detalleActual()!.igv | number: '1.2-2' }}</span>
           </div>
           <div class="flex justify-content-between mb-2">
             <span class="text-color-secondary text-sm">ISC</span>
-            <span class="text-color text-sm">{{ detalleActual.currency }} {{ detalleActual.isc | number: '1.2-2' }}</span>
+            <span class="text-color text-sm">{{ detalleActual()!.currency }} {{ detalleActual()!.isc | number: '1.2-2' }}</span>
           </div>
           <div class="mt-auto pt-3 border-top-1 surface-border">
             <div class="flex justify-content-between align-items-center">
               <span class="font-bold text-lg">Total Final</span>
-              <strong class="text-xl text-primary">{{ detalleActual.currency }} {{ detalleActual.totalAmount | number: '1.2-2' }}</strong>
+              <strong class="text-xl text-primary">{{ detalleActual()!.currency }} {{ detalleActual()!.totalAmount | number: '1.2-2' }}</strong>
             </div>
           </div>
         </div>
@@ -322,7 +325,7 @@
     <div class="mt-2">
       <h4 class="mt-0 mb-3 text-lg"><i class="pi pi-list text-primary mr-2"></i> Ítems Devueltos</h4>
       <p-table
-        [value]="detalleActual.items"
+        [value]="detalleActual()!.items"
         [tableStyle]="{ 'min-width': '100%' }"
         styleClass="p-datatable-sm p-datatable-striped"
       >
@@ -364,10 +367,10 @@
   </ng-template>
 </p-dialog>
 
-<!-- ── Dialog Anular ──────────────────────────────────────────────── -->
 <p-dialog
   header="Anular Nota de Crédito"
-  [(visible)]="anularVisible"
+  [visible]="anularVisible()"
+  (visibleChange)="anularVisible.set($event)"
   [modal]="true"
   [closable]="true"
   [style]="{ width: '420px' }"
@@ -385,7 +388,8 @@
       <label class="font-semibold text-sm">Motivo de anulación <span class="text-red-500">*</span></label>
       <input
         pInputText
-        [(ngModel)]="anularMotivo"
+        [ngModel]="anularMotivo()"
+        (ngModelChange)="anularMotivo.set($event)"
         placeholder="Ej: Error en el monto, cliente desistió..."
         class="w-full"
         (keyup.enter)="confirmarAnular()"
@@ -405,7 +409,7 @@
       icon="pi pi-ban"
       severity="danger"
       [loading]="anularLoading()"
-      [disabled]="!anularMotivo.trim()"
+      [disabled]="!anularMotivo().trim()"
       (onClick)="confirmarAnular()"
     ></p-button>
   </ng-template>

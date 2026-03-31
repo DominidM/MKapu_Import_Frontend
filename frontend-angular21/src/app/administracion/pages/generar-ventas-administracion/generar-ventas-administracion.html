@@ -33,10 +33,7 @@
   </p-card>
 </div>
 
-<app-loading-overlay 
-  [visible]="loading()"
-  mensaje="Procesando venta..."
-  modo="overlay" />
+<app-loading-overlay [visible]="loading()" mensaje="Procesando venta..." modo="overlay" />
 
 <div class="p-2">
   <div class="pos-body">
@@ -682,10 +679,10 @@
                 <label class="pos-input-label">Nº de Operación</label>
                 <input
                   pInputText
-                  [value]="numeroOperacion()"
-                  (input)="numeroOperacion.set($any($event.target).value)"
-                  placeholder="Número de operación"
-                  class="pos-operacion-input"
+                  [ngModel]="numeroOperacion()"
+                  (input)="validarNumeroOperacion($event)"
+                  maxlength="20"
+                  placeholder="Ingrese 20 dígitos"
                 />
               </div>
             </ng-container>

@@ -8,6 +8,11 @@
   gap: 16px;
 }
 
+.conteo-header-card ::ng-deep .p-card-body {
+  padding: 1rem 1.25rem;
+}
+
+.conteo-title-icon {
 .sedes-header-card .p-card-body {
   padding: 1rem 1.25rem;
 }
@@ -18,6 +23,12 @@
   display: grid;
   place-items: center;
   border-radius: 999px;
+  background: #ffedd5; /* Fondo naranja claro */
+  color: #ea580c;      /* Naranja principal */
+  font-size: 18px;
+}
+
+.conteo-kicker {
   background: #e8a424 !important;
   color: #1f2937 !important;
   font-size: 18px;
@@ -39,6 +50,42 @@
   color: #1f2937;
 }
 
+:host-context(.app-dark) .conteo-metrics ::ng-deep .metric-card {
+  color: #f9fafb;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.55);
+}
+
+/* INFO (AZUL OSCURO) */
+:host-context(.app-dark) .conteo-metrics ::ng-deep .metric-info {
+  background: linear-gradient(135deg, #061b28, #020f1a) !important;
+  border: 1px solid rgba(56, 189, 248, 0.25) !important;
+  --metric-shine: rgba(56, 189, 248, 0.55);
+}
+
+/* SUCCESS (VERDE OSCURO) */
+:host-context(.app-dark) .conteo-metrics ::ng-deep .metric-success {
+  background: linear-gradient(135deg, #06281e, #03160f) !important;
+  border: 1px solid rgba(34, 197, 94, 0.25) !important;
+  --metric-shine: rgba(34, 197, 94, 0.55);
+}
+
+/* WARNING / DANGER (ROJO OSCURO) */
+:host-context(.app-dark) .conteo-metrics ::ng-deep .metric-warning {
+  background: linear-gradient(135deg, #2a0f0f, #140606) !important;
+  border: 1px solid rgba(239, 68, 68, 0.28) !important;
+  --metric-shine: rgba(239, 68, 68, 0.55);
+}
+
+/* ICONOS EN DARK MODE */
+:host-context(.app-dark) .metric-icon-info { background: rgba(56, 189, 248, 0.15); color: #7dd3fc; }
+:host-context(.app-dark) .metric-icon-success { background: rgba(34, 197, 94, 0.15); color: #86efac; }
+:host-context(.app-dark) .metric-icon-warning { background: rgba(239, 68, 68, 0.15); color: #fca5a5; }
+
+/* EFECTO SHINE DARK MODE */
+:host-context(.app-dark) .conteo-metrics ::ng-deep .metric-card::before { opacity: 0; }
+:host-context(.app-dark) .conteo-metrics ::ng-deep .metric-card:hover::before {
+  opacity: 1;
+  animation: metricShine 0.9s ease;
 .sedes-search-container {
   display: flex;
   flex-direction: column;

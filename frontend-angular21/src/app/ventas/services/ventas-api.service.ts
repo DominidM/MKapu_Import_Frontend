@@ -95,6 +95,6 @@ export class VentasApiService {
     );
   }
   getSaleReceiptByCorrelative(correlativo: string): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/receipts/correlativo/${correlativo}`);
+    return this.http.get<any>(`${this.apiUrl}/credit-note/receipt-by-correlative/${correlativo}`);
   }
 }

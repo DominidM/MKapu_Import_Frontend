@@ -7,24 +7,22 @@
           <i class="pi pi-box"></i>
         </span>
         <div>
-          <p class="sedes-kicker">OPERACIÓN DE ALMACÉN</p>
-          <h2 class="sedes-title">Ejecución de Conteo de Inventario</h2>
+          <p class="conteo-kicker mb-0">LOGÍSTICA · OPERACIÓN DE ALMACÉN</p>
+          <h2 class="conteo-title mb-0">Ejecución de Conteo de Inventario</h2>
         </div>
       </div>
-
       <div class="flex gap-2">
         <p-button
           label="Cancelar"
           icon="pi pi-times"
-          [outlined]="true"
-          severity="secondary"
+          styleClass="conteo-pill conteo-pill-danger"
           (onClick)="cancelar()"
         ></p-button>
         <p-button
           *ngIf="conteoActual()"
           label="Finalizar y Ajustar Stock"
           icon="pi pi-check"
-          severity="success"
+          styleClass="conteo-pill conteo-pill-success"
           (onClick)="guardarConteo()"
           [loading]="loading()"
         ></p-button>
