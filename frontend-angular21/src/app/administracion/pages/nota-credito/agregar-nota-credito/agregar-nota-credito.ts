@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -20,10 +20,8 @@ import { VentasApiService } from '../../../../ventas/services/ventas-api.service
 import { CreditNoteService, RegisterCreditNoteDto } from '../../../services/nota-credito.service';
 import { StockSocketService } from '../../../../ventas/services/stock-socket.service';
 
-// 👇 Importa aquí tu nuevo servicio de Sockets
-
 interface VentaItemUI {
-  id_detalle: number;
+  id_detalle: string | number; // Cambiado para soportar cod_prod si es string
   descripcion: string;
   cantidadOriginal: number;
   precioUnitario: number;
@@ -58,8 +56,6 @@ export class AgregarNotaCreditoComponent implements OnInit, OnDestroy {
   private readonly ventasService = inject(VentasApiService);
   private readonly messageService = inject(MessageService);
   private readonly confirmationService = inject(ConfirmationService);
-  private readonly cdr = inject(ChangeDetectorRef);
-  
   private readonly stockSocket = inject(StockSocketService);
 
   private subscriptions = new Subscription();
@@ -69,12 +65,17 @@ export class AgregarNotaCreditoComponent implements OnInit, OnDestroy {
     { label: 'Boleta', value: '03' },
   ];
 
-  tipoComprobanteRef: string | null = null;
-  serieCorrelativoRef: string = '';
-  buscandoComprobante = false;
+  // ── Signals ──────────────────────────────────────────────────
+  tipoComprobanteRef = signal<string | null>(null);
+  serieCorrelativoRef = signal<string>('');
+  buscandoComprobante = signal<boolean>(false);
 
-  ventaReferenciaCabecera: any = null;
-  itemsVenta: VentaItemUI[] = [];
+  ventaReferenciaCabecera = signal<any>(null);
+  itemsVenta = signal<VentaItemUI[]>([]);
+
+  motivoSunatSeleccionado = signal<string | null>(null);
+  sustentoDescripcion = signal<string>('');
+  guardandoNota = signal<boolean>(false);
 
   readonly motivosSunat = [
     { label: 'Anulación de la operación', value: '01' },
@@ -88,10 +89,18 @@ export class AgregarNotaCreditoComponent implements OnInit, OnDestroy {
     { label: 'Disminución en el valor', value: '09' },
   ];
 
-  motivoSunatSeleccionado: string | null = null;
-  sustentoDescripcion: string = '';
-
-  guardandoNota = false;
+  // ── Computed ──────────────────────────────────────────────────
+  esFormularioValido = computed(() => {
+    const hayItemsSeleccionados = this.itemsVenta().some(
+      (i) => i.seleccionado && i.cantidadADevolver > 0,
+    );
+    return !!(
+      this.ventaReferenciaCabecera() &&
+      this.motivoSunatSeleccionado() &&
+      this.sustentoDescripcion().trim().length >= 5 &&
+      hayItemsSeleccionados
+    );
+  });
 
   private stockListener = (data: any) => {
     this.messageService.add({
@@ -100,7 +109,6 @@ export class AgregarNotaCreditoComponent implements OnInit, OnDestroy {
       detail: `Se devolvieron ${data.quantity} unidades del producto ID: ${data.productId} al almacén.`,
       life: 6000
     });
-    this.cdr.markForCheck();
   };
 
   ngOnInit(): void {
@@ -113,147 +121,119 @@ export class AgregarNotaCreditoComponent implements OnInit, OnDestroy {
   }
 
   buscarComprobante(): void {
-    if (!this.tipoComprobanteRef) {
+    if (!this.tipoComprobanteRef()) {
       this.messageService.add({ severity: 'warn', summary: 'Atención', detail: 'Seleccione el tipo de comprobante.' });
       return;
     }
-    if (!this.serieCorrelativoRef || !this.serieCorrelativoRef.includes('-')) {
+    if (!this.serieCorrelativoRef() || !this.serieCorrelativoRef().includes('-')) {
       this.messageService.add({ severity: 'error', summary: 'Formato inválido', detail: 'Use el formato Serie-Número (Ej: F001-123).' });
       return;
     }
 
-    this.buscandoComprobante = true;
+    this.buscandoComprobante.set(true);
     this.limpiarBuscadorBase();
     
-    const correlativoLimpio = this.serieCorrelativoRef.trim().toUpperCase();
+    const correlativoLimpio = this.serieCorrelativoRef().trim().toUpperCase();
 
     const sub = this.ventasService.getSaleReceiptByCorrelative(correlativoLimpio).subscribe({
       next: (res: any) => {
-        const cabecera = res;
-        const listaProductos = res.detalles || [];
+        try {
+          if (!res) throw new Error('Respuesta vacía del servidor');
 
-        const esFactura = correlativoLimpio.startsWith('F');
-        if (
-          (this.tipoComprobanteRef === '01' && !esFactura) ||
-          (this.tipoComprobanteRef === '03' && esFactura)
-        ) {
-          this.buscandoComprobante = false;
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error de Coherencia',
-            detail: 'El tipo seleccionado no coincide con la serie buscada.',
+          // Como el backend ya devuelve detailResponse.data directo, 'res' es la cabecera
+          const cabecera = res.data ? res.data : res;
+
+          // Asignamos la data EXACTA que arroja getDetalleCompleto()
+          this.ventaReferenciaCabecera.set({
+            id: cabecera.id_comprobante,
+            clienteNombre: cabecera.cliente?.nombre || 'Cliente sin nombre',
+            clienteDocumento: cabecera.cliente?.documento || 'S/D',
+            fechaEmision: cabecera.fec_emision,
+            total: Number(cabecera.total || 0),
+            subtotal: Number(cabecera.subtotal || 0),
+            igv: Number(cabecera.igv || 0)            
           });
-          return;
-        }
 
-        const totalComprobante = Number(cabecera.total || 0);
-        const subtotalCalculado = totalComprobante / 1.18; 
-        const igvCalculado = totalComprobante - subtotalCalculado;
+          // Mapeamos los productos según la estructura de getDetalleCompleto()
+          const listaProductos = cabecera.productos || [];
 
-        this.ventaReferenciaCabecera = {
-          id: cabecera.id,
-          clienteNombre: cabecera.nombre_cliente || 'Cliente sin nombre',
-          clienteDocumento: cabecera.cliente_documento || '—',
-          fechaEmision: cabecera.fec_emision,
-          total: totalComprobante,
-          subtotal: subtotalCalculado,
-          igv: igvCalculado            
-        };
-
-        this.itemsVenta = listaProductos.map((p: any) => {
-          const precio = Number(p.peso_unitario || p.precio_unitario || 0);
-          
-          return {
-            id_detalle: p.id_producto,
-            descripcion: p.descripcion || p.cod_prod || 'Producto Desconocido',
-            cantidadOriginal: Number(p.cantidad || 0),
-            precioUnitario: precio,
-            cantidadADevolver: 0,
-            seleccionado: false,
-          };
-        });
-
-        this.buscandoComprobante = false;
-        this.cdr.markForCheck();
-
-        if (this.itemsVenta.length > 0) {
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Éxito',
-            detail: 'Comprobante y productos cargados.',
+          const itemsMapeados = listaProductos.map((p: any) => {
+            return {
+              id_detalle: p.id_producto || p.productId || p.id_prod_ref || p.id, 
+              descripcion: p.descripcion || 'Producto Desconocido',
+              cantidadOriginal: Number(p.cantidad || 0),
+              precioUnitario: Number(p.precio_unit || 0), // getDetalleCompleto lo llama precio_unit
+              cantidadADevolver: 0,
+              seleccionado: false,
+            };
           });
-        } else {
-          this.messageService.add({
-            severity: 'warn',
-            summary: 'Atención',
-            detail: 'El comprobante no tiene productos vinculados.',
-          });
+
+          this.itemsVenta.set(itemsMapeados);
+          this.buscandoComprobante.set(false);
+
+          if (this.itemsVenta().length > 0) {
+            this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Comprobante cargado correctamente.' });
+          } else {
+            this.messageService.add({ severity: 'warn', summary: 'Atención', detail: 'El comprobante no tiene productos para devolver.' });
+          }
+
+        } catch (e) {
+          console.error("Error mapeando la data:", e);
+          this.buscandoComprobante.set(false);
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Estructura de comprobante irreconocible.' });
         }
       },
       error: (err) => {
-        this.buscandoComprobante = false;
-        this.messageService.add({
-          severity: 'error',
-          summary: 'No encontrado',
-          detail: 'No se pudo localizar el comprobante.',
-        });
-        this.cdr.markForCheck();
+        console.error(err);
+        this.buscandoComprobante.set(false);
+        this.messageService.add({ severity: 'error', summary: 'No encontrado', detail: 'No se pudo localizar el comprobante.' });
       },
     });
     this.subscriptions.add(sub);
   }
 
   limpiarBuscadorBase(): void {
-    this.ventaReferenciaCabecera = null;
-    this.itemsVenta = [];
-    this.motivoSunatSeleccionado = null;
-    this.sustentoDescripcion = '';
+    this.ventaReferenciaCabecera.set(null);
+    this.itemsVenta.set([]);
+    this.motivoSunatSeleccionado.set(null);
+    this.sustentoDescripcion.set('');
   }
 
   onMotivoChange(): void {
-    if (this.motivoSunatSeleccionado === '01' || this.motivoSunatSeleccionado === '06') {
-      this.itemsVenta.forEach((item) => {
-        item.seleccionado = true;
-        item.cantidadADevolver = item.cantidadOriginal;
-      });
-    } else {
-      this.itemsVenta.forEach((item) => {
-        item.seleccionado = false;
-        item.cantidadADevolver = 0;
-      });
-    }
+    const motivo = this.motivoSunatSeleccionado();
+    const nuevosItems = this.itemsVenta().map(item => {
+      if (motivo === '01' || motivo === '06') {
+        return { ...item, seleccionado: true, cantidadADevolver: item.cantidadOriginal };
+      } else {
+        return { ...item, seleccionado: false, cantidadADevolver: 0 };
+      }
+    });
+    this.itemsVenta.set(nuevosItems);
   }
 
   onCantidadChange(item: VentaItemUI): void {
-    if (item.cantidadADevolver > item.cantidadOriginal) {
-      item.cantidadADevolver = item.cantidadOriginal;
-    }
-    if (item.cantidadADevolver < 0) {
-      item.cantidadADevolver = 0;
-    }
+    let cant = item.cantidadADevolver;
+    if (cant > item.cantidadOriginal) cant = item.cantidadOriginal;
+    if (cant < 0) cant = 0;
 
-    item.seleccionado = item.cantidadADevolver > 0;
+    const nuevosItems = this.itemsVenta().map(i => {
+      if (i.id_detalle === item.id_detalle) {
+        return { ...i, cantidadADevolver: cant, seleccionado: cant > 0 };
+      }
+      return i;
+    });
+    this.itemsVenta.set(nuevosItems);
   }
 
   onCheckboxChange(item: VentaItemUI): void {
-    if (item.seleccionado && item.cantidadADevolver === 0) {
-      item.cantidadADevolver = 1;
-    } else if (!item.seleccionado) {
-      item.cantidadADevolver = 0;
-    }
-  }
-
-
-  esFormularioValido(): boolean {
-    const hayItemsSeleccionados = this.itemsVenta.some(
-      (i) => i.seleccionado && i.cantidadADevolver > 0,
-    );
-    return !!(
-      this.ventaReferenciaCabecera &&
-      this.motivoSunatSeleccionado &&
-      this.sustentoDescripcion.trim().length >= 5 &&
-      hayItemsSeleccionados
-    );
+    const nuevosItems = this.itemsVenta().map(i => {
+      if (i.id_detalle === item.id_detalle) {
+        const cant = i.seleccionado && i.cantidadADevolver === 0 ? 1 : (!i.seleccionado ? 0 : i.cantidadADevolver);
+        return { ...i, cantidadADevolver: cant };
+      }
+      return i;
+    });
+    this.itemsVenta.set(nuevosItems);
   }
 
   confirmarEmision(): void {
@@ -281,25 +261,29 @@ export class AgregarNotaCreditoComponent implements OnInit, OnDestroy {
   }
 
   private emitirNotaCredito(): void {
-    this.guardandoNota = true;
+    this.guardandoNota.set(true);
 
-    const itemsParaDevolver = this.itemsVenta.filter(
+    const itemsParaDevolver = this.itemsVenta().filter(
       (i) => i.seleccionado && i.cantidadADevolver > 0,
     );
 
     const payload: RegisterCreditNoteDto = {
-      salesReceiptId: this.ventaReferenciaCabecera.id,
-      reasonCode: this.motivoSunatSeleccionado!,
-      reasonDescription: this.sustentoDescripcion.trim(),
+      salesReceiptId: this.ventaReferenciaCabecera().id,
+      reasonCode: this.motivoSunatSeleccionado()!,
+      reasonDescription: this.sustentoDescripcion().trim(),
+      clientName: this.ventaReferenciaCabecera().clienteNombre,
+      clientDocument: this.ventaReferenciaCabecera().clienteDocumento,
+      clientId: this.ventaReferenciaCabecera().clienteId || 1,
       items: itemsParaDevolver.map((item) => ({
-        itemId: item.id_detalle,
+        itemId: Number(item.id_detalle),
         quantity: item.cantidadADevolver,
       })),
     };
+    console.log("Payload a enviar:", payload);
 
     const sub = this.creditNoteService.registrar(payload).subscribe({
       next: (res) => {
-        this.guardandoNota = false;
+        this.guardandoNota.set(false);
         this.messageService.add({
           severity: 'success',
           summary: 'Éxito',
@@ -309,7 +293,7 @@ export class AgregarNotaCreditoComponent implements OnInit, OnDestroy {
         setTimeout(() => this.volverListado(), 2000); 
       },
       error: (err) => {
-        this.guardandoNota = false;
+        this.guardandoNota.set(false);
         this.messageService.add({
           severity: 'error',
           summary: 'Error',

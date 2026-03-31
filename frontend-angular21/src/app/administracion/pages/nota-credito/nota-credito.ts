@@ -1,27 +1,20 @@
-import {
-  Component,
-  OnInit,
-  OnDestroy,
-  inject,
-  ChangeDetectorRef,
-  signal,
-} from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 
 // PrimeNG
-import { Card }          from 'primeng/card';
-import { Button }        from 'primeng/button';
-import { Select }        from 'primeng/select';
-import { TableModule }   from 'primeng/table';
-import { Tag }           from 'primeng/tag';
-import { Toast }         from 'primeng/toast';
-import { Dialog }        from 'primeng/dialog';
-import { DatePicker }    from 'primeng/datepicker';
-import { Tooltip }       from 'primeng/tooltip';
-import { InputText }     from 'primeng/inputtext';
+import { Card } from 'primeng/card';
+import { Button } from 'primeng/button';
+import { Select } from 'primeng/select';
+import { TableModule } from 'primeng/table';
+import { Tag } from 'primeng/tag';
+import { Toast } from 'primeng/toast';
+import { Dialog } from 'primeng/dialog';
+import { DatePicker } from 'primeng/datepicker';
+import { Tooltip } from 'primeng/tooltip';
+import { InputText } from 'primeng/inputtext';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { ConfirmDialog } from 'primeng/confirmdialog';
 
@@ -36,17 +29,16 @@ import {
 
 // Services
 import {
-  CreditNoteService,
   CreditNoteSummary,
   CreditNoteDetail,
   CreditNoteFilter,
   AnnulCreditNoteDto,
+  CreditNoteService,
 } from '../../services/nota-credito.service';
 import { VentasAdminService } from '../../services/ventas.service';
-import { AuthService }        from '../../../auth/services/auth.service';
-import { UserRole }           from '../../../core/constants/roles.constants';
-import { SedeAdmin }          from '../../interfaces/ventas.interface';
-
+import { AuthService } from '../../../auth/services/auth.service';
+import { UserRole } from '../../../core/constants/roles.constants';
+import { SedeAdmin } from '../../interfaces/ventas.interface';
 
 @Component({
   selector: 'app-notas-credito',
@@ -69,81 +61,72 @@ import { SedeAdmin }          from '../../interfaces/ventas.interface';
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './nota-credito.html',
-  styleUrl:    './nota-credito.css',
+  styleUrl: './nota-credito.css',
 })
 export class NotasCreditoComponent implements OnInit, OnDestroy {
-  // ── Inyecciones ──────────────────────────────────────────────────
-  private readonly router            = inject(Router);
+  private readonly router = inject(Router);
   private readonly creditNoteService = inject(CreditNoteService);
-  private readonly ventasService     = inject(VentasAdminService);
-  private readonly authService       = inject(AuthService);
-  private readonly messageService    = inject(MessageService);
-  private readonly cdr               = inject(ChangeDetectorRef);
+  private readonly ventasService = inject(VentasAdminService);
+  private readonly authService = inject(AuthService);
+  private readonly messageService = inject(MessageService);
 
   private subscriptions = new Subscription();
 
-  readonly tituloKicker    = 'VENTAS';
+  readonly tituloKicker = 'VENTAS';
   readonly subtituloKicker = 'NOTAS DE CRÉDITO';
-  readonly iconoCabecera   = 'pi pi-file-edit';
+  readonly iconoCabecera = 'pi pi-file-edit';
 
-  // ── Auth / Sede ───────────────────────────────────────────────────
-  readonly esAdmin: boolean;
-  readonly sedeNombre: string;
+  readonly esAdmin = signal<boolean>(false);
+  readonly sedeNombre = signal<string>('Mi sede');
   private readonly sedePropiaId: number | null;
 
-  // ── Sedes (solo admin) ────────────────────────────────────────────
-  sedesOpciones: { label: string; value: number | null }[] = [];
+  sedesOpciones = signal<{ label: string; value: number | null }[]>([]);
 
-  // ── Estado tabla ─────────────────────────────────────────────────
-  notas: CreditNoteSummary[] = [];
-  loading = false;
+  notas = signal<CreditNoteSummary[]>([]);
+  loading = signal<boolean>(false);
 
-  paginaActual    = 1;
-  limitePorPagina = 5;
-  totalRegistros  = 0;
-  totalPaginas    = 0;
+  paginaActual = signal<number>(1);
+  limitePorPagina = signal<number>(5);
+  totalRegistros = signal<number>(0);
 
-  // ── Filtros ───────────────────────────────────────────────────────
+  totalPaginas = computed(() => Math.ceil(this.totalRegistros() / this.limitePorPagina()));
+
   readonly estadosOpciones = [
-    { label: 'Todos',     value: null },
-    { label: 'Emitida',   value: 'EMITIDA' },
-    { label: 'Aceptada',  value: 'ACEPTADA' },
+    { label: 'Todos', value: null },
+    { label: 'Emitida', value: 'EMITIDA' },
+    { label: 'Aceptada', value: 'ACEPTADA' },
     { label: 'Observada', value: 'OBSERVADA' },
     { label: 'Rechazada', value: 'RECHAZADA' },
     { label: 'Revertida', value: 'REVERTIDA' },
   ];
 
-  filtroEstado:      string | null = null;
-  filtroSerie:       string        = '';
-  filtroDoc:         string        = '';
-  filtroFechaInicio: Date | null   = getLunesSemanaActualPeru();  // ← lunes de la semana actual
-  filtroFechaFin:    Date | null   = getDomingoSemanaActualPeru(); // ← domingo de la semana actual
-  filtroSede:        number | null = null;
+  filtroEstado = signal<string | null>(null);
+  filtroSerie = signal<string>('');
+  filtroNumDocRef = signal<string>('');
+  filtroFechaInicio = signal<Date | null>(getLunesSemanaActualPeru());
+  filtroFechaFin = signal<Date | null>(getDomingoSemanaActualPeru());
+  filtroSede = signal<number | null>(null);
 
-  // ── Dialog detalle ────────────────────────────────────────────────
-  detalleVisible  = false;
-  detalleLoading  = false;
-  detalleActual: CreditNoteDetail | null = null;
+  detalleVisible = signal<boolean>(false);
+  detalleLoading = signal<boolean>(false);
+  detalleActual = signal<CreditNoteDetail | null>(null);
 
-  // ── Dialog anular ─────────────────────────────────────────────────
-  anularVisible  = false;
-  anularLoading  = signal(false);
-  anularMotivo   = '';
-  anularIdActual: number | null = null;
+  anularVisible = signal<boolean>(false);
+  anularLoading = signal<boolean>(false);
+  anularMotivo = signal<string>('');
+  anularIdActual = signal<number | null>(null);
 
-  // ── Constructor ───────────────────────────────────────────────────
   constructor() {
-    const user        = this.authService.getCurrentUser();
-    this.esAdmin      = this.authService.getRoleId() === UserRole.ADMIN;
-    this.sedeNombre   = user?.sedeNombre ?? 'Mi sede';
+    const user = this.authService.getCurrentUser();
+    this.esAdmin.set(this.authService.getRoleId() === UserRole.ADMIN);
+    this.sedeNombre.set(user?.sedeNombre ?? 'Mi sede');
     this.sedePropiaId = user?.idSede ?? null;
   }
 
-  // ── Lifecycle ─────────────────────────────────────────────────────
   ngOnInit(): void {
-    this.filtroSede = this.sedePropiaId;
+    this.filtroSede.set(this.sedePropiaId);
 
-    if (this.esAdmin) {
+    if (this.esAdmin()) {
       this.cargarSedes();
     } else {
       this.cargarNotas();
@@ -154,24 +137,22 @@ export class NotasCreditoComponent implements OnInit, OnDestroy {
     this.subscriptions.unsubscribe();
   }
 
-  // ── Carga de sedes ────────────────────────────────────────────────
   private cargarSedes(): void {
     const sub = this.ventasService.obtenerSedes().subscribe({
       next: (data: SedeAdmin[]) => {
-        const activas = data.filter(s => s.activo);
-        this.sedesOpciones = [
+        const activas = data.filter((s) => s.activo);
+        this.sedesOpciones.set([
           { label: 'Todas las sedes', value: null },
-          ...activas.map(s => ({ label: s.nombre, value: s.id_sede })),
-        ];
-        this.cdr.markForCheck();
+          ...activas.map((s) => ({ label: s.nombre, value: s.id_sede })),
+        ]);
         this.cargarNotas();
       },
       error: () => {
         this.messageService.add({
           severity: 'error',
-          summary:  'Error',
-          detail:   'No se pudieron cargar las sedes',
-          life:     3000,
+          summary: 'Error',
+          detail: 'No se pudieron cargar las sedes',
+          life: 3000,
         });
         this.cargarNotas();
       },
@@ -179,100 +160,116 @@ export class NotasCreditoComponent implements OnInit, OnDestroy {
     this.subscriptions.add(sub);
   }
 
-  // ── Carga de notas ────────────────────────────────────────────────
   cargarNotas(): void {
-    this.loading = true;
+    this.loading.set(true);
 
     const filters: CreditNoteFilter = {
-      page:  this.paginaActual,
-      limit: this.limitePorPagina,
-      ...(this.filtroEstado        && { status:           this.filtroEstado }),
-      ...(this.filtroSede != null  && { sedeId:           this.filtroSede }),
-      ...(this.filtroSerie.trim()  && { serie:            this.filtroSerie.trim() }),
-      ...(this.filtroDoc.trim()    && { customerDocument: this.filtroDoc.trim() }),
-      ...(this.filtroFechaInicio   && { startDate:        this.formatDate(this.filtroFechaInicio) }),
-      ...(this.filtroFechaFin      && { endDate:          this.formatDate(this.filtroFechaFin) }),
+      page: this.paginaActual(),
+      limit: this.limitePorPagina(),
     };
+
+    if (this.filtroEstado()) {
+      filters.status = this.filtroEstado() as string;
+    }
+    if (this.filtroSede() != null) {
+      filters.sedeId = this.filtroSede() as number;
+    }
+    if (this.filtroSerie().trim()) {
+      filters.serie = this.filtroSerie().trim();
+    }
+    if (this.filtroNumDocRef().trim()) filters.numberDocRef = this.filtroNumDocRef().trim();
+    if (this.filtroFechaInicio()) {
+      filters.startDate = this.formatDate(this.filtroFechaInicio()!);
+    }
+    if (this.filtroFechaFin()) {
+      filters.endDate = this.formatDate(this.filtroFechaFin()!);
+    }
 
     const sub = this.creditNoteService.listar(filters).subscribe({
       next: (res: any) => {
-        this.notas          = res.data ?? [];
-        this.totalRegistros = res.total ?? 0;
-        this.totalPaginas   = Math.ceil(this.totalRegistros / this.limitePorPagina);
-        this.loading        = false;
-        this.cdr.markForCheck();
+        this.notas.set(res.data ?? []);
+        this.totalRegistros.set(res.total ?? 0);
+        this.loading.set(false);
       },
       error: () => {
-        this.loading = false;
+        this.loading.set(false);
         this.messageService.add({
           severity: 'error',
-          summary:  'Error',
-          detail:   'No se pudieron cargar las notas de crédito',
-          life:     3000,
+          summary: 'Error',
+          detail: 'No se pudieron cargar las notas de crédito',
+          life: 3000,
         });
-        this.cdr.markForCheck();
       },
     });
     this.subscriptions.add(sub);
   }
 
-  // ── Navegación ────────────────────────────────────────────────────
   generarNotaCredito(): void {
     this.router.navigate(['/admin/nota-credito/crear']);
   }
 
-  // ── Filtros y Paginación ──────────────────────────────────────────
   aplicarFiltros(): void {
-    if (!this.esAdmin) {
-      this.filtroSede = this.sedePropiaId;
+    if (!this.esAdmin()) {
+      this.filtroSede.set(this.sedePropiaId);
     }
-    this.paginaActual = 1;
+    this.paginaActual.set(1);
     this.cargarNotas();
   }
 
   limpiarFiltros(): void {
-    this.filtroEstado      = null;
-    this.filtroSerie       = '';
-    this.filtroDoc         = '';
-    this.filtroFechaInicio = null;  
-    this.filtroFechaFin    = null; 
-    this.filtroSede        = null;
+    this.filtroEstado.set(null);
+    this.filtroSerie.set('');
+    this.filtroNumDocRef.set('');
+    this.filtroFechaInicio.set(null);
+    this.filtroFechaFin.set(null);
+    this.filtroSede.set(null);
     this.aplicarFiltros();
   }
 
   onPageChange(page: number): void {
-    this.paginaActual = page;
+    this.paginaActual.set(page);
     this.cargarNotas();
   }
 
   onLimitChange(limit: number): void {
-    this.limitePorPagina = limit;
-    this.paginaActual    = 1;
+    this.limitePorPagina.set(limit);
+    this.paginaActual.set(1);
     this.cargarNotas();
   }
 
-  // ── Exportar Excel ────────────────────────────────────────────────
   exportarExcel(): void {
     this.messageService.add({
       severity: 'info',
-      summary:  'Exportando',
-      detail:   'Generando archivo Excel...',
+      summary: 'Exportando',
+      detail: 'Generando archivo Excel...',
     });
 
-    const filters: CreditNoteFilter = {
-      ...(this.filtroEstado        && { status:           this.filtroEstado }),
-      ...(this.filtroSede != null  && { sedeId:           this.filtroSede }),
-      ...(this.filtroSerie         && { serie:            this.filtroSerie.trim() }),
-      ...(this.filtroDoc           && { customerDocument: this.filtroDoc.trim() }),
-      ...(this.filtroFechaInicio   && { startDate:        this.formatDate(this.filtroFechaInicio) }),
-      ...(this.filtroFechaFin      && { endDate:          this.formatDate(this.filtroFechaFin) }),
-    };
+    const filters: CreditNoteFilter = {};
+
+    if (this.filtroEstado()) {
+      filters.status = this.filtroEstado() as string;
+    }
+    if (this.filtroSede() != null) {
+      filters.sedeId = this.filtroSede() as number;
+    }
+    if (this.filtroSerie().trim()) {
+      filters.serie = this.filtroSerie().trim();
+    }
+    if (this.filtroNumDocRef().trim()) {
+      filters.numberDocRef = this.filtroNumDocRef().trim();
+    }
+    if (this.filtroFechaInicio()) {
+      filters.startDate = this.formatDate(this.filtroFechaInicio()!);
+    }
+    if (this.filtroFechaFin()) {
+      filters.endDate = this.formatDate(this.filtroFechaFin()!);
+    }
 
     const sub = this.creditNoteService.exportarExcel(filters).subscribe({
       next: (blob: Blob) => {
-        const url  = window.URL.createObjectURL(blob);
-        const a    = document.createElement('a');
-        a.href     = url;
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
         a.download = `Notas_de_Credito_${new Date().getTime()}.xlsx`;
         document.body.appendChild(a);
         a.click();
@@ -280,76 +277,71 @@ export class NotasCreditoComponent implements OnInit, OnDestroy {
         window.URL.revokeObjectURL(url);
         this.messageService.add({
           severity: 'success',
-          summary:  'Éxito',
-          detail:   'Excel descargado correctamente.',
+          summary: 'Éxito',
+          detail: 'Excel descargado correctamente.',
         });
       },
       error: () => {
         this.messageService.add({
           severity: 'error',
-          summary:  'Error',
-          detail:   'No se pudo generar el Excel.',
+          summary: 'Error',
+          detail: 'No se pudo generar el Excel.',
         });
       },
     });
     this.subscriptions.add(sub);
   }
 
-  // ── Detalle ───────────────────────────────────────────────────────
   verDetalle(nota: CreditNoteSummary): void {
-    this.detalleActual  = null;
-    this.detalleLoading = true;
-    this.detalleVisible = true;
+    this.detalleActual.set(null);
+    this.detalleLoading.set(true);
+    this.detalleVisible.set(true);
 
-    const sub = this.creditNoteService.detalle(nota.noteSummaryId).subscribe({
+    this.creditNoteService.detalle(nota.noteSummaryId).subscribe({
       next: (res: CreditNoteDetail) => {
-        this.detalleActual  = res;
-        this.detalleLoading = false;
-        this.cdr.markForCheck();
+        this.detalleActual.set(res);
+        this.detalleLoading.set(false);
       },
       error: () => {
-        this.detalleLoading = false;
-        this.detalleVisible = false;
+        this.detalleLoading.set(false);
+        this.detalleVisible.set(false);
         this.messageService.add({
           severity: 'error',
-          summary:  'Error',
-          detail:   'No se pudo cargar el detalle',
-          life:     3000,
+          summary: 'Error',
+          detail: 'No se pudo cargar el detalle',
+          life: 3000,
         });
-        this.cdr.markForCheck();
       },
     });
-    this.subscriptions.add(sub);
   }
 
   cerrarDetalle(): void {
-    this.detalleVisible = false;
-    this.detalleActual  = null;
+    this.detalleVisible.set(false);
+    this.detalleActual.set(null);
   }
 
-  // ── Anular ────────────────────────────────────────────────────────
   abrirAnular(nota: CreditNoteSummary): void {
-    this.anularIdActual = nota.noteSummaryId;
-    this.anularMotivo   = '';
-    this.anularVisible  = true;
+    this.anularIdActual.set(nota.noteSummaryId);
+    this.anularMotivo.set('');
+    this.anularVisible.set(true);
   }
 
   confirmarAnular(): void {
-    if (!this.anularMotivo.trim() || !this.anularIdActual) return;
+    if (!this.anularMotivo().trim() || !this.anularIdActual()) return;
 
     this.anularLoading.set(true);
 
-    const dto: AnnulCreditNoteDto = { reason: this.anularMotivo.trim() };
+    const dto: AnnulCreditNoteDto = { reason: this.anularMotivo().trim() };
 
-    const sub = this.creditNoteService.anular(this.anularIdActual, dto).subscribe({
+    const sub = this.creditNoteService.anular(this.anularIdActual()!, dto).subscribe({
       next: () => {
         this.anularLoading.set(false);
         this.cerrarAnular();
         this.messageService.add({
           severity: 'success',
-          summary:  'Nota anulada',
-          detail:   'La nota de crédito fue anulada correctamente',
-          life:     3000,
+          summary: 'Nota anulada',
+          detail: 'La nota de crédito fue anulada correctamente',
+          life: 3000,
         });
         this.cargarNotas();
       },
@@ -357,35 +349,39 @@ export class NotasCreditoComponent implements OnInit, OnDestroy {
         this.anularLoading.set(false);
         this.messageService.add({
           severity: 'error',
-          summary:  'Error',
-          detail:   err?.error?.message ?? 'No se pudo anular la nota de crédito',
-          life:     4000,
+          summary: 'Error',
+          detail: err?.error?.message ?? 'No se pudo anular la nota de crédito',
+          life: 4000,
         });
-        this.cdr.markForCheck();
       },
     });
     this.subscriptions.add(sub);
   }
 
   cerrarAnular(): void {
-    this.anularVisible  = false;
-    this.anularIdActual = null;
-    this.anularMotivo   = '';
+    this.anularVisible.set(false);
+    this.anularIdActual.set(null);
+    this.anularMotivo.set('');
   }
 
-  // ── Helpers ───────────────────────────────────────────────────────
   private formatDate(date: Date): string {
     return date.toISOString().split('T')[0];
   }
 
   getSeveridadEstado(status: string): 'success' | 'warn' | 'danger' | 'info' | 'secondary' {
     switch (status?.toUpperCase()) {
-      case 'EMITIDA':   return 'info';
-      case 'ACEPTADA':  return 'success';
-      case 'OBSERVADA': return 'warn';
-      case 'RECHAZADA': return 'danger';
-      case 'REVERTIDA': return 'secondary';
-      default:          return 'secondary';
+      case 'EMITIDA':
+        return 'info';
+      case 'ACEPTADA':
+        return 'success';
+      case 'OBSERVADA':
+        return 'warn';
+      case 'RECHAZADA':
+        return 'danger';
+      case 'REVERTIDA':
+        return 'secondary';
+      default:
+        return 'secondary';
     }
   }
 

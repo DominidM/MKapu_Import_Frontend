@@ -1,7 +1,6 @@
 <div class="p-2">
   <p-card styleClass="mb-4 shadow-1 border-round-xl">
     <div class="flex align-items-center justify-content-between flex-wrap gap-3">
-
       <div class="flex align-items-center gap-3">
         <div class="flex align-items-center justify-content-center border-round-lg"
              style="width: 3.5rem; height: 3.5rem; background-color: var(--primary-color); color: var(--primary-color-text);">
@@ -16,7 +15,6 @@
           </h2>
         </div>
       </div>
-
       <div class="flex gap-2">
         <p-button
           label="Volver al listado"
@@ -27,7 +25,6 @@
           (onClick)="volverListado()"
         ></p-button>
       </div>
-
     </div>
   </p-card>
 </div>
@@ -42,13 +39,14 @@
       <div class="field col-12 md:col-3">
         <label class="font-semibold text-sm text-color-secondary">Tipo de Comprobante</label>
         <p-select
-          [(ngModel)]="tipoComprobanteRef"
+          [ngModel]="tipoComprobanteRef()"
+          (ngModelChange)="tipoComprobanteRef.set($event)"
           [options]="tiposComprobante"
           optionLabel="label"
           optionValue="value"
           placeholder="Seleccione..."
           styleClass="w-full mt-2"
-          [disabled]="ventaReferenciaCabecera !== null || buscandoComprobante"
+          [disabled]="ventaReferenciaCabecera() !== null || buscandoComprobante()"
         ></p-select>
       </div>
 
@@ -57,22 +55,23 @@
         <div class="p-inputgroup mt-2">
           <input
             pInputText
-            [(ngModel)]="serieCorrelativoRef"
+            [ngModel]="serieCorrelativoRef()"
+            (ngModelChange)="serieCorrelativoRef.set($event)"
             placeholder="Ingrese serie y número..."
             (keyup.enter)="buscarComprobante()"
-            [disabled]="ventaReferenciaCabecera !== null || buscandoComprobante"
+            [disabled]="ventaReferenciaCabecera() !== null || buscandoComprobante()"
           />
           <button
             type="button"
             pButton
             icon="pi pi-search"
             (click)="buscarComprobante()"
-            [disabled]="!serieCorrelativoRef || ventaReferenciaCabecera !== null || buscandoComprobante"
+            [disabled]="!serieCorrelativoRef() || ventaReferenciaCabecera() !== null || buscandoComprobante()"
           ></button>
         </div>
       </div>
 
-      <div class="field col-12 md:col-3 flex align-items-end" *ngIf="ventaReferenciaCabecera">
+      <div class="field col-12 md:col-3 flex align-items-end" *ngIf="ventaReferenciaCabecera()">
         <p-button
           label="Cambiar Comprobante"
           icon="pi pi-refresh"
@@ -85,21 +84,21 @@
   </div>
 </div>
 
-<div class="p-2" *ngIf="!ventaReferenciaCabecera && !buscandoComprobante">
+<div class="p-2" *ngIf="!ventaReferenciaCabecera() && !buscandoComprobante()">
   <div class="surface-ground border-round-xl p-5 flex flex-column align-items-center justify-content-center border surface-border border-dashed">
     <i class="pi pi-receipt text-5xl text-color-secondary mb-3"></i>
     <span class="text-color-secondary font-medium">Busque un comprobante para cargar los datos e iniciar la nota de crédito.</span>
   </div>
 </div>
 
-<div class="p-2" *ngIf="buscandoComprobante">
+<div class="p-2" *ngIf="buscandoComprobante()">
   <div class="surface-ground border-round-xl p-5 flex flex-column align-items-center justify-content-center border surface-border border-dashed">
     <i class="pi pi-spin pi-spinner text-5xl text-primary mb-3"></i>
     <span class="text-color-secondary font-medium">Buscando comprobante en SUNAT/Base de Datos...</span>
   </div>
 </div>
 
-<ng-container *ngIf="ventaReferenciaCabecera">
+<ng-container *ngIf="ventaReferenciaCabecera()">
 
   <div class="p-2">
     <div class="surface-card p-4 border-round-xl shadow-1 mb-4">
@@ -111,25 +110,25 @@
         <div class="flex flex-column">
           <span class="text-xs text-color-secondary mb-1">Cliente</span>
           <span class="text-sm font-bold text-color">
-            {{ ventaReferenciaCabecera.cliente?.razon_social || ventaReferenciaCabecera.clienteNombre || (ventaReferenciaCabecera.cliente?.nombres + ' ' + ventaReferenciaCabecera.cliente?.apellidos) }}
+            {{ ventaReferenciaCabecera().clienteNombre }}
           </span>
         </div>
         <div class="flex flex-column">
           <span class="text-xs text-color-secondary mb-1">Documento</span>
           <span class="text-sm font-semibold text-color">
-            {{ ventaReferenciaCabecera.cliente?.valor_doc || ventaReferenciaCabecera.clienteDocumento }}
+            {{ ventaReferenciaCabecera().clienteDocumento }}
           </span>
         </div>
         <div class="flex flex-column">
           <span class="text-xs text-color-secondary mb-1">Fecha Emisión Ref.</span>
           <span class="text-sm font-semibold text-color">
-            {{ (ventaReferenciaCabecera.fecha_emision || ventaReferenciaCabecera.fechaEmision) | date: 'dd/MM/yyyy' }}
+            {{ ventaReferenciaCabecera().fechaEmision | date: 'dd/MM/yyyy' }}
           </span>
         </div>
         <div class="flex flex-column">
           <span class="text-xs text-color-secondary mb-1">Total Comprobante Orig.</span>
           <span class="text-sm font-bold text-primary">
-            S/. {{ (ventaReferenciaCabecera.total || 0) | number: '1.2-2' }}
+            S/. {{ ventaReferenciaCabecera().total | number: '1.2-2' }}
           </span>
         </div>
       </div>
@@ -138,7 +137,8 @@
         <div class="field col-12 md:col-6">
           <label class="font-semibold text-sm text-color-secondary">Tipo de Nota de Crédito (Catálogo 09 SUNAT) <span class="text-red-500">*</span></label>
           <p-select
-            [(ngModel)]="motivoSunatSeleccionado"
+            [ngModel]="motivoSunatSeleccionado()"
+            (ngModelChange)="motivoSunatSeleccionado.set($event)"
             [options]="motivosSunat"
             optionLabel="label"
             optionValue="value"
@@ -152,7 +152,8 @@
           <label class="font-semibold text-sm text-color-secondary">Sustento / Descripción detallada <span class="text-red-500">*</span></label>
           <input
             pInputText
-            [(ngModel)]="sustentoDescripcion"
+            [ngModel]="sustentoDescripcion()"
+            (ngModelChange)="sustentoDescripcion.set($event)"
             placeholder="Ej: Anulación de la operación por desistimiento del cliente"
             class="w-full mt-2"
           />
@@ -171,7 +172,7 @@
       </p>
 
       <p-table
-        [value]="itemsVenta"
+        [value]="itemsVenta()"
         styleClass="p-datatable-sm p-datatable-striped"
         [tableStyle]="{ 'min-width': '50rem' }"
       >
@@ -184,24 +185,25 @@
             <th class="text-center" style="width: 25%">Cant. a Devolver</th>
           </tr>
         </ng-template>
-        <ng-template pTemplate="body" let-item let-i="rowIndex">
+        <ng-template pTemplate="body" let-item>
           <tr>
             <td class="text-center">
               <p-checkbox 
-                [(ngModel)]="item.seleccionado" 
+                [ngModel]="item.seleccionado" 
+                (ngModelChange)="item.seleccionado = $event; onCheckboxChange(item)"
                 [binary]="true" 
-                inputId="chk{{i}}" 
-                (onChange)="onCheckboxChange(item)">
+                [inputId]="'chk' + item.id_detalle">
               </p-checkbox>
             </td>
             <td class="text-sm font-medium">{{ item.descripcion }}</td>
             <td class="text-center">
-              <p-tag severity="secondary" [value]="item.cantidadOriginal"></p-tag>
+              <p-tag severity="secondary" [value]="item.cantidadOriginal.toString()"></p-tag>
             </td>
             <td class="text-right text-sm">S/. {{ item.precioUnitario | number: '1.2-2' }}</td>
             <td class="text-center">
               <p-inputNumber 
-                [(ngModel)]="item.cantidadADevolver" 
+                [ngModel]="item.cantidadADevolver" 
+                (ngModelChange)="item.cantidadADevolver = $event; onCantidadChange(item)"
                 [min]="0" 
                 [max]="item.cantidadOriginal" 
                 [showButtons]="true" 
@@ -211,7 +213,6 @@
                 incrementButtonClass="p-button-success" 
                 incrementButtonIcon="pi pi-plus" 
                 decrementButtonIcon="pi pi-minus"
-                (ngModelChange)="onCantidadChange(item)"
                 styleClass="w-full max-w-10rem p-inputtext-sm">
               </p-inputNumber>
             </td>
@@ -234,16 +235,16 @@
 
         <div class="flex justify-content-between align-items-center mb-2 mt-3">
           <span class="text-color-secondary text-sm">Gravada Orig.</span>
-          <span class="text-color font-medium">S/. {{ (ventaReferenciaCabecera.subtotal || ventaReferenciaCabecera.subTotal || 0) | number: '1.2-2' }}</span>
+          <span class="text-color font-medium">S/. {{ ventaReferenciaCabecera().subtotal | number: '1.2-2' }}</span>
         </div>
         <div class="flex justify-content-between align-items-center mb-2">
           <span class="text-color-secondary text-sm">IGV (18%) Orig.</span>
-          <span class="text-color font-medium">S/. {{ (ventaReferenciaCabecera.igv || ventaReferenciaCabecera.igvTotal || 0) | number: '1.2-2' }}</span>
+          <span class="text-color font-medium">S/. {{ ventaReferenciaCabecera().igv | number: '1.2-2' }}</span>
         </div>
 
         <div class="flex justify-content-between align-items-center mt-3 pt-3 border-top-1 surface-border">
           <span class="font-bold text-lg">Total Original</span>
-          <strong class="text-2xl text-primary">S/. {{ (ventaReferenciaCabecera.total || 0) | number: '1.2-2' }}</strong>
+          <strong class="text-2xl text-primary">S/. {{ ventaReferenciaCabecera().total | number: '1.2-2' }}</strong>
         </div>
 
         <div class="flex flex-column gap-2 mt-4 pt-3">
@@ -252,7 +253,7 @@
             icon="pi pi-check-circle"
             severity="success"
             styleClass="w-full"
-            [loading]="guardandoNota"
+            [loading]="guardandoNota()"
             [disabled]="!esFormularioValido()"
             (onClick)="confirmarEmision()"
           ></p-button>
