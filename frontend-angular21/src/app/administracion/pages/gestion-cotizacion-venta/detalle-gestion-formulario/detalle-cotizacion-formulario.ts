@@ -259,7 +259,18 @@ export class DetalleCotizacionComponent implements OnInit {
 
   enviar() {
     const id = this.cotizacion()?.id_cotizacion;
+    const emailCliente = this.cotizacion()?.cliente?.email;
+    
     if (!id) return;
+
+    if (!emailCliente) {
+      this.messageService.add({
+        severity: 'warn',
+        summary:  'Advertencia',
+        detail:   'El cliente no tiene un correo electrónico registrado.',
+      });
+      return;
+    }
 
     this.messageService.add({
       severity: 'info',
@@ -271,12 +282,12 @@ export class DetalleCotizacionComponent implements OnInit {
       next:  (res) => this.messageService.add({
         severity: 'success',
         summary:  'Email enviado',
-        detail:   `Cotización enviada a ${res.sentTo}`,
+        detail:   `Cotización enviada a ${res.sentTo || emailCliente}`,
       }),
       error: () => this.messageService.add({
         severity: 'error',
         summary:  'Error',
-        detail:   'No se pudo enviar. Verifique que el cliente tenga email registrado.',
+        detail:   'No se pudo enviar. Verifique el servidor de correos o su conexión.',
       }),
     });
   }

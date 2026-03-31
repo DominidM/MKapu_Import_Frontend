@@ -125,6 +125,7 @@ export class PromocionesFormulario implements OnInit {
   private categoriaService = inject(CategoriaService);
   private messageService = inject(MessageService);
   private destroyRef = inject(DestroyRef);
+  productosSugeridos = signal<any[]>([]);
   private lastConceptWarningAt = 0;
   private initialPayloadSnapshot: string | null = null;
 
@@ -532,4 +533,5 @@ export class PromocionesFormulario implements OnInit {
       detail: PROMOTION_CONCEPT_TOAST_DETAIL,
     });
   }
+  
 }

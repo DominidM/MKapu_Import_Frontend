@@ -1,31 +1,30 @@
-<div class="p-2">
-  <p-card class="sedes-header-card mb-4 ventas-header-bordered">
-    <div class="flex align-items-center justify-content-between flex-wrap gap-2">
+<div class="p-3">
+  <p-card class="ventas-header-card mb-4 ventas-header-bordered">
+    <div class="flex align-items-center justify-content-between flex-wrap gap-3">
       <div class="flex align-items-center gap-3">
-        <span class="sedes-title-icon">
-          <i class="pi pi-chart-line"></i>
+        <span class="ventas-title-icon">
+          <i class="pi pi-list"></i>
         </span>
         <div>
-          <p class="sedes-kicker">ADMINISTRADOR · ADMINISTRACIÓN · CONTEOS</p>
-          <h2 class="sedes-title">CONTEOS DE INVENTARIO </h2>
+          <p class="ventas-kicker mb-0">LOGÍSTICA · ADMINISTRACIÓN</p>
+          <h2 class="ventas-title mb-0">CONTEOS DE INVENTARIO</h2>
         </div>
       </div>
-      <div class="flex justify-items-end gap-2">
+      <div class="flex justify-content-end gap-2">
         <p-button
           label="Crear Nuevo Conteo"
           icon="pi pi-plus"
-          styleClass="sedes-pill"
+          severity="success"
           (onClick)="crearConteo()">
         </p-button>
       </div>
     </div>
   </p-card>
 
-  <p-card class="mt-3 filtros-card">
+  <p-card class="mb-4 border-round-xl shadow-1">
     <div class="flex flex-wrap gap-3 align-items-center">
 
-      <!-- Rango de fechas: dos datepickers independientes -->
-      <div class="fechas-con-guion" style="display: flex; align-items: center; gap: 8px;">
+      <div class="fechas-con-guion flex align-items-center gap-2">
         <p-datepicker
           [ngModel]="fechaSeleccionada()?.[0] ?? null"
           (ngModelChange)="onFechaInicioChange($event)"
@@ -34,7 +33,7 @@
           [showClear]="true"
           [showIcon]="true">
         </p-datepicker>
-        <span style="color: var(--text-color-secondary);">—</span>
+        <span class="text-500 font-bold">—</span>
         <p-datepicker
           [ngModel]="fechaSeleccionada()?.[1] ?? null"
           (ngModelChange)="onFechaFinChange($event)"
@@ -45,12 +44,13 @@
         </p-datepicker>
       </div>
 
-      <span class="p-input-icon-left flex-1" style="display: flex; align-items: center; gap: 10px;">
+      <span class="p-input-icon-left flex-1 min-w-min">
         <i class="pi pi-search"></i>
         <input
           pInputText
           type="text"
-          placeholder="Buscar por detalle..."
+          class="w-full"
+          placeholder="Buscar por detalle de conteo..."
           [ngModel]="filtroBusqueda()"
           (ngModelChange)="filtroBusqueda.set($event); paginaActual.set(1)"
         />
@@ -62,7 +62,7 @@
         [suggestions]="estadosFiltrados()"
         (completeMethod)="filtrarEstados($event)"
         optionLabel="nombre"
-        placeholder="Estado"
+        placeholder="Filtrar Estado"
         [dropdown]="true">
       </p-autoComplete>
 
@@ -72,7 +72,7 @@
         [suggestions]="familiasFiltradas()"
         (completeMethod)="filtrarFamilias($event)"
         optionLabel="nombre"
-        placeholder="Familia"
+        placeholder="Filtrar Familia"
         [dropdown]="true">
       </p-autoComplete>
 
@@ -86,7 +86,7 @@
     </div>
   </p-card>
 
-  <p-card class="mt-3 tabla-card">
+  <p-card class="border-round-xl shadow-1">
     <div style="position: relative;">
       <app-loading-overlay
         [visible]="loading()"
@@ -99,16 +99,17 @@
           [value]="conteosPaginados()"
           [loading]="false"
           responsiveLayout="scroll"
-          styleClass="p-datatable-striped"
+          styleClass="p-datatable-striped p-datatable-sm"
+          [rowHover]="true"
           [paginator]="false">
 
           <ng-template pTemplate="header">
             <tr>
-              <th>Fecha</th>
-              <th>Detalle</th>
-              <th>Estado</th>
-              <th>Familia</th>
-              <th class="text-center" style="text-align: center">Acción</th>
+              <th style="min-width: 180px">Fecha</th>
+              <th style="min-width: 250px">Detalle</th>
+              <th style="min-width: 120px">Estado</th>
+              <th style="min-width: 150px">Familia</th>
+              <th class="text-center" style="width: 120px">Acción</th>
             </tr>
           </ng-template>
 
@@ -116,7 +117,7 @@
             <tr>
               <td>
                 <div class="flex align-items-center gap-2">
-                  <i class="pi pi-calendar text-400"></i>
+                  <i class="pi pi-calendar text-500"></i>
                   <span class="text-700 font-medium">
                     {{ row.fechaIni | date: 'dd MMM, yyyy · HH:mm' }}
                   </span>
@@ -124,7 +125,7 @@
               </td>
               <td>
                 <div class="flex flex-column">
-                  <span class="font-semibold text-700">Conteo en {{ row.nomSede }}</span>
+                  <span class="font-bold text-700">Conteo en {{ row.nomSede }}</span>
                   <small class="text-500">
                     {{ row.totalItems }} ítems
                     <ng-container *ngIf="row.detalles && row.detalles.length > 0">
@@ -152,21 +153,23 @@
                   [value]="row.nomCategoria"
                   severity="info"
                   [rounded]="true"
-                  styleClass="p-tag-sm">
+                  styleClass="p-tag-sm px-3">
                 </p-tag>
                 <ng-template #general>
                   <p-tag
                     value="Varias Familias"
+                    severity="secondary"
                     [rounded]="true"
-                    styleClass="p-tag-sm tag-general">
+                    styleClass="p-tag-sm px-3">
                   </p-tag>
                 </ng-template>
               </td>
-              <td class="text-center" style="text-align: center">
+              <td class="text-center">
                 <p-button
-                  label="Ver detalle"
                   icon="pi pi-eye"
-                  styleClass="p-button-sm btn-detalle-amarillo"
+                  styleClass="p-button-rounded p-button-text p-button-warning"
+                  pTooltip="Ver detalle"
+                  tooltipPosition="top"
                   (onClick)="verDetalle(row)">
                 </p-button>
               </td>
@@ -176,22 +179,24 @@
           <ng-template pTemplate="emptymessage">
             <tr>
               <td colspan="5" class="text-center py-6">
-                <i class="pi pi-inbox text-4xl text-400 mb-3 block"></i>
-                <p class="text-900 font-medium mb-0">No se encontraron conteos</p>
-                <p class="text-600 mt-2">Ajusta los filtros arriba para buscar nuevamente</p>
+                <i class="pi pi-inbox text-5xl text-300 mb-3 block"></i>
+                <p class="text-700 font-bold mb-1 text-lg">No se encontraron conteos</p>
+                <p class="text-500 mt-0">Ajusta los filtros de búsqueda e intenta nuevamente.</p>
               </td>
             </tr>
           </ng-template>
         </p-table>
 
-        <app-paginador
-          [page]="paginaActual()"
-          [totalPages]="totalPaginas()"
-          [total]="totalRegistros() || conteosFiltrados().length"
-          [limit]="rows()"
-          (pageChange)="onPageChange($event)"
-          (limitChange)="onLimitChange($event)">
-        </app-paginador>
+        <div class="mt-3">
+          <app-paginador
+            [page]="paginaActual()"
+            [totalPages]="totalPaginas()"
+            [total]="totalRegistros() || conteosFiltrados().length"
+            [limit]="rows()"
+            (pageChange)="onPageChange($event)"
+            (limitChange)="onLimitChange($event)">
+          </app-paginador>
+        </div>
 
       </div>
     </div>

@@ -132,6 +132,14 @@
             <small class="text-green-500 flex align-items-center gap-1">
               <i class="pi pi-check-circle text-xs"></i> Nombre válido.
             </small>
+          } @else if (productoForm.get('anexo')?.errors?.['pattern']) {
+            <small class="text-red-500 flex align-items-center gap-1">
+              <i class="pi pi-times-circle text-xs"></i> El nombre debe empezar con la letra R.
+            </small>
+          } @else if (productoForm.get('anexo')?.errors?.['maxlength']) {
+            <small class="text-red-500 flex align-items-center gap-1">
+              <i class="pi pi-times-circle text-xs"></i> Límite de 150 caracteres excedido.
+            </small>
           } @else {
             <small class="text-400">Nombre comercial completo del producto.</small>
           }

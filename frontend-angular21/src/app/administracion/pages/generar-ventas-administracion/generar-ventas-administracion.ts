@@ -1444,13 +1444,27 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
         });
         return;
       }
-      if (!esEfectivo && !this.numeroOperacion().trim()) {
-        this.messageService.add({
-          severity: 'warn',
-          summary: 'Nº Operación Requerido',
-          detail: 'Ingrese el número de operación',
-        });
-        return;
+      if (!esEfectivo) {
+        const numOp = this.numeroOperacion().trim();
+        
+        if (!numOp) {
+          this.messageService.add({
+            severity: 'warn',
+            summary: 'Nº Operación Requerido',
+            detail: 'Ingrese el número de operación',
+          });
+          return;
+        }
+
+        const numOpRegex = /^\d{20}$/;
+        if (!numOpRegex.test(numOp)) {
+          this.messageService.add({
+            severity: 'warn',
+            summary: 'Nº Operación Inválido',
+            detail: 'El número de operación debe tener exactamente 20 dígitos numéricos, ni más ni menos.',
+          });
+          return;
+        }
       }
     }
     if (this.loading()) return;
@@ -1679,5 +1693,10 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
     return c.documentTypeDescription
       ? `${c.documentTypeDescription}: ${c.documentValue}`
       : (c.documentValue ?? '');
+  }
+  validarNumeroOperacion(event: any): void {
+    const input = event.target;
+    input.value = input.value.replace(/[^0-9]/g, '').slice(0, 20);
+    this.numeroOperacion.set(input.value);
   }
 }

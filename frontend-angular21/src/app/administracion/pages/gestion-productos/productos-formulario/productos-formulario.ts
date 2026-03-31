@@ -102,6 +102,8 @@ export class ProductosFormulario implements OnInit {
     if (ctrl('codigo')?.errors?.['pattern'])       errores.push('Código: solo letras, números y guiones.');
     if (ctrl('anexo')?.errors?.['required'])       errores.push('Nombre: es obligatorio.');
     if (ctrl('anexo')?.errors?.['minlength'])      errores.push('Nombre: mínimo 3 caracteres.');
+    if (ctrl('anexo')?.errors?.['maxlength'])      errores.push('Nombre: no debe exceder los 150 caracteres.');
+    if (ctrl('anexo')?.errors?.['pattern'])        errores.push('Nombre: debe empezar con la letra R.');
     if (ctrl('descripcion')?.errors?.['required']) errores.push('Descripción: es obligatoria.');
     if (ctrl('descripcion')?.errors?.['minlength'])errores.push('Descripción: mínimo 10 caracteres.');
     if (ctrl('familia')?.errors?.['required'])     errores.push('Categoría: debes seleccionar una familia.');
@@ -153,6 +155,7 @@ export class ProductosFormulario implements OnInit {
       Validators.required,
       Validators.minLength(3),
       Validators.maxLength(150),
+      Validators.pattern(/^[Rr].*/)
     ]],
     descripcion: ['', [
       Validators.required,

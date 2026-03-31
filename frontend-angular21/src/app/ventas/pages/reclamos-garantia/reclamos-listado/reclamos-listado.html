@@ -236,7 +236,7 @@
               </p-button>
               <!-- EDITAR — requiere EDITAR_RECLAMOS -->
               <p-button
-                *ngIf="puedeEditarReclamos"
+                *ngIf="puedeEditarReclamos && reclamo.status !== 'RESUELTO'" 
                 icon="pi pi-pencil"
                 [rounded]="true" [text]="true" severity="secondary"
                 pTooltip="Editar reclamo" tooltipPosition="top"

@@ -1,292 +1,234 @@
 /* =======================
-   HEADER (ORIGINAL – NO TOCAR)
+   HEADER (ADAPTADO A CONTEOS)
 ======================= */
 :host {
-    display: block;
-  }
-  
-  .sedes-page {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-  
-  .sedes-header-card .p-card-body {
-    padding: 1rem 1.25rem;
-  }
-  
-  .sedes-title-icon {
-    width: 40px;
-    height: 40px;
-    display: grid;
-    place-items: center;
-    border-radius: 999px;
-    background: #f5c34d;
-    color: #1f2937;
-    font-size: 18px;
-  }
-  
-  .sedes-kicker {
-    margin: 0;
-    font-size: 0.65rem;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: #94a3b8;
-  }
-  
-  .sedes-title {
-    margin: 0;
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #1f2937;
-  }
-  
-  :host-context(.app-dark) .sedes-kicker {
-    color: #94a3b8;
-  }
-  
-  :host-context(.app-dark) .sedes-title {
-    color: #f8fafc;
-  }
-  
-  /* ===============================
-     COMISIONES – MÉTRICAS
+  display: block;
+}
+
+.conteo-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.conteo-header-card ::ng-deep .p-card-body {
+  padding: 1rem 1.25rem;
+}
+
+.conteo-title-icon {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #ffedd5; /* Fondo naranja claro */
+  color: #ea580c;      /* Naranja principal */
+  font-size: 18px;
+}
+
+.conteo-kicker {
+  margin: 0;
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.conteo-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+:host-context(.app-dark) .conteo-kicker {
+  color: #94a3b8;
+}
+
+:host-context(.app-dark) .conteo-title {
+  color: #f8fafc;
+}
+
+/* ===============================
+     CONTEOS – MÉTRICAS
   ================================ */
-  
-  .comision-metrics {
-    row-gap: 1.25rem;
-  }
-  
-  .comision-metrics p-card {
-    width: 100%;
-    display: block;
-  }
-  
-  .comision-metrics .metric-card .p-card-body {
-    padding: 0.9rem 1rem;
-  }
-  
-  /* ===== ANIMACIÓN DE ENTRADA ===== */
-  .comision-metrics .metric-card {
-    position: relative;
-    overflow: hidden;
-    opacity: 0;
-    transform: translateY(14px);
-    animation: metricEnter 0.55s ease forwards;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-  }
-  
-  /* DELAY PROGRESIVO */
-  .comision-metrics .col-12:nth-child(1) .metric-card {
-    animation-delay: 0.05s;
-  }
-  .comision-metrics .col-12:nth-child(2) .metric-card {
-    animation-delay: 0.15s;
-  }
-  .comision-metrics .col-12:nth-child(3) .metric-card {
-    animation-delay: 0.25s;
-  }
-  
-  /* SHINE */
-  .comision-metrics .metric-card::before {
-    content: '';
-    position: absolute;
-    top: -20%;
-    left: -60%;
-    width: 60%;
-    height: 140%;
-    background: linear-gradient(
-      110deg,
+
+.conteo-metrics {
+  row-gap: 1.25rem;
+}
+
+.conteo-metrics p-card {
+  width: 100%;
+  display: block;
+}
+
+.conteo-metrics ::ng-deep .metric-card .p-card-body {
+  padding: 0.9rem 1rem;
+}
+
+/* ===== ANIMACIÓN DE ENTRADA ===== */
+.conteo-metrics ::ng-deep .metric-card {
+  position: relative;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(14px);
+  animation: metricEnter 0.55s ease forwards;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border-radius: 12px;
+}
+
+/* DELAY PROGRESIVO PARA CADA TARJETA */
+.conteo-metrics .col-12:nth-child(1) ::ng-deep .metric-card { animation-delay: 0.05s; }
+.conteo-metrics .col-12:nth-child(2) ::ng-deep .metric-card { animation-delay: 0.15s; }
+.conteo-metrics .col-12:nth-child(3) ::ng-deep .metric-card { animation-delay: 0.25s; }
+
+/* EFECTO SHINE (BRILLO) */
+.conteo-metrics ::ng-deep .metric-card::before {
+  content: '';
+  position: absolute;
+  top: -20%;
+  left: -60%;
+  width: 60%;
+  height: 140%;
+  background: linear-gradient(110deg,
       transparent,
       var(--metric-shine, rgba(255, 255, 255, 0.7)),
-      transparent
-    );
-    transform: skewX(-12deg);
-    opacity: 0;
-    pointer-events: none;
-  }
-  
-  .comision-metrics .metric-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08);
-  }
-  
-  .comision-metrics .metric-card:hover::before {
-    opacity: 0.9;
-    animation: metricShine 0.8s ease;
-  }
-  
-  /* HEADER */
-  .comision-metrics .metric-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-  
-  .comision-metrics .metric-title {
-    font-size: 0.75rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: #6b7280;
-    font-weight: 600;
-  }
-  
-  .comision-metrics .metric-value {
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: #111827;
-    margin-top: 0.4rem;
-  }
-  
-  .comision-metrics .metric-sub {
-    font-size: 0.75rem;
-    color: #6b7280;
-    margin-top: 0.2rem;
-  }
-  
-  /* ICONOS */
-  .comision-metrics .metric-icon {
-    width: 28px;
-    height: 28px;
-    border-radius: 9px;
-    display: grid;
-    place-items: center;
-    font-size: 0.85rem;
-  }
-  
-  .metric-icon-info {
-    background: #e0f2fe;
-    color: #075985;
-  }
-  
-  .metric-icon-success {
-    background: #dcfce7;
-    color: #166534;
-  }
-  
-  .metric-icon-warning {
-    background: #fef3c7;
-    color: #92400e;
-  }
-  
-  /* VARIANTES */
-  .metric-info {
-    border: 1px solid #bae6fd;
-    background: linear-gradient(135deg, #e0f2fe, #f0f9ff);
-    --metric-shine: rgba(186, 230, 253, 0.65);
-  }
-  
-  .metric-success {
-    border: 1px solid #bbf7d0;
-    background: linear-gradient(135deg, #dcfce7, #f0fdf4);
-    --metric-shine: rgba(187, 247, 208, 0.65);
-  }
-  
-  .metric-warning {
-    border: 1px solid #fde68a;
-    background: linear-gradient(135deg, #fff7d6, #fffbeb);
-    --metric-shine: rgba(253, 230, 138, 0.65);
-  }
-  
-  /* DARK MODE */
-  :host-context(.app-dark) .comision-metrics .metric-title {
-    color: #cbd5f5;
-  }
-  
-  :host-context(.app-dark) .comision-metrics .metric-value {
-    color: #f8fafc;
-  }
-  
-  :host-context(.app-dark) .comision-metrics .metric-sub {
-    color: #94a3b8;
-  }
-  
-  /* KEYFRAMES */
-  @keyframes metricEnter {
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  
-  @keyframes metricShine {
-    from {
-      transform: translateX(-120%) skewX(-12deg);
-    }
-    to {
-      transform: translateX(220%) skewX(-12deg);
-    }
-  }
-  
+      transparent);
+  transform: skewX(-12deg);
+  opacity: 0;
+  pointer-events: none;
+}
 
-  /* =====================================
-   DARK MODE – ESTILO FINAL (COMO IMAGEN)
-===================================== */
+.conteo-metrics ::ng-deep .metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08);
+}
 
-:host-context(.app-dark) .comision-metrics .metric-card {
-    color: #f9fafb;
-    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.55);
-  }
-  
-  /* ---------- INFO (AZUL OSCURO) ---------- */
-  :host-context(.app-dark) .comision-metrics .metric-info {
-    background: linear-gradient(135deg, #061b28, #020f1a);
-    border: 1px solid rgba(56, 189, 248, 0.25);
-    --metric-shine: rgba(56, 189, 248, 0.55);
-  }
-  
-  /* ---------- SUCCESS (VERDE OSCURO) ---------- */
-  :host-context(.app-dark) .comision-metrics .metric-success {
-    background: linear-gradient(135deg, #06281e, #03160f);
-    border: 1px solid rgba(34, 197, 94, 0.25);
-    --metric-shine: rgba(34, 197, 94, 0.55);
-  }
-  
-  /* ---------- WARNING (ROJO / ÁMBAR OSCURO) ---------- */
-  :host-context(.app-dark) .comision-metrics .metric-warning {
-    background: linear-gradient(135deg, #2a0f0f, #140606);
-    border: 1px solid rgba(239, 68, 68, 0.28);
-    --metric-shine: rgba(239, 68, 68, 0.55);
-  }
-  
-  /* ---------- TEXTO ---------- */
-  :host-context(.app-dark) .comision-metrics .metric-title {
-    color: #e5e7eb;
-    opacity: 0.95;
-  }
-  
-  :host-context(.app-dark) .comision-metrics .metric-value {
-    color: #ffffff;
-    font-weight: 700;
-  }
-  
-  :host-context(.app-dark) .comision-metrics .metric-sub {
-    color: #9ca3af;
-  }
-  
-  /* ---------- ICONOS ---------- */
-  :host-context(.app-dark) .metric-icon-info {
-    background: rgba(56, 189, 248, 0.15);
-    color: #7dd3fc;
-  }
-  
-  :host-context(.app-dark) .metric-icon-success {
-    background: rgba(34, 197, 94, 0.15);
-    color: #86efac;
-  }
-  
-  :host-context(.app-dark) .metric-icon-warning {
-    background: rgba(239, 68, 68, 0.15);
-    color: #fca5a5;
-  }
-  
-  /* ---------- SHINE (VISIBLE COMO EN LA IMAGEN) ---------- */
-  :host-context(.app-dark) .comision-metrics .metric-card::before {
-    opacity: 0;
-  }
-  
-  :host-context(.app-dark) .comision-metrics .metric-card:hover::before {
+.conteo-metrics ::ng-deep .metric-card:hover::before {
+  opacity: 0.9;
+  animation: metricShine 0.8s ease;
+}
+
+/* TEXTOS DE LA MÉTRICA */
+.conteo-metrics .metric-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.conteo-metrics .metric-title {
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.conteo-metrics .metric-value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #111827;
+  margin-top: 0.4rem;
+}
+
+/* ICONOS */
+.conteo-metrics .metric-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  font-size: 1rem;
+}
+
+.metric-icon-info {
+  background: #e0f2fe;
+  color: #075985;
+}
+
+.metric-icon-success {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.metric-icon-warning {
+  background: #fee2e2; /* Ajustado a rojo suave para desviaciones */
+  color: #991b1b;
+}
+
+/* VARIANTES DE TARJETA */
+::ng-deep .metric-info {
+  border: 1px solid #bae6fd !important;
+  background: linear-gradient(135deg, #e0f2fe, #f0f9ff) !important;
+  --metric-shine: rgba(186, 230, 253, 0.65);
+}
+
+::ng-deep .metric-success {
+  border: 1px solid #bbf7d0 !important;
+  background: linear-gradient(135deg, #dcfce7, #f0fdf4) !important;
+  --metric-shine: rgba(187, 247, 208, 0.65);
+}
+
+::ng-deep .metric-warning {
+  border: 1px solid #fecaca !important; /* Rojo pastel */
+  background: linear-gradient(135deg, #fef2f2, #fff5f5) !important;
+  --metric-shine: rgba(254, 202, 202, 0.65);
+}
+
+/* DARK MODE PARA TEXTOS */
+:host-context(.app-dark) .conteo-metrics .metric-title { color: #cbd5f5; }
+:host-context(.app-dark) .conteo-metrics .metric-value { color: #f8fafc; }
+
+/* KEYFRAMES */
+@keyframes metricEnter {
+  to {
     opacity: 1;
-    animation: metricShine 0.9s ease;
+    transform: translateY(0);
   }
-  
+}
+
+@keyframes metricShine {
+  from { transform: translateX(-120%) skewX(-12deg); }
+  to { transform: translateX(220%) skewX(-12deg); }
+}
+
+/* =====================================
+   DARK MODE – TARJETAS
+===================================== */
+:host-context(.app-dark) .conteo-metrics ::ng-deep .metric-card {
+  color: #f9fafb;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.55);
+}
+
+/* INFO (AZUL OSCURO) */
+:host-context(.app-dark) .conteo-metrics ::ng-deep .metric-info {
+  background: linear-gradient(135deg, #061b28, #020f1a) !important;
+  border: 1px solid rgba(56, 189, 248, 0.25) !important;
+  --metric-shine: rgba(56, 189, 248, 0.55);
+}
+
+/* SUCCESS (VERDE OSCURO) */
+:host-context(.app-dark) .conteo-metrics ::ng-deep .metric-success {
+  background: linear-gradient(135deg, #06281e, #03160f) !important;
+  border: 1px solid rgba(34, 197, 94, 0.25) !important;
+  --metric-shine: rgba(34, 197, 94, 0.55);
+}
+
+/* WARNING / DANGER (ROJO OSCURO) */
+:host-context(.app-dark) .conteo-metrics ::ng-deep .metric-warning {
+  background: linear-gradient(135deg, #2a0f0f, #140606) !important;
+  border: 1px solid rgba(239, 68, 68, 0.28) !important;
+  --metric-shine: rgba(239, 68, 68, 0.55);
+}
+
+/* ICONOS EN DARK MODE */
+:host-context(.app-dark) .metric-icon-info { background: rgba(56, 189, 248, 0.15); color: #7dd3fc; }
+:host-context(.app-dark) .metric-icon-success { background: rgba(34, 197, 94, 0.15); color: #86efac; }
+:host-context(.app-dark) .metric-icon-warning { background: rgba(239, 68, 68, 0.15); color: #fca5a5; }
+
+/* EFECTO SHINE DARK MODE */
+:host-context(.app-dark) .conteo-metrics ::ng-deep .metric-card::before { opacity: 0; }
+:host-context(.app-dark) .conteo-metrics ::ng-deep .metric-card:hover::before {
+  opacity: 1;
+  animation: metricShine 0.9s ease;
+}
