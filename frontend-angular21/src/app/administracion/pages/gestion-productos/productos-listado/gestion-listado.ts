@@ -20,6 +20,8 @@ import { ProductoAutocomplete, ProductoStock } from '../../../interfaces/product
 import { SedeService } from '../../../services/sede.service';
 import { CategoriaService } from '../../../services/categoria.service';
 import { SharedTableContainerComponent } from '../../../../shared/components/table.componente/shared-table-container.component';
+import { AuthService } from '../../../../auth/services/auth.service';
+import { UserRole } from '../../../../core/constants/roles.constants';
 
 @Component({
   selector: 'app-gestion-productos',
@@ -42,6 +44,17 @@ export class GestionListado implements OnInit {
   private categoriaService    = inject(CategoriaService);
   private confirmationService = inject(ConfirmationService);
   private messageService      = inject(MessageService);
+  private authService         = inject(AuthService);
+
+  // ── Auth ──────────────────────────────────────────────────────────
+  esAdmin    = signal<boolean>(false);
+  sedeNombre = signal<string>('Mi sede');
+
+  // ── Permisos ──────────────────────────────────────────────────────
+  puedeCrearProducto  = false; // CREAR_PRODUCTOS  → botón "Agregar Producto"
+  puedeEditarProducto = false; // EDITAR_PRODUCTOS → botón lápiz
+  puedeVerDetalle     = false; // VER_PRODUCTOS    → botón ojo
+  // eliminar → solo esAdmin
 
   productos    = signal<ProductoStock[]>([]);
   loading      = signal<boolean>(false);
@@ -76,10 +89,16 @@ export class GestionListado implements OnInit {
   );
 
   constructor() {
+    this.esAdmin.set(this.authService.getRoleId() === UserRole.ADMIN);
     this.obtenerSedeDeUsuario();
   }
 
   ngOnInit() {
+    // ── Resolver permisos ─────────────────────────────────────────
+    this.puedeCrearProducto  = this.authService.hasPermiso('CREAR_PRODUCTOS');
+    this.puedeEditarProducto = this.authService.hasPermiso('EDITAR_PRODUCTOS');
+    this.puedeVerDetalle     = this.authService.hasPermiso('VER_PRODUCTOS');
+
     this.sedeService.loadSedes().subscribe({
       error: (err) => console.error('Error cargando sedes', err),
     });
@@ -101,14 +120,14 @@ export class GestionListado implements OnInit {
       const userString = localStorage.getItem('user');
       if (userString) {
         const user = JSON.parse(userString);
-        if (user.idSede) this.idSedeActual.set(user.idSede);
+        if (user.idSede)     this.idSedeActual.set(user.idSede);
+        if (user.sedeNombre) this.sedeNombre.set(user.sedeNombre);
       }
     } catch (e) {
       console.error('Error parseando usuario', e);
     }
   }
 
-  /** Resuelve el id_sede a partir del nombre de sede que viene en cada fila */
   private resolverIdSedePorNombre(sedeNombre: string): number | null {
     const match = this.sedesOptions().find(s => s.label === sedeNombre);
     return match?.value ?? this.idSedeActual();
@@ -139,6 +158,7 @@ export class GestionListado implements OnInit {
   }
 
   onSedeChange(nuevaSedeId: number | null) {
+    if (!this.esAdmin()) return;
     this.idSedeActual.set(nuevaSedeId);
     this.currentPage.set(1);
     if (nuevaSedeId) {
@@ -211,15 +231,13 @@ export class GestionListado implements OnInit {
     this.cargarProductos();
   }
 
-  irCrear() { this.router.navigate(['/admin/gestion-productos/crear-producto']); }
-
-  irEditar(id: number) {
+  irCrear()              { this.router.navigate(['/admin/gestion-productos/crear-producto']); }
+  irEditar(id: number)   {
     this.router.navigate(['/admin/gestion-productos/editar-producto', id], {
       queryParams: { idSede: this.idSedeActual() },
     });
   }
 
-  /** Navega al detalle pasando el id_sede resuelto desde el nombre de sede del producto */
   irDetalle(idProducto: number, sedeNombre: string) {
     const idSede = this.resolverIdSedePorNombre(sedeNombre);
     this.router.navigate(
@@ -230,9 +248,9 @@ export class GestionListado implements OnInit {
 
   confirmarEliminar(id: number) {
     this.confirmationService.confirm({
-      message:    '¿Estás seguro de que deseas eliminar este producto?',
-      header:     'Confirmar Eliminación',
-      icon:       'pi pi-exclamation-triangle',
+      message:     '¿Estás seguro de que deseas eliminar este producto?',
+      header:      'Confirmar Eliminación',
+      icon:        'pi pi-exclamation-triangle',
       acceptLabel: 'Sí, eliminar',
       rejectLabel: 'No, cancelar',
       accept: () => this.eliminarProducto(id),

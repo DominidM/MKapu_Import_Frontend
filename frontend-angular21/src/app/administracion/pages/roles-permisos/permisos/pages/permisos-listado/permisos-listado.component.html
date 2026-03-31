@@ -16,11 +16,6 @@
           severity="secondary" [outlined]="true" styleClass="sedes-pill"
           [routerLink]="['/admin/roles-permisos']">
         </p-button>
-        <p-button
-          label="Agregar Permiso" icon="pi pi-plus"
-          styleClass="sedes-pill"
-          [routerLink]="['/admin/roles-permisos/agregar-permiso']">
-        </p-button>
       </div>
     </div>
   </p-card>
@@ -73,21 +68,26 @@
     <p-message *ngIf="!loading() && error() as e" severity="error" [text]="e"></p-message>
   </div>
 
-  <!-- TABLA -->
+  <!-- TABLA CON SHARED CONTAINER -->
   <app-shared-table-container
     titulo="Listado de Permisos"
     iconoTitulo="pi pi-lock"
     mensajeCarga="Cargando permisos..."
     [loading]="loading()"
+    [paginaActual]="paginaActual()"
+    [totalPaginas]="totalPaginas()"
+    [totalRegistros]="filteredPermisos().length"
+    [limitePorPagina]="limitePagina()"
     [mostrarExportar]="false"
-  >
+    (pageChange)="onPageChange($event)"
+    (limitChange)="onLimitChange($event)">
 
     <!-- Tag contador en slot de acciones -->
     <div slot="acciones">
       <p-tag
         [value]="filteredPermisos().length + ' permisos'"
-        [severity]="viewMode() === 'activos'   ? 'success'
-                  : viewMode() === 'inactivos'  ? 'danger' : 'info'">
+        [severity]="viewMode() === 'activos' ? 'success'
+                  : viewMode() === 'inactivos' ? 'danger' : 'info'">
       </p-tag>
     </div>
 
@@ -102,14 +102,12 @@
       </p-button>
     </div>
 
-    <!-- Tabla con paginador nativo -->
+    <!-- Tabla sin paginador (el paginador está en SharedTableContainer) -->
     <p-table
       *ngIf="!loading() && filteredPermisos().length > 0"
-      [value]="filteredPermisos()"
+      [value]="permisosPaginados()"
       styleClass="p-datatable-striped"
-      [paginator]="true"
-      [rows]="5"
-      [rowsPerPageOptions]="[5, 10, 20, 50]"
+      [paginator]="false"
       [tableStyle]="{ 'min-width': '100%' }">
 
       <ng-template pTemplate="header">
@@ -136,30 +134,20 @@
           <td class="text-center">
             <div class="acciones-tabla">
               <p-button
-                icon="pi pi-eye"
-                [rounded]="true" [text]="true" severity="secondary"
+                icon="pi pi-eye" [rounded]="true" [text]="true" severity="secondary"
                 pTooltip="Ver detalle" tooltipPosition="top"
                 (onClick)="verDetalle(perm)">
               </p-button>
               <p-button
-                icon="pi pi-pencil"
-                [rounded]="true" [text]="true" severity="secondary"
-                pTooltip="Editar permiso" tooltipPosition="top"
+                icon="pi pi-pencil" [rounded]="true" [text]="true" severity="secondary"
+                pTooltip="Editar" tooltipPosition="top"
                 [routerLink]="['/admin/roles-permisos/editar-permiso', perm.id_permiso]">
               </p-button>
               <p-button
-                [icon]="perm.activo ? 'pi pi-times' : 'pi pi-check'"
-                [rounded]="true" [text]="true"
+                [icon]="perm.activo ? 'pi pi-times' : 'pi pi-check'" [rounded]="true" [text]="true" 
                 [severity]="perm.activo ? 'danger' : 'success'"
-                [pTooltip]="perm.activo ? 'Desactivar' : 'Activar'"
-                tooltipPosition="top"
+                [pTooltip]="perm.activo ? 'Desactivar' : 'Activar'" tooltipPosition="top"
                 (onClick)="confirmToggleStatus(perm)">
-              </p-button>
-              <p-button
-                icon="pi pi-trash"
-                [rounded]="true" [text]="true" severity="danger"
-                pTooltip="Eliminar" tooltipPosition="top"
-                (onClick)="confirmDelete(perm)">
               </p-button>
             </div>
           </td>

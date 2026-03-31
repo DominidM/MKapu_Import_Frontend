@@ -191,6 +191,8 @@ export class CommissionService {
     return this.loadReport(from, to, role);
   }
 
+  // ── Liquidar comisión ──────────────────────────────────────────────────────
+
   atender(id: number, role = 'Administrador'): Observable<CommissionReport> {
     return this.http
       .patch<any>(`${this.api}/sales/commissions/${id}/atender`, {}, {
@@ -203,6 +205,25 @@ export class CommissionService {
         )),
         catchError(err => {
           this._error.set('Error al atender la comisión');
+          return throwError(() => err);
+        }),
+      );
+  }
+
+  // ── Anular comisión ────────────────────────────────────────────────────────
+
+  anular(id: number, role = 'Administrador'): Observable<CommissionReport> {
+    return this.http
+      .patch<any>(`${this.api}/sales/commissions/${id}/anular`, {}, {
+        headers: this.headers(role),
+      })
+      .pipe(
+        map(res => res?.props ?? res),
+        tap(updated => this._report.update(list =>
+          list.map(c => c.id_comision === id ? { ...c, ...updated } : c),
+        )),
+        catchError(err => {
+          this._error.set('Error al anular la comisión');
           return throwError(() => err);
         }),
       );

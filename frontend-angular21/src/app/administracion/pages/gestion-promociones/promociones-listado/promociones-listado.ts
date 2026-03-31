@@ -18,8 +18,8 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { SharedTableContainerComponent } from '../../../../shared/components/table.componente/shared-table-container.component';
 
 import { PromotionsService, Promotion } from '../../../services/promotions.service';
-import { LoadingOverlayComponent } from '../../../../shared/components/loading-overlay/loading-overlay.component';
-import { PaginadorComponent } from '../../../../shared/components/paginador/paginador.components';
+import { AuthService } from '../../../../auth/services/auth.service';
+import { UserRole } from '../../../../core/constants/roles.constants';
 
 interface Filtros {
   busqueda: string;
@@ -50,13 +50,21 @@ interface Filtros {
   providers: [ConfirmationService, MessageService],
 })
 export class PromocionesListado implements OnInit, OnDestroy {
-  private readonly promotionsService = inject(PromotionsService);
+  private readonly promotionsService   = inject(PromotionsService);
   private readonly confirmationService = inject(ConfirmationService);
-  private readonly messageService = inject(MessageService);
-  private readonly router = inject(Router);
+  private readonly messageService      = inject(MessageService);
+  private readonly router              = inject(Router);
+  private readonly authService         = inject(AuthService);
 
   private destroy$ = new Subject<void>();
-  private search$ = new Subject<string>();
+  private search$  = new Subject<string>();
+
+  // ── Permisos ──────────────────────────────────────────────────────
+  esAdmin             = false;
+  puedeCrearPromocion = false; // CREAR_PROMOCION  → botón "Nueva Promoción"
+  puedeEditarPromocion = false; // EDITAR_PROMOCION → botón lápiz
+  puedeVerDetalle     = false; // VER_PROMOCION    → botón ojo
+  // toggleEstado / eliminar → solo esAdmin
 
   filtros = signal<Filtros>({
     busqueda: '',
@@ -67,101 +75,83 @@ export class PromocionesListado implements OnInit, OnDestroy {
 
   tiposPromocion = [
     { label: 'Porcentaje', value: 'PORCENTAJE' },
-    { label: 'Monto fijo', value: 'MONTO' },
+    { label: 'Monto fijo', value: 'MONTO'      },
   ];
 
   estadosPromocion = [
-    { label: 'Activa', value: 'Activa' },
+    { label: 'Activa',   value: 'Activa'   },
     { label: 'Inactiva', value: 'Inactiva' },
   ];
 
   rangosDescuento = [
-    { label: 'Hasta 10%', value: '0-10' },
-    { label: 'De 10% a 25%', value: '10-25' },
-    { label: 'De 25% a 50%', value: '25-50' },
-    { label: 'Más de 50%', value: '50-100' },
+    { label: 'Hasta 10%',      value: '0-10'    },
+    { label: 'De 10% a 25%',   value: '10-25'   },
+    { label: 'De 25% a 50%',   value: '25-50'   },
+    { label: 'Más de 50%',     value: '50-100'  },
   ];
 
   itemsPorPagina = signal(5);
-  paginaActual = signal(1);
+  paginaActual   = signal(1);
 
   readonly promociones = this.promotionsService.promociones;
-  readonly loading = this.promotionsService.loading;
+  readonly loading     = this.promotionsService.loading;
 
   readonly filteredPromociones = computed(() => {
-    const filtros = this.filtros();
-    let promociones = this.promociones();
+    const filtros    = this.filtros();
+    let promociones  = this.promociones();
 
     if (filtros.busqueda) {
       const termino = filtros.busqueda.trim().toLowerCase();
-      promociones = promociones.filter((promocion) => {
-        const codigo = `cod${promocion.idPromocion}`.toLowerCase();
-        const id = String(promocion.idPromocion);
-
+      promociones = promociones.filter((p) => {
+        const codigo = `cod${p.idPromocion}`.toLowerCase();
         return (
           codigo.includes(termino) ||
-          id.includes(termino) ||
-          promocion.concepto.toLowerCase().includes(termino) ||
-          promocion.tipo.toLowerCase().includes(termino) ||
-          String(promocion.valor).includes(termino)
+          String(p.idPromocion).includes(termino) ||
+          p.concepto.toLowerCase().includes(termino) ||
+          p.tipo.toLowerCase().includes(termino) ||
+          String(p.valor).includes(termino)
         );
       });
     }
 
-    if (filtros.tipo) {
-      promociones = promociones.filter((promocion) => promocion.tipo === filtros.tipo);
-    }
-
-    if (filtros.estado) {
-      promociones = promociones.filter(
-        (promocion) => this.obtenerEstado(promocion) === filtros.estado,
-      );
-    }
+    if (filtros.tipo)   promociones = promociones.filter(p => p.tipo === filtros.tipo);
+    if (filtros.estado) promociones = promociones.filter(p => this.obtenerEstado(p) === filtros.estado);
 
     if (filtros.rangoDescuento) {
       const [min, max] = filtros.rangoDescuento.split('-').map(Number);
-      promociones = promociones.filter(
-        (promocion) => promocion.valor >= min && promocion.valor <= max,
-      );
+      promociones = promociones.filter(p => p.valor >= min && p.valor <= max);
     }
 
     return [...promociones].sort((a, b) => {
-      if (a.activo === b.activo) {
-        return 0;
-      }
-
+      if (a.activo === b.activo) return 0;
       return a.activo ? -1 : 1;
     });
   });
 
   readonly promocionesPaginadas = computed(() => {
-    const promociones = this.filteredPromociones();
     const start = (this.paginaActual() - 1) * this.itemsPorPagina();
-    const end = start + this.itemsPorPagina();
-
-    return promociones.slice(start, end);
+    return this.filteredPromociones().slice(start, start + this.itemsPorPagina());
   });
 
   readonly totalPages = computed(() =>
-    Math.ceil(this.filteredPromociones().length / this.itemsPorPagina()),
+    Math.ceil(this.filteredPromociones().length / this.itemsPorPagina())
   );
 
-  readonly kpiActivas = computed(() => this.promociones().filter((p) => p.activo).length);
-  readonly kpiTotal = computed(() => this.promociones().length);
-  readonly kpiInactivas = computed(() =>
-    this.promociones().filter((p) => !p.activo).length,
-  );
-  readonly kpiConReglas = computed(() =>
-    this.promociones().filter((p) => p.reglas.length > 0).length,
-  );
+  readonly kpiActivas   = computed(() => this.promociones().filter(p => p.activo).length);
+  readonly kpiTotal     = computed(() => this.promociones().length);
+  readonly kpiInactivas = computed(() => this.promociones().filter(p => !p.activo).length);
+  readonly kpiConReglas = computed(() => this.promociones().filter(p => p.reglas.length > 0).length);
 
   ngOnInit(): void {
+    // ── Resolver permisos ─────────────────────────────────────────
+    this.esAdmin              = this.authService.getRoleId() === UserRole.ADMIN;
+    this.puedeCrearPromocion  = this.authService.hasPermiso('CREAR_PROMOCION');
+    this.puedeEditarPromocion = this.authService.hasPermiso('EDITAR_PROMOCION');
+    this.puedeVerDetalle      = this.authService.hasPermiso('VER_PROMOCION');
+
     this.search$
       .pipe(debounceTime(250), distinctUntilChanged(), takeUntil(this.destroy$))
-      .subscribe(() => {
-        this.paginaActual.set(1);
-        this.cargarPromociones();
-      });
+      .subscribe(() => { this.paginaActual.set(1); this.cargarPromociones(); });
 
     this.cargarPromociones();
   }
@@ -179,82 +169,42 @@ export class PromocionesListado implements OnInit, OnDestroy {
   }
 
   setBusqueda(valor: string): void {
-    this.filtros.update((filtros) => ({ ...filtros, busqueda: valor }));
+    this.filtros.update(f => ({ ...f, busqueda: valor }));
     this.search$.next(valor.trim());
   }
 
-  setTipo(valor: string): void {
-    this.filtros.update((filtros) => ({ ...filtros, tipo: valor ?? '' }));
-    this.paginaActual.set(1);
-  }
-
-  setEstado(valor: string): void {
-    this.filtros.update((filtros) => ({ ...filtros, estado: valor ?? '' }));
-    this.paginaActual.set(1);
-  }
-
-  setRangoDescuento(valor: string): void {
-    this.filtros.update((filtros) => ({ ...filtros, rangoDescuento: valor ?? '' }));
-    this.paginaActual.set(1);
-  }
+  setTipo(valor: string): void           { this.filtros.update(f => ({ ...f, tipo: valor ?? '' }));           this.paginaActual.set(1); }
+  setEstado(valor: string): void         { this.filtros.update(f => ({ ...f, estado: valor ?? '' }));         this.paginaActual.set(1); }
+  setRangoDescuento(valor: string): void { this.filtros.update(f => ({ ...f, rangoDescuento: valor ?? '' })); this.paginaActual.set(1); }
 
   limpiarFiltros(): void {
-    this.filtros.set({
-      busqueda: '',
-      tipo: '',
-      estado: '',
-      rangoDescuento: '',
-    });
+    this.filtros.set({ busqueda: '', tipo: '', estado: '', rangoDescuento: '' });
     this.paginaActual.set(1);
     this.cargarPromociones();
-
-    this.messageService.add({
-      severity: 'info',
-      summary: 'Filtros limpiados',
-      detail: 'Se han limpiado todos los filtros',
-    });
+    this.messageService.add({ severity: 'info', summary: 'Filtros limpiados', detail: 'Se han limpiado todos los filtros' });
   }
 
-  onPageChange(page: number): void {
-    this.paginaActual.set(page);
-  }
+  onPageChange(page: number): void   { this.paginaActual.set(page); }
+  onLimitChange(limit: number): void { this.itemsPorPagina.set(limit); this.paginaActual.set(1); }
 
-  onLimitChange(limit: number): void {
-    this.itemsPorPagina.set(limit);
-    this.paginaActual.set(1);
-  }
-
-  irANueva(): void {
-    this.router.navigate(['/admin/promociones/crear']);
-  }
-
-  verPromocion(id: number): void {
-    this.router.navigate(['/admin/promociones/ver-detalle', id]);
-  }
-
-  editarPromocion(id: number): void {
-    this.router.navigate(['/admin/promociones/editar', id]);
-  }
+  irANueva():              void { this.router.navigate(['/admin/promociones/crear']); }
+  verPromocion(id: number): void { this.router.navigate(['/admin/promociones/ver-detalle', id]); }
+  editarPromocion(id: number): void { this.router.navigate(['/admin/promociones/editar', id]); }
 
   toggleEstado(promo: Promotion): void {
     const accion = promo.activo ? 'desactivar' : 'activar';
-
     this.confirmationService.confirm({
       message: `¿Deseas ${accion} la promoción "${promo.concepto}"?`,
-      header: 'Confirmar cambio de estado',
-      icon: 'pi pi-exclamation-triangle',
+      header:  'Confirmar cambio de estado',
+      icon:    'pi pi-exclamation-triangle',
       accept: () => {
-        this.promotionsService
-          .updatePromotionStatus(promo.idPromocion, !promo.activo)
-          .subscribe(() => {
-            this.messageService.add({
-              severity: 'success',
-              summary: 'Éxito',
-              detail: `Promoción ${promo.activo ? 'desactivada' : 'activada'} correctamente`,
-            });
-
-            this.cargarPromociones();
+        this.promotionsService.updatePromotionStatus(promo.idPromocion, !promo.activo).subscribe(() => {
+          this.messageService.add({
+            severity: 'success', summary: 'Éxito',
+            detail: `Promoción ${promo.activo ? 'desactivada' : 'activada'} correctamente`,
           });
+          this.cargarPromociones();
+        });
       },
     });
   }
@@ -262,34 +212,21 @@ export class PromocionesListado implements OnInit, OnDestroy {
   eliminarPromocion(id: number, concepto: string): void {
     this.confirmationService.confirm({
       message: `¿Deseas eliminar permanentemente la promoción "${concepto}"?`,
-      header: 'Eliminar permanentemente',
-      icon: 'pi pi-exclamation-triangle',
+      header:  'Eliminar permanentemente',
+      icon:    'pi pi-exclamation-triangle',
       acceptButtonStyleClass: 'p-button-danger',
       accept: () => {
         this.promotionsService.hardDeletePromotion(id).subscribe(() => {
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Éxito',
-            detail: 'Promoción eliminada permanentemente',
-          });
-
+          this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Promoción eliminada permanentemente' });
           this.cargarPromociones();
         });
       },
     });
   }
 
-  obtenerEstado(promo: Promotion): 'Activa' | 'Inactiva' {
-    return promo.activo ? 'Activa' : 'Inactiva';
-  }
-
-  severidadEstado(estado: string): 'success' | 'warn' {
-    return estado === 'Activa' ? 'success' : 'warn';
-  }
-
+  obtenerEstado(promo: Promotion): 'Activa' | 'Inactiva' { return promo.activo ? 'Activa' : 'Inactiva'; }
+  severidadEstado(estado: string): 'success' | 'warn'    { return estado === 'Activa' ? 'success' : 'warn'; }
   formatearDescuento(promo: Promotion): string {
-    return promo.tipo === 'PORCENTAJE'
-      ? `${promo.valor}%`
-      : `S/. ${promo.valor.toFixed(2)}`;
+    return promo.tipo === 'PORCENTAJE' ? `${promo.valor}%` : `S/. ${promo.valor.toFixed(2)}`;
   }
 }

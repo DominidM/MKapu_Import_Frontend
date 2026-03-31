@@ -11,7 +11,9 @@
         </div>
       </div>
       <div class="flex justify-items-end gap-2">
+        <!-- Botón "Agregar Categoría" — solo si tiene CREAR_CATEGORIAS -->
         <p-button
+          *ngIf="puedeCrearCategoria"
           label="Agregar Categoría"
           icon="pi pi-plus"
           styleClass="sedes-pill"
@@ -98,10 +100,8 @@
     [limitePorPagina]="limitePagina()"
     [mostrarExportar]="false"
     (pageChange)="onPageChange($event)"
-    (limitChange)="onLimitChange($event)"
-  >
+    (limitChange)="onLimitChange($event)">
 
-    <!-- Tag contador en slot de acciones -->
     <div slot="acciones">
       <p-tag
         [value]="filteredCategorias().length + ' categorías'"
@@ -151,19 +151,28 @@
           </td>
           <td class="text-center">
             <div class="acciones-tabla">
+
+              <!-- VER DETALLE — requiere VER_CATEGORIAS -->
               <p-button
+                *ngIf="puedeVerDetalle"
                 icon="pi pi-eye"
                 [rounded]="true" [text]="true" severity="secondary"
                 pTooltip="Ver detalle" tooltipPosition="top"
                 (onClick)="verDetalle(cat)">
               </p-button>
+
+              <!-- EDITAR — requiere EDITAR_CATEGORIAS -->
               <p-button
+                *ngIf="puedeEditarCategoria"
                 icon="pi pi-pencil"
                 [rounded]="true" [text]="true" severity="secondary"
                 pTooltip="Editar categoría" tooltipPosition="top"
                 [routerLink]="['/admin/categoria/editar-categoria', cat.id_categoria]">
               </p-button>
+
+              <!-- ACTIVAR / DESACTIVAR — solo ADMIN -->
               <p-button
+                *ngIf="esAdmin"
                 [icon]="cat.activo ? 'pi pi-times' : 'pi pi-check'"
                 [rounded]="true" [text]="true"
                 [severity]="cat.activo ? 'danger' : 'success'"
@@ -171,6 +180,7 @@
                 tooltipPosition="top"
                 (onClick)="confirmToggleStatus(cat)">
               </p-button>
+
             </div>
           </td>
         </tr>
@@ -253,7 +263,9 @@
             styleClass="adm-btn-close"
             (onClick)="dialogVisible = false">
           </p-button>
+          <!-- Editar dentro del modal — mismo permiso EDITAR_CATEGORIAS -->
           <p-button
+            *ngIf="puedeEditarCategoria"
             label="Editar" icon="pi pi-pencil"
             styleClass="adm-btn-edit"
             [routerLink]="['/admin/categoria/editar-categoria', c.id_categoria]"

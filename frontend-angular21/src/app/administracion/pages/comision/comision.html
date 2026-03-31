@@ -19,7 +19,9 @@
           styleClass="sedes-pill"
           [routerLink]="['/admin/comision/reportes']">
         </p-button>
+        <!-- Botón "Crear Regla" — solo si tiene CREAR_COMISIONES -->
         <p-button
+          *ngIf="puedeCrearComisiones"
           label="Crear Regla"
           icon="pi pi-plus"
           styleClass="sedes-pill"
@@ -232,13 +234,18 @@
 
           <td class="text-center">
             <div class="acciones-tabla">
-            <p-button
-              icon="pi pi-pencil"
-              [rounded]="true" [text]="true" severity="secondary"
-              pTooltip="Editar regla" tooltipPosition="top"
-              [routerLink]="['/admin/comision/regla', r.raw.id_regla]">   
-            </p-button>
+              <!-- EDITAR — requiere EDITAR_COMISIONES -->
               <p-button
+                *ngIf="puedeEditarComisiones"
+                icon="pi pi-pencil"
+                [rounded]="true" [text]="true" severity="secondary"
+                pTooltip="Editar regla" tooltipPosition="top"
+                [routerLink]="['/admin/comision/regla', r.raw.id_regla]">   
+              </p-button>
+
+              <!-- ACTIVAR / DESACTIVAR — solo ADMIN -->
+              <p-button
+                *ngIf="esAdmin"
                 [icon]="r.activo ? 'pi pi-eye-slash' : 'pi pi-eye'"
                 [rounded]="true" [text]="true"
                 [severity]="r.activo ? 'danger' : 'success'"

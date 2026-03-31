@@ -49,6 +49,23 @@ export class ComisionRegla implements OnInit {
     return this.esModoEdicion() ? 'EDITAR REGLA DE COMISIÓN' : 'NUEVA REGLA DE COMISIÓN';
   }
 
+  // ── Advertencias de fechas en tiempo real ─────────────────────────────────
+
+  /** fecha_fin ya pasó → la regla quedará inactiva al guardar */
+  get fechaFinVencida(): boolean {
+    const fin = this.form.get('fecha_fin')?.value;
+    if (!fin) return false;
+    return new Date(fin) < new Date();
+  }
+
+  /** fecha_inicio > fecha_fin → fechas invertidas */
+  get fechasInvertidas(): boolean {
+    const inicio = this.form.get('fecha_inicio')?.value;
+    const fin    = this.form.get('fecha_fin')?.value;
+    if (!inicio || !fin) return false;
+    return new Date(inicio) > new Date(fin);
+  }
+
   // ── Opciones ──────────────────────────────────────────────────────────────
   tiposObjetivo = [
     { label: 'Producto',  value: 'PRODUCTO'  },
@@ -210,64 +227,82 @@ export class ComisionRegla implements OnInit {
 
   // ── Guardar ───────────────────────────────────────────────────────────────
   guardar() {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      this.messageService.add({
-        severity: 'warn', summary: 'Formulario incompleto',
-        detail: 'Revisa los campos obligatorios.', life: 4000,
+      if (this.form.invalid) {
+        this.form.markAllAsTouched();
+        this.messageService.add({
+          severity: 'warn', summary: 'Formulario incompleto',
+          detail: 'Revisa los campos obligatorios.', life: 4000,
+        });
+        return;
+      }
+
+      if (this.fechasInvertidas) {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Fechas inválidas',
+          detail: 'La fecha de inicio no puede ser posterior a la fecha de fin.',
+          life: 5000,
+        });
+        return;
+      }
+
+      this.isSubmitting.set(true);
+      const raw = this.form.getRawValue();
+
+      const fechaFin = raw.fecha_fin ? new Date(raw.fecha_fin) : null;
+      const yaVencida = fechaFin !== null && fechaFin < new Date();
+
+      const dto = {
+        nombre:           raw.nombre.trim(),
+        descripcion:      raw.descripcion?.trim() || undefined,
+        tipo_objetivo:    raw.tipo_objetivo,
+        id_objetivo:      raw.id_objetivo,
+        meta_unidades:    raw.meta_unidades,
+        tipo_recompensa:  raw.tipo_recompensa,
+        valor_recompensa: raw.valor_recompensa,
+        fecha_inicio:     raw.fecha_inicio instanceof Date
+                            ? raw.fecha_inicio.toISOString().split('T')[0]
+                            : raw.fecha_inicio,
+        fecha_fin:        fechaFin
+                            ? (raw.fecha_fin instanceof Date
+                                ? raw.fecha_fin.toISOString().split('T')[0]
+                                : raw.fecha_fin)
+                            : undefined,
+      };
+
+      const req$ = this.esModoEdicion()
+        ? this.commissionService.updateRule(this.idRegla()!, dto)
+        : raw.tipo_objetivo === 'PRODUCTO'
+          ? this.commissionService.createProductRule(dto)
+          : this.commissionService.createCategoryRule(dto);
+
+      req$.subscribe({
+        next: () => {
+          if (yaVencida && this.idRegla()) {
+            this.commissionService.toggleRuleStatus(this.idRegla()!, false).subscribe();
+          }
+
+          this.isSubmitting.set(false);
+          this.messageService.add({
+            severity: 'success',
+            summary:  this.esModoEdicion() ? 'Regla actualizada' : 'Regla creada',
+            detail:   yaVencida
+              ? 'Regla guardada y desactivada por fecha vencida.'
+              : this.esModoEdicion()
+                ? 'Los cambios fueron guardados correctamente.'
+                : 'La regla de comisión fue registrada exitosamente.',
+            life: 2500,
+          });
+          setTimeout(() => this.router.navigate(['/admin/comision']), 2000);
+        },
+        error: (err) => {
+          this.isSubmitting.set(false);
+          this.messageService.add({
+            severity: 'error', summary: 'Error al guardar',
+            detail: err?.error?.message ?? 'No se pudo guardar la regla.', life: 5000,
+          });
+        },
       });
-      return;
-    }
-
-    this.isSubmitting.set(true);
-    const raw = this.form.getRawValue();
-
-    const dto = {
-      nombre:           raw.nombre.trim(),
-      descripcion:      raw.descripcion?.trim() || undefined,
-      tipo_objetivo:    raw.tipo_objetivo,
-      id_objetivo:      raw.id_objetivo,
-      meta_unidades:    raw.meta_unidades,
-      tipo_recompensa:  raw.tipo_recompensa,
-      valor_recompensa: raw.valor_recompensa,
-      fecha_inicio:     raw.fecha_inicio instanceof Date
-                          ? raw.fecha_inicio.toISOString().split('T')[0]
-                          : raw.fecha_inicio,
-      fecha_fin:        raw.fecha_fin
-                          ? (raw.fecha_fin instanceof Date
-                              ? raw.fecha_fin.toISOString().split('T')[0]
-                              : raw.fecha_fin)
-                          : undefined,
-    };
-
-    // ── Edición → PUT, Creación → POST ────────────────────────────────────
-    const req$ = this.esModoEdicion()
-      ? this.commissionService.updateRule(this.idRegla()!, dto)
-      : raw.tipo_objetivo === 'PRODUCTO'
-        ? this.commissionService.createProductRule(dto)
-        : this.commissionService.createCategoryRule(dto);
-
-    req$.subscribe({
-      next: () => {
-        this.isSubmitting.set(false);
-        this.messageService.add({
-          severity: 'success',
-          summary:  this.esModoEdicion() ? 'Regla actualizada' : 'Regla creada',
-          detail:   this.esModoEdicion()
-            ? 'Los cambios fueron guardados correctamente.'
-            : 'La regla de comisión fue registrada exitosamente.',
-          life: 2500,
-        });
-        setTimeout(() => this.router.navigate(['/admin/comision']), 2000);
-      },
-      error: (err) => {
-        this.isSubmitting.set(false);
-        this.messageService.add({
-          severity: 'error', summary: 'Error al guardar',
-          detail: err?.error?.message ?? 'No se pudo guardar la regla.', life: 5000,
-        });
-      },
-    });
   }
 
   cancelar() {

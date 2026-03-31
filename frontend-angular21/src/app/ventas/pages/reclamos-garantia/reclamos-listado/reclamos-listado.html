@@ -11,7 +11,9 @@
         </div>
       </div>
       <div class="flex gap-2">
+        <!-- Botón "Nuevo Reclamo" — solo si tiene CREAR_RECLAMOS -->
         <p-button
+          *ngIf="puedeCrearReclamos"
           label="Nuevo Reclamo"
           icon="pi pi-plus"
           (onClick)="nuevoReclamo()"
@@ -65,7 +67,6 @@
     <div class="seccion-filtros">
       <h3><i class="pi pi-filter"></i> Filtros de búsqueda</h3>
 
-      <!-- Línea 1: buscador + fechas -->
       <div class="filtros-linea-1">
         <div class="filtro-item filtro-busqueda-65">
           <label>Buscar por ID Comprobante o Descripción</label>
@@ -100,10 +101,8 @@
         </div>
       </div>
 
-      <!-- Línea 2: sede + motivo + estado + limpiar -->
       <div class="filtros-linea-2">
 
-        <!-- Sede (solo admin) -->
         <div class="filtro-item filtro-compacto" *ngIf="esAdmin">
           <label>Sede</label>
           <p-select
@@ -117,7 +116,6 @@
           </p-select>
         </div>
 
-        <!-- Sede fija (no admin) -->
         <div class="filtro-item filtro-compacto" *ngIf="!esAdmin">
           <label>Sede</label>
           <div class="sede-fija-badge">
@@ -126,7 +124,6 @@
           </div>
         </div>
 
-        <!-- Motivo -->
         <div class="filtro-item filtro-compacto">
           <label>Motivo</label>
           <p-select
@@ -140,7 +137,6 @@
           </p-select>
         </div>
 
-        <!-- Estado -->
         <div class="filtro-item filtro-compacto">
           <label>Estado</label>
           <p-select
@@ -182,14 +178,13 @@
     [limitePorPagina]="limitePagina()"
     [mostrarExportar]="false"
     (pageChange)="onPageChange($event)"
-    (limitChange)="onLimitChange($event)"
-  >
+    (limitChange)="onLimitChange($event)">
 
     <div slot="acciones">
       <p-tag
         [value]="totalFiltrados + ' reclamos'"
-        [severity]="filtroEstado === 'RESUELTO' ? 'success'
-                  : filtroEstado === 'RECHAZADO' ? 'danger'
+        [severity]="filtroEstado === 'RESUELTO'   ? 'success'
+                  : filtroEstado === 'RECHAZADO'  ? 'danger'
                   : filtroEstado === 'EN_PROCESO' ? 'warn' : 'info'">
       </p-tag>
     </div>
@@ -202,7 +197,7 @@
 
       <ng-template pTemplate="header">
         <tr>
-          <th style="width:8%"># Reclamo</th>
+          <th style="width:8%">Reclamo</th>
           <th style="width:10%">Comprobante</th>
           <th style="width:13%">Motivo</th>
           <th style="width:10%">Estado</th>
@@ -214,10 +209,8 @@
 
       <ng-template pTemplate="body" let-reclamo>
         <tr>
-          <td class="font-semibold">#{{ reclamo.id }}</td>
-          <td>
-            <span class="codigo-comprobante">Comp. #{{ reclamo.saleReceiptId }}</span>
-          </td>
+          <td class="font-semibold">R-{{ reclamo.id }}</td>
+          <td><span class="codigo-comprobante">Comp. #{{ reclamo.saleReceiptId }}</span></td>
           <td>{{ reclamo.reason }}</td>
           <td>
             <p-tag
@@ -226,40 +219,34 @@
             </p-tag>
           </td>
           <td>{{ formatDate(reclamo.registerDate) }}</td>
-          <td>
-            <span class="dias-transcurridos">{{ diasDesde(reclamo.registerDate) }} días</span>
-          </td>
-            
+          <td><span class="dias-transcurridos">{{ diasDesde(reclamo.registerDate) }} días</span></td>
           <td class="text-center">
             <div class="acciones-tabla">
               <p-button
                 icon="pi pi-eye"
                 [rounded]="true" [text]="true" severity="secondary"
-                pTooltip="Ver detalle" tooltipPosition="top"
+                pTooltip="Ver reclamo" tooltipPosition="top"
                 (onClick)="verDetalle(reclamo.id)">
               </p-button>
               <p-button
-                icon="pi pi-file-edit"
+                icon="pi pi-file-pdf"
+                [rounded]="true" [text]="true" severity="secondary"
+                pTooltip="Documentos" tooltipPosition="top"
+                (onClick)="abrirAcciones(reclamo)">
+              </p-button>
+              <!-- EDITAR — requiere EDITAR_RECLAMOS -->
+              <p-button
+                *ngIf="puedeEditarReclamos"
+                icon="pi pi-pencil"
                 [rounded]="true" [text]="true" severity="secondary"
                 pTooltip="Editar reclamo" tooltipPosition="top"
                 (onClick)="editarReclamo(reclamo.id)">
               </p-button>
               <p-button
-                icon="pi pi-print"
+                icon="pi pi-inbox"
                 [rounded]="true" [text]="true" severity="secondary"
-                pTooltip="Imprimir reclamo" tooltipPosition="top"
-                (onClick)="imprimirReclamo(reclamo)">
-              </p-button>
-              <p-button
-                icon="pi pi-send"
-                [rounded]="true" [text]="true" severity="secondary"
-                pTooltip="Enviar a correo" tooltipPosition="top"
-                (onClick)="enviarCorreo(reclamo)">
-              </p-button>
-              <p-button
-                icon="pi pi-whatsapp"
-                [rounded]="true" [text]="true" severity="success"
-                pTooltip="Enviar a Wsp" tooltipPosition="top">
+                pTooltip="Ver comprobante" tooltipPosition="top"
+                (onClick)="verDetalleComprobante(reclamo)">
               </p-button>
             </div>
           </td>
@@ -280,6 +267,226 @@
     </p-table>
 
   </app-shared-table-container>
-
-  <p-toast />
 </div>
+
+<!-- DIALOGS Y TOASTS -->
+<p-toast />
+
+<app-acciones-comprobante-dialog
+  [(visible)]="accionesVisible"
+  [config]="accionesConfig"
+  [accionCargando]="accionCargando"
+  (accion)="onAccion($event)"
+  (cerrar)="accionesVisible = false">
+</app-acciones-comprobante-dialog>
+
+<!-- DIALOG WHATSAPP -->
+<p-dialog
+  [(visible)]="mostrarDialogWsp"
+  [modal]="true"
+  [closable]="!enviandoWsp"
+  [style]="{ width: '420px' }"
+  [draggable]="false"
+  (onHide)="cerrarDialogWsp()"
+  header="Enviar Reclamo por WhatsApp">
+
+  <div class="flex flex-column align-items-center gap-4 py-3">
+
+    <!-- Iniciando sesión -->
+    <ng-container *ngIf="!wspReady && !wspQr">
+      <i class="pi pi-spin pi-spinner" style="font-size:2.5rem; color:var(--primary-color)"></i>
+      <p style="color:var(--text-color-secondary); font-size:0.9rem">Iniciando WhatsApp...</p>
+    </ng-container>
+
+    <!-- Mostrar QR -->
+    <ng-container *ngIf="!wspReady && wspQr">
+      <p style="color:var(--text-color-secondary); font-size:0.88rem; text-align:center; line-height:1.6">
+        Escanea este QR con WhatsApp en tu teléfono.<br>
+        <strong>Solo una vez</strong> — la sesión queda guardada.
+      </p>
+      <img [src]="wspQr" alt="QR WhatsApp"
+           style="width:200px; height:200px; border-radius:8px; border:2px solid var(--primary-color)" />
+      <div style="display:flex; align-items:center; gap:6px; color:var(--text-color-secondary); font-size:0.8rem">
+        <i class="pi pi-spin pi-spinner"></i>
+        Esperando que escanees...
+      </div>
+    </ng-container>
+
+    <!-- Conectado -->
+    <ng-container *ngIf="wspReady">
+      <i class="pi pi-check-circle" style="font-size:3rem; color:#25D366"></i>
+      <p style="text-align:center; color:var(--text-color-secondary); font-size:0.9rem; line-height:1.6">
+        WhatsApp conectado<br>
+        <ng-container *ngIf="reclamoWsp">
+          Se enviará el reclamo <strong>R-{{ reclamoWsp.id }}</strong>
+        </ng-container>
+      </p>
+    </ng-container>
+
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-content-end gap-2">
+      <p-button
+        label="Cancelar" icon="pi pi-times"
+        severity="secondary" [outlined]="true"
+        [disabled]="enviandoWsp"
+        (onClick)="cerrarDialogWsp()">
+      </p-button>
+      <p-button
+        [label]="enviandoWsp ? 'Enviando...' : 'Enviar por WhatsApp'"
+        [icon]="enviandoWsp ? 'pi pi-spin pi-spinner' : 'pi pi-send'"
+        severity="success"
+        [disabled]="!wspReady || enviandoWsp"
+        (onClick)="enviarPorWsp()">
+      </p-button>
+    </div>
+  </ng-template>
+</p-dialog>
+
+<!-- DIALOG DETALLE COMPROBANTE -->
+<p-dialog
+  [visible]="detalleComprobanteVisible()"
+  (visibleChange)="detalleComprobanteVisible.set($event)"
+  header="Detalle del Comprobante"
+  [style]="{ width: '900px', 'border-radius': '12px' }"
+  [maximizable]="true"
+  (onHide)="detalleComprobanteVisible.set(false)">
+
+  <app-loading-overlay
+    [visible]="detalleComprobanteLoading()"
+    mensaje="Cargando detalle del comprobante..."
+    modo="overlay">
+  </app-loading-overlay>
+
+  <div *ngIf="!detalleComprobanteLoading() && detalleComprobanteData() as detalle" class="detalle-comprobante-modal">
+
+    <div class="info-grid">
+      <div class="info-section">
+        <h4><i class="pi pi-file"></i> Comprobante</h4>
+        <div class="info-row">
+          <span class="label">Tipo:</span>
+          <p-tag [value]="getTipoComprobanteLabel(detalle)" severity="info"></p-tag>
+        </div>
+        <div class="info-row">
+          <span class="label">N° Comprobante:</span>
+          <strong>{{ detalle.numero_completo }}</strong>
+        </div>
+        <div class="info-row">
+          <span class="label">Fecha emisión:</span>
+          <span>{{ detalle.fec_emision | date:'dd/MM/yyyy HH:mm' }}</span>
+        </div>
+        <div class="info-row">
+          <span class="label">Estado:</span>
+          <p-tag
+            [value]="detalle.estado"
+            [severity]="detalle.estado === 'EMITIDO' ? 'success' : 'warn'">
+          </p-tag>
+        </div>
+      </div>
+
+      <div class="info-section">
+        <h4><i class="pi pi-user"></i> Cliente</h4>
+        <div class="info-row">
+          <span class="label">Nombre:</span>
+          <span>{{ detalle.cliente.nombre }}</span>
+        </div>
+        <div class="info-row">
+          <span class="label">{{ getTipoDocumentoLabel(detalle) }}:</span>
+          <span>{{ detalle.cliente.documento }}</span>
+        </div>
+        <div class="info-row" *ngIf="detalle.cliente.email">
+          <span class="label">Email:</span>
+          <span>{{ detalle.cliente.email }}</span>
+        </div>
+        <div class="info-row" *ngIf="detalle.cliente.telefono">
+          <span class="label">Teléfono:</span>
+          <span>{{ detalle.cliente.telefono }}</span>
+        </div>
+      </div>
+    </div>
+
+    <p-divider></p-divider>
+
+    <h4 style="margin-top:1rem; margin-bottom:0.75rem">
+      <i class="pi pi-shopping-cart"></i> Productos ({{ detalle.productos.length }} items)
+    </h4>
+
+    <div class="table-responsive">
+      <p-table
+        [value]="detalle.productos"
+        [paginator]="false"
+        [tableStyle]="{ 'min-width': '100%', 'font-size': '0.875rem' }"
+        styleClass="p-datatable-sm p-datatable-striped">
+        <ng-template pTemplate="header">
+          <tr>
+            <th style="width:12%">Código</th>
+            <th style="width:35%">Descripción</th>
+            <th style="width:10%; text-align:center">Cant.</th>
+            <th style="width:13%; text-align:right">P. Unit.</th>
+            <th style="width:15%; text-align:right">Descuento</th>
+            <th style="width:15%; text-align:right">Total</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-item>
+          <tr>
+            <td>{{ item.cod_prod }}</td>
+            <td>
+              <div>
+                <strong>{{ item.descripcion }}</strong>
+                <div *ngIf="item.remate" class="detalle-remate-badge">
+                  <i class="pi pi-tag"></i> Remate
+                </div>
+              </div>
+            </td>
+            <td style="text-align:center">{{ item.cantidad }}</td>
+            <td style="text-align:right">S/. {{ item.precio_unit | number:'1.2-2' }}</td>
+            <td style="text-align:right">
+              <span *ngIf="!item.descuento_nombre" class="text-muted">—</span>
+              <p-tag
+                *ngIf="item.descuento_nombre"
+                [value]="item.descuento_nombre + ' (' + item.descuento_porcentaje + '%)'"
+                severity="warn"
+                [rounded]="true">
+              </p-tag>
+            </td>
+            <td style="text-align:right"><strong>S/. {{ item.total | number:'1.2-2' }}</strong></td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+
+    <div class="totales-section">
+      <div class="total-row">
+        <span class="label">Subtotal:</span>
+        <span>S/. {{ detalle.subtotal | number:'1.2-2' }}</span>
+      </div>
+      <div class="total-row" *ngIf="detalle.promocion">
+        <span class="label"><i class="pi pi-tag"></i> Descuento ({{ detalle.promocion.nombre }}):</span>
+        <span class="descuento-valor">-S/. {{ detalle.promocion.monto_descuento | number:'1.2-2' }}</span>
+      </div>
+      <div class="total-row">
+        <span class="label">IGV (18%):</span>
+        <span>S/. {{ detalle.igv | number:'1.2-2' }}</span>
+      </div>
+      <div class="total-row total-final">
+        <span class="label">TOTAL A PAGAR:</span>
+        <span class="amount">S/. {{ detalle.total | number:'1.2-2' }}</span>
+      </div>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Cerrar" icon="pi pi-times"
+      severity="secondary"
+      (onClick)="detalleComprobanteVisible.set(false)">
+    </p-button>
+    <p-button
+      label="Ver detalle completo" icon="pi pi-arrow-right"
+      severity="primary"
+      [disabled]="!detalleComprobanteData()"
+      (onClick)="irADetalleVenta(detalleComprobanteId)">
+    </p-button>
+  </ng-template>
+</p-dialog>

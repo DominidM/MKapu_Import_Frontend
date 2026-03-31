@@ -10,14 +10,15 @@
           <h2 class="ventas-title">PROMOCIONES Y OFERTAS</h2>
         </div>
       </div>
+      <!-- Botón "Nueva Promoción" — solo si tiene CREAR_PROMOCION -->
       <p-button
+        *ngIf="puedeCrearPromocion"
         label="Nueva Promoción"
         icon="pi pi-plus"
         (click)="irANueva()"
         pTooltip="Crear nueva promoción"
         tooltipPosition="bottom"
-        styleClass="ventas-pill ventas-pill-warning"
-      />
+        styleClass="ventas-pill ventas-pill-warning" />
     </div>
   </p-card>
 </div>
@@ -73,8 +74,7 @@
             placeholder="Código, concepto, tipo o valor..."
             [value]="filtros().busqueda"
             (input)="setBusqueda($any($event.target).value)"
-            class="w-full"
-          />
+            class="w-full" />
         </div>
       </div>
 
@@ -89,8 +89,7 @@
             optionLabel="label"
             optionValue="value"
             [showClear]="true"
-            styleClass="w-full"
-          />
+            styleClass="w-full" />
         </div>
 
         <div class="filtro-item filtro-compacto">
@@ -103,8 +102,7 @@
             optionLabel="label"
             optionValue="value"
             [showClear]="true"
-            styleClass="w-full"
-          />
+            styleClass="w-full" />
         </div>
 
         <div class="filtro-item filtro-compacto">
@@ -117,8 +115,7 @@
             optionLabel="label"
             optionValue="value"
             [showClear]="true"
-            styleClass="w-full"
-          />
+            styleClass="w-full" />
         </div>
 
         <div class="filtro-item filtro-boton-limpiar">
@@ -128,8 +125,7 @@
             icon="pi pi-filter-slash"
             (onClick)="limpiarFiltros()"
             severity="danger"
-            styleClass="btn-limpiar-filtros"
-          />
+            styleClass="btn-limpiar-filtros" />
         </div>
       </div>
     </div>
@@ -147,25 +143,23 @@
     [totalPaginas]="totalPages()"
     [totalRegistros]="filteredPromociones().length"
     [limitePorPagina]="itemsPorPagina()"
-    labelExportar="Exportar Excel"
     [mostrarExportar]="false"
     (pageChange)="onPageChange($event)"
-    (limitChange)="onLimitChange($event)"
-  >
+    (limitChange)="onLimitChange($event)">
 
     <div slot="acciones" class="flex align-items-center gap-2">
       <p-tag
         [value]="filteredPromociones().length + ' promociones'"
-        [severity]="filtros().estado === 'Activa' ? 'success'
-                  : filtros().estado === 'Inactiva' ? 'warn' : 'info'">
+        [severity]="filtros().estado === 'Activa'   ? 'success'
+                  : filtros().estado === 'Inactiva'  ? 'warn' : 'info'">
       </p-tag>
     </div>
 
     <p-table
       [value]="promocionesPaginadas()"
       styleClass="p-datatable-striped"
-      [tableStyle]="{ 'min-width': '55rem' }"
-    >
+      [tableStyle]="{ 'min-width': '55rem' }">
+
       <ng-template pTemplate="header">
         <tr>
           <th>Código</th>
@@ -187,15 +181,11 @@
           <td>
             <p-tag
               [value]="promo.tipo"
-              [severity]="promo.tipo === 'PORCENTAJE' ? 'info' : 'warn'"
-            />
+              [severity]="promo.tipo === 'PORCENTAJE' ? 'info' : 'warn'" />
           </td>
 
           <td>
-            <span
-              class="descuento-badge"
-              [ngClass]="{ 'descuento-alto': promo.valor > 20 }"
-            >
+            <span class="descuento-badge" [ngClass]="{ 'descuento-alto': promo.valor > 20 }">
               {{ formatearDescuento(promo) }}
             </span>
           </td>
@@ -212,61 +202,53 @@
           <td>
             <p-tag
               [value]="obtenerEstado(promo)"
-              [severity]="severidadEstado(obtenerEstado(promo))"
-            />
+              [severity]="severidadEstado(obtenerEstado(promo))" />
           </td>
 
           <td class="text-center">
             <div class="acciones-tabla">
+
+              <!-- VER DETALLE — requiere VER_PROMOCION -->
               <p-button
+                *ngIf="puedeVerDetalle"
                 icon="pi pi-eye"
                 (onClick)="verPromocion(promo.idPromocion)"
-                [rounded]="true"
-                [text]="true"
-                severity="secondary"
-                pTooltip="Ver Detalles"
-                tooltipPosition="top"
-              />
+                [rounded]="true" [text]="true" severity="secondary"
+                pTooltip="Ver Detalles" tooltipPosition="top" />
+
+              <!-- EDITAR — requiere EDITAR_PROMOCION -->
               <p-button
+                *ngIf="puedeEditarPromocion"
                 icon="pi pi-pencil"
                 (onClick)="editarPromocion(promo.idPromocion)"
-                [rounded]="true"
-                [text]="true"
-                severity="secondary"
-                pTooltip="Editar"
-                tooltipPosition="top"
-              />
+                [rounded]="true" [text]="true" severity="secondary"
+                pTooltip="Editar" tooltipPosition="top" />
 
-              @if (promo.activo) {
-                <p-button
-                  icon="pi pi-times"
-                  (onClick)="toggleEstado(promo)"
-                  [rounded]="true"
-                  [text]="true"
-                  pTooltip="Desactivar"
-                  severity="danger"
-                  tooltipPosition="top"
-                />
-              } @else {
-                <p-button
-                  icon="pi pi-check"
-                  (onClick)="toggleEstado(promo)"
-                  [rounded]="true"
-                  [text]="true"
-                  severity="success"
-                  pTooltip="Activar"
-                  tooltipPosition="top"
-                />
-                <p-button
-                  icon="pi pi-trash"
-                  (onClick)="eliminarPromocion(promo.idPromocion, promo.concepto)"
-                  [rounded]="true"
-                  [text]="true"
-                  severity="danger"
-                  pTooltip="Eliminar"
-                  tooltipPosition="top"
-                />
+              <!-- ACTIVAR / DESACTIVAR / ELIMINAR — solo ADMIN -->
+              @if (esAdmin) {
+                @if (promo.activo) {
+                  <p-button
+                    icon="pi pi-times"
+                    (onClick)="toggleEstado(promo)"
+                    [rounded]="true" [text]="true"
+                    severity="danger"
+                    pTooltip="Desactivar" tooltipPosition="top" />
+                } @else {
+                  <p-button
+                    icon="pi pi-check"
+                    (onClick)="toggleEstado(promo)"
+                    [rounded]="true" [text]="true"
+                    severity="success"
+                    pTooltip="Activar" tooltipPosition="top" />
+                  <p-button
+                    icon="pi pi-trash"
+                    (onClick)="eliminarPromocion(promo.idPromocion, promo.concepto)"
+                    [rounded]="true" [text]="true"
+                    severity="danger"
+                    pTooltip="Eliminar" tooltipPosition="top" />
+                }
               }
+
             </div>
           </td>
         </tr>

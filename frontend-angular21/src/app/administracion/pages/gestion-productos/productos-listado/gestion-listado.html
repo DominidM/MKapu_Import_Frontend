@@ -11,7 +11,9 @@
         </div>
       </div>
       <div class="flex gap-2">
+        <!-- Botón "Agregar Producto" — solo si tiene CREAR_PRODUCTOS -->
         <p-button
+          *ngIf="puedeCrearProducto"
           label="Agregar Producto"
           icon="pi pi-plus"
           styleClass="productos-pill productos-pill-warning"
@@ -23,7 +25,6 @@
 </div>
 
 <div class="p-2">
-
   <!-- CONTADORES -->
   <div class="contadores-productos mb-4">
     <div class="contador-card">
@@ -97,26 +98,36 @@
 
       <div class="filtros-linea-2">
         <div class="filtro-item filtro-compacto">
-          <label>Familias</label>
-          <p-select
-            [options]="categorias()"
-            [ngModel]="categoriaSeleccionada()"
-            (ngModelChange)="onCategoriaChange($event)"
-            placeholder="Filtrar por categoría"
-            [showClear]="true"
-            styleClass="w-full">
-          </p-select>
-        </div>
-
-        <div class="filtro-item filtro-compacto">
           <label>Sede</label>
+
           <p-select
+            *ngIf="esAdmin()"
             [options]="sedesOptions()"
             [ngModel]="idSedeActual()"
             (ngModelChange)="onSedeChange($event)"
             optionLabel="label"
             optionValue="value"
             placeholder="Seleccione una sede"
+            [showClear]="true"
+            styleClass="w-full">
+          </p-select>
+
+          <div
+            *ngIf="!esAdmin()"
+            class="flex align-items-center gap-2 px-3 py-2 border-round"
+            style="background: var(--surface-100); border: 1px solid var(--surface-border); height: 42px;">
+            <i class="pi pi-map-marker" style="color: #ffa726"></i>
+            <span class="font-semibold">{{ sedeNombre() }}</span>
+          </div>
+        </div>
+
+        <div class="filtro-item filtro-compacto">
+          <label>Familias</label>
+          <p-select
+            [options]="categorias()"
+            [ngModel]="categoriaSeleccionada()"
+            (ngModelChange)="onCategoriaChange($event)"
+            placeholder="Filtrar por categoría"
             [showClear]="true"
             styleClass="w-full">
           </p-select>
@@ -151,10 +162,7 @@
     (limitChange)="onLimitChange($event)">
 
     <div slot="acciones">
-      <p-tag
-        [value]="totalRecords() + ' productos'"
-        severity="info">
-      </p-tag>
+      <p-tag [value]="totalRecords() + ' productos'" severity="info"></p-tag>
     </div>
 
     <p-table
@@ -165,12 +173,12 @@
 
       <ng-template pTemplate="header">
         <tr>
-          <th style="width:15%">CÓDIGO</th>
-          <th style="width:35%">PRODUCTO</th>
-          <th style="width:15%">FAMILIA</th>
-          <th style="width:12%">SEDE</th>
-          <th style="width:12%">STOCK</th>
-          <th style="width:11%" class="text-center">ACCIONES</th>
+          <th style="width: 15%">CÓDIGO</th>
+          <th style="width: 35%">PRODUCTO</th>
+          <th style="width: 15%">FAMILIA</th>
+          <th style="width: 12%">SEDE</th>
+          <th style="width: 12%">STOCK</th>
+          <th style="width: 11%" class="text-center">ACCIONES</th>
         </tr>
       </ng-template>
 
@@ -190,24 +198,34 @@
           </td>
           <td class="text-center">
             <div class="acciones-tabla">
+
+              <!-- VER DETALLE — requiere VER_PRODUCTOS -->
               <p-button
+                *ngIf="puedeVerDetalle"
                 icon="pi pi-eye"
                 [rounded]="true" [text]="true" severity="secondary"
                 pTooltip="Ver Detalles" tooltipPosition="top"
                 (onClick)="irDetalle(p.id_producto, p.sede)">
               </p-button>
+
+              <!-- EDITAR — requiere EDITAR_PRODUCTOS -->
               <p-button
+                *ngIf="puedeEditarProducto"
                 icon="pi pi-pencil"
                 [rounded]="true" [text]="true" severity="secondary"
                 pTooltip="Editar Producto" tooltipPosition="top"
                 (onClick)="irEditar(p.id_producto)">
               </p-button>
+
+              <!-- ELIMINAR — solo ADMIN -->
               <p-button
+                *ngIf="esAdmin()"
                 icon="pi pi-trash"
                 [rounded]="true" [text]="true" severity="danger"
                 pTooltip="Eliminar Producto" tooltipPosition="top"
                 (onClick)="confirmarEliminar(p.id_producto)">
               </p-button>
+
             </div>
           </td>
         </tr>
@@ -223,11 +241,8 @@
           </td>
         </tr>
       </ng-template>
-
     </p-table>
-
   </app-shared-table-container>
-
 </div>
 
 <p-toast></p-toast>

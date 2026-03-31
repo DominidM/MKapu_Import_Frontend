@@ -43,18 +43,19 @@
         }
       </div>
 
-      <!-- Solo visible para admin (tiene CREAR_SEDES) -->
-      @if (isAdmin) {
-        <p-button
-          icon="pi pi-file-edit"
-          class="mr-2"
-          text
-          severity="secondary"
-          pTooltip="Términos y Condiciones"
-          tooltipPosition="bottom"
-          [routerLink]="['/admin/terminos-condiciones']">
-        </p-button>
+      <!-- Términos y Condiciones — visible para todos -->
+      <p-button
+        icon="pi pi-file-edit"
+        class="mr-2"
+        text
+        severity="secondary"
+        pTooltip="Términos y Condiciones"
+        tooltipPosition="bottom"
+        [routerLink]="['/admin/terminos-condiciones']">
+      </p-button>
 
+      <!-- Personalización de Empresa — solo admin -->
+      @if (isAdmin) {
         <p-button
           icon="pi pi-building"
           class="mr-2"

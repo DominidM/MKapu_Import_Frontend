@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, signal, computed, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, computed, inject, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -22,6 +22,8 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 // Services & Utils
 import { QuoteService } from '../../../services/quote.service';
 import { SedeService } from '../../../services/sede.service';
+import { AuthService } from '../../../../auth/services/auth.service';
+import { UserRole } from '../../../../core/constants/roles.constants';
 import { QuoteListItem } from '../../../interfaces/quote.interface';
 import { getDomingoSemanaActualPeru, getLunesSemanaActualPeru } from '../../../../shared/utils/date-peru.utils';
 import { AccionesComprobanteDialogComponent, AccionesComprobanteConfig, AccionComprobante } from '../../../../shared/components/acciones-comprobante-dialog/acciones-comprobante';
@@ -53,6 +55,18 @@ export class GestionCotizacionesComponent implements OnInit, OnDestroy {
   private messageService = inject(MessageService);
   private confirmationService = inject(ConfirmationService);
   private router = inject(Router);
+  private authService = inject(AuthService);
+
+  // ── Auth ──────────────────────────────────────────────────────────
+  readonly esAdmin:      boolean;
+  readonly sedeNombre:   string;
+  readonly sedePropiaId: string;
+
+  // ── Permisos ──────────────────────────────────────────────────────
+  puedeVerCotizacionesVenta    = false; // VER_COTIZACIONES_VENTA
+  puedeCrearCotizacionesVenta  = false; // CREAR_COTIZACIONES_VENTA → botón "Agregar Cotización"
+  puedeEditarCotizacionesVenta = false; // EDITAR_COTIZACIONES_VENTA (si existe)
+  // rechazar cotización solo puede ver el admin
 
   // Signals de Estado
   buscarValue = signal<string>('');
@@ -73,10 +87,13 @@ export class GestionCotizacionesComponent implements OnInit, OnDestroy {
     { label: 'Vencida',   value: 'VENCIDA'   },
   ];
 
-  sedesOptions = computed(() => this.sedeService.sedes().map(sede => ({
-    label: sede.nombre,
-    value: sede.id_sede,
-  })));
+  sedesOptions = computed(() => [
+    { label: 'Todas las sedes', value: '' },
+    ...this.sedeService.sedes().map(sede => ({
+      label: sede.nombre,
+      value: String(sede.id_sede),
+    })),
+  ]);
 
   cotizaciones = computed(() => this.quoteService.quotes());
 
@@ -129,6 +146,19 @@ export class GestionCotizacionesComponent implements OnInit, OnDestroy {
   private searchSubject$ = new Subject<string>();
 
   constructor() {
+    const user = this.authService.getCurrentUser();
+
+    this.esAdmin      = this.authService.getRoleId() === UserRole.ADMIN;
+    this.sedeNombre   = user?.sedeNombre ?? 'Mi sede';
+    this.sedePropiaId = String(user?.idSede ?? '');
+
+    this.sedeSeleccionada.set(this.esAdmin ? null : Number(this.sedePropiaId));
+
+    effect(() => {
+      const sede = this.sedeSeleccionada();
+      this.cargarCotizacion();
+    });
+
     this.searchSubject$.pipe(
       debounceTime(400),
       distinctUntilChanged(),
@@ -141,7 +171,11 @@ export class GestionCotizacionesComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    this.inicializarSede();
+    // ── Resolver permisos ─────────────────────────────────────────
+    this.puedeVerCotizacionesVenta    = true; // Acceso a la página implica que puede ver
+    this.puedeCrearCotizacionesVenta  = this.authService.hasPermiso('CREAR_COTIZACIONES_VENTA');
+    this.puedeEditarCotizacionesVenta = this.authService.hasPermiso('EDITAR_COTIZACIONES_VENTA');
+
     this.cargarCotizacion();
     this.sedeService.loadSedes().subscribe({
       error: (err) => console.error('Error cargando sedes', err),
@@ -152,35 +186,23 @@ export class GestionCotizacionesComponent implements OnInit, OnDestroy {
     if (this.pollingInterval) clearInterval(this.pollingInterval);
   }
 
-  private inicializarSede() {
-    try {
-      const userString = localStorage.getItem('user');
-      if (userString) {
-        const user = JSON.parse(userString);
-        if (user.idSede) this.sedeSeleccionada.set(user.idSede);
-      }
-    } catch (e) {
-      console.error('Error parseando usuario', e);
-    }
-  }
-
   cargarCotizacion() {
     const search = this.buscarValue()?.trim() || undefined;
     this.quoteService.loadQuotes({
       estado:  this.estadoSeleccionado(),
       tipo:    this.TIPO_FIJO,
       id_sede: this.sedeSeleccionada(),
-      search,                          // ← este valor debe llegar al backend
+      search,                        
       page:    this.currentPage(),
       limit:   this.rows(),
     }).subscribe();
   }
+
   // --- Filtros y Fechas ---
 
   onSedeChange(nuevaSedeId: number | null) {
     this.sedeSeleccionada.set(nuevaSedeId);
     this.currentPage.set(1);
-    this.cargarCotizacion();
   }
 
   onEstadoChange(estado: string | null) {
@@ -198,8 +220,8 @@ export class GestionCotizacionesComponent implements OnInit, OnDestroy {
     this.cotizacionSugerencias.set([]);
     this.fechaInicio.set(null);
     this.fechaFin.set(null);
-    this.sedeSeleccionada.set(null);
-    this.estadoSeleccionado.set(null);
+    this.sedeSeleccionada.set(this.esAdmin ? null : Number(this.sedePropiaId));
+    this.estadoSeleccionado.set('PENDIENTE');
     this.currentPage.set(1);
     this.cargarCotizacion();
   }
@@ -214,16 +236,14 @@ export class GestionCotizacionesComponent implements OnInit, OnDestroy {
   }
 
   seleccionarCotizacionBusqueda(event: any) {
-    // event puede ser { value: QuoteListItem } o directamente QuoteListItem
     const item: QuoteListItem = event?.value ?? event;
     this.buscarValue.set(item.codigo);
     this.cotizacionSugerencias.set([]);
     this.currentPage.set(1);
-    this.cargarCotizacion(); // filtra la tabla, no navega
+    this.cargarCotizacion();
   }
 
   onBuscarChange(value: string | QuoteListItem | null) {
-    // Cuando seleccionas del dropdown llega el objeto, cuando escribes llega string
     const texto = typeof value === 'object' && value !== null
       ? (value as QuoteListItem).codigo
       : (value ?? '');
@@ -267,6 +287,16 @@ export class GestionCotizacionesComponent implements OnInit, OnDestroy {
   // --- Acciones sobre Cotizaciones ---
 
   rechazarCotizacion(id: number) {
+    // ── Validar que es ADMIN ──
+    if (!this.esAdmin) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Acción no permitida',
+        detail: 'Solo administradores pueden rechazar cotizaciones.',
+      });
+      return;
+    }
+
     this.confirmationService.confirm({
       message: '¿Estás seguro de rechazar esta cotización? El estado cambiará a <strong>RECHAZADA</strong>.',
       header: 'Confirmar rechazo', icon: 'pi pi-exclamation-triangle',
@@ -322,7 +352,7 @@ export class GestionCotizacionesComponent implements OnInit, OnDestroy {
       titulo:       c.codigo,
       subtitulo:    c.cliente_nombre,
       labelPdf:     'PDF Cotización',
-      labelVoucher: 'Voucher',
+      mostrarVoucher  : false,
     };
     this.accionCargando  = null;
     this.accionesVisible = true;
@@ -457,7 +487,7 @@ export class GestionCotizacionesComponent implements OnInit, OnDestroy {
       rejectButtonStyleClass: 'p-button-secondary p-button-outlined',
       accept: () => {
         this.router.navigate(
-          ['/admin/cotizaciones-venta/generar-ventas-administracion'],
+          ['/admin/generar-ventas-administracion'],
           { queryParams: { cotizacion: id, tipo: 'contado', tipoCot } }
         );
       },

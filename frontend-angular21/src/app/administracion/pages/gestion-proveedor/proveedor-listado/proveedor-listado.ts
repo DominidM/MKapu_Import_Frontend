@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, computed, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, computed, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, NavigationEnd, RouterModule, RouterOutlet } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -20,6 +20,8 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { ProveedorService } from '../../../services/proveedor.service';
 import { SupplierResponse } from '../../../interfaces/supplier.interface';
 import { SharedTableContainerComponent } from '../../../../shared/components/table.componente/shared-table-container.component';
+import { AuthService } from '../../../../auth/services/auth.service';
+import { UserRole } from '../../../../core/constants/roles.constants';
 
 type EstadoFiltro = 'todos' | 'activos' | 'inactivos';
 
@@ -44,18 +46,20 @@ interface SelectOption {
   providers: [ConfirmationService, MessageService],
 })
 export class ProveedorListado implements OnInit, OnDestroy {
-  private destroy$ = new Subject<void>();
+  private readonly authService = inject(AuthService);
+
+  private destroy$   = new Subject<void>();
   private currentUrl = signal<string>('');
 
   private todosLosProveedores = signal<SupplierResponse[]>([]);
 
-  loading         = signal(false);
-  buscarValue     = signal<string | null>(null);
-  autoInputValue  = signal<string>('');
-  items           = signal<SupplierResponse[]>([]);
-  filtroEstado    = signal<EstadoFiltro>('activos');
-  paginaActual    = signal<number>(1);
-  rows            = signal<number>(5);
+  loading        = signal(false);
+  buscarValue    = signal<string | null>(null);
+  autoInputValue = signal<string>('');
+  items          = signal<SupplierResponse[]>([]);
+  filtroEstado   = signal<EstadoFiltro>('activos');
+  paginaActual   = signal<number>(1);
+  rows           = signal<number>(5);
 
   readonly estadoOptions: SelectOption[] = [
     { label: 'Todos',     value: 'todos'     },
@@ -63,14 +67,19 @@ export class ProveedorListado implements OnInit, OnDestroy {
     { label: 'Inactivos', value: 'inactivos' },
   ];
 
+  // ── Permisos ──────────────────────────────────────────────────────
+  esAdmin               = false;
+  puedeCrearProveedor   = false; // CREAR_PROVEEDORES  → botón "Agregar Proveedor"
+  puedeEditarProveedor  = false; // EDITAR_PROVEEDORES → botón lápiz
+  puedeVerDetalle       = false; // VER_PROVEEDORES    → botón ojo
+  // desactivar/activar → solo esAdmin
+
   readonly proveedoresFiltrados = computed(() => {
     const todos  = this.todosLosProveedores();
     const estado = this.filtroEstado();
-
     let resultado = todos;
     if (estado === 'activos')   resultado = resultado.filter(p => p.estado);
     if (estado === 'inactivos') resultado = resultado.filter(p => !p.estado);
-
     return resultado;
   });
 
@@ -115,6 +124,12 @@ export class ProveedorListado implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    // ── Resolver permisos ─────────────────────────────────────────
+    this.esAdmin              = this.authService.getRoleId() === UserRole.ADMIN;
+    this.puedeCrearProveedor  = this.authService.hasPermiso('CREAR_PROVEEDORES');
+    this.puedeEditarProveedor = this.authService.hasPermiso('EDITAR_PROVEEDORES');
+    this.puedeVerDetalle      = this.authService.hasPermiso('VER_PROVEEDORES');
+
     this.cargarProveedores();
     this.router.events
       .pipe(filter(e => e instanceof NavigationEnd), takeUntil(this.destroy$))
@@ -142,10 +157,7 @@ export class ProveedorListado implements OnInit, OnDestroy {
     });
   }
 
-  onEstadoChange(valor: EstadoFiltro): void {
-    this.filtroEstado.set(valor);
-    this.paginaActual.set(1);
-  }
+  onEstadoChange(valor: EstadoFiltro): void { this.filtroEstado.set(valor); this.paginaActual.set(1); }
 
   searchBuscar(event: any): void {
     const query = (event.query || '').trim();
@@ -157,9 +169,7 @@ export class ProveedorListado implements OnInit, OnDestroy {
   }
 
   filtrarPorBusqueda(event: any): void {
-    if (event?.value) {
-      this.irDetalle(event.value.id_proveedor);
-    }
+    if (event?.value) this.irDetalle(event.value.id_proveedor);
   }
 
   limpiarFiltros(): void {

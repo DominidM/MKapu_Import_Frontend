@@ -150,12 +150,14 @@ export class RolePermissionListadoComponent implements OnInit {
     this.permSvc.loadPermissions().pipe(take(1)).subscribe({
       next: perms => {
         this.todosLosPermisos.set(
-          perms.map(p => ({
-            id_permiso:  p.id_permiso,
-            nombre:      p.nombre,
-            descripcion: p.descripcion,
-            activo:      p.activo,
-          }))
+        perms.map(p => ({
+          id_permiso:  p.id_permiso,
+          nombre:      p.nombre,
+          descripcion: p.descripcion,
+          activo:      p.activo,
+          modulo:      p.modulo     ?? 'General',
+          depende_de:  p.depende_de ?? null,
+        }))
         );
         this.dialogAsignarVisible = true;
       },

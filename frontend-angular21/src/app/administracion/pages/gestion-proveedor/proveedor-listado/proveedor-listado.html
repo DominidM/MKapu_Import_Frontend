@@ -10,12 +10,13 @@
           <h2 class="proveedores-title mb-0">{{ subtituloKicker }}</h2>
         </div>
       </div>
+      <!-- Botón "Agregar Proveedor" — solo si tiene CREAR_PROVEEDORES -->
       <p-button
+        *ngIf="puedeCrearProveedor"
         label="Agregar Proveedor"
         icon="pi pi-plus"
         styleClass="proveedores-pill proveedores-pill-warning"
-        (onClick)="irCrear()"
-      >
+        (onClick)="irCrear()">
       </p-button>
     </div>
   </p-card>
@@ -71,8 +72,7 @@
               [forceSelection]="false"
               placeholder="Razón social, RUC o contacto..."
               fluid
-              styleClass="autocomplete-proveedores w-full"
-            >
+              styleClass="autocomplete-proveedores w-full">
               <ng-template let-item pTemplate="item">
                 <div class="autocomplete-item-custom">
                   <div class="flex flex-column">
@@ -101,8 +101,7 @@
               [ngModel]="filtroEstado()"
               (ngModelChange)="onEstadoChange($event)"
               styleClass="w-full"
-              placeholder="Estado"
-            >
+              placeholder="Estado">
             </p-select>
           </div>
 
@@ -114,8 +113,7 @@
               severity="danger"
               styleClass="btn-limpiar-filtros"
               type="button"
-              (click)="limpiarFiltros()"
-            >
+              (click)="limpiarFiltros()">
             </p-button>
           </div>
         </div>
@@ -133,13 +131,12 @@
       [limitePorPagina]="rows()"
       [mostrarExportar]="false"
       (pageChange)="onPageChange($event)"
-      (limitChange)="onLimitChange($event)"
-    >
+      (limitChange)="onLimitChange($event)">
+
       <div slot="acciones">
         <p-tag
           [value]="totalRecords() + ' proveedores'"
-          [severity]="filtroEstado() === 'inactivos' ? 'danger' : 'success'"
-        >
+          [severity]="filtroEstado() === 'inactivos' ? 'danger' : 'success'">
         </p-tag>
       </div>
 
@@ -151,8 +148,7 @@
           icon="pi pi-filter-slash"
           severity="danger"
           size="small"
-          (onClick)="limpiarFiltros()"
-        >
+          (onClick)="limpiarFiltros()">
         </p-button>
       </div>
 
@@ -162,8 +158,8 @@
         dataKey="id_proveedor"
         [paginator]="false"
         [rowTrackBy]="trackByFn"
-        styleClass="p-datatable-striped proveedores-table-hover"
-      >
+        styleClass="p-datatable-striped proveedores-table-hover">
+
         <ng-template pTemplate="header">
           <tr>
             <th style="width: 15%">RUC</th>
@@ -185,42 +181,41 @@
               <p-tag
                 [value]="p.estado ? 'Activo' : 'Inactivo'"
                 [severity]="p.estado ? 'success' : 'danger'"
-                styleClass="font-bold"
-              >
+                styleClass="font-bold">
               </p-tag>
             </td>
             <td class="text-center">
               <div class="acciones-tabla">
+
+                <!-- VER DETALLE — requiere VER_PROVEEDORES -->
                 <p-button
+                  *ngIf="puedeVerDetalle"
                   icon="pi pi-eye"
-                  [rounded]="true"
-                  [text]="true"
-                  severity="secondary"
-                  pTooltip="Ver Detalles"
-                  tooltipPosition="top"
-                  (onClick)="irDetalle(p.id_proveedor)"
-                >
+                  [rounded]="true" [text]="true" severity="secondary"
+                  pTooltip="Ver Detalles" tooltipPosition="top"
+                  (onClick)="irDetalle(p.id_proveedor)">
                 </p-button>
+
+                <!-- EDITAR — requiere EDITAR_PROVEEDORES -->
                 <p-button
+                  *ngIf="puedeEditarProveedor"
                   icon="pi pi-pencil"
-                  [rounded]="true"
-                  [text]="true"
-                  severity="secondary"
-                  pTooltip="Editar Proveedor"
-                  tooltipPosition="top"
-                  (onClick)="irEditar(p.id_proveedor)"
-                >
+                  [rounded]="true" [text]="true" severity="secondary"
+                  pTooltip="Editar Proveedor" tooltipPosition="top"
+                  (onClick)="irEditar(p.id_proveedor)">
                 </p-button>
+
+                <!-- ACTIVAR / DESACTIVAR — solo ADMIN -->
                 <p-button
+                  *ngIf="esAdmin"
                   icon="pi pi-trash"
-                  [rounded]="true"
-                  [text]="true"
+                  [rounded]="true" [text]="true"
                   [severity]="p.estado ? 'danger' : 'success'"
                   [pTooltip]="p.estado ? 'Enviar a eliminados' : 'Restaurar a activos'"
                   tooltipPosition="top"
-                  (onClick)="toggleStatus(p)"
-                >
+                  (onClick)="toggleStatus(p)">
                 </p-button>
+
               </div>
             </td>
           </tr>

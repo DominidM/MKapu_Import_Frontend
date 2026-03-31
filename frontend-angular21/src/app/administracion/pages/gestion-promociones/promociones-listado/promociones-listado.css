@@ -465,7 +465,7 @@
 .descuento-badge {
   display: inline-block;
   background: #65b49a;
-  color: white;
+  color: rgb(0, 0, 0);
   padding: 0.5rem 0.875rem;
   border-radius: 6px;
   font-weight: 600;

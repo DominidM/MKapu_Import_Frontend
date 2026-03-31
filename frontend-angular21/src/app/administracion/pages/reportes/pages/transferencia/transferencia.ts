@@ -36,6 +36,7 @@ import { TransferUserContextService } from '../../../../services/transfer-user-c
 import { SedeService } from '../../../../services/sede.service';
 import { TransferSocketService } from '../../../../services/transfer-socket.service';
 import { AuthService } from '../../../../../auth/services/auth.service';
+import { UserRole } from '../../../../../core/constants/roles.constants';
 import { LoadingOverlayComponent } from '../../../../../shared/components/loading-overlay/loading-overlay.component';
 import { PaginadorComponent } from '../../../../../shared/components/paginador/paginador.components';
 
@@ -91,9 +92,13 @@ export class Transferencia {
   private readonly messageService      = inject(MessageService);
   private readonly destroyRef          = inject(DestroyRef);
   private readonly transferUserContext = inject(TransferUserContextService);
-  private readonly sedeService = inject(SedeService);
-  private readonly transferSocket = inject(TransferSocketService);
-  private readonly authService = inject(AuthService, { optional: true });
+  private readonly sedeService         = inject(SedeService);
+  private readonly transferSocket      = inject(TransferSocketService);
+  private readonly authService         = inject(AuthService, { optional: true });
+
+  // ── Permisos ──────────────────────────────────────────────────────
+  puedeVerTransferencia    = false; // VER_TRANSFERENCIA
+  puedeCrearTransferencia  = false; // CREAR_TRANSFERENCIA → botón "Nueva Transferencia"
 
   private readonly headquarterCatalogSig = computed(() => {
     const nameById = new Map<string, string>();
@@ -278,6 +283,10 @@ export class Transferencia {
   }
 
   ngOnInit(): void {
+    // ── Resolver permisos ─────────────────────────────────────────
+    this.puedeVerTransferencia   = true; // Acceso a la página implica que puede ver
+    this.puedeCrearTransferencia = this.authService?.hasPermiso?.('CREAR_TRANSFERENCIA') ?? false;
+
     this.destroyRef.onDestroy(() => {
       this.transferSocket.disconnect('transfer-page');
     });
@@ -302,12 +311,12 @@ export class Transferencia {
           this.loadTransfersPage(this.paginationSig().page, this.paginationSig().pageSize);
         },
         error: () => {
-          // La tabla ya se cargÃ³ con el contexto disponible; este catÃ¡logo solo enriquece nombres y cÃ³digos.
+          // La tabla ya se cargó con el contexto disponible; este catálogo solo enriquece nombres y códigos.
         },
       });
   }
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Getters / setters Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  // ── Getters / setters ─────────────────────────────────────────────
   get transferencias():           TransferenciaRow[]   { return this.transferenciasSig(); }
   get filteredTransferencias():   TransferenciaRow[]   { return this.filteredTransferenciasSig(); }
   get transferenciaSuggestions(): TransferenciaRow[]   { return this.filteredTransferenciasSig(); }
@@ -332,7 +341,7 @@ export class Transferencia {
   get fechaFin(): Date | null                 { return this.fechaFinSig(); }
   set fechaFin(v: Date | string | null)       { this.fechaFinSig.set(this.normalizeDateInput(v)); }
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Eventos Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  // ── Eventos ───────────────────────────────────────────────────────
   trackByTransferId = (_: number, item: TransferenciaRow): number => item.id;
 
   onSearch(event: { query: string }): void { this.searchTerm = event.query ?? ''; }
@@ -417,7 +426,7 @@ export class Transferencia {
       !this.isUserFromTransferOrigin(row.originHeadquartersId) ||
       this.isUserFromTransferDestination(row.destinationHeadquartersId)
     ) {
-      this.messageService.add({ severity: 'warn', summary: 'AcciÃƒÂ³n no permitida',
+      this.messageService.add({ severity: 'warn', summary: 'Acción no permitida',
         detail: 'Solo un administrador de la sede origen (y no de destino) puede aprobar esta solicitud.' });
       return;
     }
@@ -426,7 +435,7 @@ export class Transferencia {
     this.transferStore.approve(row.id, dto).pipe(takeUntilDestroyed(this.destroyRef)).subscribe((response) => {
       if (!response) return;
       this.messageService.add({ severity: 'success', summary: 'Transferencia aprobada',
-        detail: `Se aprobÃƒÂ³ la transferencia #${row.codigo}` });
+        detail: `Se aprobó la transferencia #${row.codigo}` });
     });
   }
 
@@ -441,7 +450,7 @@ export class Transferencia {
         severity: 'warn',
         summary: 'Accion no permitida',
         detail:
-          'Solo un administrador de la sede destino, distinto al que aprobo, puede completar esta transferencia.',
+          'Solo un administrador de la sede destino, distinto al que aprobó, puede completar esta transferencia.',
       });
       return;
     }
@@ -459,7 +468,7 @@ export class Transferencia {
         this.messageService.add({
           severity: 'success',
           summary: 'Recepcion confirmada',
-          detail: `La transferencia #${row.codigo} paso a COMPLETADA`,
+          detail: `La transferencia #${row.codigo} pasó a COMPLETADA`,
         });
       });
   }
@@ -547,7 +556,7 @@ export class Transferencia {
     const reason = String(event.transfer.reason ?? '').trim();
 
     return [
-      `${this.buildTransferLabel(event.transfer.id)} ahora esta ${this.formatRealtimeStatus(status).toLowerCase()}`,
+      `${this.buildTransferLabel(event.transfer.id)} ahora está ${this.formatRealtimeStatus(status).toLowerCase()}`,
       route ? `Ruta: ${route}` : null,
       reason ? `Motivo: ${reason}` : null,
     ]
@@ -743,7 +752,7 @@ export class Transferencia {
     if (validationError) {
       this.messageService.add({
         severity: 'warn',
-        summary: 'Rango de fechas invalido',
+        summary: 'Rango de fechas inválido',
         detail: validationError,
       });
       return;

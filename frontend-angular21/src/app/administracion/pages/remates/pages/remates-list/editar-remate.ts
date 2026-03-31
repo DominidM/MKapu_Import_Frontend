@@ -10,8 +10,9 @@ import { SelectModule } from 'primeng/select';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { SedeService } from '../../../../services/sede.service';
-
+import { UserRole } from '../../../../../core/constants/roles.constants';
 import { AuctionService, AuctionResponseDto, PatchAuctionDto } from '../../../../services/auction.service';
+import { AuthService } from '../../../../../auth/services/auth.service';
 
 interface RemateForm {
   codigo:         string;
@@ -47,6 +48,7 @@ export class EditarRemateComponent implements OnInit {
   private readonly router         = inject(Router);
   private readonly route          = inject(ActivatedRoute);
   private readonly sedeService     = inject(SedeService);
+  private readonly authService         = inject(AuthService);
 
   cargando  = signal(true);
   guardando = signal(false);

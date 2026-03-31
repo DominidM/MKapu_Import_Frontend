@@ -70,6 +70,8 @@ export class AgregarRolesPermisosComponent implements OnInit {
             nombre:      p.nombre,
             descripcion: p.descripcion,
             activo:      p.activo,
+            modulo:      p.modulo     ?? 'General',
+            depende_de:  p.depende_de ?? null,
           }))
         );
       },

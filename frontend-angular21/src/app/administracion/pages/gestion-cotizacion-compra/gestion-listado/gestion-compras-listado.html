@@ -9,7 +9,9 @@
         </div>
       </div>
       <div class="flex gap-2">
+        <!-- Botón "Agregar Cotización Compra" — solo si tiene CREAR_COTIZACIONES_COMPRA -->
         <p-button
+          *ngIf="puedeCrearCotizacionesCompra"
           label="Agregar Cotización Compra"
           icon="pi pi-plus"
           styleClass="cotizaciones-pill cotizaciones-pill-warning"
@@ -29,7 +31,6 @@
       <div>
         <span class="contador-label">Total Cotizaciones Compra</span>
         <span class="contador-valor">{{ totalRecords() }}</span>
-        <span class="contador-detalle"><i class="pi pi-list"></i> registros</span>
       </div>
     </div>
     <div class="contador-card">
@@ -37,7 +38,6 @@
       <div>
         <span class="contador-label">Aprobadas</span>
         <span class="contador-valor">{{ totalAprobadas() }}</span>
-        <span class="contador-detalle"><i class="pi pi-check"></i> completadas</span>
       </div>
     </div>
     <div class="contador-card">
@@ -45,7 +45,6 @@
       <div>
         <span class="contador-label">Pendientes</span>
         <span class="contador-valor">{{ totalPendientes() }}</span>
-        <span class="contador-detalle"><i class="pi pi-hourglass"></i> por aprobar</span>
       </div>
     </div>
     <div class="contador-card">
@@ -53,7 +52,6 @@
       <div>
         <span class="contador-label">Proveedores</span>
         <span class="contador-valor">{{ proveedoresUnicos() }}</span>
-        <span class="contador-detalle"><i class="pi pi-building"></i> en este período</span>
       </div>
     </div>
   </div>
@@ -116,14 +114,27 @@
 
       <div class="filtros-linea-2">
         <div class="filtro-item filtro-compacto">
-          <label>Sede</label>
+          <label>SEDE</label>
+
           <p-select
+            *ngIf="esAdmin"
             [options]="sedesOptions()"
             [ngModel]="sedeSeleccionada()"
             (ngModelChange)="onSedeChange($event)"
-            optionLabel="label" optionValue="value"
-            placeholder="Todas" [showClear]="true" styleClass="w-full">
-          </p-select>
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Todas las sedes"
+            styleClass="w-full"
+            [showClear]="true"
+          ></p-select>
+
+          <div
+            *ngIf="!esAdmin"
+            class="flex align-items-center gap-2 px-3 py-2 border-round"
+            style="background: var(--surface-100); border: 1px solid var(--surface-border); height: 42px">
+            <i class="pi pi-map-marker" style="color: #FFA726"></i>
+            <span class="font-semibold">{{ sedeNombre }}</span>
+          </div>
         </div>
         <div class="filtro-item filtro-compacto">
           <label>Estado</label>
@@ -248,7 +259,8 @@
                 pTooltip="Documentos" tooltipPosition="top"
                 (onClick)="abrirAcciones(c)">
               </p-button>
-              <ng-container *ngIf="c.estado === 'PENDIENTE'">
+              <!-- RECHAZAR — solo ADMIN, estado PENDIENTE -->
+              <ng-container *ngIf="c.estado === 'PENDIENTE' && esAdmin">
                 <p-button
                   icon="pi pi-times"
                   [rounded]="true" [text]="true" severity="danger"
@@ -328,7 +340,7 @@
     <ng-container *ngIf="wspReady">
       <i class="pi pi-check-circle" style="font-size:3rem; color:#25D366"></i>
       <p style="text-align:center; color:var(--text-muted); font-size:0.9rem; line-height:1.6">
-        WhatsApp conectado ✅<br>
+        WhatsApp conectado <br>
         <ng-container *ngIf="cotizacionWsp">
           Se enviará la cotización <strong>{{ cotizacionWsp.codigo }}</strong>
         </ng-container>

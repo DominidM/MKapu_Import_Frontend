@@ -5,6 +5,7 @@ import {
 import { CajaService }          from '../../services/caja.service';
 import { RoleService }          from '../../../core/services/role.service';
 import { CashboxSocketService } from '../../services/cashbox-socket.service';
+import { AuthService }          from '../../../auth/services/auth.service';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { CardModule }           from 'primeng/card';
 import { ButtonModule }         from 'primeng/button';
@@ -40,6 +41,7 @@ export class CajaPage implements OnInit, OnDestroy {
   private confirmService  = inject(ConfirmationService);
   private messageService  = inject(MessageService);
   private ngZone          = inject(NgZone);
+  private authService     = inject(AuthService);
   protected cashboxSocket = inject(CashboxSocketService);
 
   readonly caja         = this.cashboxSocket.caja;
@@ -51,6 +53,9 @@ export class CajaPage implements OnInit, OnDestroy {
   readonly historialVisible = signal<boolean>(false);
   readonly historialLoading = signal<boolean>(false);
   isLoading = signal<boolean>(true);
+
+  // ── Permisos ──────────────────────────────────────────────────────
+  puedeCerrarCaja = false;
 
   private chartInstance: any = null;
 
@@ -65,7 +70,7 @@ export class CajaPage implements OnInit, OnDestroy {
 
   readonly idSede: number | undefined;
 
-  // ── Socket listener: corre dentro de NgZone para que Angular detecte cambios ──
+  // ─�� Socket listener: corre dentro de NgZone para que Angular detecte cambios ──
   private cajaListener = () => {
     this.ngZone.run(() => {
       if (this.cashboxSocket.caja()) {
@@ -94,6 +99,9 @@ export class CajaPage implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    // ── Resolver permisos ─────────────────────────────────────────
+    this.puedeCerrarCaja = this.authService.hasPermiso('CERRAR_CAJA');
+
     if (!this.idSede) {
       this.isLoading.set(false);
       return;
@@ -147,7 +155,6 @@ export class CajaPage implements OnInit, OnDestroy {
     this.cashboxService.openCashbox(this.idSede, this.montoInicial() ?? undefined).subscribe({
       next: () => {
         this.montoInicial.set(null);
-        // ✅ checkActiveSession DENTRO del next() — secuencial, no paralelo
         this.cashboxSocket.checkActiveSession(this.idSede!).then(() => {
           if (this.cashboxSocket.caja()) {
             this.cargarCajaDesdeDB();
@@ -168,6 +175,17 @@ export class CajaPage implements OnInit, OnDestroy {
   }
 
   confirmarCierre(): void {
+    // ── Validar permiso ───────────��───────────────────────────────
+    if (!this.puedeCerrarCaja) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Acción no permitida',
+        detail: 'No tienes permiso para cerrar la caja.',
+        life: 3500,
+      });
+      return;
+    }
+
     this.confirmService.confirm({
       message:    '¿Estás seguro de cerrar la caja? Se generará el reporte del día.',
       header:     'Cerrar Caja',
@@ -187,7 +205,6 @@ export class CajaPage implements OnInit, OnDestroy {
 
     this.cashboxService.closeCashbox(detalle.id_caja).subscribe({
       next: () => {
-        // ✅ Limpieza DENTRO del next() — solo cuando el backend confirma
         this.cajaDetalle.set(null);
         this.chartInstance?.destroy();
         this.chartInstance = null;

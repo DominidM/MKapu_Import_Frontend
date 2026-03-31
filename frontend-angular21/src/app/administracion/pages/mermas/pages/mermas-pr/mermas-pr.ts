@@ -26,31 +26,32 @@ import {
 } from '../../../../services/wastage.service';
 import { SharedTableContainerComponent } from '../../../../../shared/components/table.componente/shared-table-container.component';
 import { AuthService } from '../../../../../auth/services/auth.service';
+import { UserRole } from '../../../../../core/constants/roles.constants';
 
 interface WastageDetail {
-  id_detalle: number;
-  id_producto: number;
-  cod_prod: string;
-  desc_prod: string;
-  cantidad: number;
-  pre_unit: number;
-  observacion?: string;
+  id_detalle:    number;
+  id_producto:   number;
+  cod_prod:      string;
+  desc_prod:     string;
+  cantidad:      number;
+  pre_unit:      number;
+  observacion?:  string;
   id_tipo_merma: number;
 }
 
 interface MermaUI {
-  id_merma: number;
-  codigo: string;
-  motivo: string;
-  tipoMerma: string;
-  tipoMermaId: number;
-  cantidad: number;
-  responsable: string;
+  id_merma:      number;
+  codigo:        string;
+  motivo:        string;
+  tipoMerma:     string;
+  tipoMermaId:   number;
+  cantidad:      number;
+  responsable:   string;
   fechaRegistro: Date;
-  observacion?: string;
-  detalles: WastageDetail[];
-  valorTotal: number;
-  id_sede: number;
+  observacion?:  string;
+  detalles:      WastageDetail[];
+  valorTotal:    number;
+  id_sede:       number;
 }
 
 type Severity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast';
@@ -59,22 +60,11 @@ type Severity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast
   selector: 'app-mermas-pr',
   standalone: true,
   imports: [
-    CardModule,
-    ButtonModule,
-    RouterModule,
-    FormsModule,
-    InputTextModule,
-    AutoCompleteModule,
-    Select,
-    ConfirmDialogModule,
-    ToastModule,
-    TableModule,
-    TooltipModule,
-    TagModule,
-    DialogModule,
-    InputNumberModule,
-    SelectButtonModule,
-    CommonModule,
+    CardModule, ButtonModule, RouterModule, FormsModule,
+    InputTextModule, AutoCompleteModule, Select,
+    ConfirmDialogModule, ToastModule, TableModule,
+    TooltipModule, TagModule, DialogModule,
+    InputNumberModule, SelectButtonModule, CommonModule,
     SharedTableContainerComponent,
   ],
   templateUrl: './mermas-pr.html',
@@ -82,22 +72,33 @@ type Severity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast
   providers: [ConfirmationService, MessageService],
 })
 export class MermasPr implements OnInit {
-  private readonly wastageService = inject(WastageService);
-  private readonly messageService = inject(MessageService);
+  private readonly wastageService      = inject(WastageService);
+  private readonly messageService      = inject(MessageService);
   private readonly confirmationService = inject(ConfirmationService);
-  private readonly router = inject(Router);
-  private readonly sedeService = inject(SedeService);
-  private readonly authService = inject(AuthService);
+  private readonly router              = inject(Router);
+  private readonly sedeService         = inject(SedeService);
+  private readonly authService         = inject(AuthService);
+
+  // ── Auth ──────────────────────────────────────────────────────────
+  readonly esAdmin:      boolean;
+  readonly sedeNombre:   string;
+  readonly sedePropiaId: string;
+
+  // ── Permisos ──────────────────────────────────────────────────────
+  puedeCrearMermas  = false; // CREAR_MERMAS  → botón "Registrar Merma"
+  puedeEditarMermas = false; // EDITAR_MERMAS → botón editar
+  puedeVerMermas    = false; // VER_MERMAS    → visualización de mermas
+  // desactivar/activar → solo esAdmin
 
   mesActual = signal(this.obtenerMesActual());
-  cargando = this.wastageService.loading;
+  cargando  = this.wastageService.loading;
 
-  // ── Autocomplete ──────────────────────────────────────────────────────────
+  // ── Autocomplete ──────────────────────────────────────────────────
   busquedaObj: WastageSuggestionDto | string | null = null;
-  sugeridos = signal<WastageSuggestionDto[]>([]);
+  sugeridos     = signal<WastageSuggestionDto[]>([]);
   mermaIdFiltro = signal<number | null>(null);
 
-  // ── Opciones ──────────────────────────────────────────────────────────────
+  // ── Opciones ──────────────────────────────────────────────────────
   tiposMermaOpciones = computed(() => [
     { label: 'Todos los tipos', value: '' },
     ...this.wastageService.tiposMerma().map((t: WastageTypeDto) => ({
@@ -114,37 +115,42 @@ export class MermasPr implements OnInit {
     })),
   ]);
 
-  // ── Filtros ───────────────────────────────────────────────────────────────
+  // ── Filtros ───────────────────────────────────────────────────────
   tipoMermaFiltro = signal('');
-  sedeFiltro = signal(String(this.authService.getCurrentUser()?.idSede ?? ''));
+  sedeFiltro      = signal(String(this.authService.getCurrentUser()?.idSede ?? ''));
 
   readonly paginaActual = signal<number>(1);
   readonly limitePagina = signal<number>(5);
 
-  // ── Modal ─────────────────────────────────────────────────────────────────
-  mermaSeleccionada = signal<MermaUI | null>(null);
+  // ── Modal ─────────────────────────────────────────────────────────
+  mermaSeleccionada   = signal<MermaUI | null>(null);
   mostrarModalDetalle = signal(false);
 
   constructor() {
+    const user = this.authService.getCurrentUser();
+
+    this.esAdmin      = this.authService.getRoleId() === UserRole.ADMIN;
+    this.sedeNombre   = user?.sedeNombre ?? 'Mi sede';
+    this.sedePropiaId = String(user?.idSede ?? '');
+
     effect(() => {
-      const sede = this.sedeFiltro();
+      const sede   = this.sedeFiltro();
       const idSede = sede ? Number(sede) : 0;
       this.wastageService.loadWastages(1, this.limitePagina(), idSede).subscribe();
       this.paginaActual.set(1);
     });
   }
 
-  // ── Datos ─────────────────────────────────────────────────────────────────
+  // ── Datos ─────────────────────────────────────────────────────────
   mermas = computed(() => this.wastageService.wastages().map((m) => this.mapToUI(m)));
 
   mermasFiltradas = computed(() => {
-    let lista = this.mermas();
-    const idFiltro = this.mermaIdFiltro();
+    let lista     = this.mermas();
+    const idFiltro   = this.mermaIdFiltro();
     const tipoFiltro = this.tipoMermaFiltro();
 
     if (idFiltro !== null) lista = lista.filter((m) => m.id_merma === idFiltro);
-
-    if (tipoFiltro) lista = lista.filter((m) => m.tipoMerma === tipoFiltro);
+    if (tipoFiltro)        lista = lista.filter((m) => m.tipoMerma === tipoFiltro);
 
     return lista;
   });
@@ -158,11 +164,11 @@ export class MermasPr implements OnInit {
     Math.ceil(this.mermasFiltradas().length / this.limitePagina()),
   );
 
-  totalMermas = computed(() => this.mermas().length);
+  totalMermas    = computed(() => this.mermas().length);
   totalProductos = computed(() => this.mermas().reduce((sum, m) => sum + m.cantidad, 0));
 
   mermasMesActual = computed(() => {
-    const mes = new Date().getMonth();
+    const mes  = new Date().getMonth();
     const year = new Date().getFullYear();
     return this.mermas().filter((m) => {
       const f = new Date(m.fechaRegistro);
@@ -170,18 +176,23 @@ export class MermasPr implements OnInit {
     }).length;
   });
 
-  // ── Lifecycle ─────────────────────────────────────────────────────────────
+  // ── Lifecycle ─────────────────────────────────────────────────────
   ngOnInit(): void {
+    // ── Resolver permisos ─────────────────────────────────────────
+    this.puedeCrearMermas  = this.authService.hasPermiso('CREAR_MERMAS');
+    this.puedeEditarMermas = this.authService.hasPermiso('EDITAR_MERMAS');
+    this.puedeVerMermas    = this.authService.hasPermiso('VER_MERMAS');
+
     this.cargarTiposMerma();
     this.sedeService.loadSedes().subscribe();
   }
 
-  // ── Autocomplete handlers ─────────────────────────────────────────────────
+  // ── Autocomplete ──────────────────────────────────────────────────
   buscarSugeridos(event: { query: string }): void {
     const idSede = this.sedeFiltro() ? Number(this.sedeFiltro()) : 0;
     this.wastageService.searchWastages(event.query, idSede, 8).subscribe({
-      next: (res) => this.sugeridos.set(res),
-      error: () => this.sugeridos.set([]),
+      next:  (res) => this.sugeridos.set(res),
+      error: ()    => this.sugeridos.set([]),
     });
   }
 
@@ -204,7 +215,7 @@ export class MermasPr implements OnInit {
     this.paginaActual.set(1);
   }
 
-  // ── Filtros ───────────────────────────────────────────────────────────────
+  // ── Filtros ───────────────────────────────────────────────────────
   recargarConFiltros(): void {
     const idSede = this.sedeFiltro() ? Number(this.sedeFiltro()) : 0;
     this.busquedaObj = null;
@@ -218,81 +229,66 @@ export class MermasPr implements OnInit {
     this.sugeridos.set([]);
     this.mermaIdFiltro.set(null);
     this.tipoMermaFiltro.set('');
-    this.sedeFiltro.set('');
+    this.sedeFiltro.set(this.esAdmin ? '' : this.sedePropiaId);
     this.paginaActual.set(1);
     this.messageService.add({
-      severity: 'info',
-      summary: 'Filtros limpiados',
-      detail: 'Se muestran todas las mermas',
-      life: 2000,
+      severity: 'info', summary: 'Filtros limpiados',
+      detail: 'Se muestran todas las mermas', life: 2000,
     });
   }
 
-  // ── Carga ─────────────────────────────────────────────────────────────────
+  // ── Carga ─────────────────────────────────────────────────────────
   private cargarTiposMerma(): void {
     this.wastageService.loadTiposMerma().subscribe({
-      error: () =>
-        this.messageService.add({
-          severity: 'warn',
-          summary: 'Aviso',
-          detail: 'No se pudieron cargar los tipos de merma.',
-          life: 3000,
-        }),
+      error: () => this.messageService.add({
+        severity: 'warn', summary: 'Aviso',
+        detail: 'No se pudieron cargar los tipos de merma.', life: 3000,
+      }),
     });
   }
 
   cargarMermas(id_sede = 0): void {
     this.wastageService.loadWastages(1, this.limitePagina(), id_sede).subscribe({
-      error: () =>
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudieron cargar las mermas',
-          life: 3000,
-        }),
+      error: () => this.messageService.add({
+        severity: 'error', summary: 'Error',
+        detail: 'No se pudieron cargar las mermas', life: 3000,
+      }),
     });
   }
 
-  // ── Mapper ────────────────────────────────────────────────────────────────
+  // ── Mapper ────────────────────────────────────────────────────────
   private mapToUI(merma: WastageResponseDto): MermaUI {
     const valorTotal = merma.detalles?.reduce((sum, d) => sum + d.cantidad * d.pre_unit, 0) ?? 0;
-
     return {
-      id_merma: merma.id_merma,
-      codigo: `MER-${merma.id_merma.toString().padStart(4, '0')}`,
-      motivo: merma.motivo,
-      tipoMerma: merma.tipo_merma_label || 'SIN CLASIFICAR',
-      tipoMermaId: merma.tipo_merma_id,
-      cantidad: merma.total_items,
-      responsable: merma.responsable || 'Sin asignar',
+      id_merma:      merma.id_merma,
+      codigo:        `MER-${merma.id_merma.toString().padStart(4, '0')}`,
+      motivo:        merma.motivo,
+      tipoMerma:     merma.tipo_merma_label || 'SIN CLASIFICAR',
+      tipoMermaId:   merma.tipo_merma_id,
+      cantidad:      merma.total_items,
+      responsable:   merma.responsable || 'Sin asignar',
       fechaRegistro: new Date(merma.fec_merma),
-      observacion: merma.detalles?.[0]?.observacion || '',
-      id_sede: merma.id_sede_ref ?? 0,
-      detalles:
-        merma.detalles?.map((d) => ({
-          id_detalle: d.id_detalle ?? 0,
-          id_producto: d.id_producto,
-          cod_prod: d.cod_prod,
-          desc_prod: d.desc_prod,
-          cantidad: d.cantidad,
-          pre_unit: d.pre_unit,
-          observacion: d.observacion,
-          id_tipo_merma: d.id_tipo_merma,
-        })) ?? [],
+      observacion:   merma.detalles?.[0]?.observacion || '',
+      id_sede:       merma.id_sede_ref ?? 0,
+      detalles:      merma.detalles?.map((d) => ({
+        id_detalle:    d.id_detalle ?? 0,
+        id_producto:   d.id_producto,
+        cod_prod:      d.cod_prod,
+        desc_prod:     d.desc_prod,
+        cantidad:      d.cantidad,
+        pre_unit:      d.pre_unit,
+        observacion:   d.observacion,
+        id_tipo_merma: d.id_tipo_merma,
+      })) ?? [],
       valorTotal,
     };
   }
 
-  // ── Navegación ────────────────────────────────────────────────────────────
-  irRegistro(): void {
-    this.router.navigate(['/admin', 'mermas', 'registro-merma']);
-  }
+  // ── Navegación ────────────────────────────────────────────────────
+  irRegistro(): void { this.router.navigate(['/admin', 'mermas', 'registro-merma']); }
+  irEditar(merma: MermaUI): void { this.router.navigate(['/admin/mermas', 'edicion-merma', merma.id_merma]); }
 
-  irEditar(merma: MermaUI): void {
-    this.router.navigate(['/admin/mermas', 'edicion-merma', merma.id_merma]);
-  }
-
-  // ── Modal ─────────────────────────────────────────────────────────────────
+  // ── Modal ─────────────────────────────────────────────────────────
   verDetalleMerma(merma: MermaUI): void {
     this.mermaSeleccionada.set({ ...merma });
     this.mostrarModalDetalle.set(true);
@@ -303,27 +299,15 @@ export class MermasPr implements OnInit {
     this.mermaSeleccionada.set(null);
   }
 
-  // ── Helpers ───────────────────────────────────────────────────────────────
+  // ── Helpers ───────────────────────────────────────────────────────
   getNombreSede(id_sede: number): string {
     const sede = this.sedeService.sedes().find((s) => s.id_sede === id_sede);
     return sede ? sede.nombre : '—';
   }
 
   obtenerMesActual(): string {
-    const meses = [
-      'Enero',
-      'Febrero',
-      'Marzo',
-      'Abril',
-      'Mayo',
-      'Junio',
-      'Julio',
-      'Agosto',
-      'Septiembre',
-      'Octubre',
-      'Noviembre',
-      'Diciembre',
-    ];
+    const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                   'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
     return meses[new Date().getMonth()];
   }
 
@@ -334,27 +318,20 @@ export class MermasPr implements OnInit {
 
   getTipoMermaSeverity(tipo: string): Severity {
     const map: Record<string, Severity> = {
-      DAÑO: 'danger',
-      VENCIMIENTO: 'warn',
-      ROBO: 'danger',
-      DETERIORO: 'info',
-      ERROR_CONTEO: 'secondary',
-      DEVOLUCION: 'warn',
-      OTRO: 'secondary',
+      DAÑO:          'danger',
+      VENCIMIENTO:   'warn',
+      ROBO:          'danger',
+      DETERIORO:     'info',
+      ERROR_CONTEO:  'secondary',
+      DEVOLUCION:    'warn',
+      OTRO:          'secondary',
       'SIN CLASIFICAR': 'secondary',
     };
     return map[tipo] || 'info';
   }
 
-  refrescarLista(): void {
-    this.cargarMermas(this.sedeFiltro() ? Number(this.sedeFiltro()) : 0);
-  }
+  refrescarLista(): void { this.cargarMermas(this.sedeFiltro() ? Number(this.sedeFiltro()) : 0); }
 
-  onPageChange(page: number): void {
-    this.paginaActual.set(page);
-  }
-  onLimitChange(limit: number): void {
-    this.limitePagina.set(limit);
-    this.paginaActual.set(1);
-  }
+  onPageChange(page: number):   void { this.paginaActual.set(page); }
+  onLimitChange(limit: number): void { this.limitePagina.set(limit); this.paginaActual.set(1); }
 }

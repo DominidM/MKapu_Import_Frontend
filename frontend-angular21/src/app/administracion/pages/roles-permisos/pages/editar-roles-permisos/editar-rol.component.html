@@ -118,7 +118,9 @@
   <!-- ═══ PASO 2: Permisos del Rol ═══ -->
   @if (step() === 2) {
     <p-card>
-      <div class="flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+
+      <!-- Cabecera del paso -->
+      <div class="flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
         <div class="flex align-items-center gap-2">
           <span class="sedes-section-icon"><i class="pi pi-key"></i></span>
           <span class="text-sm font-semibold text-700">PERMISOS DEL ROL</span>
@@ -139,51 +141,112 @@
         </div>
       </div>
 
+      <!-- Subtítulo -->
       <p class="text-500 text-sm mb-3">
         Rol: <strong class="text-900">{{ rolNombre() }}</strong> —
         Marca los permisos que tendrá este rol. Los cambios reemplazan la asignación actual.
       </p>
 
+      <!-- Leyenda de tiers -->
+      <div class="flex gap-3 flex-wrap mb-3">
+        <span class="flex align-items-center gap-1 text-xs text-500">
+          <span class="tier-dot tier-ver"></span> Listado
+        </span>
+        <span class="flex align-items-center gap-1 text-xs text-500">
+          <span class="tier-dot tier-crear"></span> Crear
+        </span>
+        <span class="flex align-items-center gap-1 text-xs text-500">
+          <span class="tier-dot tier-editar"></span> Editar
+        </span>
+        <span class="flex align-items-center gap-1 text-xs text-500">
+          <span class="tier-dot tier-especial"></span> Especial
+        </span>
+      </div>
+
+      <!-- Buscador -->
+      <div class="mb-3">
+        <span class="p-input-icon-left w-full">
+          <input pInputText class="w-full"
+                 placeholder="Filtrar por nombre o módulo..."
+                 [ngModel]="filtro()"
+                 (ngModelChange)="filtro.set($event)">
+        </span>
+      </div>
+
+      <!-- Loading -->
       @if (permSvc.loading()) {
         <div class="text-center py-4 text-500">
           <i class="pi pi-spin pi-spinner mr-2"></i> Cargando permisos...
         </div>
       }
 
-      <div class="grid">
-        @for (perm of todosLosPermisos(); track perm.id_permiso) {
-          <div class="col-12 md:col-6 lg:col-4 mb-2">
+      <!-- Grupos por módulo -->
+      @for (grupo of permisosAgrupados(); track grupo.modulo) {
+        <p-panel [toggleable]="true" styleClass="mb-2" [collapsed]="false">
 
-            <div class="flex align-items-start gap-2 surface-100 border-round p-3 cursor-pointer"
-                 [style.opacity]="perm.activo ? '1' : '0.5'"
-                 [style.border]="selectedPermIds().includes(perm.id_permiso)
-                   ? '1px solid var(--p-primary-color)'
-                   : '1px solid transparent'"
-                 (click)="togglePerm(perm.id_permiso)">
-              <p-checkbox
-                [binary]="true"
-                [ngModel]="selectedPermIds().includes(perm.id_permiso)"
-                [inputId]="'perm_' + perm.id_permiso">
-              </p-checkbox>
-              <label [for]="'perm_' + perm.id_permiso"
-                     class="cursor-pointer flex-1"
-                     (click)="$event.stopPropagation()">
-                <span class="font-medium text-sm text-900 block">{{ perm.nombre }}</span>
-                <span class="text-400 text-xs">{{ perm.descripcion || '—' }}</span>
-              </label>
+          <ng-template pTemplate="header">
+            <div class="flex align-items-center gap-2">
+              <span class="font-semibold text-sm">{{ grupo.modulo }}</span>
+              <p-tag
+                [value]="cuentaSeleccionados(grupo.permisos)"
+                severity="secondary">
+              </p-tag>
             </div>
+          </ng-template>
 
+          <div class="grid">
+            @for (perm of grupo.permisos; track perm.id_permiso) {
+              <div class="col-12 md:col-6 lg:col-4 mb-1">
+                <div class="flex align-items-start gap-2 border-round p-2 cursor-pointer"
+                     [class.surface-100]="!selectedPermIds().includes(perm.id_permiso)"
+                     [style.opacity]="perm.activo ? '1' : '0.45'"
+                     [style.border]="selectedPermIds().includes(perm.id_permiso)
+                       ? '1px solid var(--p-primary-color)' : '1px solid transparent'"
+                     [style.background]="selectedPermIds().includes(perm.id_permiso)
+                       ? 'color-mix(in srgb, var(--p-primary-color) 8%, transparent)' : ''"
+                     (click)="perm.activo && togglePerm(perm.id_permiso)">
+
+                  <!-- Indicador de tier -->
+                  <span [class]="tierDot(perm.nombre)"
+                        [pTooltip]="tierLabel(perm.nombre)"
+                        tooltipPosition="top">
+                  </span>
+
+                  <p-checkbox
+                    [binary]="true"
+                    [ngModel]="selectedPermIds().includes(perm.id_permiso)"
+                    [inputId]="'perm_' + perm.id_permiso">
+                  </p-checkbox>
+
+                  <label [for]="'perm_' + perm.id_permiso"
+                         class="cursor-pointer flex-1"
+                         (click)="$event.stopPropagation()">
+                    <span class="font-medium text-sm text-900 block">{{ perm.nombre }}</span>
+                    <span class="text-400 text-xs block">{{ perm.descripcion || '—' }}</span>
+                    @if (perm.depende_de) {
+                      <span class="text-300 text-xs">
+                        requiere: {{ nombrePadre(perm.depende_de) }}
+                      </span>
+                    }
+                  </label>
+
+                </div>
+              </div>
+            }
           </div>
-        }
-      </div>
 
-      @if (!permSvc.loading() && todosLosPermisos().length === 0) {
+        </p-panel>
+      }
+
+      <!-- Sin resultados -->
+      @if (!permSvc.loading() && permisosAgrupados().length === 0) {
         <div class="text-center text-500 py-4">
           <i class="pi pi-info-circle mr-2"></i>
           No hay permisos disponibles.
         </div>
       }
 
+      <!-- Acción guardar -->
       <div class="flex gap-2 justify-content-end pt-4 border-top-1 surface-border mt-3">
         <p-button label="Guardar permisos" icon="pi pi-check"
           [loading]="submitting()"

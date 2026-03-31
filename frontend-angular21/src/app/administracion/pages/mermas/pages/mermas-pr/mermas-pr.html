@@ -10,7 +10,9 @@
           <h2 class="clientes-title">GESTIÓN DE MERMAS</h2>
         </div>
       </div>
+      <!-- Botón "Registrar Merma" — solo si tiene CREAR_MERMAS -->
       <p-button
+        *ngIf="puedeCrearMermas"
         (onClick)="irRegistro()"
         label="Registrar Merma"
         icon="pi pi-plus"
@@ -95,6 +97,34 @@
       </div>
       <div class="filtros-linea-2">
         <div class="filtro-item filtro-compacto">
+          <label>SEDE</label>
+
+          <p-select
+            *ngIf="esAdmin"
+            [options]="sedesOpciones()"
+            [ngModel]="sedeFiltro()"
+            (ngModelChange)="sedeFiltro.set($event); recargarConFiltros()"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Todas las sedes"
+            styleClass="w-full"
+            [showClear]="true"
+          ></p-select>
+
+          <div
+            *ngIf="!esAdmin"
+            class="flex align-items-center gap-2 px-3 py-2 border-round"
+            style="
+              background: var(--surface-100);
+              border: 1px solid var(--surface-border);
+              height: 42px;
+            "
+          >
+            <i class="pi pi-map-marker" style="color: #ffa726"></i>
+            <span class="font-semibold">{{ sedeNombre }}</span>
+          </div>
+        </div>
+        <div class="filtro-item filtro-compacto">
           <label>TIPO</label>
           <p-select
             [options]="tiposMermaOpciones()"
@@ -108,20 +138,7 @@
           >
           </p-select>
         </div>
-        <div class="filtro-item filtro-compacto">
-          <label>SEDE</label>
-          <p-select
-            [options]="sedesOpciones()"
-            [ngModel]="sedeFiltro()"
-            (ngModelChange)="sedeFiltro.set($event); recargarConFiltros()"
-            optionLabel="label"
-            optionValue="value"
-            placeholder="Todas las sedes"
-            styleClass="w-full"
-            [showClear]="true"
-          >
-          </p-select>
-        </div>
+
         <div class="filtro-item filtro-boton-limpiar">
           <label>&nbsp;</label>
           <p-button
@@ -187,7 +204,6 @@
           <td>
             <div class="producto-info">
               <div class="producto-nombre">{{ merma.motivo }}</div>
-              <div class="producto-responsable">{{ merma.observacion || 'Sin observaciones' }}</div>
             </div>
           </td>
           <td>
@@ -229,7 +245,9 @@
                 (onClick)="verDetalleMerma(merma)"
               >
               </p-button>
+              <!-- EDITAR — requiere EDITAR_MERMAS -->
               <p-button
+                *ngIf="puedeEditarMermas"
                 icon="pi pi-pencil"
                 [rounded]="true"
                 [text]="true"

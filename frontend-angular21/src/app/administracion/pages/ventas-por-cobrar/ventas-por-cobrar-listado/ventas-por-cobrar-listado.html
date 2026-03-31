@@ -85,8 +85,7 @@
               [showClear]="true"
               [showIcon]="true"
               styleClass="w-full"
-            >
-            </p-datepicker>
+            ></p-datepicker>
             <span class="fecha-separador">—</span>
             <p-datepicker
               [ngModel]="fechaFin()"
@@ -98,8 +97,7 @@
               [showClear]="true"
               [showIcon]="true"
               styleClass="w-full"
-            >
-            </p-datepicker>
+            ></p-datepicker>
           </div>
         </div>
       </div>
@@ -116,8 +114,7 @@
             placeholder="Todas"
             [showClear]="true"
             styleClass="w-full"
-          >
-          </p-select>
+          ></p-select>
         </div>
 
         <div class="filtro-item filtro-compacto">
@@ -131,8 +128,7 @@
             placeholder="Todos"
             [showClear]="true"
             styleClass="w-full"
-          >
-          </p-select>
+          ></p-select>
         </div>
 
         <div class="filtro-item filtro-boton-limpiar">
@@ -143,8 +139,7 @@
             (onClick)="limpiarFiltros()"
             severity="danger"
             styleClass="btn-limpiar-filtros"
-          >
-          </p-button>
+          ></p-button>
         </div>
       </div>
     </div>
@@ -159,8 +154,7 @@
         icon="pi pi-refresh"
         styleClass="p-button-text p-button-sm ml-3"
         (onClick)="onPageChange(paginaActual())"
-      >
-      </p-button>
+      ></p-button>
     </div>
   }
 
@@ -170,8 +164,7 @@
         [visible]="arService.loading()"
         mensaje="Cargando cuentas por cobrar..."
         modo="inline"
-      >
-      </app-loading-overlay>
+      ></app-loading-overlay>
 
       <div
         class="seccion-tabla"
@@ -189,8 +182,7 @@
             pTooltip="Descargar reporte en Excel"
             tooltipPosition="bottom"
             size="small"
-          >
-          </p-button>
+          ></p-button>
         </div>
 
         <p-table
@@ -253,8 +245,7 @@
                     pTooltip="Ver detalle"
                     tooltipPosition="top"
                     (onClick)="verDetalle(a.id)"
-                  >
-                  </p-button>
+                  ></p-button>
 
                   <p-button
                     icon="pi pi-file-pdf"
@@ -264,8 +255,7 @@
                     pTooltip="Documentos"
                     tooltipPosition="top"
                     (onClick)="abrirAcciones(a)"
-                  >
-                  </p-button>
+                  ></p-button>
 
                   <span class="accion-separador"></span>
 
@@ -277,8 +267,7 @@
                     pTooltip="Registrar Pago"
                     tooltipPosition="top"
                     (onClick)="irAgregarVentaPorCobrar(a.id)"
-                  >
-                  </p-button>
+                  ></p-button>
 
                   <p-button
                     icon="pi pi-times"
@@ -289,8 +278,7 @@
                     tooltipPosition="top"
                     [disabled]="a.status === 'CANCELADO' || a.status === 'PAGADO'"
                     (onClick)="rechazarCotizacion(a.id)"
-                  >
-                  </p-button>
+                  ></p-button>
                 </div>
               </td>
             </tr>
@@ -313,8 +301,7 @@
           [limit]="rows()"
           (pageChange)="onPageChange($event)"
           (limitChange)="onLimitChange($event)"
-        >
-        </app-paginador>
+        ></app-paginador>
 
         <small class="text-500 block text-center py-2">
           El botón <i class="pi pi-shopping-cart"></i> permite registrar un pago sobre la cuenta.
@@ -329,61 +316,60 @@
   [config]="accionesConfig"
   [accionCargando]="accionCargando"
   (accion)="onAccion($event)"
-  (cerrar)="accionesVisible = false"
->
-</app-acciones-comprobante-dialog>
+  (cerrar)="onDialogCerrar()"
+></app-acciones-comprobante-dialog>
 
 <p-dialog
-  [(visible)]="mostrarDialogWsp"
+  [visible]="mostrarDialogWsp()"
+  (visibleChange)="mostrarDialogWsp.set($event)"
   [modal]="true"
-  [closable]="!enviandoWsp"
+  [closable]="!enviandoWsp()"
   [style]="{ width: '420px' }"
   [draggable]="false"
   (onHide)="cerrarDialogWsp()"
   header="Enviar Cuenta por Cobrar por WhatsApp"
 >
   <div class="flex flex-column align-items-center gap-4 py-3">
-    <ng-container *ngIf="!wspReady && !wspQr">
+
+    <!-- Verificando / iniciando -->
+    <ng-container *ngIf="!wspReady() && !wspQr()">
       <i class="pi pi-spin pi-spinner" style="font-size: 2.5rem; color: var(--gold)"></i>
-      <p style="color: var(--text-muted); font-size: 0.9rem">Iniciando WhatsApp...</p>
+      <p style="color: var(--text-muted); font-size: 0.9rem">Verificando estado de WhatsApp...</p>
+      <small style="color: var(--text-muted); font-size: 0.78rem; text-align: center">
+        Si demora más de 10 segundos, es posible que el servicio no esté disponible.
+      </small>
     </ng-container>
 
-    <ng-container *ngIf="!wspReady && wspQr">
+    <!-- Mostrar QR -->
+    <ng-container *ngIf="!wspReady() && wspQr()">
       <p style="color: var(--text-muted); font-size: 0.88rem; text-align: center; line-height: 1.6">
         Escanea este QR con WhatsApp en tu teléfono.<br />
         <strong>Solo una vez</strong> — la sesión queda guardada.
       </p>
       <img
-        [src]="wspQr"
+        [src]="wspQr()"
         alt="QR WhatsApp"
         style="width: 200px; height: 200px; border-radius: 8px; border: 2px solid var(--gold)"
       />
-      <div
-        style="
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          color: var(--text-muted);
-          font-size: 0.8rem;
-        "
-      >
+      <div style="display: flex; align-items: center; gap: 6px; color: var(--text-muted); font-size: 0.8rem;">
         <i class="pi pi-spin pi-spinner"></i>
         Esperando que escanees...
       </div>
     </ng-container>
 
-    <ng-container *ngIf="wspReady">
+    <!-- Listo para enviar -->
+    <ng-container *ngIf="wspReady()">
       <i class="pi pi-check-circle" style="font-size: 3rem; color: #25d366"></i>
       <p style="text-align: center; color: var(--text-muted); font-size: 0.9rem; line-height: 1.6">
-        WhatsApp conectado ✅<br />
-        <ng-container *ngIf="cuentaWsp">
+        WhatsApp conectado <br />
+        <ng-container *ngIf="cuentaWsp()">
           Se enviará la cuenta por cobrar del comprobante
-          <strong>#{{ cuentaWsp.salesReceiptId }}</strong
-          ><br />
+          <strong>#{{ cuentaWsp()!.salesReceiptId }}</strong><br />
           con el PDF adjunto al número del cliente.
         </ng-container>
       </p>
     </ng-container>
+
   </div>
 
   <ng-template pTemplate="footer">
@@ -393,18 +379,16 @@
         icon="pi pi-times"
         severity="secondary"
         [outlined]="true"
-        [disabled]="enviandoWsp"
+        [disabled]="enviandoWsp()"
         (onClick)="cerrarDialogWsp()"
-      >
-      </p-button>
+      ></p-button>
       <p-button
-        [label]="enviandoWsp ? 'Enviando...' : 'Enviar por WhatsApp'"
-        [icon]="enviandoWsp ? 'pi pi-spin pi-spinner' : 'pi pi-send'"
+        [label]="enviandoWsp() ? 'Enviando...' : 'Enviar por WhatsApp'"
+        [icon]="enviandoWsp() ? 'pi pi-spin pi-spinner' : 'pi pi-send'"
         severity="success"
-        [disabled]="!wspReady || enviandoWsp"
+        [disabled]="!wspReady() || enviandoWsp()"
         (onClick)="enviarPorWsp()"
-      >
-      </p-button>
+      ></p-button>
     </div>
   </ng-template>
 </p-dialog>

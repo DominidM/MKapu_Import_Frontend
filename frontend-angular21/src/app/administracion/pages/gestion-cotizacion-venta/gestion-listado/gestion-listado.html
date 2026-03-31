@@ -9,7 +9,9 @@
         </div>
       </div>
       <div class="flex gap-2">
+        <!-- Botón "Agregar Cotización" — solo si tiene CREAR_COTIZACIONES_VENTA -->
         <p-button
+          *ngIf="puedeCrearCotizacionesVenta"
           label="Agregar Cotización"
           icon="pi pi-plus"
           styleClass="cotizaciones-pill cotizaciones-pill-warning"
@@ -135,19 +137,28 @@
 
       <div class="filtros-linea-2">
         <div class="filtro-item filtro-compacto">
-          <label>Sede</label>
-          <p-select
-            [options]="sedesOptions()"
-            [ngModel]="sedeSeleccionada()"
-            (ngModelChange)="onSedeChange($event)"
-            optionLabel="label"
-            optionValue="value"
-            placeholder="Todas"
-            [showClear]="true"
-            styleClass="w-full">
-          </p-select>
-        </div>
+            <label>SEDE</label>
 
+            <p-select
+              *ngIf="esAdmin"
+              [options]="sedesOptions()"
+              [ngModel]="sedeSeleccionada()"
+              (ngModelChange)="onSedeChange($event)"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Todas las sedes"
+              styleClass="w-full"
+              [showClear]="true"
+            ></p-select>
+
+            <div
+              *ngIf="!esAdmin"
+              class="flex align-items-center gap-2 px-3 py-2 border-round"
+              style="background: var(--surface-100); border: 1px solid var(--surface-border); height: 42px">
+              <i class="pi pi-map-marker" style="color: #FFA726"></i>
+              <span class="font-semibold">{{ sedeNombre }}</span>
+            </div>
+          </div>
         <div class="filtro-item filtro-compacto">
           <label>Estado</label>
           <p-select
@@ -281,6 +292,7 @@
                 pTooltip="Documentos" tooltipPosition="top"
                 (onClick)="abrirAcciones(c)">
               </p-button>
+              <!-- ACCIONES PENDIENTE — solo si estado es PENDIENTE -->
               <ng-container *ngIf="c.estado === 'PENDIENTE'">
                 <p-button
                   icon="pi pi-shopping-cart"
@@ -294,13 +306,16 @@
                   pTooltip="Venta por Cobrar" tooltipPosition="top"
                   (onClick)="irAgregarVentaPorCobrar(c.id_cotizacion)">
                 </p-button>
+                <!-- RECHAZAR — solo ADMIN, estado PENDIENTE -->
                 <p-button
+                  *ngIf="esAdmin"
                   icon="pi pi-times"
                   [rounded]="true" [text]="true" severity="danger"
                   pTooltip="Rechazar cotización" tooltipPosition="top"
                   (onClick)="rechazarCotizacion(c.id_cotizacion)">
                 </p-button>
               </ng-container>
+              <!-- ACCIONES RECHAZADA -->
               <ng-container *ngIf="c.estado === 'RECHAZADA'">
                 <p-button
                   icon="pi pi-refresh"
@@ -372,7 +387,7 @@
       <ng-container *ngIf="wspReady">
         <i class="pi pi-check-circle" style="font-size:3rem; color:#25D366"></i>
         <p style="text-align:center; color:var(--text-muted); font-size:0.9rem; line-height:1.6">
-          WhatsApp conectado ✅<br>
+          WhatsApp conectado <br>
           <ng-container *ngIf="cotizacionWsp">
             Se enviará la cotización <strong>{{ cotizacionWsp.codigo }}</strong><br>
             con el PDF adjunto al número del cliente.

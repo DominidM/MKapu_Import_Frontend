@@ -73,20 +73,26 @@
     <p-message *ngIf="!loading() && error() as e" severity="error" [text]="e"></p-message>
   </div>
 
-  <!-- TABLA -->
+  <!-- TABLA CON SHARED CONTAINER -->
   <app-shared-table-container
     titulo="Listado de Roles"
     iconoTitulo="pi pi-id-card"
     mensajeCarga="Cargando roles..."
     [loading]="loading()"
+    [paginaActual]="paginaActual()"
+    [totalPaginas]="totalPaginas()"
+    [totalRegistros]="filteredRoles().length"
+    [limitePorPagina]="limitePagina()"
     [mostrarExportar]="false"
-  >
+    (pageChange)="onPageChange($event)"
+    (limitChange)="onLimitChange($event)">
+
     <!-- Tag contador en slot de acciones -->
     <div slot="acciones">
       <p-tag
         [value]="filteredRoles().length + ' roles'"
-        [severity]="viewMode() === 'activos'   ? 'success'
-                  : viewMode() === 'inactivos'  ? 'danger' : 'info'">
+        [severity]="viewMode() === 'activos' ? 'success'
+                  : viewMode() === 'inactivos' ? 'danger' : 'info'">
       </p-tag>
     </div>
 
@@ -101,14 +107,12 @@
       </p-button>
     </div>
 
-    <!-- Tabla con paginador nativo de PrimeNG -->
+    <!-- Tabla sin paginador (el paginador está en SharedTableContainer) -->
     <p-table
       *ngIf="!loading() && filteredRoles().length > 0"
-      [value]="filteredRoles()"
+      [value]="rolesPaginados()"
       styleClass="p-datatable-striped"
-      [paginator]="true"
-      [rows]="5"
-      [rowsPerPageOptions]="[5, 10, 20, 50]"
+      [paginator]="false"
       [tableStyle]="{ 'min-width': '100%' }">
 
       <ng-template pTemplate="header">

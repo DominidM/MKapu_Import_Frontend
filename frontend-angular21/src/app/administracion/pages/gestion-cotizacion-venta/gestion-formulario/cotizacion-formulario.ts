@@ -744,7 +744,7 @@ guardar() {
       igv:                this.igv,
       total:              this.total,
       tipo:               this.tipoCotizacion() ?? 'VENTA',
-      id_responsable_ref: this.getIdUsuarioActual(), // ✅ FIX: responsable desde localStorage
+      id_responsable_ref: this.getIdUsuarioActual(), 
       detalles: this.detalles().map(
         ({ importe, uni_med, tipoPrecio, pre_unit, pre_may, pre_caja, almacen, stock, ...d }) => d
       ),

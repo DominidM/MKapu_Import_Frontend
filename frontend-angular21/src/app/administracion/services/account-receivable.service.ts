@@ -30,6 +30,16 @@ export interface AccountReceivablePaginatedResponse {
   totalPages: number;
 }
 
+// ── Pago individual ───────────────────────────────────────────────────────────
+export interface PagoAR {
+  id:          number;
+  fec_pago:    string;
+  metodo_pago: string;
+  referencia:  string | null;
+  monto:       number;
+  estado:      string;
+}
+
 export interface CreateAccountReceivablePayload {
   salesReceiptId: number;
   userRef:        string;
@@ -57,11 +67,57 @@ export interface UpdateDueDatePayload {
   newDueDate:          string;
 }
 
+// ── Tipos del detalle enriquecido ─────────────────────────────────────────────
+
+export interface ProductoDetalleAR {
+  id_prod_ref:  any;
+  cod_prod:     string;
+  descripcion:  string;
+  cantidad:     number;
+  precio_unit:  number;
+  igv:          number;
+  total:        number;
+}
+
+export interface ClienteDetalleAR {
+  id_cliente:     any;
+  nombre:         string;
+  documento:      string;
+  tipo_documento: string;
+  direccion:      string;
+  email:          string;
+  telefono:       string;
+}
+
+export interface ComprobanteDetalleAR {
+  id_comprobante:   number;
+  numero_completo:  string;
+  serie:            string;
+  numero:           number;
+  tipo_comprobante: string;
+  fec_emision:      string;
+  estado:           string;
+  subtotal:         number;
+  igv:              number;
+  total:            number;
+  metodo_pago:      string;
+  responsable:      { nombre: string; nombreSede: string };
+  productos:        ProductoDetalleAR[];
+}
+
+export interface AccountReceivableDetalle {
+  cuenta:      AccountReceivableResponse;
+  cliente:     ClienteDetalleAR;
+  comprobante: ComprobanteDetalleAR;
+  pagos:       PagoAR[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class AccountReceivableService {
 
-  private readonly http    = inject(HttpClient);
-  private readonly baseUrl = `${environment.apiUrl}/sales/account-receivables`;
+  private readonly http        = inject(HttpClient);
+  private readonly baseUrl     = `${environment.apiUrl}/sales/account-receivables`;
+  private readonly receiptsUrl = `${environment.apiUrl}/sales/receipts`;
 
   readonly list         = signal<AccountReceivableResponse[]>([]);
   readonly selected     = signal<AccountReceivableResponse | null>(null);
@@ -73,7 +129,6 @@ export class AccountReceivableService {
   readonly accounts     = this.list.asReadonly();
   readonly totalRecords = this.total.asReadonly();
 
-  // ── KPI globales (independientes de filtros y paginado) ───────────
   readonly kpiTotal      = signal<number>(0);
   readonly kpiPendientes = signal<number>(0);
   readonly kpiVencidos   = signal<number>(0);
@@ -94,9 +149,9 @@ export class AccountReceivableService {
     sedeId? : number,
     status? : AccountReceivableStatus | null,
   ): Promise<void> {
-    this._lastSedeId = sedeId;
-    this._lastStatus = (status === null || status === undefined) ? undefined : status;
-    this._lastLimit  = limit;
+    this._lastSedeId      = sedeId;
+    this._lastStatus      = (status === null || status === undefined) ? undefined : status;
+    this._lastLimit       = limit;
     const statusParaQuery = status === null ? undefined : status;
 
     this.loading.set(true);
@@ -112,35 +167,17 @@ export class AccountReceivableService {
       const kpiBase = new HttpParams().set('page', '1').set('limit', '1');
 
       const [res, totalRes, pendRes, vencRes, cancelRes] = await Promise.all([
-        // página actual con filtros aplicados
-        firstValueFrom(this.http.get<AccountReceivablePaginatedResponse>(
-          this.baseUrl, { params: httpParams }
-        )),
-        // total global sin filtro de estado
-        firstValueFrom(this.http.get<AccountReceivablePaginatedResponse>(
-          this.baseUrl, { params: kpiBase }
-        )),
-        // total PENDIENTE global
-        firstValueFrom(this.http.get<AccountReceivablePaginatedResponse>(
-          this.baseUrl, { params: kpiBase.set('status', 'PENDIENTE') }
-        )),
-        // total VENCIDO global
-        firstValueFrom(this.http.get<AccountReceivablePaginatedResponse>(
-          this.baseUrl, { params: kpiBase.set('status', 'VENCIDO') }
-        )),
-        // total CANCELADO global
-        firstValueFrom(this.http.get<AccountReceivablePaginatedResponse>(
-          this.baseUrl, { params: kpiBase.set('status', 'CANCELADO') }
-        )),
+        firstValueFrom(this.http.get<AccountReceivablePaginatedResponse>(this.baseUrl, { params: httpParams })),
+        firstValueFrom(this.http.get<AccountReceivablePaginatedResponse>(this.baseUrl, { params: kpiBase })),
+        firstValueFrom(this.http.get<AccountReceivablePaginatedResponse>(this.baseUrl, { params: kpiBase.set('status', 'PENDIENTE') })),
+        firstValueFrom(this.http.get<AccountReceivablePaginatedResponse>(this.baseUrl, { params: kpiBase.set('status', 'VENCIDO') })),
+        firstValueFrom(this.http.get<AccountReceivablePaginatedResponse>(this.baseUrl, { params: kpiBase.set('status', 'CANCELADO') })),
       ]);
 
-      // página actual
       this.list.set(res.data);
       this.total.set(res.total);
       this.page.set(res.page);
       this.totalPages.set(res.totalPages);
-
-      // KPIs globales
       this.kpiTotal.set(totalRes.total);
       this.kpiPendientes.set(pendRes.total);
       this.kpiVencidos.set(vencRes.total);
@@ -159,6 +196,68 @@ export class AccountReceivableService {
 
   async loadAll(params: { page?: number; limit?: number } = {}): Promise<void> {
     await this.getAll(params.page ?? 1, params.limit ?? 10);
+  }
+
+  /**
+   * Carga en paralelo:
+   *  1. cuenta base            GET /account-receivables/:id
+   *  2. detalle del comprobante GET /receipts/:salesReceiptId/detalle
+   *  3. pagos                   GET /account-receivables/:id/payments
+   */
+  async getDetalleEnriquecidoAsync(id: number): Promise<AccountReceivableDetalle> {
+    // Paso 1: cuenta base (necesitamos salesReceiptId antes de continuar)
+    const cuenta = await firstValueFrom(
+      this.http.get<AccountReceivableResponse>(`${this.baseUrl}/${id}`)
+    );
+
+    // Paso 2: detalle comprobante + pagos en paralelo
+    const [detalleComprobante, pagos] = await Promise.all([
+      firstValueFrom(
+        this.http.get<any>(`${this.receiptsUrl}/${cuenta.salesReceiptId}/detalle`)
+      ),
+      firstValueFrom(
+        this.http.get<PagoAR[]>(`${this.baseUrl}/${id}/payments`)
+      ),
+    ]);
+
+    const cliente: ClienteDetalleAR = {
+      id_cliente:     detalleComprobante.cliente?.id_cliente     ?? null,
+      nombre:         detalleComprobante.cliente?.nombre          ?? '—',
+      documento:      detalleComprobante.cliente?.documento       ?? '—',
+      tipo_documento: detalleComprobante.cliente?.tipo_documento  ?? '—',
+      direccion:      detalleComprobante.cliente?.direccion       ?? '',
+      email:          detalleComprobante.cliente?.email           ?? '',
+      telefono:       detalleComprobante.cliente?.telefono        ?? '',
+    };
+
+    const comprobante: ComprobanteDetalleAR = {
+      id_comprobante:   detalleComprobante.id_comprobante,
+      numero_completo:  detalleComprobante.numero_completo,
+      serie:            detalleComprobante.serie,
+      numero:           detalleComprobante.numero,
+      tipo_comprobante: detalleComprobante.tipo_comprobante ?? '—',
+      fec_emision:      detalleComprobante.fec_emision,
+      estado:           detalleComprobante.estado,
+      subtotal:         Number(detalleComprobante.subtotal),
+      igv:              Number(detalleComprobante.igv),
+      total:            Number(detalleComprobante.total),
+      metodo_pago:      detalleComprobante.metodo_pago ?? '—',
+      responsable: {
+        nombre:     detalleComprobante.responsable?.nombre     ?? '—',
+        nombreSede: detalleComprobante.responsable?.nombreSede ?? '—',
+      },
+      productos: (detalleComprobante.productos ?? []).map((p: any) => ({
+        id_prod_ref: p.id_prod_ref,
+        cod_prod:    p.cod_prod,
+        descripcion: p.descripcion,
+        cantidad:    Number(p.cantidad),
+        precio_unit: Number(p.precio_unit),
+        igv:         Number(p.igv),
+        total:       Number(p.total),
+      })),
+    };
+
+    return { cuenta, cliente, comprobante, pagos: pagos ?? [] };
   }
 
   async getById(id: number): Promise<void> {
@@ -221,7 +320,7 @@ export class AccountReceivableService {
     } finally { this.loading.set(false); }
   }
 
-  // ── Voucher térmico ───────────────────────────────────────────────
+  // ── PDF / Voucher ─────────────────────────────────────────────────
 
   printVoucher(id: number): Observable<void> {
     return new Observable((observer) => {
@@ -234,8 +333,7 @@ export class AccountReceivableService {
             setTimeout(() => { try { win.focus(); win.print(); } catch { } }, 1500);
           }
           setTimeout(() => window.URL.revokeObjectURL(url), 60_000);
-          observer.next();
-          observer.complete();
+          observer.next(); observer.complete();
         },
         error: (err) => observer.error(err),
       });
@@ -251,12 +349,9 @@ export class AccountReceivableService {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      observer.next();
-      observer.complete();
+      observer.next(); observer.complete();
     });
   }
-
-  // ── PDF ───────────────────────────────────────────────────────────
 
   exportPdf(id: number): void {
     window.open(`${this.baseUrl}/${id}/export/pdf`, '_blank');
@@ -266,17 +361,14 @@ export class AccountReceivableService {
     return new Observable((observer) => {
       this.http.get(`${this.baseUrl}/${id}/export/pdf`, { responseType: 'blob' }).subscribe({
         next: (blob) => {
-          const blobUrl = window.URL.createObjectURL(
-            new Blob([blob], { type: 'application/pdf' })
-          );
+          const blobUrl = window.URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }));
           const win = window.open(blobUrl, '_blank');
           if (win) {
             win.onload = () => { win.focus(); win.print(); };
             setTimeout(() => { try { win.focus(); win.print(); } catch { } }, 1500);
           }
           setTimeout(() => window.URL.revokeObjectURL(blobUrl), 60_000);
-          observer.next();
-          observer.complete();
+          observer.next(); observer.complete();
         },
         error: (err) => observer.error(err),
       });
@@ -292,20 +384,15 @@ export class AccountReceivableService {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      observer.next();
-      observer.complete();
+      observer.next(); observer.complete();
     });
   }
-
-  // ── Email ─────────────────────────────────────────────────────────
 
   sendByEmail(id: number): Observable<{ message: string; sentTo: string }> {
     return this.http.post<{ message: string; sentTo: string }>(
       `${this.baseUrl}/${id}/send-email`, {}
     );
   }
-
-  // ── WhatsApp ──────────────────────────────────────────────────────
 
   getWhatsAppStatus(): Observable<{ ready: boolean; qr: string | null }> {
     return this.http.get<{ ready: boolean; qr: string | null }>(

@@ -12,6 +12,8 @@ import { CommissionService, CommissionRule } from '../../services/commission.ser
 import { CategoriaService } from '../../services/categoria.service';
 import { SharedTableContainerComponent } from '../../../shared/components/table.componente/shared-table-container.component';
 import { TooltipModule } from 'primeng/tooltip';
+import { AuthService } from '../../../auth/services/auth.service';
+import { UserRole } from '../../../core/constants/roles.constants';
 
 @Component({
   selector: 'app-comision',
@@ -29,12 +31,20 @@ import { TooltipModule } from 'primeng/tooltip';
 export class Comision implements OnInit {
   private readonly commissionService = inject(CommissionService);
   private readonly categoriaService  = inject(CategoriaService);
+  private readonly authService       = inject(AuthService);
 
   readonly loading    = this.commissionService.loading;
   readonly error      = this.commissionService.error;
   readonly categorias = this.categoriaService.categorias;
 
-  // ── Filtros ────────────────────────────────────────────────────────────────
+  // ── Permisos ───────────────────────────────────────────────────────────────
+  esAdmin                 = false;
+  puedeCrearComisiones    = false; // CREAR_COMISIONES  → botón "Crear Regla"
+  puedeEditarComisiones   = false; // EDITAR_COMISIONES → botón lápiz
+  puedeVerComisiones      = false; // VER_COMISIONES    → visualización de reglas
+  // desactivar/activar → solo esAdmin
+
+  // ── Filtros ─────────────────────────────────��──────────────────────────────
   readonly filtroBusqueda   = signal('');
   readonly filtroTipo       = signal<string | null>(null);
   readonly filtroRecompensa = signal<string | null>(null);
@@ -150,6 +160,12 @@ export class Comision implements OnInit {
 
   // ── Lifecycle ──────────────────────────────────────────────────────────────
   ngOnInit() {
+    // ── Resolver permisos ─────────────────────────────────────────
+    this.esAdmin               = this.authService.getRoleId() === UserRole.ADMIN;
+    this.puedeCrearComisiones  = this.authService.hasPermiso('CREAR_COMISIONES');
+    this.puedeEditarComisiones = this.authService.hasPermiso('EDITAR_COMISIONES');
+    this.puedeVerComisiones    = this.authService.hasPermiso('VER_COMISIONES');
+
     this.commissionService.loadRules().subscribe();
     this.commissionService.loadUsageByRule().subscribe();
     this.categoriaService.loadCategorias().subscribe();

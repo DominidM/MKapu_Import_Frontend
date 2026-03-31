@@ -11,7 +11,8 @@ import { TooltipModule } from 'primeng/tooltip';
 import { RouterModule } from '@angular/router';
 import { DatePickerModule } from 'primeng/datepicker';
 import { ToastModule } from 'primeng/toast';
-import { MessageService } from 'primeng/api';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { MessageService, ConfirmationService } from 'primeng/api';
 import { CommissionService, CommissionReport } from '../../../services/commission.service';
 import { SedeService } from '../../../services/sede.service';
 import { AuthService } from '../../../../auth/services/auth.service';
@@ -37,17 +38,19 @@ import {
     RouterModule,
     DatePickerModule,
     ToastModule,
+    ConfirmDialogModule,
     SharedTableContainerComponent,
   ],
   templateUrl: './comisionreportes.html',
   styleUrls: ['./comisionreportes.css'],
-  providers: [MessageService],
+  providers: [MessageService, ConfirmationService],
 })
 export class ComisionReportes implements OnInit {
-  private readonly commissionService = inject(CommissionService);
-  private readonly sedeService       = inject(SedeService);
-  private readonly authService       = inject(AuthService);
-  private readonly messageService    = inject(MessageService);
+  private readonly commissionService    = inject(CommissionService);
+  private readonly sedeService          = inject(SedeService);
+  private readonly authService          = inject(AuthService);
+  private readonly messageService       = inject(MessageService);
+  private readonly confirmationService  = inject(ConfirmationService);
 
   readonly loading = this.commissionService.loading;
   readonly error   = this.commissionService.error;
@@ -78,8 +81,9 @@ export class ComisionReportes implements OnInit {
     { label: 'Anulada',   value: 'ANULADA'   },
   ];
 
-  // ── Estado botón atender ───────────────────────────────────────────
+  // ── Estados de botones ─────────────────────────────────────────────
   readonly atendiendo = signal<number | null>(null);
+  readonly anulando   = signal<number | null>(null);
 
   // ── Reportes filtrados ─────────────────────────────────────────────
   readonly reportesFiltrados = computed(() => {
@@ -155,7 +159,6 @@ export class ComisionReportes implements OnInit {
     this.cargar();
   }
 
-  // ✅ limpiarFiltros: resetea al rango del mes actual (no a null)
   limpiarFiltros() {
     this.filtroBusqueda.set('');
     this.filtroEstado.set(null);
@@ -167,7 +170,6 @@ export class ComisionReportes implements OnInit {
   }
 
   private cargar() {
-    // ✅ Siempre usa las fechas del signal — nunca null gracias al default del mes
     const desde = this.fechaInicio() ?? getPrimerDiaMesActualPeru();
     const hasta = this.fechaFin()    ?? getUltimoDiaMesActualPeru();
     const d = new Date(desde); d.setHours(0, 0, 0, 0);
@@ -175,27 +177,75 @@ export class ComisionReportes implements OnInit {
     this.commissionService.loadReport(d, h).subscribe();
   }
 
-  // ── Atender ────────────────────────────────────────────────────────
+  // ── Liquidar ───────────────────────────────────────────────────────
   atender(r: CommissionReport): void {
-    this.atendiendo.set(r.id_comision);
-    this.commissionService.atender(r.id_comision).subscribe({
-      next: () => {
-        this.atendiendo.set(null);
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Liquidada',
-          detail: `Comisión #${r.id_comision} marcada como LIQUIDADA`,
-          life: 3000,
+    this.confirmationService.confirm({
+      message:  `¿Marcar como <strong>LIQUIDADA</strong> la comisión <strong>#${r.id_comision}</strong> de <strong>${r.nombre_vendedor}</strong> por <strong>S/ ${Number(r.monto).toFixed(2)}</strong>?`,
+      header:   'Liquidar Comisión',
+      icon:     'pi pi-check-circle',
+      acceptLabel: 'Sí, liquidar',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-success',
+      rejectButtonStyleClass: 'p-button-secondary p-button-outlined',
+      accept: () => {
+        this.atendiendo.set(r.id_comision);
+        this.commissionService.atender(r.id_comision).subscribe({
+          next: () => {
+            this.atendiendo.set(null);
+            this.messageService.add({
+              severity: 'success',
+              summary:  'Liquidada',
+              detail:   `Comisión #${r.id_comision} marcada como LIQUIDADA`,
+              life: 3000,
+            });
+            this.cargar();
+          },
+          error: () => {
+            this.atendiendo.set(null);
+            this.messageService.add({
+              severity: 'error',
+              summary:  'Error',
+              detail:   'No se pudo liquidar la comisión',
+              life: 3000,
+            });
+          },
         });
-        this.cargar();
       },
-      error: () => {
-        this.atendiendo.set(null);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudo liquidar la comisión',
-          life: 3000,
+    });
+  }
+
+  // ── Anular ─────────────────────────────────────────────────────────
+  anular(r: CommissionReport): void {
+    this.confirmationService.confirm({
+      message:  `¿Estás seguro de <strong>ANULAR</strong> la comisión <strong>#${r.id_comision}</strong> de <strong>${r.nombre_vendedor}</strong> por <strong>S/ ${Number(r.monto).toFixed(2)}</strong>? Esta acción no se puede deshacer.`,
+      header:   'Anular Comisión',
+      icon:     'pi pi-exclamation-triangle',
+      acceptLabel: 'Sí, anular',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger',
+      rejectButtonStyleClass: 'p-button-secondary p-button-outlined',
+      accept: () => {
+        this.anulando.set(r.id_comision);
+        this.commissionService.anular(r.id_comision).subscribe({
+          next: () => {
+            this.anulando.set(null);
+            this.messageService.add({
+              severity: 'warn',
+              summary:  'Anulada',
+              detail:   `Comisión #${r.id_comision} fue anulada`,
+              life: 3000,
+            });
+            this.cargar();
+          },
+          error: () => {
+            this.anulando.set(null);
+            this.messageService.add({
+              severity: 'error',
+              summary:  'Error',
+              detail:   'No se pudo anular la comisión',
+              life: 3000,
+            });
+          },
         });
       },
     });
