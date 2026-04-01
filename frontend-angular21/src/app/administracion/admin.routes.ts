@@ -482,6 +482,13 @@ export const ADMIN_ROUTES: Routes = [
           data: { permiso: 'VER_NC' },
       },
       {
+        path: 'detalle-nota-credito/:id',
+        loadComponent: () =>
+          import('./pages/nota-credito/detalle-nota-credito/detalle-nota-credito').then((m) => m.DetalleNotaCreditoComponent),
+          canActivate: [roleGuard],
+          data: { permiso: 'VER_NC' },
+      },
+      {
         path: 'crear',
         loadComponent: () =>
           import('./pages/nota-credito/agregar-nota-credito/agregar-nota-credito').then((m) => m.AgregarNotaCreditoComponent,),
@@ -727,6 +734,13 @@ export const ADMIN_ROUTES: Routes = [
         path: '',
         loadComponent: () =>
           import('./pages/mermas/pages/mermas-pr/mermas-pr').then((m) => m.MermasPr),
+          canActivate: [roleGuard],
+          data: { permiso: 'VER_MERMAS' },
+      },
+            {
+        path: 'detalle-merma/:id',
+        loadComponent: () =>
+          import('./pages/mermas/pages/mermas-detalle/mermas-detalle').then((m) => m.MermasDetalle),
           canActivate: [roleGuard],
           data: { permiso: 'VER_MERMAS' },
       },

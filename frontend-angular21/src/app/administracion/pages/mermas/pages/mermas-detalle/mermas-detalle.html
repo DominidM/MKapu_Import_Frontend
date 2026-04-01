@@ -1,0 +1,259 @@
+@if (loading()) {
+  <div class="merma-loading">
+    <i class="pi pi-spin pi-spinner merma-loading-icon"></i>
+  </div>
+}
+
+@if (!loading()) {
+  @if (detalle(); as merma) {
+    <div class="p-2 merma-page">
+      <p-card styleClass="merma-header-card mb-4 merma-header-bordered">
+        <div class="flex align-items-center justify-content-between flex-wrap gap-2">
+          <div class="flex align-items-center gap-3">
+            <span class="merma-title-icon">
+              <i class="pi pi-exclamation-triangle"></i>
+            </span>
+            <div>
+              <p class="merma-kicker mb-0">ADMINISTRADOR - ADMINISTRACIÓN - MERMAS</p>
+              <h2 class="merma-title mb-0">DETALLE DE LA MERMA</h2>
+            </div>
+          </div>
+
+          <div class="flex gap-2 flex-wrap justify-content-end">
+            @if (canEdit()) {
+              <p-button
+                label="Editar Merma"
+                icon="pi pi-pencil"
+                styleClass="merma-pill merma-pill-warning"
+                (onClick)="irEditar()">
+              </p-button>
+            }
+
+            <p-button
+              label="Volver"
+              icon="pi pi-arrow-left"
+              styleClass="merma-pill merma-pill-secondary"
+              (onClick)="volver()">
+            </p-button>
+          </div>
+        </div>
+      </p-card>
+
+      <div class="merma-summary-grid mb-4">
+        <div class="merma-summary-card merma-summary-card--code">
+          <i class="pi pi-barcode"></i>
+          <div>
+            <span class="merma-summary-label">Codigo</span>
+            <span class="merma-summary-value">{{ mermaCode() }}</span>
+            <span class="merma-summary-detail">
+              <i class="pi pi-hashtag"></i>
+              Registro interno de la merma
+            </span>
+          </div>
+        </div>
+
+        <div class="merma-summary-card merma-summary-card--type">
+          <i class="pi pi-tag"></i>
+          <div>
+            <span class="merma-summary-label">Tipo de merma</span>
+            <span class="merma-summary-value">{{ tipoMermaLabel() }}</span>
+            <span class="merma-summary-detail">
+              <i class="pi pi-flag"></i>
+              {{ observacionesCount() }} observaciones registradas
+            </span>
+          </div>
+        </div>
+
+        <div class="merma-summary-card merma-summary-card--sede">
+          <i class="pi pi-building"></i>
+          <div>
+            <span class="merma-summary-label">Sede</span>
+            <span class="merma-summary-value">{{ sedeLabel() }}</span>
+            <span class="merma-summary-detail">
+              <i class="pi pi-user"></i>
+              {{ responsableLabel() }}
+            </span>
+          </div>
+        </div>
+
+        <div
+          class="merma-summary-card"
+          [class.merma-summary-card--status-active]="merma.estado"
+          [class.merma-summary-card--status-inactive]="!merma.estado">
+          <i class="pi pi-power-off"></i>
+          <div>
+            <span class="merma-summary-label">Estado</span>
+            <span class="merma-summary-value">{{ estadoLabel() }}</span>
+            <span class="merma-summary-detail">
+              <i class="pi pi-info-circle"></i>
+              {{ estadoDetalle() }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="merma-section-card mb-4">
+        <div class="merma-section-header">
+          <h3><i class="pi pi-info-circle"></i> Informacion de la Merma</h3>
+        </div>
+
+        <div class="merma-fields-grid merma-fields-grid--single">
+          <div class="merma-field">
+            <label>MOTIVO PRINCIPAL</label>
+            <div class="merma-field-display merma-field-display--multiline">
+              <i class="pi pi-comment text-600"></i>
+              <span>{{ motivoLabel() }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="merma-fields-grid">
+          <div class="merma-field">
+            <label>RESPONSABLE</label>
+            <div class="merma-field-display">
+              <i class="pi pi-user text-600"></i>
+              <span class="font-semibold">{{ responsableLabel() }}</span>
+            </div>
+          </div>
+
+          <div class="merma-field">
+            <label>FECHA DE REGISTRO</label>
+            <div class="merma-field-display">
+              <i class="pi pi-calendar text-600"></i>
+              <span class="font-semibold">{{ fechaRegistro() | date:'dd/MM/yyyy HH:mm' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="merma-fields-grid">
+          <div class="merma-field">
+            <label>SEDE</label>
+            <div class="merma-field-display">
+              <i class="pi pi-map-marker text-600"></i>
+              <span>{{ sedeLabel() }}</span>
+            </div>
+          </div>
+
+          <div class="merma-field">
+            <label>TIPO DE MERMA</label>
+            <div class="merma-field-display">
+              <i class="pi pi-tag text-600"></i>
+              <p-tag [value]="tipoMermaLabel()" [severity]="getTipoMermaSeverity(tipoMermaLabel())"></p-tag>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="merma-section-card mb-4">
+        <div class="merma-section-header">
+          <h3><i class="pi pi-chart-bar"></i> Impacto y Observaciones</h3>
+        </div>
+
+        <div class="merma-fields-grid">
+          <div class="merma-field">
+            <label>PRODUCTOS AFECTADOS</label>
+            <div class="merma-field-display">
+              <i class="pi pi-box text-600"></i>
+              <span class="font-semibold">{{ detalleCount() }}</span>
+            </div>
+          </div>
+
+          <div class="merma-field">
+            <label>UNIDADES DADAS DE BAJA</label>
+            <div class="merma-field-display">
+              <i class="pi pi-sort-amount-down text-600"></i>
+              <span class="font-semibold">{{ totalItems() }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="merma-fields-grid">
+          <div class="merma-field">
+            <label>VALOR REFERENCIAL</label>
+            <div class="merma-field-display">
+              <i class="pi pi-wallet text-600"></i>
+              <span class="font-semibold">{{ valorTotal() | currency:'PEN':'symbol':'1.2-2' }}</span>
+            </div>
+          </div>
+
+          <div class="merma-field">
+            <label>PROMEDIO DE UNIDADES POR PRODUCTO</label>
+            <div class="merma-field-display">
+              <i class="pi pi-chart-line text-600"></i>
+              <span class="font-semibold">{{ promedioUnidades() | number:'1.2-2' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="merma-fields-grid merma-fields-grid--single">
+          <div class="merma-field">
+            <label>OBSERVACIONES CONSOLIDADAS</label>
+            <div class="merma-field-display merma-field-display--multiline">
+              <i class="pi pi-file-edit text-600"></i>
+              <span>{{ observacionesLabel() }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="merma-section-card">
+        <div class="merma-section-header">
+          <h3><i class="pi pi-box"></i> Productos Afectados</h3>
+          <p-tag [value]="detalleCount() + ' productos'" severity="warn"></p-tag>
+        </div>
+
+        <div class="merma-products-grid">
+          @for (item of productos(); track trackDetalle(item, $index)) {
+            <article class="merma-product-card">
+              <div class="merma-product-card__top">
+                <span class="merma-product-code">{{ item.cod_prod || 'SIN-CODIGO' }}</span>
+                <span class="merma-product-qty">{{ item.cantidad }} unid.</span>
+              </div>
+
+              <h4 class="merma-product-name">{{ item.desc_prod || 'Producto sin descripcion' }}</h4>
+
+              <div class="merma-product-metrics">
+                <div>
+                  <span>Precio unit.</span>
+                  <strong>{{ item.pre_unit | currency:'PEN':'symbol':'1.2-2' }}</strong>
+                </div>
+                <div>
+                  <span>Subtotal</span>
+                  <strong>{{ item.cantidad * item.pre_unit | currency:'PEN':'symbol':'1.2-2' }}</strong>
+                </div>
+              </div>
+
+              <div class="merma-product-footer">
+                <p-tag [value]="tipoMermaLabel()" [severity]="getTipoMermaSeverity(tipoMermaLabel())"></p-tag>
+                @if (item.observacion) {
+                  <span class="merma-product-observation">{{ item.observacion }}</span>
+                }
+              </div>
+            </article>
+          } @empty {
+            <div class="merma-products-empty">
+              <i class="pi pi-inbox"></i>
+              <p>No hay productos registrados para esta merma.</p>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  } @else {
+    <div class="p-2">
+      <p-card styleClass="merma-header-card merma-header-bordered">
+        <div class="merma-error-state">
+          <i class="pi pi-exclamation-triangle merma-error-state__icon"></i>
+          <h3>No se pudo cargar la merma</h3>
+          <p>{{ errorMsg() ?? 'La merma no existe o no esta disponible.' }}</p>
+          <p-button
+            label="Volver a Mermas"
+            icon="pi pi-arrow-left"
+            styleClass="merma-pill merma-pill-secondary"
+            (onClick)="volver()">
+          </p-button>
+        </div>
+      </p-card>
+    </div>
+  }
+}
