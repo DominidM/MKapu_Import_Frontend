@@ -1,25 +1,33 @@
 <div class="p-2">
-  <p-card class="nota-credito-header-card mb-4 nota-credito-header-bordered">
-    <div class="flex align-items-center justify-content-between flex-wrap gap-2">
+  <p-card styleClass="mb-4 shadow-1 border-round-xl">
+    <div class="flex align-items-center justify-content-between flex-wrap gap-3">
       <div class="flex align-items-center gap-3">
-        <span class="nota-credito-title-icon"><i [class]="iconoCabecera"></i></span>
-        <div>
-          <p class="nota-credito-kicker mb-0">{{ tituloKicker }}</p>
-          <h2 class="nota-credito-title mb-0">{{ subtituloKicker }}</h2>
+        <div class="flex align-items-center justify-content-center border-round-lg"
+             style="width: 3.5rem; height: 3.5rem; background-color: var(--primary-color); color: var(--primary-color-text);">
+          <i class="pi pi-file-plus" style="font-size: 1.5rem;"></i>
+        </div>
+        <div class="flex flex-column justify-content-center">
+          <span class="text-sm font-semibold mb-0" style="color: var(--text-color-secondary); letter-spacing: 0.5px;">
+            VENTAS - NOTAS DE CRÉDITO
+          </span>
+          <h2 class="m-0 text-2xl font-bold" style="color: var(--text-color);">
+            Emitir Nota de Crédito
+          </h2>
         </div>
       </div>
       <div class="flex gap-2">
         <p-button
-          label="Volver al Listado"
+          label="Volver al listado"
           icon="pi pi-arrow-left"
-          styleClass="nota-credito-pill nota-credito-pill-warning"
+          [rounded]="true"
+          [outlined]="true"
+          severity="secondary"
           (onClick)="volverListado()"
         ></p-button>
       </div>
     </div>
   </p-card>
 </div>
-
 
 <div class="p-2">
   <div class="surface-card p-4 border-round-xl shadow-1 mb-4">
