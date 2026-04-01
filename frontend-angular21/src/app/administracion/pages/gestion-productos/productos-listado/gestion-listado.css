@@ -4061,3 +4061,62 @@
 .rdm-btn-close { min-width: 100px; }
 .rdm-btn-toggle { min-width: 150px; }
 .rdm-btn-edit   { min-width: 150px; }
+
+/* ── Modal Merma / Remate ─────────────────────────── */
+.merma-remate-body {
+  padding: 4px 0 8px 0;
+}
+
+.seccion-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--text-color-secondary);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.acciones-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.accion-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 20px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--surface-border);
+  background: var(--surface-ground);  /* ← fondo más claro */
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-color);
+  transition: all 0.18s;
+  text-align: center;
+  width: 100%;
+}
+
+.accion-btn:hover {
+  border-color: #ffa726;
+  background: var(--surface-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255,167,38,0.15);
+}
+
+.accion-icono {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+}
