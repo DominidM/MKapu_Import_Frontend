@@ -1,0 +1,175 @@
+@if (loading()) {
+  <div class="categoria-loading">
+    <i class="pi pi-spin pi-spinner categoria-loading-icon"></i>
+  </div>
+}
+
+@if (!loading()) {
+  @if (detalle(); as categoria) {
+    <div class="p-2 categoria-page">
+      <p-card styleClass="categoria-header-card mb-4 categoria-header-bordered">
+        <div class="flex align-items-center justify-content-between flex-wrap gap-2">
+          <div class="flex align-items-center gap-3">
+            <span class="categoria-title-icon">
+              <i class="pi pi-tag"></i>
+            </span>
+            <div>
+              <p class="categoria-kicker mb-0">ADMINISTRADOR · ADMINISTRACIÓN · CATEGORÍAS</p>
+              <h2 class="categoria-title mb-0">DETALLE DE LA CATEGORÍA</h2>
+            </div>
+          </div>
+
+          <div class="flex gap-2">
+            @if (canEdit()) {
+              <p-button
+                label="Editar Categoría"
+                icon="pi pi-pencil"
+                styleClass="categoria-pill categoria-pill-warning"
+                (onClick)="irEditar()">
+              </p-button>
+            }
+
+            <p-button
+              label="Volver"
+              icon="pi pi-arrow-left"
+              styleClass="categoria-pill categoria-pill-secondary"
+              (onClick)="volver()">
+            </p-button>
+          </div>
+        </div>
+      </p-card>
+
+      <div class="categoria-summary-grid mb-4">
+        <div class="categoria-summary-card categoria-summary-card--code">
+          <i class="pi pi-hashtag"></i>
+          <div>
+            <span class="categoria-summary-label">Código</span>
+            <span class="categoria-summary-value">{{ categoriaCode() }}</span>
+            <span class="categoria-summary-detail">
+              <i class="pi pi-tag"></i>
+              Identificador interno de la categoría
+            </span>
+          </div>
+        </div>
+
+        <div class="categoria-summary-card categoria-summary-card--name">
+          <i class="pi pi-bookmark"></i>
+          <div>
+            <span class="categoria-summary-label">Nombre</span>
+            <span class="categoria-summary-value">{{ categoriaNombre() }}</span>
+            <span class="categoria-summary-detail">
+              <i class="pi pi-folder"></i>
+              Clasificación operativa principal
+            </span>
+          </div>
+        </div>
+
+        <div class="categoria-summary-card categoria-summary-card--description">
+          <i class="pi pi-align-left"></i>
+          <div>
+            <span class="categoria-summary-label">Descripción</span>
+            <span class="categoria-summary-value">{{ descripcionStatus() }}</span>
+            <span class="categoria-summary-detail">
+              <i class="pi pi-file-edit"></i>
+              {{ descripcionMeta() }}
+            </span>
+          </div>
+        </div>
+
+        <div
+          class="categoria-summary-card"
+          [class.categoria-summary-card--status-active]="categoria.activo"
+          [class.categoria-summary-card--status-inactive]="!categoria.activo">
+          <i class="pi pi-power-off"></i>
+          <div>
+            <span class="categoria-summary-label">Estado</span>
+            <span class="categoria-summary-value">{{ estadoLabel() }}</span>
+            <span class="categoria-summary-detail">
+              <i class="pi pi-info-circle"></i>
+              {{ categoria.activo ? 'Disponible para operación' : 'Fuera de operación' }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="categoria-section-card mb-4">
+        <div class="categoria-section-header">
+          <h3><i class="pi pi-info-circle"></i> Información de la Categoría</h3>
+        </div>
+
+        <div class="categoria-fields-grid categoria-fields-grid--single">
+          <div class="categoria-field">
+            <label>NOMBRE DE LA CATEGORÍA</label>
+            <div class="categoria-field-display">
+              <i class="pi pi-tag text-600"></i>
+              <span class="font-semibold">{{ categoriaNombre() }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="categoria-fields-grid categoria-fields-grid--single">
+          <div class="categoria-field">
+            <label>DESCRIPCIÓN</label>
+            <div class="categoria-field-display categoria-field-display--multiline">
+              <i class="pi pi-align-left text-600"></i>
+              <span>{{ categoriaDescripcion() }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="categoria-section-card">
+        <div class="categoria-section-header">
+          <h3><i class="pi pi-objects-column"></i> Estado y Referencia</h3>
+        </div>
+
+        <div class="categoria-fields-grid categoria-fields-grid--single">
+          <div class="categoria-field">
+            <label>CÓDIGO VISUAL</label>
+            <div class="categoria-field-display">
+              <i class="pi pi-barcode text-600"></i>
+              <span class="font-semibold">{{ categoriaCode() }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="categoria-fields-grid">
+          <div class="categoria-field">
+            <label>ESTADO ACTUAL</label>
+            <div class="categoria-field-display">
+              <i class="pi pi-power-off text-600"></i>
+              <p-tag
+                [value]="estadoLabel()"
+                [severity]="categoria.activo ? 'success' : 'danger'">
+              </p-tag>
+            </div>
+          </div>
+
+          <div class="categoria-field">
+            <label>RESUMEN DESCRIPTIVO</label>
+            <div class="categoria-field-display categoria-field-display--multiline">
+              <i class="pi pi-file text-600"></i>
+              <span>{{ descripcionCorta() }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  } @else {
+    <div class="p-2">
+      <p-card styleClass="categoria-header-card categoria-header-bordered">
+        <div class="categoria-error-state">
+          <i class="pi pi-exclamation-triangle categoria-error-state__icon"></i>
+          <h3>No se pudo cargar la categoría</h3>
+          <p>{{ errorMsg() ?? 'La categoría no existe o no está disponible.' }}</p>
+          <p-button
+            label="Volver a Categorías"
+            icon="pi pi-arrow-left"
+            styleClass="categoria-pill categoria-pill-secondary"
+            (onClick)="volver()">
+          </p-button>
+        </div>
+      </p-card>
+    </div>
+  }
+}

@@ -158,7 +158,8 @@
                 icon="pi pi-eye"
                 [rounded]="true" [text]="true" severity="secondary"
                 pTooltip="Ver detalle" tooltipPosition="top"
-                (onClick)="verDetalle(cat)">
+                [routerLink]="['/admin/categoria/detalle-categoria', cat.id_categoria]"
+                [disabled]="!cat.id_categoria">
               </p-button>
 
               <!-- EDITAR — requiere EDITAR_CATEGORIAS -->
@@ -202,79 +203,5 @@
     <p-confirmdialog />
 
   </app-shared-table-container>
-
-  <!-- MODAL DETALLE -->
-  <p-dialog
-    [(visible)]="dialogVisible"
-    [modal]="true" [draggable]="false"
-    [style]="{ width: '420px', 'border-radius': '16px', overflow: 'hidden' }"
-    [contentStyle]="{ padding: '0' }"
-    (onHide)="dialogVisible = false">
-
-    <ng-template pTemplate="header"><span></span></ng-template>
-
-    <ng-container *ngIf="categoriaSeleccionada() as c">
-      <div class="almacen-detail-modal">
-
-        <div class="adm-banner">
-          <div class="adm-banner-icon"><i class="pi pi-tag"></i></div>
-          <div class="adm-banner-info">
-            <span class="adm-kicker">CATEGORÍA</span>
-            <h3 class="adm-nombre">{{ c.nombre }}</h3>
-          </div>
-          <button class="adm-close-btn" (click)="dialogVisible = false">
-            <i class="pi pi-times"></i>
-          </button>
-        </div>
-
-        <div class="adm-code-row">
-          <span class="adm-code-badge">
-            <i class="pi pi-hashtag"></i> ID: {{ c.id_categoria }}
-          </span>
-          <span class="adm-status-badge"
-            [class.adm-status--active]="c.activo"
-            [class.adm-status--inactive]="!c.activo">
-            <span class="adm-status-dot"></span>
-            {{ c.activo ? 'Activo' : 'Inactivo' }}
-          </span>
-        </div>
-
-        <div class="adm-info-grid">
-          <div class="adm-info-item adm-info-item--full">
-            <span class="adm-info-icon"><i class="pi pi-tag"></i></span>
-            <div class="adm-info-content">
-              <span class="adm-info-label">Nombre</span>
-              <span class="adm-info-value">{{ c.nombre }}</span>
-            </div>
-          </div>
-          <div class="adm-info-item adm-info-item--full">
-            <span class="adm-info-icon"><i class="pi pi-align-left"></i></span>
-            <div class="adm-info-content">
-              <span class="adm-info-label">Descripción</span>
-              <span class="adm-info-value">{{ c.descripcion ?? '—' }}</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="adm-footer">
-          <p-button
-            label="Cerrar" icon="pi pi-times"
-            severity="secondary" [outlined]="true"
-            styleClass="adm-btn-close"
-            (onClick)="dialogVisible = false">
-          </p-button>
-          <!-- Editar dentro del modal — mismo permiso EDITAR_CATEGORIAS -->
-          <p-button
-            *ngIf="puedeEditarCategoria"
-            label="Editar" icon="pi pi-pencil"
-            styleClass="adm-btn-edit"
-            [routerLink]="['/admin/categoria/editar-categoria', c.id_categoria]"
-            (onClick)="dialogVisible = false">
-          </p-button>
-        </div>
-
-      </div>
-    </ng-container>
-  </p-dialog>
 
 </div>

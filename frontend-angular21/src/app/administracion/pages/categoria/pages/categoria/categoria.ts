@@ -2,7 +2,6 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { DialogModule } from 'primeng/dialog';
 import { AutoCompleteModule } from 'primeng/autocomplete';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
@@ -29,7 +28,7 @@ type ViewMode = 'todas' | 'activas' | 'inactivas';
   standalone: true,
   imports: [
     CommonModule, FormsModule, RouterModule,
-    DialogModule, CardModule, ButtonModule,
+    CardModule, ButtonModule,
     AutoCompleteModule, TableModule, TagModule,
     ToastModule, ConfirmDialogModule, MessageModule,
     SelectModule,
@@ -48,9 +47,6 @@ export class CategoriaListado implements OnInit {
 
   readonly loading = this.categoriaService.loading;
   readonly error   = this.categoriaService.error;
-
-  dialogVisible = false;
-  readonly categoriaSeleccionada = signal<Categoria | null>(null);
 
   readonly searchTerm = signal<string>('');
   readonly categorias = computed(() => this.categoriaService.categorias());
@@ -109,8 +105,6 @@ export class CategoriaListado implements OnInit {
 
     this.categoriaService.loadCategorias('Administrador').subscribe();
   }
-
-  verDetalle(cat: Categoria): void { this.categoriaSeleccionada.set(cat); this.dialogVisible = true; }
 
   onViewModeChange(mode: ViewMode): void { this.viewMode.set(mode); this.paginaActual.set(1); }
   onSearch(event: { query: string }): void { this.searchTerm.set(event.query); this.paginaActual.set(1); }
