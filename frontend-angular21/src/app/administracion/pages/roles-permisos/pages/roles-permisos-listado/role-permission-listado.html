@@ -183,7 +183,7 @@
                 icon="pi pi-eye"
                 [rounded]="true" [text]="true" severity="secondary"
                 pTooltip="Ver permisos" tooltipPosition="top"
-                (onClick)="verDetalle(rol)">
+                [routerLink]="['/admin/roles-permisos/detalle-roles-permisos', rol.id_rol]">
               </p-button>
               <p-button
                 *ngIf="rol.id_rol !== 1"

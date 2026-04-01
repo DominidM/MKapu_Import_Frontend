@@ -102,7 +102,7 @@ export class ConteoInventarios implements OnInit {
       const textoProductos = c.detalles
         ? c.detalles.map((d: any) => d.descripcion?.toLowerCase()).join(' ')
         : '';
-      const textoDetalleCompleto = `conteo en ${textoSede} ${cantidadItems} ítems ${textoProductos}`;
+      const textoDetalleCompleto = `conteo en ${textoSede} ${cantidadItems} Ã­tems ${textoProductos}`;
 
       const coincideBusqueda =
         !busqueda ||
@@ -141,7 +141,7 @@ export class ConteoInventarios implements OnInit {
     this.cargarHistorialBackend(1, this.rows());
   }
 
-  // ── Manejo independiente de cada datepicker ───────────────────────
+  // â”€â”€ Manejo independiente de cada datepicker â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   onFechaInicioChange(fecha: Date | null): void {
     const actual = this.fechaSeleccionada() ?? [];
     this.fechaSeleccionada.set([fecha ?? actual[0], actual[1]]);
@@ -212,7 +212,7 @@ export class ConteoInventarios implements OnInit {
         }));
         this.familias.set([{ nombre: 'Todas' }, { nombre: 'General' }, ...categoriasBD]);
       },
-      error: (err) => console.error('Error cargando categorías en listado:', err),
+      error: (err) => console.error('Error cargando categorÃ­as en listado:', err),
     });
   }
 
@@ -239,10 +239,10 @@ export class ConteoInventarios implements OnInit {
   }
 
   verDetalle(row: any): void {
-    this.router.navigate(['/admin/conteo-inventario/detalle', row.idConteo]);
+    this.router.navigate(['/logistica/conteo-detalle', row.idConteo]);
   }
 
   crearConteo(): void {
-    this.router.navigate(['/admin/conteo-inventario/crear']);
+    this.router.navigate(['/logistica/conteo-crear']);
   }
 }

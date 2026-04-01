@@ -12,7 +12,6 @@ import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { SelectModule } from 'primeng/select';
-import { DialogModule } from 'primeng/dialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { SharedTableContainerComponent } from '../../../../../shared/components/table.componente/shared-table-container.component';
 import { AlmacenService } from '../../../../services/almacen.service';
@@ -28,7 +27,7 @@ type ViewMode = 'todas' | 'activas' | 'inactivas';
   standalone: true,
   imports: [
     CommonModule, FormsModule, RouterModule,
-    DialogModule, CardModule, ButtonModule,
+    CardModule, ButtonModule,
     AutoCompleteModule, TableModule, TagModule,
     ToastModule, ConfirmDialogModule, MessageModule,
     SelectModule, TooltipModule,
@@ -46,9 +45,6 @@ export class AlmacenListado implements OnInit {
 
   readonly loading = this.almacenService.loading;
   readonly error   = this.almacenService.error;
-
-  dialogVisible                = false;
-  readonly almacenSeleccionado = signal<Headquarter | null>(null);
 
   readonly searchTerm = signal<string>('');
   readonly almacenes  = computed(() => this.almacenService.sedes());
@@ -117,10 +113,6 @@ export class AlmacenListado implements OnInit {
     });
   }
 
-  verDetalle(almacen: Headquarter): void {
-    this.almacenSeleccionado.set(almacen);
-    this.dialogVisible = true;
-  }
 
   onViewModeChange(mode: ViewMode): void { this.viewMode.set(mode); this.paginaActual.set(1); }
   onSearch(event: { query: string }): void { this.searchTerm.set(event.query); this.paginaActual.set(1); }

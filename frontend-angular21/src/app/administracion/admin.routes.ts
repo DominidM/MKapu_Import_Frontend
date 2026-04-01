@@ -107,6 +107,15 @@ export const ADMIN_ROUTES: Routes = [
         canActivate: [roleGuard],
         data: { permiso: 'EDITAR_ALMACEN' },
       },
+      {
+        path: 'detalle-almacen/:id',
+        loadComponent: () =>
+          import('./pages/almacen/pages/detalle-almacen/detalle-almacen').then(
+            (m) => m.DetalleAlmacen,
+          ),
+        canActivate: [roleGuard],
+        data: { permiso: 'VER_ALMACEN' },
+      },
     ],
   },
 
@@ -163,6 +172,15 @@ export const ADMIN_ROUTES: Routes = [
           ),
         canActivate: [roleGuard],
         data: { permiso: 'EDITAR_CATEGORIAS' },
+      },
+      {
+        path: 'detalle-categoria/:id',
+        loadComponent: () =>
+          import('./pages/categoria/pages/detalle-categoria/detalle-categoria').then(
+            (m) => m.DetalleCategoria,
+          ),
+        canActivate: [roleGuard],
+        data: { permiso: 'VER_CATEGORIAS' },
       },
     ],
   },
@@ -224,6 +242,13 @@ export const ADMIN_ROUTES: Routes = [
             (m) => m.EditarPermisoComponent,
           ),
         canDeactivate: [pendingChangesGuard],
+      },
+      {
+        path: 'detalle-roles-permisos/:id',
+        loadComponent: () =>
+          import('./pages/roles-permisos/pages/detalle-roles-permisos/detalle-roles-permisos').then(
+            (m) => m.DetalleRolesPermisos,
+          ),
       },
       {
         path: 'agregar-roles-permisos',
@@ -453,6 +478,13 @@ export const ADMIN_ROUTES: Routes = [
         path: '',
         loadComponent: () =>
           import('./pages/nota-credito/nota-credito').then((m) => m.NotasCreditoComponent),
+          canActivate: [roleGuard],
+          data: { permiso: 'VER_NC' },
+      },
+      {
+        path: 'detalle-nota-credito/:id',
+        loadComponent: () =>
+          import('./pages/nota-credito/detalle-nota-credito/detalle-nota-credito').then((m) => m.DetalleNotaCreditoComponent),
           canActivate: [roleGuard],
           data: { permiso: 'VER_NC' },
       },
@@ -702,6 +734,13 @@ export const ADMIN_ROUTES: Routes = [
         path: '',
         loadComponent: () =>
           import('./pages/mermas/pages/mermas-pr/mermas-pr').then((m) => m.MermasPr),
+          canActivate: [roleGuard],
+          data: { permiso: 'VER_MERMAS' },
+      },
+            {
+        path: 'detalle-merma/:id',
+        loadComponent: () =>
+          import('./pages/mermas/pages/mermas-detalle/mermas-detalle').then((m) => m.MermasDetalle),
           canActivate: [roleGuard],
           data: { permiso: 'VER_MERMAS' },
       },

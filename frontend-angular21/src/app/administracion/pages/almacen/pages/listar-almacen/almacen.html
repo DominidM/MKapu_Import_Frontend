@@ -183,7 +183,8 @@
                 icon="pi pi-eye"
                 [rounded]="true" [text]="true" severity="secondary"
                 pTooltip="Ver detalle" tooltipPosition="top"
-                (onClick)="verDetalle(almacen)">
+                [routerLink]="['/admin/almacen/detalle-almacen', (almacen.id_almacen ?? almacen.id)]"
+                [disabled]="!(almacen.id_almacen ?? almacen.id)">
               </p-button>
 
               <!-- EDITAR — requiere EDITAR_ALMACEN -->
@@ -228,105 +229,5 @@
     <p-confirmdialog />
 
   </app-shared-table-container>
-
-  <!-- MODAL DETALLE ALMACÉN -->
-  <p-dialog
-    [(visible)]="dialogVisible"
-    [modal]="true" [draggable]="false"
-    [style]="{ width: '480px', 'border-radius': '16px', overflow: 'hidden' }"
-    [contentStyle]="{ padding: '0' }"
-    (onHide)="dialogVisible = false">
-
-    <ng-template pTemplate="header"><span></span></ng-template>
-
-    <ng-container *ngIf="almacenSeleccionado() as a">
-      <div class="almacen-detail-modal">
-
-        <div class="adm-banner">
-          <div class="adm-banner-icon"><i class="pi pi-warehouse"></i></div>
-          <div class="adm-banner-info">
-            <span class="adm-kicker">ALMACÉN</span>
-            <h3 class="adm-nombre">{{ a.nombre }}</h3>
-          </div>
-          <button class="adm-close-btn" (click)="dialogVisible = false">
-            <i class="pi pi-times"></i>
-          </button>
-        </div>
-
-        <div class="adm-code-row">
-          <span class="adm-code-badge"><i class="pi pi-tag"></i>{{ a.codigo }}</span>
-          <span class="adm-status-badge"
-            [class.adm-status--active]="a.activo"
-            [class.adm-status--inactive]="!a.activo">
-            <span class="adm-status-dot"></span>
-            {{ a.activo ? 'Activo' : 'Inactivo' }}
-          </span>
-        </div>
-
-        <div class="adm-info-grid">
-          <div class="adm-info-item">
-            <span class="adm-info-icon"><i class="pi pi-map"></i></span>
-            <div class="adm-info-content">
-              <span class="adm-info-label">Departamento</span>
-              <span class="adm-info-value">{{ a.departamento ?? '—' }}</span>
-            </div>
-          </div>
-          <div class="adm-info-item">
-            <span class="adm-info-icon"><i class="pi pi-building"></i></span>
-            <div class="adm-info-content">
-              <span class="adm-info-label">Sede asignada</span>
-              <span class="adm-info-value">{{ a.sede?.nombre ?? '—' }}</span>
-            </div>
-          </div>
-          <div class="adm-info-item">
-            <span class="adm-info-icon"><i class="pi pi-map"></i></span>
-            <div class="adm-info-content">
-              <span class="adm-info-label">Provincia</span>
-              <span class="adm-info-value">{{ a.provincia ?? '—' }}</span>
-            </div>
-          </div>
-          <div class="adm-info-item">
-            <span class="adm-info-icon"><i class="pi pi-map-marker"></i></span>
-            <div class="adm-info-content">
-              <span class="adm-info-label">Ciudad</span>
-              <span class="adm-info-value">{{ a.ciudad ?? '—' }}</span>
-            </div>
-          </div>
-          <div class="adm-info-item">
-            <span class="adm-info-icon"><i class="pi pi-phone"></i></span>
-            <div class="adm-info-content">
-              <span class="adm-info-label">Teléfono</span>
-              <span class="adm-info-value">{{ a.telefono ?? '—' }}</span>
-            </div>
-          </div>
-          <div class="adm-info-item adm-info-item--full">
-            <span class="adm-info-icon"><i class="pi pi-home"></i></span>
-            <div class="adm-info-content">
-              <span class="adm-info-label">Dirección</span>
-              <span class="adm-info-value">{{ a.direccion ?? '—' }}</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="adm-footer">
-          <p-button
-            label="Cerrar" icon="pi pi-times"
-            severity="secondary" [outlined]="true"
-            styleClass="adm-btn-close"
-            (onClick)="dialogVisible = false">
-          </p-button>
-          <!-- Editar dentro del modal — mismo permiso EDITAR_ALMACEN -->
-          <p-button
-            *ngIf="puedeEditarAlmacen"
-            label="Editar Almacén" icon="pi pi-pencil"
-            styleClass="adm-btn-edit"
-            [routerLink]="['/admin/almacen/editar-almacen', (a.id_almacen ?? a.id)]"
-            (onClick)="dialogVisible = false">
-          </p-button>
-        </div>
-
-      </div>
-    </ng-container>
-  </p-dialog>
 
 </div>

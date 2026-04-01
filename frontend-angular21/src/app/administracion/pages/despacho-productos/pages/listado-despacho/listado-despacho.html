@@ -5,7 +5,7 @@
       <div class="flex align-items-center gap-3">
         <span class="ventas-title-icon"><i [class]="iconoCabecera"></i></span>
         <div>
-          <p class="ventas-kicker mb-0">LOGÍSTICA</p>
+          <p class="ventas-kicker mb-0">LOGISTICA</p>
           <h2 class="ventas-title mb-0">{{ subtituloKicker }}</h2>
         </div>
       </div>
@@ -33,7 +33,7 @@
       <div class="estadistica-card">
         <i class="pi pi-send"></i>
         <div>
-          <span class="estadistica-label">En Tránsito</span>
+          <span class="estadistica-label">En Transito</span>
           <span class="estadistica-valor">{{ totalEnviados() }}</span>
         </div>
       </div>
@@ -51,7 +51,7 @@
 <div class="p-2">
   <div class="filtros-container mb-4">
     <div class="seccion-filtros">
-      <h3><i class="pi pi-filter"></i> Filtros de búsqueda</h3>
+      <h3><i class="pi pi-filter"></i> Filtros de busqueda</h3>
 
       <div class="filtros-linea-1">
         <div class="filtro-item filtro-cliente-50">
@@ -141,7 +141,6 @@
     </div>
   </div>
 
-
   <app-shared-table-container
     [titulo]="'Listado de Despachos'"
     [iconoTitulo]="'pi pi-truck'"
@@ -154,9 +153,7 @@
     [limitePorPagina]="limitePorPagina()"
     (exportar)="exportarExcel()"
     (pageChange)="cambiarPagina($event)"
-    (limitChange)="onLimitChange($event)"
-  >
-    <!-- TABLA P-TABLE -->
+    (limitChange)="onLimitChange($event)">
     <p-table [value]="filasFiltradas()"
       styleClass="despacho-table-nativa despacho-table-hover" [rowHover]="true">
       <ng-template pTemplate="header">
@@ -164,44 +161,38 @@
           <th style="width:18%">Comprobante</th>
           <th style="width:22%">Cliente</th>
           <th style="width:14%">Sede</th>
-          <th style="width:26%">Dirección de Entrega</th>
+          <th style="width:26%">Direccion de Entrega</th>
           <th style="width:10%">Estado</th>
           <th style="width:10%">Acciones</th>
         </tr>
       </ng-template>
       <ng-template pTemplate="body" let-d>
         <tr>
-          <!-- Comprobante -->
           <td>
             <span class="font-semibold text-primary block">{{ d.comprobante || ('Venta #' + d.id_venta_ref) }}</span>
             <span class="text-xs text-500">#Despacho {{ d.id_despacho }}</span>
           </td>
-          <!-- Cliente -->
           <td>
             <span class="font-semibold block">{{ d.clienteNombre || '—' }}</span>
             <span class="text-xs text-500" *ngIf="d.clienteDoc">
               <i class="pi pi-id-card mr-1"></i>{{ d.clienteDoc }}
             </span>
           </td>
-          <!-- Sede -->
           <td>
             <span class="flex align-items-center gap-1">
               <i class="pi pi-building text-400 text-xs"></i>
               {{ d.sedeNombre || '—' }}
             </span>
           </td>
-          <!-- Dirección -->
           <td>
             <span class="flex align-items-center gap-2">
               <i class="pi pi-map-marker text-400"></i>
               {{ d.direccion_entrega ?? '—' }}
             </span>
           </td>
-          <!-- Estado -->
           <td>
             <p-tag [value]="getEstadoLabel(d.estado)" [severity]="getEstadoSeverity(d.estado)" styleClass="font-bold"></p-tag>
           </td>
-          <!-- Acciones -->
           <td>
             <div class="flex align-items-center gap-2">
               <p-button icon="pi pi-eye" [text]="true" severity="secondary"
@@ -225,7 +216,7 @@
             <i class="pi pi-truck text-4xl text-400 mb-3 block"></i>
             <p class="text-900 font-medium mb-0">No se encontraron despachos</p>
             <p class="text-600 mt-2">
-              {{ (searchTerm() || filtros().estado || fechaDesde() || fechaHasta()) ? 'Prueba ajustando los filtros' : 'Aún no hay despachos registrados' }}
+              {{ (searchTerm() || filtros().estado || fechaDesde() || fechaHasta()) ? 'Prueba ajustando los filtros' : 'Aun no hay despachos registrados' }}
             </p>
           </td>
         </tr>
@@ -234,199 +225,6 @@
   </app-shared-table-container>
 </div>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<!-- ════════════════════════��═════════════════
-     MODAL DETALLE DESPACHO
-══════════════════════════════════════════ -->
-<p-dialog
-  [visible]="modalVisible()"
-  (visibleChange)="modalVisible.set($event)"
-  [modal]="true"
-  [draggable]="false"
-  [resizable]="false"
-  [style]="{ width: '800px', 'max-width': '96vw' }"
-  [contentStyle]="{ padding: '0', background: '#12121f', 'border-radius': '16px' }"
-  [showHeader]="false"
-  styleClass="dm-dialog">
-
-  <ng-container *ngIf="despachoSeleccionado() as d">
-    <!-- ── HEADER ── -->
-    <div class="dm-header">
-      <div class="dm-header-left">
-        <div class="dm-header-icon"><i class="pi pi-truck"></i></div>
-        <div>
-          <p class="dm-header-sub">Detalle de Despacho</p>
-          <h3 class="dm-header-title">#{{ d.id_despacho }}
-            <span class="dm-header-venta">· {{ numeroVentaModal() }}</span>
-          </h3>
-        </div>
-      </div>
-      <div class="dm-header-right">
-        <span [class]="'dm-estado-pill dm-estado-' + d.estado">{{ getEstadoLabel(d.estado) }}</span>
-        <button class="dm-close-btn" (click)="cerrarModal()"><i class="pi pi-times"></i></button>
-      </div>
-    </div>
-
-    <!-- ── LOADING ── -->
-    <div *ngIf="loadingDetalle()" class="dm-loading">
-      <i class="pi pi-spin pi-spinner"></i>
-      <span>Cargando detalles...</span>
-    </div>
-
-    <ng-container *ngIf="!loadingDetalle()">
-      <!-- ── INFO GRID ── -->
-      <div class="dm-info-grid">
-        <!-- Cliente -->
-        <div class="dm-info-card dm-info-card-cliente" *ngIf="clienteInfo()">
-          <span class="dm-info-label"><i class="pi pi-user mr-1"></i>Cliente</span>
-          <p class="dm-info-value">{{ clienteInfo()!.nombre }}</p>
-          <p class="dm-info-obs mt-1" *ngIf="clienteInfo()!.documento">
-            <i class="pi pi-id-card mr-1"></i>{{ clienteInfo()!.documento }}
-          </p>
-          <p class="dm-info-obs" *ngIf="clienteInfo()!.telefono">
-            <i class="pi pi-phone mr-1"></i>{{ clienteInfo()!.telefono }}
-          </p>
-        </div>
-        <div class="dm-info-card dm-info-card-cliente" *ngIf="!clienteInfo()">
-          <span class="dm-info-label"><i class="pi pi-user mr-1"></i>Cliente</span>
-          <p class="dm-info-obs" style="margin:0;">—</p>
-        </div>
-
-        <!-- DIRECCIÓN + MAPA -->
-        <div class="dm-info-card dm-info-card-direccion">
-          <span class="dm-info-label"><i class="pi pi-map-marker mr-1"></i>Dirección de Entrega</span>
-          <p class="dm-info-value mb-2">{{ d.direccion_entrega }}</p>
-          <a [href]="'https://www.google.com/maps/search/?api=1&query=' + encodeAddress(d.direccion_entrega)"
-             target="_blank" rel="noopener" class="dm-map-link-ext">
-            <i class="pi pi-external-link mr-1"></i> Ver en Google Maps
-          </a>
-          <div class="dm-map-embed-wrap">
-            <iframe
-              [src]="getMapEmbedUrl(d.direccion_entrega)"
-              class="dm-map-iframe"
-              style="border:0;"
-              allowfullscreen loading="lazy"
-              referrerpolicy="no-referrer-when-downgrade">
-            </iframe>
-          </div>
-        </div>
-
-        <!-- Sede -->
-        <div class="dm-info-card dm-info-card-sede">
-          <span class="dm-info-label"><i class="pi pi-building mr-1"></i>Sede Origen</span>
-          <p class="dm-info-value">{{ sedeNombreModal() }}</p>
-        </div>
-
-        <!-- Fechas -->
-        <div class="dm-info-card dm-info-fechas">
-          <span class="dm-info-label"><i class="pi pi-calendar mr-1"></i>Fechas</span>
-          <div class="dm-fechas-row">
-            <div class="dm-fecha-item">
-              <span class="dm-fecha-lbl">Creación</span>
-              <span class="dm-fecha-val">{{ d.fecha_creacion | date:'dd/MM/yy' }}</span>
-            </div>
-            <div class="dm-fecha-item">
-              <span class="dm-fecha-lbl">Programada</span>
-              <span class="dm-fecha-val">{{ d.fecha_programada ? (d.fecha_programada | date:'dd/MM/yy') : '—' }}</span>
-            </div>
-            <div class="dm-fecha-item">
-              <span class="dm-fecha-lbl">Salida</span>
-              <span class="dm-fecha-val">{{ d.fecha_salida ? (d.fecha_salida | date:'dd/MM/yy') : '—' }}</span>
-            </div>
-            <div class="dm-fecha-item">
-              <span class="dm-fecha-lbl">Entrega</span>
-              <span class="dm-fecha-val">{{ d.fecha_entrega ? (d.fecha_entrega | date:'dd/MM/yy') : '—' }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- PRODUCTOS -->
-      <div class="dm-productos">
-        <div class="dm-productos-header">
-          <div class="dm-productos-title">
-            <i class="pi pi-box"></i>
-            <span>Productos por Despachar</span>
-          </div>
-          <div class="dm-productos-badges">
-            <span class="dm-badge-count">{{ d.detalles.length || 0 }} ítems</span>
-            <span class="dm-badge-units">{{ totalProductosModal() }} unidades</span>
-          </div>
-        </div>
-
-        <div class="dm-productos-body">
-          <ng-container *ngIf="d.detalles.length > 0; else emptyProductos">
-            <div class="dm-producto-row" *ngFor="let det of d.detalles">
-              <div class="dm-producto-icon"><i class="pi pi-box"></i></div>
-              <div class="dm-producto-info">
-                <span class="dm-producto-nombre">{{ getProductoNombre(det.id_producto) }}</span>
-                <span class="dm-producto-id">{{ getProductoCodigo(det.id_producto) }}</span>
-              </div>
-              <div class="dm-producto-qty">
-                <div class="dm-qty-item">
-                  <span class="dm-qty-lbl">Solicitado</span>
-                  <span class="dm-qty-val">{{ det.cantidad_solicitada }}</span>
-                </div>
-                <div class="dm-qty-divider">→</div>
-                <div class="dm-qty-item">
-                  <span class="dm-qty-lbl">Despachado</span>
-                  <span class="dm-qty-val dm-qty-despachado">{{ det.cantidad_despachada }}</span>
-                </div>
-              </div>
-              <span [class]="'dm-det-badge dm-det-' + det.estado.toLowerCase()">{{ det.estado }}</span>
-            </div>
-          </ng-container>
-          <ng-template #emptyProductos>
-            <div class="dm-empty-productos">
-              <i class="pi pi-inbox"></i>
-              <p>Sin productos registrados</p>
-            </div>
-          </ng-template>
-        </div>
-
-        <div class="dm-productos-footer">
-          <span>Total unidades: <strong>{{ totalProductosModal() }}</strong></span>
-          <span *ngIf="d.tieneFaltantes" class="dm-faltantes-warn">
-            <i class="pi pi-exclamation-triangle mr-1"></i>Tiene faltantes
-          </span>
-        </div>
-      </div>
-
-      <!-- FOOTER ACCIONES -->
-      <div class="dm-footer">
-        <p-button label="Cerrar" icon="pi pi-times" severity="secondary" [outlined]="true" (onClick)="cerrarModal()"></p-button>
-
-        <button *ngIf="d.estado !== 'GENERADO' && d.estado !== 'CANCELADO'"
-          class="dm-btn-copia" (click)="imprimirCopia()">
-          <i class="pi pi-print mr-2"></i>Imprimir Copia
-        </button>
-
-        <button *ngIf="d.estado === 'GENERADO'"
-          class="dm-btn-salida" (click)="confirmarSalida()">
-          <i class="pi pi-send mr-2"></i>Confirmar Salida
-        </button>
-      </div>
-    </ng-container>
-  </ng-container>
-</p-dialog>
-
-<!-- DIALOG CAMBIO DE ESTADO -->
 <p-dialog
   [visible]="cambioEstadoVisible()"
   (visibleChange)="cambioEstadoVisible.set($event)"

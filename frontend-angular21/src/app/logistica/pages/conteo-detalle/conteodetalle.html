@@ -1,153 +1,303 @@
 <p-toast></p-toast>
-<div class="detalle-page p-3">
-  <div class="flex justify-content-between align-items-center mb-4">
-    <div>
-      <h2 class="mb-1 text-900">DETALLE DE CONTEO #{{ conteo()?.idConteo | number: '3.0' }}</h2>
-      <small class="text-600">
-        <i class="pi pi-calendar mr-1"></i> {{ conteo()?.fechaIni | date: 'dd/MM/yyyy HH:mm' }} |
-        <i class="pi pi-building mx-1"></i> Sede: {{ conteo()?.nomSede }} |
-        <p-tag
-          [value]="conteo()?.estado"
-          [severity]="conteo()?.estado === 'PENDIENTE' ? 'warn' : 'success'"
-        ></p-tag>
-      </small>
-    </div>
+<p-confirmDialog></p-confirmDialog>
 
-    <div class="flex gap-2">
-      <p-button
-        label="Volver"
-        icon="pi pi-arrow-left"
-        styleClass="p-button-outlined p-button-secondary"
-        (onClick)="regresar()"
-      >
-      </p-button>
-      <p-button
-        *ngIf="conteo()?.estado === 'PENDIENTE' || conteo()?.estado === 'INICIADO'"
-        label="Anular"
-        icon="pi pi-ban"
-        styleClass="p-button-outlined p-button-danger"
-        (onClick)="anularConteo()"
-        [loading]="loading()"
-      >
-      </p-button>
-      <p-button
-        *ngIf="conteo()?.estado === 'PENDIENTE' || conteo()?.estado === 'INICIADO'"
-        label="Continuar Conteo"
-        icon="pi pi-play"
-        styleClass="p-button-warning"
-        (onClick)="retomarConteo()"
-      >
-      </p-button>
-      <p-button
-        icon="pi pi-file-excel"
-        label="Descargar Excel"
-        severity="success"
-        styleClass="p-button-outlined shadow-1"
-        (onClick)="descargarExcel()"
-      ></p-button>
-      <p-button
-        icon="pi pi-file-pdf"
-        label="Descargar PDF"
-        severity="danger"
-        styleClass="p-button-outlined shadow-1"
-        (onClick)="descargarPdf()"
-      ></p-button>
-    </div>
+@if (loading()) {
+  <div class="conteo-loading">
+    <i class="pi pi-spin pi-spinner conteo-loading-icon"></i>
   </div>
+}
 
-  <div class="grid mb-4">
-    <div class="col-12 md:col-3">
-      <p-card styleClass="resumen-card">
-        <div class="text-600 font-medium mb-2">Total Stock Sistema</div>
-        <div class="text-3xl font-bold text-blue-600">{{ totalSistema() | number: '1.0-2' }}</div>
+@if (!loading()) {
+  @if (detalle(); as conteo) {
+    <div class="p-2 conteo-page">
+      <p-card styleClass="conteo-header-card mb-4 conteo-header-bordered">
+        <div class="flex align-items-center justify-content-between flex-wrap gap-2">
+          <div class="flex align-items-center gap-3">
+            <span class="conteo-title-icon">
+              <i class="pi pi-box"></i>
+            </span>
+            <div>
+              <p class="conteo-kicker mb-0">ADMINISTRADOR - LOGISTICA - CONTEO</p>
+              <h2 class="conteo-title mb-0">DETALLE DEL CONTEO DE INVENTARIO</h2>
+            </div>
+          </div>
+
+          <div class="flex gap-2 flex-wrap justify-content-end">
+            @if (canContinue()) {
+              <p-button
+                label="Continuar Conteo"
+                icon="pi pi-play"
+                styleClass="conteo-pill conteo-pill-warning"
+                (onClick)="retomarConteo()">
+              </p-button>
+            }
+
+            @if (canAnnul()) {
+              <p-button
+                label="Anular"
+                icon="pi pi-ban"
+                styleClass="conteo-pill conteo-pill-danger-outlined"
+                [loading]="actionLoading()"
+                (onClick)="anularConteo()">
+              </p-button>
+            }
+
+            <p-button
+              label="Excel"
+              icon="pi pi-file-excel"
+              styleClass="conteo-pill conteo-pill-success-outlined"
+              [loading]="isDownloadingExcel()"
+              (onClick)="descargarExcel()">
+            </p-button>
+
+            <p-button
+              label="PDF"
+              icon="pi pi-file-pdf"
+              styleClass="conteo-pill conteo-pill-danger-outlined"
+              [loading]="isDownloadingPdf()"
+              (onClick)="descargarPdf()">
+            </p-button>
+
+            <p-button
+              label="Volver"
+              icon="pi pi-arrow-left"
+              styleClass="conteo-pill conteo-pill-secondary"
+              (onClick)="volver()">
+            </p-button>
+          </div>
+        </div>
       </p-card>
+
+      <div class="conteo-summary-grid mb-4">
+        <div class="conteo-summary-card conteo-summary-card--code">
+          <i class="pi pi-hashtag"></i>
+          <div>
+            <span class="conteo-summary-label">Codigo</span>
+            <span class="conteo-summary-value">{{ conteoCode() }}</span>
+            <span class="conteo-summary-detail">
+              <i class="pi pi-calendar"></i>
+              {{ fechaInicio() | date:'dd/MM/yyyy HH:mm' }}
+            </span>
+          </div>
+        </div>
+
+        <div class="conteo-summary-card conteo-summary-card--sede">
+          <i class="pi pi-building"></i>
+          <div>
+            <span class="conteo-summary-label">Sede</span>
+            <span class="conteo-summary-value">{{ sedeLabel() }}</span>
+            <span class="conteo-summary-detail">
+              <i class="pi pi-tag"></i>
+              {{ categoriaLabel() }}
+            </span>
+          </div>
+        </div>
+
+        <div class="conteo-summary-card conteo-summary-card--accuracy">
+          <i class="pi pi-chart-line"></i>
+          <div>
+            <span class="conteo-summary-label">Exactitud</span>
+            <span class="conteo-summary-value">{{ exactitud() }}%</span>
+            <span class="conteo-summary-detail">
+              <i class="pi pi-info-circle"></i>
+              {{ exactitudDetalle() }}
+            </span>
+          </div>
+        </div>
+
+        <div class="conteo-summary-card conteo-summary-card--status">
+          <i class="pi pi-power-off"></i>
+          <div>
+            <span class="conteo-summary-label">Estado</span>
+            <span class="conteo-summary-value">{{ estadoLabel() }}</span>
+            <span class="conteo-summary-detail">
+              <i class="pi pi-box"></i>
+              {{ totalItems() }} items registrados
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="conteo-section-card mb-4">
+        <div class="conteo-section-header">
+          <h3><i class="pi pi-info-circle"></i> Informacion del Conteo</h3>
+        </div>
+
+        <div class="conteo-fields-grid">
+          <div class="conteo-field">
+            <label>CODIGO DE CONTEO</label>
+            <div class="conteo-field-display">
+              <i class="pi pi-hashtag text-600"></i>
+              <span class="font-semibold">{{ conteoCode() }}</span>
+            </div>
+          </div>
+
+          <div class="conteo-field">
+            <label>SEDE</label>
+            <div class="conteo-field-display">
+              <i class="pi pi-building text-600"></i>
+              <span>{{ sedeLabel() }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="conteo-fields-grid">
+          <div class="conteo-field">
+            <label>FECHA DE INICIO</label>
+            <div class="conteo-field-display">
+              <i class="pi pi-calendar text-600"></i>
+              <span class="font-semibold">{{ fechaInicio() | date:'dd/MM/yyyy HH:mm' }}</span>
+            </div>
+          </div>
+
+          <div class="conteo-field">
+            <label>FECHA DE CIERRE</label>
+            <div class="conteo-field-display">
+              <i class="pi pi-clock text-600"></i>
+              <span>{{ fechaFin() ? (fechaFin() | date:'dd/MM/yyyy HH:mm') : 'Conteo aun abierto' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="conteo-fields-grid">
+          <div class="conteo-field">
+            <label>FAMILIA / CATEGORIA</label>
+            <div class="conteo-field-display">
+              <i class="pi pi-tag text-600"></i>
+              <span>{{ categoriaLabel() }}</span>
+            </div>
+          </div>
+
+          <div class="conteo-field">
+            <label>ESTADO ACTUAL</label>
+            <div class="conteo-field-display">
+              <i class="pi pi-power-off text-600"></i>
+              <p-tag [value]="estadoLabel()" [severity]="getEstadoSeverity(estadoKey())"></p-tag>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="conteo-section-card mb-4">
+        <div class="conteo-section-header">
+          <h3><i class="pi pi-chart-bar"></i> Resumen Operativo</h3>
+        </div>
+
+        <div class="conteo-fields-grid">
+          <div class="conteo-field">
+            <label>TOTAL STOCK SISTEMA</label>
+            <div class="conteo-field-display">
+              <i class="pi pi-database text-600"></i>
+              <span class="font-semibold">{{ totalSistema() | number:'1.0-2' }}</span>
+            </div>
+          </div>
+
+          <div class="conteo-field">
+            <label>TOTAL CONTEO FISICO</label>
+            <div class="conteo-field-display">
+              <i class="pi pi-box text-600"></i>
+              <span class="font-semibold">{{ totalReal() | number:'1.0-2' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="conteo-fields-grid">
+          <div class="conteo-field">
+            <label>DIFERENCIA NETA</label>
+            <div class="conteo-field-display">
+              <i class="pi pi-sort-amount-up text-600"></i>
+              <span class="font-semibold" [class.conteo-value-negative]="diferenciaNeta() < 0" [class.conteo-value-positive]="diferenciaNeta() > 0">
+                {{ diferenciaNeta() > 0 ? '+' : '' }}{{ diferenciaNeta() | number:'1.0-2' }}
+              </span>
+            </div>
+          </div>
+
+          <div class="conteo-field">
+            <label>TOTAL DIFERENCIAS ABSOLUTAS</label>
+            <div class="conteo-field-display">
+              <i class="pi pi-wave-pulse text-600"></i>
+              <span class="font-semibold">{{ totalDiferencias() | number:'1.0-2' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="conteo-fields-grid">
+          <div class="conteo-field">
+            <label>PRODUCTOS CONTADOS</label>
+            <div class="conteo-field-display">
+              <i class="pi pi-list text-600"></i>
+              <span class="font-semibold">{{ totalItems() }}</span>
+            </div>
+          </div>
+
+          <div class="conteo-field">
+            <label>PRODUCTOS CON DESVIACION</label>
+            <div class="conteo-field-display">
+              <i class="pi pi-exclamation-circle text-600"></i>
+              <span class="font-semibold">{{ desviacionesCount() }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="conteo-section-card">
+        <div class="conteo-section-header">
+          <h3><i class="pi pi-list"></i> Detalle de Productos</h3>
+          <p-tag [value]="totalItems() + ' registros'" [severity]="getEstadoSeverity(estadoKey())"></p-tag>
+        </div>
+
+        <p-table [value]="detalleRows()" [paginator]="false" responsiveLayout="scroll" styleClass="conteo-table">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Codigo</th>
+              <th>Producto</th>
+              <th class="text-right">Sistema</th>
+              <th class="text-right">Conteo</th>
+              <th class="text-right">Diferencia</th>
+              <th class="text-center">Unidad</th>
+              <th>Observacion</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-item>
+            <tr>
+              <td class="font-semibold">{{ codigoProducto(item) }}</td>
+              <td>
+                <div class="conteo-table-product">{{ descripcionProducto(item) }}</div>
+              </td>
+              <td class="text-right">{{ stockSistema(item) | number:'1.0-2' }}</td>
+              <td class="text-right font-semibold">{{ stockConteo(item) | number:'1.0-2' }}</td>
+              <td class="text-right font-semibold" [class.conteo-value-negative]="diferencia(item) < 0" [class.conteo-value-positive]="diferencia(item) > 0" [class.conteo-value-neutral]="diferencia(item) === 0">
+                {{ diferencia(item) > 0 ? '+' : '' }}{{ diferencia(item) | number:'1.0-2' }}
+              </td>
+              <td class="text-center">
+                <p-tag [value]="unidadMedida(item)" severity="secondary"></p-tag>
+              </td>
+              <td>{{ item.observacion || 'Sin observacion' }}</td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="7" class="text-center py-4">No hay productos registrados en este conteo.</td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
     </div>
-    <div class="col-12 md:col-3">
-      <p-card styleClass="resumen-card">
-        <div class="text-600 font-medium mb-2">Total Conteo Físico</div>
-        <div class="text-3xl font-bold text-indigo-600">{{ totalReal() | number: '1.0-2' }}</div>
-      </p-card>
-    </div>
-    <div class="col-12 md:col-3">
-      <p-card styleClass="resumen-card">
-        <div class="text-600 font-medium mb-2">Diferencia Neta</div>
-        <div
-          class="text-3xl font-bold"
-          [ngClass]="{
-            'text-red-500': diferenciaNeta() < 0,
-            'text-green-500': diferenciaNeta() >= 0,
-          }"
-        >
-          {{ diferenciaNeta() > 0 ? '+' : '' }}{{ diferenciaNeta() | number: '1.0-2' }}
+  } @else {
+    <div class="p-2">
+      <p-card styleClass="conteo-header-card conteo-header-bordered">
+        <div class="conteo-error-state">
+          <i class="pi pi-exclamation-triangle conteo-error-state__icon"></i>
+          <h3>No se pudo cargar el conteo</h3>
+          <p>{{ errorMsg() ?? 'El conteo no existe o no esta disponible.' }}</p>
+          <p-button
+            label="Volver a Conteos"
+            icon="pi pi-arrow-left"
+            styleClass="conteo-pill conteo-pill-secondary"
+            (onClick)="volver()">
+          </p-button>
         </div>
       </p-card>
     </div>
-    <div class="col-12 md:col-3">
-      <p-card styleClass="resumen-card">
-        <div class="text-600 font-medium mb-2">Exactitud de Inventario</div>
-        <div class="flex align-items-center gap-3">
-          <span class="text-3xl font-bold text-teal-600">{{ exactitud() }}%</span>
-          <p-progressBar [value]="exactitud()" [showValue]="false" class="w-full"></p-progressBar>
-        </div>
-      </p-card>
-    </div>
-  </div>
-
-  <p-card styleClass="tabla-card shadow-1">
-    <p-table
-      [value]="conteo()?.detalles || []"
-      [loading]="loading()"
-      responsiveLayout="scroll"
-      styleClass="p-datatable-striped"
-    >
-      <ng-template pTemplate="header">
-        <tr>
-          <th>Código</th>
-          <th style="width: 35%">Producto</th>
-          <th class="text-center">Stock Sistema</th>
-          <th class="text-center columna-conteo">Conteo Real</th>
-          <th class="text-center">Diferencia</th>
-          <th class="text-center">Unidad</th>
-        </tr>
-      </ng-template>
-
-      <ng-template pTemplate="body" let-row>
-        <tr [ngClass]="{ 'fila-desviacion': row.diferencia * 1 < 0 }">
-          <td class="font-semibold text-color">{{ row.codProd || 'N/A' }}</td>
-          <td class="text-color">{{ row.descripcion }}</td>
-
-          <td class="text-center text-color-secondary font-bold">
-            {{ row.stockSistema | number: '1.0-2' }}
-          </td>
-
-          <td class="text-center font-bold text-lg columna-conteo-body">
-            {{ row.stockConteo | number: '1.0-2' }}
-          </td>
-
-          <td
-            class="text-center font-bold"
-            [ngClass]="{
-              'text-green-500': row.diferencia * 1 === 0,
-              'text-red-500': row.diferencia * 1 < 0,
-              'text-blue-500': row.diferencia * 1 > 0,
-            }"
-          >
-            {{ row.diferencia * 1 > 0 ? '+' : '' }}{{ row.diferencia * 1 | number: '1.0-2' }}
-          </td>
-
-          <td class="text-center">
-            <p-tag [value]="row.uniMed" severity="secondary"></p-tag>
-          </td>
-        </tr>
-      </ng-template>
-
-      <ng-template pTemplate="emptymessage">
-        <tr>
-          <td colspan="6" class="text-center py-5 text-color-secondary">
-            Cargando detalles del conteo...
-          </td>
-        </tr>
-      </ng-template>
-    </p-table>
-  </p-card>
-</div>
+  }
+}

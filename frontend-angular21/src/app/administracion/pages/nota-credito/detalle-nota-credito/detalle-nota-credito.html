@@ -1,0 +1,260 @@
+@if (loading()) {
+  <div class="nc-loading">
+    <i class="pi pi-spin pi-spinner nc-loading-icon"></i>
+  </div>
+}
+
+@if (!loading()) {
+  @if (detalle(); as nota) {
+    <div class="p-2 nc-page">
+      <p-card styleClass="nc-header-card mb-4 nc-header-bordered">
+        <div class="flex align-items-center justify-content-between flex-wrap gap-2">
+          <div class="flex align-items-center gap-3">
+            <span class="nc-title-icon">
+              <i class="pi pi-file-edit"></i>
+            </span>
+            <div>
+              <p class="nc-kicker mb-0">ADMINISTRADOR - VENTAS - NOTAS DE CREDITO</p>
+              <h2 class="nc-title mb-0">DETALLE DE LA NOTA DE CREDITO</h2>
+            </div>
+          </div>
+
+          <div class="flex gap-2 flex-wrap justify-content-end">
+            <p-button
+              label="Volver"
+              icon="pi pi-arrow-left"
+              styleClass="nc-pill nc-pill-secondary"
+              (onClick)="volver()">
+            </p-button>
+          </div>
+        </div>
+      </p-card>
+
+      <div class="nc-summary-grid mb-4">
+        <div class="nc-summary-card nc-summary-card--correlative">
+          <i class="pi pi-hashtag"></i>
+          <div>
+            <span class="nc-summary-label">Correlativo</span>
+            <span class="nc-summary-value">{{ correlativo() }}</span>
+            <span class="nc-summary-detail">
+              <i class="pi pi-file"></i>
+              {{ documentoRef() }}
+            </span>
+          </div>
+        </div>
+
+        <div class="nc-summary-card nc-summary-card--customer">
+          <i class="pi pi-user"></i>
+          <div>
+            <span class="nc-summary-label">Cliente</span>
+            <span class="nc-summary-value">{{ clienteNombre() }}</span>
+            <span class="nc-summary-detail">
+              <i class="pi pi-id-card"></i>
+              {{ clienteDocumento() }}
+            </span>
+          </div>
+        </div>
+
+        <div class="nc-summary-card nc-summary-card--type">
+          <i class="pi pi-replay"></i>
+          <div>
+            <span class="nc-summary-label">Tipo de devolucion</span>
+            <span class="nc-summary-value">{{ tipoDevolucion() }}</span>
+            <span class="nc-summary-detail">
+              <i class="pi pi-info-circle"></i>
+              {{ tipoDetalle() }}
+            </span>
+          </div>
+        </div>
+
+        <div class="nc-summary-card nc-summary-card--status">
+          <i class="pi pi-power-off"></i>
+          <div>
+            <span class="nc-summary-label">Estado</span>
+            <span class="nc-summary-value">{{ estadoLabel() }}</span>
+            <span class="nc-summary-detail">
+              <i class="pi pi-box"></i>
+              {{ itemsCount() }} items devueltos
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="nc-section-card mb-4">
+        <div class="nc-section-header">
+          <h3><i class="pi pi-info-circle"></i> Informacion General</h3>
+        </div>
+
+        <div class="nc-fields-grid">
+          <div class="nc-field">
+            <label>CORRELATIVO</label>
+            <div class="nc-field-display">
+              <i class="pi pi-hashtag text-600"></i>
+              <span class="font-semibold">{{ correlativo() }}</span>
+            </div>
+          </div>
+
+          <div class="nc-field">
+            <label>COMPROBANTE REFERENCIA</label>
+            <div class="nc-field-display">
+              <i class="pi pi-receipt text-600"></i>
+              <span>{{ documentoRef() }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="nc-fields-grid">
+          <div class="nc-field">
+            <label>CLIENTE</label>
+            <div class="nc-field-display nc-field-display--multiline">
+              <i class="pi pi-user text-600"></i>
+              <span>{{ clienteNombre() }}</span>
+            </div>
+          </div>
+
+          <div class="nc-field">
+            <label>DOCUMENTO</label>
+            <div class="nc-field-display">
+              <i class="pi pi-id-card text-600"></i>
+              <span>{{ clienteDocumento() }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="nc-fields-grid">
+          <div class="nc-field">
+            <label>FECHA DE EMISION</label>
+            <div class="nc-field-display">
+              <i class="pi pi-calendar text-600"></i>
+              <span class="font-semibold">{{ issueDate() | date:'dd/MM/yyyy HH:mm' }}</span>
+            </div>
+          </div>
+
+          <div class="nc-field">
+            <label>TIPO DE DEVOLUCION</label>
+            <div class="nc-field-display">
+              <i class="pi pi-sync text-600"></i>
+              <p-tag [value]="tipoDevolucion()" [severity]="getSeveridadTipo(tipoDevolucion())"></p-tag>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="nc-section-card mb-4">
+        <div class="nc-section-header">
+          <h3><i class="pi pi-wallet"></i> Resumen Economico</h3>
+        </div>
+
+        <div class="nc-fields-grid">
+          <div class="nc-field">
+            <label>VALOR VENTA</label>
+            <div class="nc-field-display">
+              <i class="pi pi-chart-bar text-600"></i>
+              <span class="font-semibold">{{ monedaLabel() }} {{ valorVenta() | number:'1.2-2' }}</span>
+            </div>
+          </div>
+
+          <div class="nc-field">
+            <label>IGV</label>
+            <div class="nc-field-display">
+              <i class="pi pi-percentage text-600"></i>
+              <span class="font-semibold">{{ monedaLabel() }} {{ igv() | number:'1.2-2' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="nc-fields-grid">
+          <div class="nc-field">
+            <label>ISC</label>
+            <div class="nc-field-display">
+              <i class="pi pi-sliders-h text-600"></i>
+              <span class="font-semibold">{{ monedaLabel() }} {{ isc() | number:'1.2-2' }}</span>
+            </div>
+          </div>
+
+          <div class="nc-field">
+            <label>TOTAL FINAL</label>
+            <div class="nc-field-display">
+              <i class="pi pi-wallet text-600"></i>
+              <span class="font-semibold">{{ monedaLabel() }} {{ totalFinal() | number:'1.2-2' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="nc-fields-grid">
+          <div class="nc-field">
+            <label>CANTIDAD TOTAL DEVUELTA</label>
+            <div class="nc-field-display">
+              <i class="pi pi-box text-600"></i>
+              <span class="font-semibold">{{ totalCantidad() }}</span>
+            </div>
+          </div>
+
+          <div class="nc-field">
+            <label>PROMEDIO POR ITEM</label>
+            <div class="nc-field-display">
+              <i class="pi pi-chart-line text-600"></i>
+              <span class="font-semibold">{{ monedaLabel() }} {{ promedioPorItem() | number:'1.2-2' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="nc-section-card">
+        <div class="nc-section-header">
+          <h3><i class="pi pi-list"></i> Items Devueltos</h3>
+          <p-tag [value]="itemsCount() + ' items'" [severity]="getSeveridadEstado(estadoLabel())"></p-tag>
+        </div>
+
+        <div class="nc-items-grid">
+          @for (item of items(); track trackItem(item)) {
+            <article class="nc-item-card">
+              <div class="nc-item-card__top">
+                <span class="nc-item-index">Item {{ $index + 1 }}</span>
+                <span class="nc-item-qty">{{ item.quantity }} unid.</span>
+              </div>
+
+              <h4 class="nc-item-name">{{ item.description || 'Item sin descripcion' }}</h4>
+
+              <div class="nc-item-metrics">
+                <div>
+                  <span>P. unit.</span>
+                  <strong>{{ monedaLabel() }} {{ item.unitPrice | number:'1.2-2' }}</strong>
+                </div>
+                <div>
+                  <span>IGV</span>
+                  <strong>{{ monedaLabel() }} {{ item.igv | number:'1.2-2' }}</strong>
+                </div>
+                <div class="nc-item-metrics__full">
+                  <span>Total</span>
+                  <strong>{{ monedaLabel() }} {{ item.total | number:'1.2-2' }}</strong>
+                </div>
+              </div>
+            </article>
+          } @empty {
+            <div class="nc-items-empty">
+              <i class="pi pi-inbox"></i>
+              <p>No hay items registrados en esta nota de credito.</p>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  } @else {
+    <div class="p-2">
+      <p-card styleClass="nc-header-card nc-header-bordered">
+        <div class="nc-error-state">
+          <i class="pi pi-exclamation-triangle nc-error-state__icon"></i>
+          <h3>No se pudo cargar la nota de credito</h3>
+          <p>{{ errorMsg() ?? 'La nota de credito no existe o no esta disponible.' }}</p>
+          <p-button
+            label="Volver a Notas de Credito"
+            icon="pi pi-arrow-left"
+            styleClass="nc-pill nc-pill-secondary"
+            (onClick)="volver()">
+          </p-button>
+        </div>
+      </p-card>
+    </div>
+  }
+}

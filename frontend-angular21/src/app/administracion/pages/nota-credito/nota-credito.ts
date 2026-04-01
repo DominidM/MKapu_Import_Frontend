@@ -30,7 +30,6 @@ import {
 // Services
 import {
   CreditNoteSummary,
-  CreditNoteDetail,
   CreditNoteFilter,
   AnnulCreditNoteDto,
   CreditNoteService,
@@ -73,7 +72,7 @@ export class NotasCreditoComponent implements OnInit, OnDestroy {
   private subscriptions = new Subscription();
 
   readonly tituloKicker = 'VENTAS';
-  readonly subtituloKicker = 'NOTAS DE CRÉDITO';
+  readonly subtituloKicker = 'NOTAS DE CRÃƒÆ’Ã¢â‚¬Â°DITO';
   readonly iconoCabecera = 'pi pi-file-edit';
 
   readonly esAdmin = signal<boolean>(false);
@@ -106,10 +105,6 @@ export class NotasCreditoComponent implements OnInit, OnDestroy {
   filtroFechaInicio = signal<Date | null>(getLunesSemanaActualPeru());
   filtroFechaFin = signal<Date | null>(getDomingoSemanaActualPeru());
   filtroSede = signal<number | null>(null);
-
-  detalleVisible = signal<boolean>(false);
-  detalleLoading = signal<boolean>(false);
-  detalleActual = signal<CreditNoteDetail | null>(null);
 
   anularVisible = signal<boolean>(false);
   anularLoading = signal<boolean>(false);
@@ -196,7 +191,7 @@ export class NotasCreditoComponent implements OnInit, OnDestroy {
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
-          detail: 'No se pudieron cargar las notas de crédito',
+          detail: 'No se pudieron cargar las notas de crÃƒÆ’Ã‚Â©dito',
           life: 3000,
         });
       },
@@ -277,7 +272,7 @@ export class NotasCreditoComponent implements OnInit, OnDestroy {
         window.URL.revokeObjectURL(url);
         this.messageService.add({
           severity: 'success',
-          summary: 'Éxito',
+          summary: 'ÃƒÆ’Ã¢â‚¬Â°xito',
           detail: 'Excel descargado correctamente.',
         });
       },
@@ -293,31 +288,7 @@ export class NotasCreditoComponent implements OnInit, OnDestroy {
   }
 
   verDetalle(nota: CreditNoteSummary): void {
-    this.detalleActual.set(null);
-    this.detalleLoading.set(true);
-    this.detalleVisible.set(true);
-
-    this.creditNoteService.detalle(nota.noteSummaryId).subscribe({
-      next: (res: CreditNoteDetail) => {
-        this.detalleActual.set(res);
-        this.detalleLoading.set(false);
-      },
-      error: () => {
-        this.detalleLoading.set(false);
-        this.detalleVisible.set(false);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudo cargar el detalle',
-          life: 3000,
-        });
-      },
-    });
-  }
-
-  cerrarDetalle(): void {
-    this.detalleVisible.set(false);
-    this.detalleActual.set(null);
+    this.router.navigate(['/admin/nota-credito', 'detalle-nota-credito', nota.noteSummaryId]);
   }
 
   abrirAnular(nota: CreditNoteSummary): void {
@@ -340,7 +311,7 @@ export class NotasCreditoComponent implements OnInit, OnDestroy {
         this.messageService.add({
           severity: 'success',
           summary: 'Nota anulada',
-          detail: 'La nota de crédito fue anulada correctamente',
+          detail: 'La nota de crÃƒÆ’Ã‚Â©dito fue anulada correctamente',
           life: 3000,
         });
         this.cargarNotas();
@@ -350,7 +321,7 @@ export class NotasCreditoComponent implements OnInit, OnDestroy {
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
-          detail: err?.error?.message ?? 'No se pudo anular la nota de crédito',
+          detail: err?.error?.message ?? 'No se pudo anular la nota de crÃƒÆ’Ã‚Â©dito',
           life: 4000,
         });
       },
