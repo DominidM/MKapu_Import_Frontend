@@ -36,7 +36,7 @@ import { SedeAdmin } from '../../../../interfaces/ventas.interface';
 import { UserRole } from '../../../../../core/constants/roles.constants';
 import { SharedTableContainerComponent } from '../../../../../shared/components/table.componente/shared-table-container.component';
 
-// ── Interfaces locales ──────────────────────────────────────────
+// Ã¢â€â‚¬Ã¢â€â‚¬ Interfaces locales Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 interface ProductoMapItem { nombre: string; codigo: string; }
 
 interface ReceiptDetalle {
@@ -93,26 +93,26 @@ export class ListadoDespacho implements OnInit, OnDestroy {
   private busquedaSubject = new Subject<string>();
 
   getMapEmbedUrl(direccion: string): SafeResourceUrl {
-    const q = encodeURIComponent((direccion ?? '') + ', Lima, Perú');
+    const q = encodeURIComponent((direccion ?? '') + ', Lima, PerÃƒÂº');
     return this.sanitizer.bypassSecurityTrustResourceUrl(
       `https://maps.google.com/maps?q=${q}&output=embed&hl=es&z=16`
     );
   }
 
   encodeAddress(direccion: string): string {
-    return encodeURIComponent((direccion ?? '') + ', Lima, Perú');
+    return encodeURIComponent((direccion ?? '') + ', Lima, PerÃƒÂº');
   }
 
   tituloKicker    = 'ADMINISTRADOR - DESPACHO - PRODUCTOS';
   subtituloKicker = 'LISTADO DE DESPACHO';
   iconoCabecera   = 'pi pi-truck';
 
-  // ── Autenticación ──────────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ AutenticaciÃƒÂ³n Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   readonly esAdmin: boolean;
   readonly sedeNombreVentas: string;
   readonly sedePropiaId: number | null;
 
-  // ── Filtros ────────────────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Filtros Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   filtros = signal<FiltroDespacho>({
     sedeSeleccionada: null,
     busqueda: '',
@@ -124,13 +124,13 @@ export class ListadoDespacho implements OnInit, OnDestroy {
   fechaHasta   = signal<Date | null>(getDomingoSemanaActualPeru());
   usuarios     = signal<UsuarioInterfaceResponse[]>([]);
 
-  // ── Sedes ──────────────────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Sedes Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   sedes = signal<SedeAdmin[]>([]);
   readonly sedesOptions = computed(() =>
     [{ label: 'Todas las sedes', value: null }, ...this.sedes().map((s) => ({ label: s.nombre, value: s.id_sede }))]
   );
 
-  // ── Modal ──────────────────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Modal Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   modalVisible         = signal(false);
   despachoSeleccionado = signal<Dispatch | null>(null);
   loadingDetalle       = signal(false);
@@ -141,7 +141,7 @@ export class ListadoDespacho implements OnInit, OnDestroy {
   productosMap         = signal<Record<string, ProductoMapItem>>({});
   productosCodigoMap   = signal<Record<number, string>>({});
   clienteInfo          = signal<{ nombre: string; documento: string; tipo_documento?: string; telefono: string; direccion?: string; } | null>(null);
-  sedeNombreModal      = signal<string>('—');
+  sedeNombreModal      = signal<string>('Ã¢â‚¬â€');
   loadingVenta         = signal(false);
   receiptDetalleActual = signal<ReceiptDetalle | null>(null);
 
@@ -151,8 +151,8 @@ export class ListadoDespacho implements OnInit, OnDestroy {
   estadoOptions = [
     { label: 'Todos',          value: null         },
     { label: 'Generado',       value: 'GENERADO'      },
-    { label: 'En preparación', value: 'EN_PREPARACION'},
-    { label: 'En tránsito',    value: 'EN_TRANSITO'   },
+    { label: 'En preparaciÃƒÂ³n', value: 'EN_PREPARACION'},
+    { label: 'En trÃƒÂ¡nsito',    value: 'EN_TRANSITO'   },
     { label: 'Entregado',      value: 'ENTREGADO'     },
     { label: 'Cancelado',      value: 'CANCELADO'     },
   ];
@@ -387,21 +387,21 @@ export class ListadoDespacho implements OnInit, OnDestroy {
     }
     
     const datosExcel = this.filasFiltradas().map((d) => ({
-      'N° Despacho': d.id_despacho,
+      'NÃ‚Â° Despacho': d.id_despacho,
       'Comprobante': this.getNumeroComprobante(d),
       'Cliente': this.getClienteNombre(d),
       'Documento': this.getClienteDoc(d),
       'Sede': this.getSede(d),
-      'Dirección': d.direccion_entrega ?? '—',
+      'DirecciÃƒÂ³n': d.direccion_entrega ?? 'Ã¢â‚¬â€',
       'Estado': this.getEstadoLabel(d.estado),
-      'Fecha Creación': new Date(d.fecha_creacion).toLocaleString('es-PE'),
+      'Fecha CreaciÃƒÂ³n': new Date(d.fecha_creacion).toLocaleString('es-PE'),
     }));
     
-    // Aquí iría tu lógica de exportación a Excel
+    // AquÃƒÂ­ irÃƒÂ­a tu lÃƒÂ³gica de exportaciÃƒÂ³n a Excel
     console.log('Exportar datos:', datosExcel);
     this.messageService.add({
       severity: 'success',
-      summary: 'Exportación exitosa',
+      summary: 'ExportaciÃƒÂ³n exitosa',
       detail: `Se exportaron ${datosExcel.length} despachos`,
       life: 3000,
     });
@@ -439,30 +439,30 @@ export class ListadoDespacho implements OnInit, OnDestroy {
     this.cargarDespachos(false);
   }
 
-  // ── Filtros ───────────────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Filtros Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   aplicarFiltros(): void {
     this.paginaActual.set(1);
     this.cargarDespachos(true);
   }
 
-  // ── Helpers tabla ─────────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Helpers tabla Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   getNumeroComprobante(d: any): string {
     const ventaRef = d.id_venta_ref ?? d.idVentaRef ?? d.id_venta ?? '?';
     return d.comprobante ?? d.numeroComprobante ?? `Venta #${ventaRef}`;
   }
 
-  getClienteNombre(d: any): string { return d.clienteNombre ?? d.cliente_nombre ?? '—'; }
+  getClienteNombre(d: any): string { return d.clienteNombre ?? d.cliente_nombre ?? 'Ã¢â‚¬â€'; }
   getClienteDoc(d: any):    string { return d.clienteDoc    ?? d.cliente_doc    ?? '';  }
-  getSede(d: any):           string { return d.sedeNombre   ?? d.sede_nombre    ?? '—'; }
+  getSede(d: any):           string { return d.sedeNombre   ?? d.sede_nombre    ?? 'Ã¢â‚¬â€'; }
 
-  // ── Computeds ──────────────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Computeds Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   readonly totalProductosModal = computed(() =>
     this.despachoSeleccionado()?.detalles?.reduce((acc, d) => acc + (d.cantidad_solicitada ?? 0), 0) ?? 0
   );
 
   readonly numeroVentaModal = computed(() => {
     const d = this.despachoSeleccionado();
-    if (!d) return '—';
+    if (!d) return 'Ã¢â‚¬â€';
     return (d as any).comprobante ?? `#${d.id_venta_ref}`;
   });
 
@@ -520,76 +520,11 @@ export class ListadoDespacho implements OnInit, OnDestroy {
   getProductoCodigo(id_producto: number): string {
     return this.productosCodigoMap()[id_producto]
       ?? this.productosMap()[String(id_producto)]?.codigo
-      ?? '—';
+      ?? 'Ã¢â‚¬â€';
   }
 
-  verDetalle(despacho: any): void {
-    this.loadingDetalle.set(true);
-    this.despachoSeleccionado.set(despacho);
-    this.modalVisible.set(true);
-
-    this.clienteInfo.set(despacho.clienteNombre ? {
-      nombre:    despacho.clienteNombre    ?? '—',
-      documento: despacho.clienteDoc       ?? '—',
-      telefono:  despacho.clienteTelefono  ?? '—',
-      direccion: despacho.clienteDireccion ?? '—',
-    } : null);
-    this.sedeNombreModal.set(despacho.sedeNombre ?? '—');
-
-    const map: Record<string, ProductoMapItem> = {};
-    (despacho.productosDetalle ?? []).forEach((p: any) => {
-      map[String(p.id_prod_ref)] = { 
-        nombre: p.descripcion ?? `#${p.id_prod_ref}`, 
-        codigo: p.cod_prod ?? '—' 
-      };
-    });
-    this.productosMap.set(map);
-
-    this.receiptDetalleActual.set({
-      id_comprobante:   despacho.id_venta_ref,
-      numero_completo:  despacho.comprobante     ?? '',
-      serie: '', 
-      numero: 0,
-      tipo_comprobante: despacho.tipoComprobante  ?? '',
-      fec_emision:      despacho.fechaEmision      ?? '',
-      subtotal:         despacho.subtotal           ?? 0,
-      igv:              despacho.igv                ?? 0,
-      total:            despacho.total              ?? 0,
-      descuento:        despacho.descuento           ?? 0,
-      metodo_pago:      despacho.metodoPago          ?? '—',
-      cliente: {
-        nombre:    despacho.clienteNombre    ?? '—',
-        documento: despacho.clienteDoc       ?? '—',
-        telefono:  despacho.clienteTelefono  ?? '—',
-        direccion: despacho.clienteDireccion ?? '—',
-      },
-      responsable: {
-        nombre:     despacho.responsableNombre ?? '—',
-        sede:       0,
-        nombreSede: despacho.sedeNombre        ?? '—',
-      },
-      productos: (despacho.productosDetalle ?? []).map((p: any) => ({
-        id_prod_ref: p.id_prod_ref, 
-        cod_prod: p.cod_prod,
-        descripcion: p.descripcion, 
-        cantidad: p.cantidad,
-        pre_uni: p.precio_unit, 
-        total: p.total,
-      })),
-    });
-
-    const sub = this.dispatchService.getDispatchById(despacho.id_despacho).subscribe({
-      next:  (d) => { 
-        this.despachoSeleccionado.set({ ...despacho, ...d }); 
-        this.loadingDetalle.set(false);
-        this.cargarSugerenciasBusqueda();
-      },
-      error: (err) => { 
-        console.error('Error cargando detalle:', err);
-        this.loadingDetalle.set(false); 
-      },
-    });
-    this.subscriptions.add(sub);
+  verDetalle(despacho: Dispatch): void {
+    this.router.navigate(['/admin/despacho-productos/detalle-despacho', despacho.id_despacho]);
   }
 
   cerrarModal(): void {
@@ -652,9 +587,9 @@ export class ListadoDespacho implements OnInit, OnDestroy {
     const noEditables: string[] = ['GENERADO', 'ENTREGADO', 'CANCELADO'];
     if (noEditables.includes(despacho.estado)) {
       const msgs: Record<string, string> = {
-        GENERADO:  'Debes confirmar la salida primero desde el modal de detalle.',
+        GENERADO:  'Debes confirmar la salida primero desde el detalle del despacho.',
         ENTREGADO: `El despacho #${despacho.id_despacho} ya fue entregado y no puede modificarse.`,
-        CANCELADO: `El despacho #${despacho.id_despacho} está cancelado y no puede modificarse.`,
+        CANCELADO: `El despacho #${despacho.id_despacho} estÃƒÂ¡ cancelado y no puede modificarse.`,
       };
       this.messageService.add({ 
         severity: 'info', 
@@ -677,7 +612,7 @@ export class ListadoDespacho implements OnInit, OnDestroy {
       this.despachoParaCambio.set(null);
       this.messageService.add({
         severity: 'success',
-        summary:  nuevoEstado === 'ENTREGADO' ? '¡Entregado!' : 'Cancelado',
+        summary:  nuevoEstado === 'ENTREGADO' ? 'Ã‚Â¡Entregado!' : 'Cancelado',
         detail:   `Despacho #${d.id_despacho} marcado como ${nuevoEstado === 'ENTREGADO' ? 'entregado' : 'cancelado'}.`,
         life: 3000,
       });
@@ -732,11 +667,11 @@ export class ListadoDespacho implements OnInit, OnDestroy {
       numeroComprobante: cache?.comprobante ?? `#${d.id_venta_ref}`,
       tipoComprobante: cache?.tipoComprobante ?? 'Comprobante',
       fecha,
-      clienteNombre: this.clienteInfo()?.nombre ?? '—',
-      clienteDoc: this.clienteInfo()?.documento ?? '—',
-      clienteTelefono: this.clienteInfo()?.telefono ?? '—',
+      clienteNombre: this.clienteInfo()?.nombre ?? 'Ã¢â‚¬â€',
+      clienteDoc: this.clienteInfo()?.documento ?? 'Ã¢â‚¬â€',
+      clienteTelefono: this.clienteInfo()?.telefono ?? 'Ã¢â‚¬â€',
       tipoEntrega,
-      direccion: d.direccion_entrega ?? '—',
+      direccion: d.direccion_entrega ?? 'Ã¢â‚¬â€',
       total: this.receiptDetalleActual()?.total ?? 0,
       productos: (d.detalles ?? []).map(det => ({
         nombre: this.getProductoNombre(det.id_producto),
@@ -836,8 +771,8 @@ export class ListadoDespacho implements OnInit, OnDestroy {
 
     const numComp = cache?.comprobante ?? '';
     let tipoComprobante = 'Comprobante';
-    if      (numComp.startsWith('F')) tipoComprobante = 'Factura Electrónica';
-    else if (numComp.startsWith('B')) tipoComprobante = 'Boleta Electrónica';
+    if      (numComp.startsWith('F')) tipoComprobante = 'Factura ElectrÃƒÂ³nica';
+    else if (numComp.startsWith('B')) tipoComprobante = 'Boleta ElectrÃƒÂ³nica';
     else if (numComp.startsWith('N')) tipoComprobante = 'Nota de Venta';
 
     const data = {
@@ -845,13 +780,13 @@ export class ListadoDespacho implements OnInit, OnDestroy {
       numeroComprobante: numComp || `#${despacho.id_venta_ref}`,
       tipoComprobante,
       fechaEmision:      receipt?.fec_emision ?? String(despacho.fecha_creacion),
-      clienteNombre:     cliente?.nombre        ?? cache?.clienteNombre ?? '—',
-      clienteDoc:        cliente?.documento      ?? cache?.clienteDoc    ?? '—',
-      clienteTipoDoc:    cliente?.tipo_documento ?? '—',
-      clienteTelefono:   cliente?.telefono       ?? '—',
-      clienteDireccion:  cliente?.direccion      ?? '—',
-      sedeNombre:        sedeNombre              ?? cache?.sedeNombre    ?? '—',
-      responsableNombre: receipt?.responsable?.nombre ?? '—',
+      clienteNombre:     cliente?.nombre        ?? cache?.clienteNombre ?? 'Ã¢â‚¬â€',
+      clienteDoc:        cliente?.documento      ?? cache?.clienteDoc    ?? 'Ã¢â‚¬â€',
+      clienteTipoDoc:    cliente?.tipo_documento ?? 'Ã¢â‚¬â€',
+      clienteTelefono:   cliente?.telefono       ?? 'Ã¢â‚¬â€',
+      clienteDireccion:  cliente?.direccion      ?? 'Ã¢â‚¬â€',
+      sedeNombre:        sedeNombre              ?? cache?.sedeNombre    ?? 'Ã¢â‚¬â€',
+      responsableNombre: receipt?.responsable?.nombre ?? 'Ã¢â‚¬â€',
       direccionEntrega:  despacho.direccion_entrega,
       tipoEntrega,
       observacion:       despacho.observacion ?? null,
@@ -860,7 +795,7 @@ export class ListadoDespacho implements OnInit, OnDestroy {
       igv:               Number(receipt?.igv       ?? 0),
       descuento:         Number(receipt?.descuento ?? 0),
       total:             Number(receipt?.total     ?? 0),
-      metodoPago:        receipt?.metodo_pago ?? '—',
+      metodoPago:        receipt?.metodo_pago ?? 'Ã¢â‚¬â€',
       esCopia,
       productos: (despacho.detalles ?? []).map(det => {
         const pr = (receipt?.productos ?? []).find(
@@ -869,7 +804,7 @@ export class ListadoDespacho implements OnInit, OnDestroy {
         return {
           id_producto:         det.id_producto,
           nombre:              prodMap[String(det.id_producto)]?.nombre ?? pr?.descripcion ?? `Producto #${det.id_producto}`,
-          codigo:              prodCodMap[det.id_producto] ?? prodMap[String(det.id_producto)]?.codigo ?? pr?.cod_prod ?? '—',
+          codigo:              prodCodMap[det.id_producto] ?? prodMap[String(det.id_producto)]?.codigo ?? pr?.cod_prod ?? 'Ã¢â‚¬â€',
           cantidad_solicitada: det.cantidad_solicitada,
           cantidad_despachada: det.cantidad_despachada,
           precio_unit:         Number(pr?.pre_uni ?? pr?.precio_unit ?? 0),
@@ -888,10 +823,10 @@ export class ListadoDespacho implements OnInit, OnDestroy {
 
   cancelar(despacho: Dispatch): void {
     this.confirmationService.confirm({
-      header: 'Confirmar cancelación',
-      message: `¿Cancelar el despacho <strong>#${despacho.id_despacho}</strong>?`,
+      header: 'Confirmar cancelaciÃƒÂ³n',
+      message: `Ã‚Â¿Cancelar el despacho <strong>#${despacho.id_despacho}</strong>?`,
       icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'Sí, cancelar', 
+      acceptLabel: 'SÃƒÂ­, cancelar', 
       rejectLabel: 'Volver',
       acceptButtonStyleClass: 'p-button-danger',
       accept: () => {
@@ -937,8 +872,8 @@ export class ListadoDespacho implements OnInit, OnDestroy {
   getEstadoLabel(estado: DispatchStatus): string {
     const labels: Record<DispatchStatus, string> = {
       GENERADO:       'Generado',
-      EN_PREPARACION: 'En preparación',
-      EN_TRANSITO:    'En tránsito',
+      EN_PREPARACION: 'En preparaciÃƒÂ³n',
+      EN_TRANSITO:    'En trÃƒÂ¡nsito',
       ENTREGADO:      'Entregado',
       CANCELADO:      'Cancelado',
     };
@@ -956,11 +891,11 @@ export class ListadoDespacho implements OnInit, OnDestroy {
   }
 
   getEstadoLabelFromFilter(estado: string | null): string {
-    if (!estado) return '—';
+    if (!estado) return 'Ã¢â‚¬â€';
     const labels: Record<string, string> = {
       'GENERADO':       'Generado',
-      'EN_PREPARACION': 'En preparación',
-      'EN_TRANSITO':    'En tránsito',
+      'EN_PREPARACION': 'En preparaciÃƒÂ³n',
+      'EN_TRANSITO':    'En trÃƒÂ¡nsito',
       'ENTREGADO':      'Entregado',
       'CANCELADO':      'Cancelado',
     };
