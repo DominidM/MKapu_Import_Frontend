@@ -14,10 +14,10 @@
       <div class="chat-panel-header">
         <span>Mensajes</span>
         <div class="header-actions">
-          <i class="pi pi-plus cursor-pointer" 
+          <i class="pi pi-plus cursor-pointer"
              title="Nuevo chat"
              (click)="abrirNuevoChat()"></i>
-          <i class="pi pi-times cursor-pointer" 
+          <i class="pi pi-times cursor-pointer"
              (click)="togglePanel()"></i>
         </div>
       </div>
@@ -25,7 +25,7 @@
         @for (conv of conversaciones(); track conv.id_conversacion) {
           <div class="chat-conv-item" (click)="abrirConversacion(conv)">
             <div class="conv-avatar">
-              <i class="pi pi-users"></i>
+              <i [class]="conv.es_grupo ? 'pi pi-users' : 'pi pi-user'"></i>
             </div>
             <div class="conv-info">
               <span class="conv-nombre">{{ conv.nombre_chat }}</span>
@@ -47,38 +47,38 @@
 
     <!-- ── VISTA: mensajes ── -->
     @if (vista() === 'mensajes') {
-    <div class="chat-panel-header">
+      <div class="chat-panel-header">
         <i class="pi pi-arrow-left cursor-pointer" (click)="volverLista()"></i>
         <span>{{ conversacionActiva()?.nombre_chat }}</span>
         <div class="header-actions">
-        <i
+          <i
             [class]="muteado() ? 'pi pi-volume-off cursor-pointer' : 'pi pi-volume-up cursor-pointer'"
             [title]="muteado() ? 'Activar sonido' : 'Silenciar'"
             (click)="toggleMute()"
-        ></i>
-        <i class="pi pi-times cursor-pointer" (click)="togglePanel()"></i>
+          ></i>
+          <i class="pi pi-times cursor-pointer" (click)="togglePanel()"></i>
         </div>
-    </div>
-    <div class="chat-mensajes" #mensajesContainer>
+      </div>
+      <div class="chat-mensajes" #mensajesContainer>
         @for (msg of mensajes(); track msg.id_mensaje) {
-        <div class="burbuja" [class.propia]="msg.id_cuenta === miIdCuenta">
+          <div class="burbuja" [class.propia]="msg.id_cuenta === miIdCuenta">
             @if (msg.id_cuenta !== miIdCuenta) {
-            <small class="burbuja-remitente">{{ msg.remitente }}</small>
+              <small class="burbuja-remitente">{{ msg.remitente }}</small>
             }
             <p class="burbuja-texto">{{ msg.contenido }}</p>
             <span class="burbuja-hora">{{ msg.enviado_en | date:'HH:mm' }}</span>
-        </div>
+          </div>
         }
-    </div>
-    <div class="chat-input-area">
+      </div>
+      <div class="chat-input-area">
         <input
-        pInputText
-        [(ngModel)]="textoMensaje"
-        placeholder="Escribe un mensaje..."
-        (keyup.enter)="enviarMensaje()"
+          pInputText
+          [(ngModel)]="textoMensaje"
+          placeholder="Escribe un mensaje..."
+          (keyup.enter)="enviarMensaje()"
         />
         <button pButton icon="pi pi-send" (click)="enviarMensaje()"></button>
-    </div>
+      </div>
     }
 
     <!-- ── VISTA: nuevo chat ── -->
@@ -88,33 +88,106 @@
         <span>Nuevo mensaje</span>
         <i class="pi pi-times cursor-pointer" (click)="togglePanel()"></i>
       </div>
+
+      <!-- Toggle individual / grupo -->
+      <div class="chat-tipo-toggle">
+        <button
+          [class.activo]="tipoNuevoChat() === 'individual'"
+          (click)="tipoNuevoChat.set('individual')">
+          <i class="pi pi-user"></i> Individual
+        </button>
+        <button
+          [class.activo]="tipoNuevoChat() === 'grupo'"
+          (click)="tipoNuevoChat.set('grupo')">
+          <i class="pi pi-users"></i> Grupo
+        </button>
+      </div>
+
+      <!-- Nombre del grupo (solo en modo grupo) -->
+      @if (tipoNuevoChat() === 'grupo') {
+        <div class="chat-busqueda">
+          <input
+            pInputText
+            [(ngModel)]="nombreGrupo"
+            placeholder="Nombre del grupo..."
+            class="w-full"
+          />
+        </div>
+      }
+
+      <!-- Contador de seleccionados (solo en modo grupo) -->
+      @if (tipoNuevoChat() === 'grupo' && usuariosSeleccionados().length > 0) {
+        <div class="chat-seleccionados-info">
+          <i class="pi pi-users"></i>
+          <span>{{ usuariosSeleccionados().length }} participante(s) seleccionado(s)</span>
+        </div>
+      }
+
+      <!-- Buscador -->
       <div class="chat-busqueda">
         <input
           pInputText
-          [(ngModel)]="busquedaUsuario"
+          [ngModel]="busquedaUsuario()"
+          (ngModelChange)="busquedaUsuario.set($event)"
           placeholder="Buscar usuario..."
           class="w-full"
         />
       </div>
-      <div class="chat-conversaciones">
-        @for (usuario of usuariosFiltrados(); track usuario.id_cuenta) {
-          <div class="chat-conv-item" (click)="iniciarChatCon(usuario)">
-            <div class="conv-avatar">
-              <i class="pi pi-user"></i>
+
+      <!-- Estado de carga -->
+      @if (cargandoUsuarios()) {
+        <div class="chat-empty">
+          <i class="pi pi-spin pi-spinner"></i>
+          <span>Cargando usuarios...</span>
+        </div>
+      } @else {
+        <!-- Lista scrolleable con TODOS los usuarios -->
+        <div class="chat-conversaciones chat-usuarios-scroll">
+          @for (usuario of usuariosFiltrados(); track usuario.id_cuenta) {
+            <div
+              class="chat-conv-item"
+              [class.seleccionado]="estaSeleccionado(usuario.id_cuenta)"
+              (click)="tipoNuevoChat() === 'grupo' ? toggleSeleccion(usuario) : iniciarChatCon(usuario)">
+              <div class="conv-avatar">
+                <i class="pi pi-user"></i>
+              </div>
+              <div class="conv-info">
+                <span class="conv-nombre">{{ usuario.nom_usu }}</span>
+                <span class="conv-ultimo">{{ usuario.email_emp }}</span>
+              </div>
+              @if (tipoNuevoChat() === 'grupo') {
+                <i
+                  class="pi check-icon"
+                  [class.pi-check-circle]="estaSeleccionado(usuario.id_cuenta)"
+                  [class.pi-circle]="!estaSeleccionado(usuario.id_cuenta)">
+                </i>
+              }
             </div>
-            <div class="conv-info">
-              <span class="conv-nombre">{{ usuario.nom_usu }}</span>
-              <span class="conv-ultimo">{{ usuario.email_emp }}</span>
+          }
+          @if (usuariosFiltrados().length === 0 && !cargandoUsuarios()) {
+            <div class="chat-empty">
+              <i class="pi pi-search"></i>
+              <span>No se encontraron usuarios</span>
             </div>
-          </div>
-        }
-        @if (usuariosFiltrados().length === 0) {
-          <div class="chat-empty">
-            <i class="pi pi-search"></i>
-            <span>No se encontraron usuarios</span>
-          </div>
-        }
-      </div>
+          }
+        </div>
+      }
+
+      <!-- Botón crear grupo -->
+      @if (tipoNuevoChat() === 'grupo') {
+        <div class="chat-crear-grupo">
+          <button
+            class="btn-crear-grupo"
+            [class.disabled]="usuariosSeleccionados().length === 0 || !nombreGrupo.trim()"
+            (click)="onCrearGrupoClick()">
+            <i class="pi pi-check"></i>
+            Crear grupo
+            @if (usuariosSeleccionados().length > 0) {
+              <span class="badge-count">{{ usuariosSeleccionados().length + 1 }}</span>
+            }
+          </button>
+        </div>
+      }
     }
 
   </div>

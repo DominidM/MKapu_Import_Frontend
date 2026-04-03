@@ -5,7 +5,7 @@ import { environment } from '../../../enviroments/enviroment';
 @Injectable({ providedIn: 'root' })
 export class ChatService {
   private http    = inject(HttpClient);
-  private baseUrl = `${environment.apiUrl}/admin/chat`; 
+  private baseUrl = `${environment.apiUrl}/admin/chat`;
 
   getMisConversaciones(idCuenta: number) {
     return this.http.get<any[]>(`${this.baseUrl}/conversaciones/${idCuenta}`);
@@ -16,6 +16,15 @@ export class ChatService {
       id_cuenta_1: idCuenta1,
       id_cuenta_2: idCuenta2,
       id_sede:     idSede,
+    });
+  }
+
+  // Nuevo: crear grupo
+  crearGrupo(nombre: string, idCuentas: number[], idSede: number) {
+    return this.http.post<any>(`${this.baseUrl}/grupo`, {
+      nombre,
+      id_cuentas: idCuentas,
+      id_sede:    idSede,
     });
   }
 
@@ -42,6 +51,8 @@ export class ChatService {
     });
   }
 
+  // Trae TODOS los usuarios de la sede excepto el actual
+  // El backend NO debe paginar este endpoint
   getUsuariosDisponibles(idSede: number, idCuentaActual: number) {
     return this.http.get<any[]>(`${this.baseUrl}/usuarios/${idSede}/${idCuentaActual}`);
   }
