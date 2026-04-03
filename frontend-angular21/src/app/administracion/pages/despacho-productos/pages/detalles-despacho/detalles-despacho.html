@@ -1,263 +1,373 @@
-<div class="p-2">
-  <p-card class="ventas-header-card mb-4 ventas-header-bordered">
-    <div class="flex align-items-center justify-content-between flex-wrap gap-2">
-      <div class="flex align-items-center gap-3">
-        <span class="ventas-title-icon">
-          <i [class]="iconoCabecera"></i>
-        </span>
-        <div>
-          <p class="ventas-kicker mb-0">{{ tituloKicker }}</p>
-          <h2 class="ventas-title mb-0">{{ subtituloKicker }}</h2>
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+@if (loading()) {
+  <div class="despacho-loading">
+    <i class="pi pi-spin pi-spinner despacho-loading-icon"></i>
+  </div>
+}
+
+@if (!loading()) {
+  @if (despacho(); as detalle) {
+    @let productosList = productos();
+
+    <div class="p-2 despacho-page">
+      <p-card styleClass="despacho-header-card mb-4 despacho-header-bordered">
+        <div class="flex align-items-center justify-content-between flex-wrap gap-2">
+          <div class="flex align-items-center gap-3">
+            <span class="despacho-title-icon">
+              <i class="pi pi-truck"></i>
+            </span>
+            <div>
+              <p class="despacho-kicker mb-0">ADMINISTRADOR · ADMINISTRACION · DESPACHO</p>
+              <h2 class="despacho-title mb-0">DETALLE DEL DESPACHO</h2>
+            </div>
+          </div>
+
+          <div class="flex gap-2 flex-wrap justify-content-end">
+            @if (canConfirmSalida()) {
+              <p-button
+                [label]="estadoKey() === 'GENERADO' ? 'Confirmar salida' : 'Continuar salida'"
+                icon="pi pi-send"
+                [loading]="actionLoading()"
+                styleClass="despacho-pill despacho-pill-warning despacho-pill-compact"
+                (onClick)="confirmarSalida()"></p-button>
+            }
+            @if (canMarkDelivered()) {
+              <p-button
+                label="Marcar entregado"
+                icon="pi pi-check-circle"
+                [loading]="actionLoading()"
+                styleClass="despacho-pill despacho-pill-success-outlined despacho-pill-compact"
+                (onClick)="cambiarEstado('ENTREGADO')"></p-button>
+            }
+            @if (canCancel()) {
+              <p-button
+                label="Cancelar"
+                icon="pi pi-times-circle"
+                [loading]="actionLoading()"
+                styleClass="despacho-pill despacho-pill-danger-outlined despacho-pill-compact"
+                (onClick)="cambiarEstado('CANCELADO')"></p-button>
+            }
+            @if (canPrint()) {
+              <p-button
+                label="Imprimir copia"
+                icon="pi pi-print"
+                styleClass="despacho-pill despacho-pill-secondary despacho-pill-compact"
+                (onClick)="imprimirCopia()"></p-button>
+            }
+            <p-button
+              label="Volver"
+              icon="pi pi-arrow-left"
+              styleClass="despacho-pill despacho-pill-neutral despacho-pill-compact"
+              (onClick)="volver()"></p-button>
+          </div>
+        </div>
+      </p-card>
+
+      <div class="despacho-summary-grid mb-4">
+        <div class="despacho-summary-card despacho-summary-card--dispatch">
+          <i class="pi pi-hashtag"></i>
+          <div>
+            <span class="despacho-summary-label">Despacho</span>
+            <span class="despacho-summary-value">#{{ detalle.id_despacho }}</span>
+            <span class="despacho-summary-detail"><i class="pi pi-briefcase"></i>Venta #{{ detalle.id_venta_ref }}</span>
+          </div>
+        </div>
+
+        <div class="despacho-summary-card despacho-summary-card--voucher">
+          <i class="pi pi-receipt"></i>
+          <div>
+            <span class="despacho-summary-label">Comprobante</span>
+            <span class="despacho-summary-value">{{ comprobanteLabel() }}</span>
+            <span class="despacho-summary-detail"><i class="pi pi-file"></i>{{ tipoComprobanteLabel() }}</span>
+          </div>
+        </div>
+
+        <div class="despacho-summary-card despacho-summary-card--client">
+          <i class="pi pi-user"></i>
+          <div>
+            <span class="despacho-summary-label">Cliente</span>
+            <span class="despacho-summary-value">{{ clienteNombre() }}</span>
+            <span class="despacho-summary-detail"><i class="pi pi-id-card"></i>{{ clienteDocumento() }}</span>
+          </div>
+        </div>
+
+        <div
+          class="despacho-summary-card"
+          [class.despacho-summary-card--status-generated]="estadoKey() === 'GENERADO'"
+          [class.despacho-summary-card--status-prep]="estadoKey() === 'EN_PREPARACION'"
+          [class.despacho-summary-card--status-transit]="estadoKey() === 'EN_TRANSITO'"
+          [class.despacho-summary-card--status-success]="estadoKey() === 'ENTREGADO'"
+          [class.despacho-summary-card--status-danger]="estadoKey() === 'CANCELADO'">
+          <i class="pi pi-power-off"></i>
+          <div>
+            <span class="despacho-summary-label">Estado</span>
+            <span class="despacho-summary-value">{{ estadoLabel() }}</span>
+            <span class="despacho-summary-detail"><i class="pi pi-box"></i>{{ unidadesLabel() }}</span>
+          </div>
         </div>
       </div>
-      <div class="flex gap-3">
-        <p-button
-          type="button"
-          label="Listado Despacho"
-          icon="pi pi-list"
-          (click)="irListadoDespacho()"
-          pTooltip="Volver al listado"
-          tooltipPosition="bottom"
-        />
+
+      <div class="despacho-section-card mb-4">
+        <div class="despacho-section-header">
+          <h3><i class="pi pi-info-circle"></i> Informacion del Despacho</h3>
+          <p-tag [value]="itemsLabel()" severity="info"></p-tag>
+        </div>
+
+        <div class="despacho-fields-grid">
+          <div class="despacho-field">
+            <label>DESPACHO</label>
+            <div class="despacho-field-display"><i class="pi pi-hashtag text-600"></i><span class="font-semibold">#{{ detalle.id_despacho }}</span></div>
+          </div>
+          <div class="despacho-field">
+            <label>VENTA RELACIONADA</label>
+            <div class="despacho-field-display"><i class="pi pi-briefcase text-600"></i><span class="font-semibold">#{{ detalle.id_venta_ref }}</span></div>
+          </div>
+        </div>
+
+        <div class="despacho-fields-grid">
+          <div class="despacho-field">
+            <label>TIPO DE COMPROBANTE</label>
+            <div class="despacho-field-display"><i class="pi pi-file text-600"></i><span>{{ tipoComprobanteLabel() }}</span></div>
+          </div>
+          <div class="despacho-field">
+            <label>NUMERO DE COMPROBANTE</label>
+            <div class="despacho-field-display"><i class="pi pi-receipt text-600"></i><span class="font-semibold">{{ comprobanteLabel() }}</span></div>
+          </div>
+        </div>
+
+        <div class="despacho-fields-grid">
+          <div class="despacho-field">
+            <label>FECHA DE CREACION</label>
+            <div class="despacho-field-display"><i class="pi pi-calendar text-600"></i><span class="font-semibold">{{ detalle.fecha_creacion | date:'dd/MM/yyyy HH:mm' }}</span></div>
+          </div>
+          <div class="despacho-field">
+            <label>FECHA PROGRAMADA</label>
+            <div class="despacho-field-display"><i class="pi pi-calendar-clock text-600"></i><span class="font-semibold">{{ detalle.fecha_programada ? (detalle.fecha_programada | date:'dd/MM/yyyy HH:mm') : 'Sin programar' }}</span></div>
+          </div>
+        </div>
+
+        <div class="despacho-fields-grid">
+          <div class="despacho-field">
+            <label>SALIDA</label>
+            <div class="despacho-field-display"><i class="pi pi-send text-600"></i><span class="font-semibold">{{ detalle.fecha_salida ? (detalle.fecha_salida | date:'dd/MM/yyyy HH:mm') : 'Pendiente' }}</span></div>
+          </div>
+          <div class="despacho-field">
+            <label>ENTREGA</label>
+            <div class="despacho-field-display"><i class="pi pi-check-circle text-600"></i><span class="font-semibold">{{ detalle.fecha_entrega ? (detalle.fecha_entrega | date:'dd/MM/yyyy HH:mm') : 'Pendiente' }}</span></div>
+          </div>
+        </div>
+
+        <div class="despacho-fields-grid">
+          <div class="despacho-field">
+            <label>ALMACEN ORIGEN</label>
+            <div class="despacho-field-display"><i class="pi pi-warehouse text-600"></i><span>Almacen #{{ detalle.id_almacen_origen }}</span></div>
+          </div>
+          <div class="despacho-field">
+            <label>TIPO DE ENTREGA</label>
+            <div class="despacho-field-display"><i class="pi pi-truck text-600"></i><span>{{ deliveryTypeLabel() }}</span></div>
+          </div>
+        </div>
+
+        <div class="despacho-fields-grid despacho-fields-grid--single">
+          <div class="despacho-field">
+            <label>DIRECCION DE ENTREGA</label>
+            <div class="despacho-field-display despacho-field-display--multiline">
+              <i class="pi pi-map-marker text-600"></i>
+              <span>{{ detalle.direccion_entrega || 'Sin direccion registrada' }}</span>
+            </div>
+          </div>
+        </div>
+
+        @if (mapsUrl()) {
+          <div class="despacho-map-row">
+            <a class="despacho-map-link" [href]="mapsUrl()!" target="_blank" rel="noopener">
+              <i class="pi pi-map"></i>
+              <span>Ver direccion en Google Maps</span>
+            </a>
+          </div>
+        }
+
+        <div class="despacho-fields-grid despacho-fields-grid--single">
+          <div class="despacho-field">
+            <label>OBSERVACION</label>
+            <div class="despacho-field-display despacho-field-display--multiline">
+              <i class="pi pi-align-left text-600"></i>
+              <span>{{ detalle.observacion || 'Sin observaciones registradas.' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="despacho-section-card mb-4">
+        <div class="despacho-section-header">
+          <h3><i class="pi pi-users"></i> Cliente y Facturacion</h3>
+          <p-tag [value]="metodoPago()" severity="success"></p-tag>
+        </div>
+
+        <div class="despacho-fields-grid">
+          <div class="despacho-field">
+            <label>CLIENTE</label>
+            <div class="despacho-field-display"><i class="pi pi-user text-600"></i><span class="font-semibold">{{ clienteNombre() }}</span></div>
+          </div>
+          <div class="despacho-field">
+            <label>DOCUMENTO</label>
+            <div class="despacho-field-display"><i class="pi pi-id-card text-600"></i><span>{{ clienteDocumento() }}</span></div>
+          </div>
+        </div>
+
+        <div class="despacho-fields-grid">
+          <div class="despacho-field">
+            <label>TELEFONO</label>
+            <div class="despacho-field-display"><i class="pi pi-phone text-600"></i><span>{{ clienteTelefono() }}</span></div>
+          </div>
+          <div class="despacho-field">
+            <label>RESPONSABLE</label>
+            <div class="despacho-field-display"><i class="pi pi-user-edit text-600"></i><span>{{ responsableNombre() }}</span></div>
+          </div>
+        </div>
+
+        <div class="despacho-fields-grid">
+          <div class="despacho-field">
+            <label>SEDE</label>
+            <div class="despacho-field-display"><i class="pi pi-building text-600"></i><span>{{ sedeNombre() }}</span></div>
+          </div>
+          <div class="despacho-field">
+            <label>METODO DE PAGO</label>
+            <div class="despacho-field-display"><i class="pi pi-wallet text-600"></i><span>{{ metodoPago() }}</span></div>
+          </div>
+        </div>
+
+        <div class="despacho-fields-grid despacho-fields-grid--single">
+          <div class="despacho-field">
+            <label>DIRECCION DEL CLIENTE</label>
+            <div class="despacho-field-display despacho-field-display--multiline"><i class="pi pi-home text-600"></i><span>{{ clienteDireccion() }}</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="despacho-section-card mb-4">
+        <div class="despacho-section-header">
+          <h3><i class="pi pi-chart-bar"></i> Totales y Seguimiento</h3>
+          <p-tag [value]="estadoLabel()" [severity]="getEstadoSeverity(estadoKey())"></p-tag>
+        </div>
+
+        <div class="despacho-fields-grid">
+          <div class="despacho-field">
+            <label>SUBTOTAL</label>
+            <div class="despacho-field-display"><i class="pi pi-calculator text-600"></i><span class="font-semibold">S/ {{ subtotalAmount() | number:'1.2-2' }}</span></div>
+          </div>
+          <div class="despacho-field">
+            <label>IGV</label>
+            <div class="despacho-field-display"><i class="pi pi-percentage text-600"></i><span class="font-semibold">S/ {{ igvAmount() | number:'1.2-2' }}</span></div>
+          </div>
+        </div>
+
+        <div class="despacho-fields-grid">
+          <div class="despacho-field">
+            <label>DESCUENTO</label>
+            <div class="despacho-field-display"><i class="pi pi-tag text-600"></i><span class="font-semibold">S/ {{ descuentoAmount() | number:'1.2-2' }}</span></div>
+          </div>
+          <div class="despacho-field">
+            <label>TOTAL</label>
+            <div class="despacho-field-display despacho-field-display--accent"><i class="pi pi-dollar text-600"></i><span class="font-semibold">S/ {{ totalAmount() | number:'1.2-2' }}</span></div>
+          </div>
+        </div>
+
+        <div class="despacho-fields-grid">
+          <div class="despacho-field">
+            <label>UNIDADES SOLICITADAS</label>
+            <div class="despacho-field-display"><i class="pi pi-box text-600"></i><span class="font-semibold">{{ totalUnidades() }}</span></div>
+          </div>
+          <div class="despacho-field">
+            <label>UNIDADES DESPACHADAS</label>
+            <div class="despacho-field-display"><i class="pi pi-check text-600"></i><span class="font-semibold">{{ totalDespachado() }}</span></div>
+          </div>
+        </div>
+
+        <div class="despacho-fields-grid">
+          <div class="despacho-field">
+            <label>UNIDADES PENDIENTES</label>
+            <div class="despacho-field-display"><i class="pi pi-hourglass text-600"></i><span class="font-semibold">{{ totalPendiente() }}</span></div>
+          </div>
+          <div class="despacho-field">
+            <label>FALTANTES</label>
+            <div class="despacho-field-display"><i class="pi pi-exclamation-triangle text-600"></i><span class="font-semibold">{{ faltantesLabel() }}</span></div>
+          </div>
+        </div>
+
+        <div class="despacho-status-chips">
+          <span class="despacho-status-chip despacho-status-chip--warn">{{ totalPendientesDetalle() }} pendientes</span>
+          <span class="despacho-status-chip despacho-status-chip--info">{{ totalPreparados() }} preparados</span>
+          <span class="despacho-status-chip despacho-status-chip--success">{{ totalDespachados() }} despachados</span>
+          <span class="despacho-status-chip despacho-status-chip--danger">{{ totalFaltantesDetalle() }} faltantes</span>
+        </div>
+      </div>
+
+      <div class="despacho-section-card">
+        <div class="despacho-section-header">
+          <h3><i class="pi pi-box"></i> Productos del Despacho</h3>
+          <div class="despacho-section-tags">
+            <p-tag [value]="itemsLabel()" severity="info"></p-tag>
+            <p-tag [value]="unidadesLabel()" severity="success"></p-tag>
+          </div>
+        </div>
+
+        <p-table [value]="productosList" [paginator]="false" responsiveLayout="scroll" styleClass="despacho-items-table">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Codigo</th>
+              <th>Descripcion</th>
+              <th class="text-right">Solicitado</th>
+              <th class="text-right">Despachado</th>
+              <th class="text-right">Pendiente</th>
+              <th class="text-right">P. Unit.</th>
+              <th class="text-right">Total</th>
+              <th>Estado</th>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="body" let-item>
+            <tr>
+              <td class="font-semibold">{{ item.codigo }}</td>
+              <td>
+                <div class="despacho-product-cell">
+                  <span class="font-semibold">{{ item.descripcion }}</span>
+                  @if (item.tieneFaltante) {
+                    <small class="despacho-product-alert">Con faltante</small>
+                  }
+                </div>
+              </td>
+              <td class="text-right">{{ item.cantidadSolicitada }}</td>
+              <td class="text-right">{{ item.cantidadDespachada }}</td>
+              <td class="text-right">{{ item.cantidadPendiente }}</td>
+              <td class="text-right">S/ {{ item.precioUnitario | number:'1.2-2' }}</td>
+              <td class="text-right font-semibold">S/ {{ item.total | number:'1.2-2' }}</td>
+              <td>
+                <p-tag [value]="getDetalleLabel(item.estado)" [severity]="getDetalleSeverity(item.estado)"></p-tag>
+              </td>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="8" class="text-center py-4">No hay productos registrados en este despacho.</td>
+            </tr>
+          </ng-template>
+        </p-table>
       </div>
     </div>
-  </p-card>
-</div>
-
-<div *ngIf="loading" class="p-2">
-  <div class="loading-container">
-    <p-card>
-      <div class="skeleton-wrapper">
-        <p-skeleton width="100%" height="150px" styleClass="mb-3"></p-skeleton>
-        <p-skeleton width="100%" height="300px" styleClass="mb-3"></p-skeleton>
-        <p-skeleton width="100%" height="200px"></p-skeleton>
-      </div>
-    </p-card>
-  </div>
-</div>
-
-<div *ngIf="!loading && despacho">
-  <div class="p-2">
-    <p-card class="comprobante-card mb-4">
-      <div class="comprobante-header">
-        <div class="comprobante-tipo">
-          <span class="tipo-icon">
-            <i [class]="getTipoComprobanteIcon()"></i>
-          </span>
-          <div>
-            <h2>{{ getTipoComprobanteLabel() }} ELECTRÓNICA</h2>
-            <p class="serie-numero">
-              {{ formatearSerieNumero(comprobante.serie, comprobante.numero) }}
-            </p>
-          </div>
+  } @else {
+    <div class="p-2">
+      <p-card styleClass="despacho-header-card despacho-header-bordered">
+        <div class="despacho-error-state">
+          <i class="pi pi-exclamation-triangle despacho-error-state__icon"></i>
+          <h3>No se pudo cargar el despacho</h3>
+          <p>{{ errorMsg() ?? 'El despacho no existe o no esta disponible.' }}</p>
+          <p-button label="Volver al listado" icon="pi pi-arrow-left" styleClass="despacho-pill despacho-pill-neutral" (onClick)="volver()"></p-button>
         </div>
-        <div class="comprobante-estado">
-          <p-tag
-            [value]="getEstadoLabel()"
-            [severity]="getEstadoSeverity()"
-            [rounded]="true"
-          ></p-tag>
-        </div>
-      </div>
-
-      <div class="info-grid-wrapper">
-        <div class="info-grid">
-          <div class="info-section">
-            <h3><i class="pi pi-user"></i> Cliente</h3>
-            <div class="info-row">
-              <span class="label">Nombre completo:</span>
-              <span class="value">{{ comprobante.cliente_nombre }}</span>
-            </div>
-            <div class="info-row">
-              <span class="label">Tipo documento:</span>
-              <span class="value">{{ getTipoDocumento() }}</span>
-            </div>
-            <div class="info-row">
-              <span class="label">N° Documento:</span>
-              <span class="value">{{ comprobante.cliente_doc }}</span>
-            </div>
-            <div class="info-row" *ngIf="cliente?.direccion">
-              <span class="label">Dirección:</span>
-              <span class="value">{{ cliente?.direccion }}</span>
-            </div>
-            <div class="info-row" *ngIf="cliente?.email">
-              <span class="label">Email:</span>
-              <span class="value">{{ cliente?.email }}</span>
-            </div>
-            <div class="info-row" *ngIf="cliente?.telefono">
-              <span class="label">Teléfono:</span>
-              <span class="value">{{ cliente?.telefono }}</span>
-            </div>
-          </div>
-
-          <div class="info-section">
-            <h3><i class="pi pi-file-edit"></i> Comprobante</h3>
-            <div class="info-row">
-              <span class="label">Fecha emisión:</span>
-              <span class="value">{{ comprobante.fec_emision | date: 'dd/MM/yyyy HH:mm' }}</span>
-            </div>
-            <div class="info-row" *ngIf="comprobante.fec_venc">
-              <span class="label">Fecha vencimiento:</span>
-              <span class="value">{{ comprobante.fec_venc | date: 'dd/MM/yyyy' }}</span>
-            </div>
-            <div class="info-row">
-              <span class="label">Moneda:</span>
-              <span class="value">{{ comprobante.moneda === 'PEN' ? 'Soles (S/.)' : 'Dólares ($)' }}</span>
-            </div>
-            <div class="info-row">
-              <span class="label">Responsable:</span>
-              <span class="value">{{ comprobante.responsable }}</span>
-            </div>
-            <div class="info-row">
-              <span class="label">Sede:</span>
-              <span class="value">{{ getSede(comprobante) }}</span>
-            </div>
-            <div class="info-row">
-              <span class="label">Estado SUNAT:</span>
-              <span class="value sunat-ok">{{ comprobante.cdr_cpe }}</span>
-            </div>
-          </div>
-
-          <div class="info-section">
-            <h3><i class="pi pi-truck"></i> Despacho</h3>
-            <div class="info-row">
-              <span class="label">Despachador:</span>
-              <span class="value">{{ despachador }}</span>
-            </div>
-            <div class="info-row">
-              <span class="label">Asesor:</span>
-              <span class="value">{{ asesor }}</span>
-            </div>
-            <div class="info-row">
-              <span class="label">Salida:</span>
-              <span class="value">{{ despachoInfo.salida }}</span>
-            </div>
-            <div class="info-row">
-              <span class="label">Ubicación:</span>
-              <span class="value">{{ despachoInfo.ubicacion }}</span>
-            </div>
-            <div class="info-row">
-              <span class="label">Agencia:</span>
-              <span class="value">{{ despachoInfo.agencia }}</span>
-            </div>
-            <div class="info-row">
-              <span class="label">Hora:</span>
-              <span class="value">{{ despachoInfo.hora }}</span>
-            </div>
-          </div>
-
-          <div class="info-section">
-            <h3><i class="pi pi-wallet"></i> Información de Pago</h3>
-
-            <div *ngIf="pagos.length > 0">
-              <div *ngFor="let pago of pagos" class="pago-item">
-                <div class="info-row">
-                  <span class="label">Medio de pago:</span>
-                  <span class="value">
-                    <i [class]="getIconoMedioPago(pago.med_pago)"></i>
-                    {{ pago.med_pago }}
-                  </span>
-                </div>
-                <div class="info-row">
-                  <span class="label">Monto pagado:</span>
-                  <span class="value amount">S/. {{ pago.monto | number: '1.2-2' }}</span>
-                </div>
-                <div class="info-row" *ngIf="pago.banco">
-                  <span class="label">Banco:</span>
-                  <span class="value">{{ pago.banco }}</span>
-                </div>
-                <div class="info-row" *ngIf="pago.num_operacion">
-                  <span class="label">N° Operación:</span>
-                  <span class="value">{{ pago.num_operacion }}</span>
-                </div>
-              </div>
-            </div>
-
-            <div *ngIf="pagos.length === 0" class="no-data">
-              <i class="pi pi-info-circle"></i>
-              <span>Sin información de pago</span>
-            </div>
-
-            <div class="promocion-integrada" *ngIf="tienePromocion()">
-              <div class="promocion-header">
-                <i class="pi pi-ticket"></i>
-                <span>Promoción Aplicada</span>
-              </div>
-              <div class="promocion-body">
-                <div class="promocion-info-row">
-                  <span class="promocion-label">Código:</span>
-                  <span class="promocion-codigo-badge">{{ getCodigoPromocion() }}</span>
-                </div>
-                <div class="promocion-info-row">
-                  <span class="promocion-label">Descripción:</span>
-                  <span class="promocion-text">{{ getDescripcionPromocion() }}</span>
-                </div>
-                <div class="promocion-info-row">
-                  <span class="promocion-label">Descuento:</span>
-                  <span class="promocion-descuento">-S/. {{ getDescuentoPromocion() | number: '1.2-2' }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </p-card>
-  </div>
-
-  <div class="p-2">
-    <p-card class="productos-card mb-4">
-      <ng-template pTemplate="header">
-        <div class="card-header">
-          <h3>
-            <span class="icon-shopping"><i class="pi pi-shopping-cart"></i></span>
-            Productos Vendidos
-          </h3>
-          <p-tag
-            [value]="detalleProductos.length + ' items'"
-            severity="success"
-            [rounded]="true"
-          ></p-tag>
-        </div>
-      </ng-template>
-
-      <p-table
-        [value]="detalleProductos"
-        [paginator]="false"
-        [tableStyle]="{ 'min-width': '50rem' }"
-        styleClass="p-datatable-gridlines p-datatable-sm"
-      >
-        <ng-template pTemplate="header">
-          <tr>
-            <th>CÓDIGO</th>
-            <th>DESCRIPCIÓN</th>
-            <th>CANT.</th>
-            <th>P. UNITARIO</th>
-            <th>TOTAL</th>
-            <th>SEDE</th>
-            <th>STOCK</th>
-          </tr>
-        </ng-template>
-        <ng-template pTemplate="body" let-item>
-          <tr>
-            <td>{{ item.codigo }}</td>
-            <td>{{ item.descripcion }}</td>
-            <td>{{ item.cantidad }}</td>
-            <td>S/. {{ item.precioUnitario | number: '1.2-2' }}</td>
-            <td>S/. {{ item.total | number: '1.2-2' }}</td>
-            <td>{{ item.sede }}</td>
-            <td>{{ item.stock ?? '-' }}</td>
-          </tr>
-        </ng-template>
-        <ng-template pTemplate="emptymessage">
-          <tr>
-            <td colspan="7" class="empty-message">
-              <i class="pi pi-info-circle"></i>
-              <span>Sin productos registrados</span>
-            </td>
-          </tr>
-        </ng-template>
-      </p-table>
-    </p-card>
-  </div>
-</div>
+      </p-card>
+    </div>
+  }
+}

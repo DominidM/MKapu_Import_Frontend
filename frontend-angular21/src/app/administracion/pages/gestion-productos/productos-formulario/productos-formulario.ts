@@ -99,12 +99,10 @@ export class ProductosFormulario implements OnInit {
 
     if (ctrl('codigo')?.errors?.['required'])      errores.push('Código: es obligatorio.');
     if (ctrl('codigo')?.errors?.['minlength'])     errores.push('Código: mínimo 2 caracteres.');
-    if (ctrl('codigo')?.errors?.['pattern'])       errores.push('Código: solo letras, números y guiones.');
     if (ctrl('anexo')?.errors?.['required'])       errores.push('Nombre: es obligatorio.');
     if (ctrl('anexo')?.errors?.['minlength'])      errores.push('Nombre: mínimo 3 caracteres.');
     if (ctrl('anexo')?.errors?.['maxlength'])      errores.push('Nombre: no debe exceder los 150 caracteres.');
-    if (ctrl('anexo')?.errors?.['pattern'])        errores.push('Nombre: debe empezar con la letra R.');
-    if (ctrl('descripcion')?.errors?.['required']) errores.push('Descripción: es obligatoria.');
+    if (ctrl('codigo')?.errors?.['pattern'])      errores.push('Código: debe comenzar con la letra R y solo contener letras, números y guiones.');    if (ctrl('descripcion')?.errors?.['required']) errores.push('Descripción: es obligatoria.');
     if (ctrl('descripcion')?.errors?.['minlength'])errores.push('Descripción: mínimo 10 caracteres.');
     if (ctrl('familia')?.errors?.['required'])     errores.push('Categoría: debes seleccionar una familia.');
     if (ctrl('unidadMedida')?.errors?.['required'])errores.push('Unidad de medida: es obligatoria.');
@@ -149,13 +147,12 @@ export class ProductosFormulario implements OnInit {
       Validators.required,
       Validators.minLength(2),
       Validators.maxLength(50),
-      Validators.pattern(/^[A-Za-z0-9\-]+$/),
+      Validators.pattern(/^[Rr][A-Za-z0-9-]*$/),  
     ]],
     anexo: ['', [
       Validators.required,
       Validators.minLength(3),
       Validators.maxLength(150),
-      Validators.pattern(/^[Rr].*/)
     ]],
     descripcion: ['', [
       Validators.required,

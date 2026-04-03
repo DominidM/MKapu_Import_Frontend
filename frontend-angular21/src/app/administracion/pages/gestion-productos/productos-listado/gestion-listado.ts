@@ -69,6 +69,10 @@ export class GestionListado implements OnInit {
   currentPage   = signal<number>(1);
   idSedeActual  = signal<number | null>(null);
 
+  modalMermaVisible   = false;
+  productoSeleccionado: ProductoStock | null = null;
+  tipoOperacion: 'MERMA' | 'REMATE' | 'MERMA_DESC' | 'REMATE_DESC' | null = null;
+
   readonly totalPages = computed(() =>
     Math.ceil(this.totalRecords() / this.rows())
   );
@@ -133,6 +137,23 @@ export class GestionListado implements OnInit {
     return match?.value ?? this.idSedeActual();
   }
 
+  abrirModalMermaRemate(producto: ProductoStock) {
+    this.productoSeleccionado = producto;
+    this.tipoOperacion        = null;
+    this.modalMermaVisible    = true;
+  }
+
+  cerrarModalMermaRemate() {
+    this.modalMermaVisible    = false;
+    this.productoSeleccionado = null;
+    this.tipoOperacion        = null;
+  }
+
+  confirmarMermaRemate() {
+    if (!this.tipoOperacion || !this.productoSeleccionado) return;
+    console.log('Operación:', this.tipoOperacion, 'Producto:', this.productoSeleccionado);
+    this.cerrarModalMermaRemate();
+  }
   cargarProductos() {
     const sedeId = this.idSedeActual();
     if (!sedeId) return;

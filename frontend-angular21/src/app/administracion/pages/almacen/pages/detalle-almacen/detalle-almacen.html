@@ -1,0 +1,251 @@
+@if (loading()) {
+  <div class="almacen-loading">
+    <i class="pi pi-spin pi-spinner almacen-loading-icon"></i>
+  </div>
+}
+
+@if (!loading()) {
+  @if (detalle(); as almacen) {
+    <div class="p-2 almacen-page">
+      <p-card styleClass="almacen-header-card mb-4 almacen-header-bordered">
+        <div class="flex align-items-center justify-content-between flex-wrap gap-2">
+          <div class="flex align-items-center gap-3">
+            <span class="almacen-title-icon">
+              <i class="pi pi-warehouse"></i>
+            </span>
+            <div>
+              <p class="almacen-kicker mb-0">ADMINISTRADOR · ADMINISTRACIÓN · ALMACÉN</p>
+              <h2 class="almacen-title mb-0">DETALLE DEL ALMACÉN</h2>
+            </div>
+          </div>
+
+          <div class="flex gap-2">
+            @if (canEdit()) {
+              <p-button
+                label="Editar Almacén"
+                icon="pi pi-pencil"
+                styleClass="almacen-pill almacen-pill-warning"
+                (onClick)="irEditar()">
+              </p-button>
+            }
+
+            <p-button
+              label="Volver"
+              icon="pi pi-arrow-left"
+              styleClass="almacen-pill almacen-pill-secondary"
+              (onClick)="volver()">
+            </p-button>
+          </div>
+        </div>
+      </p-card>
+
+      <div class="almacen-summary-grid mb-4">
+        <div class="almacen-summary-card almacen-summary-card--code">
+          <i class="pi pi-tag"></i>
+          <div>
+            <span class="almacen-summary-label">Código</span>
+            <span class="almacen-summary-value">{{ codigoAlmacen() }}</span>
+            <span class="almacen-summary-detail">
+              <i class="pi pi-barcode"></i>
+              Identificador del almacén
+            </span>
+          </div>
+        </div>
+
+        <div class="almacen-summary-card almacen-summary-card--location">
+          <i class="pi pi-map"></i>
+          <div>
+            <span class="almacen-summary-label">Departamento</span>
+            <span class="almacen-summary-value">{{ departamentoLabel() }}</span>
+            <span class="almacen-summary-detail">
+              <i class="pi pi-map-marker"></i>
+              {{ ubicacionResumen() }}
+            </span>
+          </div>
+        </div>
+
+        <div class="almacen-summary-card almacen-summary-card--sede">
+          <i class="pi pi-building"></i>
+          <div>
+            <span class="almacen-summary-label">Sede</span>
+            <span class="almacen-summary-value">{{ sedeNombre() }}</span>
+            <span class="almacen-summary-detail">
+              <i class="pi pi-home"></i>
+              {{ sedeDetalle() }}
+            </span>
+          </div>
+        </div>
+
+        <div
+          class="almacen-summary-card"
+          [class.almacen-summary-card--status-active]="almacen.activo"
+          [class.almacen-summary-card--status-inactive]="!almacen.activo">
+          <i class="pi pi-power-off"></i>
+          <div>
+            <span class="almacen-summary-label">Estado</span>
+            <span class="almacen-summary-value">{{ estadoLabel() }}</span>
+            <span class="almacen-summary-detail">
+              <i class="pi pi-info-circle"></i>
+              {{ almacen.activo ? 'Disponible para operación' : 'Sin operación activa' }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="almacen-section-card mb-4">
+        <div class="almacen-section-header">
+          <h3><i class="pi pi-info-circle"></i> Información del Almacén</h3>
+        </div>
+
+        <div class="almacen-fields-grid almacen-fields-grid--single">
+          <div class="almacen-field">
+            <label>NOMBRE DEL ALMACÉN</label>
+            <div class="almacen-field-display">
+              <i class="pi pi-warehouse text-600"></i>
+              <span class="font-semibold">{{ nombreAlmacen() }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="almacen-fields-grid">
+          <div class="almacen-field">
+            <label>TELÉFONO</label>
+            <div class="almacen-field-display">
+              <i class="pi pi-phone text-600"></i>
+              <span>{{ telefonoLabel() }}</span>
+            </div>
+          </div>
+
+          <div class="almacen-field">
+            <label>ESTADO ACTUAL</label>
+            <div class="almacen-field-display">
+              <i class="pi pi-power-off text-600"></i>
+              <p-tag
+                [value]="estadoLabel()"
+                [severity]="almacen.activo ? 'success' : 'danger'">
+              </p-tag>
+            </div>
+          </div>
+        </div>
+
+        <div class="almacen-fields-grid">
+          <div class="almacen-field">
+            <label>FECHA CREACIÓN</label>
+            <div class="almacen-field-display">
+              <i class="pi pi-calendar text-600"></i>
+              @if (almacen.createdAt) {
+                <span class="font-semibold">{{ almacen.createdAt | date:'dd/MM/yyyy' }}</span>
+              } @else {
+                <span>Sin registro</span>
+              }
+            </div>
+          </div>
+
+          <div class="almacen-field">
+            <label>ÚLTIMA EDICIÓN</label>
+            <div class="almacen-field-display">
+              <i class="pi pi-refresh text-600"></i>
+              @if (almacen.updatedAt) {
+                <span class="font-semibold">{{ almacen.updatedAt | date:'dd/MM/yyyy' }}</span>
+              } @else {
+                <span>Sin registro</span>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="almacen-section-card mb-4">
+        <div class="almacen-section-header">
+          <h3><i class="pi pi-map-marker"></i> Ubicación y Sede</h3>
+        </div>
+
+        <div class="almacen-fields-grid">
+          <div class="almacen-field">
+            <label>SEDE ASIGNADA</label>
+            <div class="almacen-field-display">
+              <i class="pi pi-building text-600"></i>
+              <span class="font-semibold">{{ sedeNombre() }}</span>
+            </div>
+          </div>
+
+          <div class="almacen-field">
+            <label>CÓDIGO DE SEDE</label>
+            <div class="almacen-field-display">
+              <i class="pi pi-hashtag text-600"></i>
+              <span>{{ sedeCodigo() }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="almacen-fields-grid">
+          <div class="almacen-field">
+            <label>DEPARTAMENTO</label>
+            <div class="almacen-field-display">
+              <i class="pi pi-map text-600"></i>
+              <span>{{ departamentoLabel() }}</span>
+            </div>
+          </div>
+
+          <div class="almacen-field">
+            <label>PROVINCIA</label>
+            <div class="almacen-field-display">
+              <i class="pi pi-map text-600"></i>
+              <span>{{ provinciaLabel() }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="almacen-fields-grid">
+          <div class="almacen-field">
+            <label>CIUDAD / DISTRITO</label>
+            <div class="almacen-field-display">
+              <i class="pi pi-map-marker text-600"></i>
+              <span>{{ ciudadLabel() }}</span>
+            </div>
+          </div>
+
+          <div class="almacen-field">
+            <label>RESUMEN DE UBICACIÓN</label>
+            <div class="almacen-field-display">
+              <i class="pi pi-compass text-600"></i>
+              <span>{{ ubicacionResumen() }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="almacen-section-card">
+        <div class="almacen-section-header">
+          <h3><i class="pi pi-home"></i> Dirección de Referencia</h3>
+        </div>
+
+        <div class="almacen-fields-grid almacen-fields-grid--single">
+          <div class="almacen-field">
+            <label>DIRECCIÓN</label>
+            <div class="almacen-field-display almacen-field-display--multiline">
+              <i class="pi pi-home text-600"></i>
+              <span>{{ direccionLabel() }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  } @else {
+    <div class="p-2">
+      <p-card styleClass="almacen-header-card almacen-header-bordered">
+        <div class="almacen-error-state">
+          <i class="pi pi-exclamation-triangle almacen-error-state__icon"></i>
+          <h3>No se pudo cargar el almacén</h3>
+          <p>{{ errorMsg() ?? 'El almacén no existe o no está disponible.' }}</p>
+          <p-button
+            label="Volver a Almacén"
+            icon="pi pi-arrow-left"
+            styleClass="almacen-pill almacen-pill-secondary"
+            (onClick)="volver()">
+          </p-button>
+        </div>
+      </p-card>
+    </div>
+  }
+}

@@ -48,16 +48,17 @@ export class AuthService {
 
   private transformUser(account: AuthAccountBackend): User {
     return {
-      userId:    account.usuario.id_usuario,
-      username:  account.username,
-      email:     account.email_emp,
-      roleId:    account.roles[0]?.id_rol,
-      roleName:  account.roles[0]?.nombre,
-      idSede:    account.id_sede,
+      userId:     account.usuario.id_usuario,
+      idCuenta:   account.id_cuenta, 
+      username:   account.username,
+      email:      account.email_emp,
+      roleId:     account.roles[0]?.id_rol,
+      roleName:   account.roles[0]?.nombre,
+      idSede:     account.id_sede,
       sedeNombre: account.sede_nombre,
-      permisos:  account.permisos.map((p) => p.nombre),
-      nombres:   account.usuario.nombres,
-      apellidos: `${account.usuario.ape_pat} ${account.usuario.ape_mat}`,
+      permisos:   account.permisos.map((p) => p.nombre),
+      nombres:    account.usuario.nombres,
+      apellidos:  `${account.usuario.ape_pat} ${account.usuario.ape_mat}`,
     };
   }
 
@@ -142,6 +143,10 @@ export class AuthService {
     return this.currentUser?.roleId || null;
   }
 
+  getIdCuenta(): number {
+    return this.currentUser?.idCuenta ?? 0;
+  }
+  
   hasPermiso(permiso: string): boolean {
     return this.currentUser?.permisos?.includes(permiso) ?? false;
   }

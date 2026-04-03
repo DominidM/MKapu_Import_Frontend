@@ -1,0 +1,672 @@
+:host {
+  display: block;
+}
+
+.merma-page {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.merma-loading {
+  min-height: 60vh;
+  display: grid;
+  place-items: center;
+}
+
+.merma-loading-icon {
+  font-size: 3rem;
+  color: #f59e0b;
+}
+
+.merma-header-card .p-card-body {
+  padding: 1rem 1.25rem;
+}
+
+.merma-header-bordered {
+  border-radius: 12px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+  overflow: hidden;
+}
+
+.merma-title-icon {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #f5c34d;
+  color: #1f2937;
+  font-size: 18px;
+}
+
+.merma-kicker {
+  margin: 0;
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.merma-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.merma-pill {
+  border-radius: 9999px !important;
+  padding: 0.95rem 1.35rem !important;
+  min-height: 44px !important;
+  font-size: 0.9rem !important;
+  font-weight: 600 !important;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.14) !important;
+  transition: all 0.2s ease !important;
+}
+
+.merma-pill:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18) !important;
+}
+
+.merma-pill-warning {
+  background: #f6af33 !important;
+  border: 2px solid #e8a424 !important;
+  color: #1f2937 !important;
+}
+
+.merma-pill-secondary {
+  background: #64748b !important;
+  border: 2px solid #475569 !important;
+  color: #ffffff !important;
+}
+
+.merma-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.merma-summary-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  background: #ffffff;
+  border-right: 2px solid #e5e7eb;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.merma-summary-card:last-child {
+  border-right: none;
+}
+
+.merma-summary-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, #f6af33 0%, #e8a424 100%);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+}
+
+.merma-summary-card:hover::before {
+  transform: scaleX(1);
+}
+
+.merma-summary-card:hover {
+  background: #fefce8;
+  box-shadow: inset 0 -2px 8px rgba(246, 175, 51, 0.1);
+}
+
+.merma-summary-card > i {
+  font-size: 2.35rem;
+  transition: transform 0.3s ease;
+}
+
+.merma-summary-card:hover > i {
+  transform: scale(1.08);
+}
+
+.merma-summary-card > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  width: 100%;
+}
+
+.merma-summary-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.merma-summary-value {
+  font-size: 1.55rem;
+  font-weight: 700;
+  color: #1f2937;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+
+.merma-summary-detail {
+  font-size: 0.75rem;
+  color: inherit;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.merma-summary-detail i {
+  font-size: 0.75rem;
+}
+
+.merma-summary-card--code > i,
+.merma-summary-card--code .merma-summary-detail {
+  color: #f97316;
+}
+
+.merma-summary-card--type > i,
+.merma-summary-card--type .merma-summary-detail {
+  color: #f59e0b;
+}
+
+.merma-summary-card--sede > i,
+.merma-summary-card--sede .merma-summary-detail {
+  color: #8b5cf6;
+}
+
+.merma-summary-card--status-active > i,
+.merma-summary-card--status-active .merma-summary-detail {
+  color: #10b981;
+}
+
+.merma-summary-card--status-inactive > i,
+.merma-summary-card--status-inactive .merma-summary-detail {
+  color: #ef4444;
+}
+
+.merma-section-card {
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.merma-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.625rem;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.merma-section-header h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #7c9636;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.merma-section-header h3 i {
+  color: #f6af33;
+  font-size: 1.1rem;
+}
+
+.merma-fields-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 0.875rem;
+}
+
+.merma-fields-grid:last-child {
+  margin-bottom: 0;
+}
+
+.merma-fields-grid--single {
+  grid-template-columns: 1fr;
+}
+
+.merma-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.merma-field label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  margin: 0;
+  line-height: 1;
+}
+
+.merma-field-display {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  min-height: 48px;
+}
+
+.merma-field-display--multiline {
+  align-items: flex-start;
+}
+
+.merma-field-display--multiline i {
+  margin-top: 0.1rem;
+}
+
+.merma-products-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.merma-product-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 1rem;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.merma-product-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+  border-color: #f6af33;
+}
+
+.merma-product-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.merma-product-code {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: 999px;
+  background: #fff7ed;
+  color: #c2410c;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.merma-product-qty {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.3rem 0.6rem;
+  border-radius: 999px;
+  background: #ecfdf5;
+  color: #047857;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.merma-product-name {
+  margin: 0;
+  font-size: 1rem;
+  color: #1f2937;
+}
+
+.merma-product-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.merma-product-metrics div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.75rem;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.merma-product-metrics span {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+}
+
+.merma-product-metrics strong {
+  color: #0f172a;
+  font-size: 0.95rem;
+}
+
+.merma-product-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.merma-product-observation {
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: #475569;
+}
+
+.merma-products-empty {
+  min-height: 180px;
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  border: 1px dashed #d1d5db;
+  border-radius: 12px;
+  color: #64748b;
+}
+
+.merma-products-empty i {
+  font-size: 1.5rem;
+  color: #f59e0b;
+}
+
+.merma-error-state {
+  min-height: 320px;
+  padding: 2rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  text-align: center;
+}
+
+.merma-error-state__icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  font-size: 1.4rem;
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+}
+
+.merma-error-state h3 {
+  margin: 0;
+  color: #1f2937;
+}
+
+.merma-error-state p {
+  margin: 0;
+  max-width: 520px;
+  color: #64748b;
+}
+
+:host-context(.app-dark) .merma-header-bordered {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35) !important;
+}
+
+:host-context(.app-dark) .merma-title-icon {
+  background: #e8a424 !important;
+  color: #1f2937 !important;
+}
+
+:host-context(.app-dark) .merma-title {
+  color: #f8fafc !important;
+}
+
+:host-context(.app-dark) .merma-pill-warning {
+  background: #e8a424 !important;
+  border-color: #d69520 !important;
+  color: #1f2937 !important;
+}
+
+:host-context(.app-dark) .merma-pill-secondary {
+  background: #475569 !important;
+  border-color: #334155 !important;
+}
+
+:host-context(.app-dark) .merma-summary-grid {
+  background: #18181b;
+}
+
+:host-context(.app-dark) .merma-summary-card {
+  background: #18181b;
+  border-right-color: #27272a;
+}
+
+:host-context(.app-dark) .merma-summary-card:hover {
+  background: #27272a;
+  box-shadow: inset 0 -2px 8px rgba(246, 175, 51, 0.2);
+}
+
+:host-context(.app-dark) .merma-summary-label {
+  color: #a1a1aa;
+}
+
+:host-context(.app-dark) .merma-summary-value {
+  color: #ffffff;
+}
+
+:host-context(.app-dark) .merma-summary-card--code > i,
+:host-context(.app-dark) .merma-summary-card--code .merma-summary-detail {
+  color: #fb923c;
+}
+
+:host-context(.app-dark) .merma-summary-card--type > i,
+:host-context(.app-dark) .merma-summary-card--type .merma-summary-detail {
+  color: #fbbf24;
+}
+
+:host-context(.app-dark) .merma-summary-card--sede > i,
+:host-context(.app-dark) .merma-summary-card--sede .merma-summary-detail {
+  color: #c084fc;
+}
+
+:host-context(.app-dark) .merma-summary-card--status-active > i,
+:host-context(.app-dark) .merma-summary-card--status-active .merma-summary-detail {
+  color: #34d399;
+}
+
+:host-context(.app-dark) .merma-summary-card--status-inactive > i,
+:host-context(.app-dark) .merma-summary-card--status-inactive .merma-summary-detail {
+  color: #f87171;
+}
+
+:host-context(.app-dark) .merma-section-card {
+  background: #18181b;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
+}
+
+:host-context(.app-dark) .merma-section-header {
+  border-bottom-color: #27272a;
+}
+
+:host-context(.app-dark) .merma-section-header h3 {
+  color: #ffffff;
+}
+
+:host-context(.app-dark) .merma-field label {
+  color: #a1a1aa;
+}
+
+:host-context(.app-dark) .merma-field-display {
+  background: #09090b;
+  border-color: #27272a;
+  color: #f8fafc;
+}
+
+:host-context(.app-dark) .merma-product-card {
+  background: #09090b;
+  border-color: #27272a;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+:host-context(.app-dark) .merma-product-card:hover {
+  border-color: #e8a424;
+}
+
+:host-context(.app-dark) .merma-product-code {
+  background: rgba(249, 115, 22, 0.14);
+  color: #fdba74;
+}
+
+:host-context(.app-dark) .merma-product-qty {
+  background: rgba(16, 185, 129, 0.14);
+  color: #6ee7b7;
+}
+
+:host-context(.app-dark) .merma-product-name,
+:host-context(.app-dark) .merma-product-metrics strong,
+:host-context(.app-dark) .merma-error-state h3 {
+  color: #f8fafc;
+}
+
+:host-context(.app-dark) .merma-product-metrics div {
+  background: #18181b;
+}
+
+:host-context(.app-dark) .merma-product-metrics span,
+:host-context(.app-dark) .merma-product-observation,
+:host-context(.app-dark) .merma-error-state p,
+:host-context(.app-dark) .merma-products-empty {
+  color: #a1a1aa;
+}
+
+:host-context(.app-dark) .merma-products-empty {
+  border-color: #27272a;
+}
+
+@media (max-width: 1200px) {
+  .merma-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .merma-summary-card:nth-child(2) {
+    border-right: none;
+  }
+
+  .merma-summary-card:nth-child(1),
+  .merma-summary-card:nth-child(2) {
+    border-bottom: 2px solid #e5e7eb;
+  }
+
+  .merma-products-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  :host-context(.app-dark) .merma-summary-card:nth-child(1),
+  :host-context(.app-dark) .merma-summary-card:nth-child(2) {
+    border-bottom-color: #27272a;
+  }
+}
+
+@media (max-width: 768px) {
+  .merma-summary-grid,
+  .merma-fields-grid,
+  .merma-fields-grid--single,
+  .merma-products-grid,
+  .merma-product-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .merma-summary-card {
+    border-right: none;
+    border-bottom: 2px solid #e5e7eb;
+    padding: 1.25rem;
+  }
+
+  .merma-summary-card:last-child {
+    border-bottom: none;
+  }
+
+  .merma-section-card {
+    padding: 1rem;
+  }
+
+  :host-context(.app-dark) .merma-summary-card {
+    border-bottom-color: #27272a;
+  }
+}
+
+@media (max-width: 600px) {
+  .merma-header-card .p-card-body {
+    padding: 0.85rem 1rem;
+  }
+
+  .merma-title {
+    font-size: 0.95rem;
+  }
+
+  .merma-kicker {
+    font-size: 0.56rem;
+  }
+
+  .merma-title-icon {
+    width: 34px;
+    height: 34px;
+    font-size: 15px;
+  }
+
+  .merma-pill {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .merma-summary-card {
+    padding: 1rem;
+  }
+
+  .merma-summary-value {
+    font-size: 1.2rem;
+  }
+
+  .merma-summary-card > i {
+    font-size: 1.65rem;
+  }
+
+  .merma-section-header h3 {
+    font-size: 0.85rem;
+  }
+
+  .merma-field label {
+    font-size: 0.62rem;
+  }
+
+  .merma-field-display {
+    min-height: 44px;
+    padding: 0.7rem 0.85rem;
+  }
+}

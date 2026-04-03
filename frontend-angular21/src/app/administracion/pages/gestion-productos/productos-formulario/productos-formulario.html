@@ -85,16 +85,16 @@
               </small>
             } @else if (productoForm.get('codigo')?.errors?.['pattern']) {
               <small class="text-red-500 flex align-items-center gap-1">
-                <i class="pi pi-times-circle text-xs"></i> Solo letras, números y guiones.
+                <i class="pi pi-times-circle text-xs"></i> Debe comenzar con <strong>R</strong> y solo contener letras, números y guiones.
               </small>
             }
           } @else if (campoValido('codigo')) {
             <small class="text-green-500 flex align-items-center gap-1">
               <i class="pi pi-check-circle text-xs"></i> Código válido.
             </small>
-          } @else {
-            <small class="text-400">Ej: RAF-TV55 · Máx. 50 caracteres.</small>
-          }
+            } @else {
+              <small class="text-400">Ej: <strong>R</strong>AF-TV55 · Máx. 50 caracteres.</small>
+            }
         </div>
         <small class="text-400">{{ productoForm.get('codigo')?.value?.length || 0 }}/50</small>
       </div>

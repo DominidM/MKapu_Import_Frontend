@@ -1,0 +1,245 @@
+@if (loading()) {
+  <div class="roles-loading">
+    <i class="pi pi-spin pi-spinner roles-loading-icon"></i>
+  </div>
+}
+
+@if (!loading()) {
+  @if (detalle(); as rol) {
+    <div class="p-2 roles-page">
+      <p-card styleClass="roles-header-card mb-4 roles-header-bordered">
+        <div class="flex align-items-center justify-content-between flex-wrap gap-2">
+          <div class="flex align-items-center gap-3">
+            <span class="roles-title-icon">
+              <i class="pi pi-shield"></i>
+            </span>
+            <div>
+              <p class="roles-kicker mb-0">ADMINISTRADOR · ADMINISTRACIÓN · ROLES Y PERMISOS</p>
+              <h2 class="roles-title mb-0">DETALLE DEL ROL Y PERMISOS</h2>
+            </div>
+          </div>
+
+          <div class="flex gap-2">
+            @if (canEdit()) {
+              <p-button
+                label="Editar Rol"
+                icon="pi pi-pencil"
+                styleClass="roles-pill roles-pill-warning"
+                (onClick)="irEditar()">
+              </p-button>
+            }
+
+            <p-button
+              label="Volver"
+              icon="pi pi-arrow-left"
+              styleClass="roles-pill roles-pill-secondary"
+              (onClick)="volver()">
+            </p-button>
+          </div>
+        </div>
+      </p-card>
+
+      <div class="roles-summary-grid mb-4">
+        <div class="roles-summary-card roles-summary-card--code">
+          <i class="pi pi-hashtag"></i>
+          <div>
+            <span class="roles-summary-label">Código</span>
+            <span class="roles-summary-value">{{ roleCode() }}</span>
+            <span class="roles-summary-detail">
+              <i class="pi pi-shield"></i>
+              Identificador del rol
+            </span>
+          </div>
+        </div>
+
+        <div class="roles-summary-card roles-summary-card--permissions">
+          <i class="pi pi-key"></i>
+          <div>
+            <span class="roles-summary-label">Permisos</span>
+            <span class="roles-summary-value">{{ totalPermisos() }}</span>
+            <span class="roles-summary-detail">
+              <i class="pi pi-check-circle"></i>
+              {{ permisosActivos() }} activos
+            </span>
+          </div>
+        </div>
+
+        <div class="roles-summary-card roles-summary-card--modules">
+          <i class="pi pi-sitemap"></i>
+          <div>
+            <span class="roles-summary-label">Módulos</span>
+            <span class="roles-summary-value">{{ totalModulos() }}</span>
+            <span class="roles-summary-detail">
+              <i class="pi pi-objects-column"></i>
+              Cobertura de acceso
+            </span>
+          </div>
+        </div>
+
+        <div
+          class="roles-summary-card"
+          [class.roles-summary-card--status-active]="rol.activo"
+          [class.roles-summary-card--status-inactive]="!rol.activo">
+          <i class="pi pi-power-off"></i>
+          <div>
+            <span class="roles-summary-label">Estado</span>
+            <span class="roles-summary-value">{{ rol.activo ? 'Activo' : 'Inactivo' }}</span>
+            <span class="roles-summary-detail">
+              <i class="pi pi-info-circle"></i>
+              {{ rol.activo ? 'Disponible para uso' : 'Sin asignación operativa' }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="roles-section-card mb-4">
+        <div class="roles-section-header">
+          <h3><i class="pi pi-info-circle"></i> Información del Rol</h3>
+        </div>
+
+        <div class="roles-fields-grid roles-fields-grid--single">
+          <div class="roles-field">
+            <label>NOMBRE DEL ROL</label>
+            <div class="roles-field-display">
+              <i class="pi pi-id-card text-600"></i>
+              <span class="font-semibold">{{ rol.nombre }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="roles-fields-grid roles-fields-grid--single">
+          <div class="roles-field">
+            <label>DESCRIPCIÓN</label>
+            <div class="roles-field-display">
+              <i class="pi pi-align-left text-600"></i>
+              <span class="text-600">{{ rol.descripcion || 'Sin descripción registrada.' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="roles-fields-grid">
+          <div class="roles-field">
+            <label>TOTAL DE PERMISOS</label>
+            <div class="roles-field-display">
+              <i class="pi pi-key text-600"></i>
+              <span class="font-semibold">{{ totalPermisos() }}</span>
+            </div>
+          </div>
+
+          <div class="roles-field">
+            <label>PERMISOS ACTIVOS</label>
+            <div class="roles-field-display">
+              <i class="pi pi-check-circle text-600"></i>
+              <span class="font-semibold">{{ permisosActivos() }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="roles-fields-grid">
+          <div class="roles-field">
+            <label>PERMISOS INACTIVOS</label>
+            <div class="roles-field-display">
+              <i class="pi pi-ban text-600"></i>
+              <span class="font-semibold">{{ permisosInactivos() }}</span>
+            </div>
+          </div>
+
+          <div class="roles-field">
+            <label>ESTADO ACTUAL</label>
+            <div class="roles-field-display">
+              <i class="pi pi-power-off text-600"></i>
+              <p-tag
+                [value]="rol.activo ? 'Activo' : 'Inactivo'"
+                [severity]="rol.activo ? 'success' : 'danger'">
+              </p-tag>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="roles-section-card">
+        <div class="roles-section-header">
+          <h3><i class="pi pi-lock"></i> Permisos Asignados por Módulo</h3>
+          <p-tag
+            [value]="getPermisosLabel(totalPermisos())"
+            [severity]="getPermisosTagSeverity(totalPermisos())">
+          </p-tag>
+        </div>
+
+        <div class="roles-modules-grid">
+          @for (grupo of gruposPermisos(); track grupo.modulo) {
+            <article class="roles-module-card">
+              <div class="roles-module-card__header">
+                <div>
+                  <p class="roles-module-kicker">Módulo</p>
+                  <h4>{{ grupo.modulo }}</h4>
+                </div>
+              </div>
+
+              <div class="roles-module-list">
+                @for (perm of grupo.permisos; track perm.id_permiso) {
+                  <div class="permission-item" [class.permission-item--inactive]="!perm.activo">
+                    <div class="permission-item__head">
+                      <div class="permission-item__title-wrap">
+                        <span [class]="tierClass(perm.nombre)"></span>
+                        <div>
+                          <div class="permission-item__title-row">
+                            <span class="permission-item__title">{{ perm.nombre }}</span>
+                            <span class="permission-tier-badge">
+                              {{ tierLabel(perm.nombre) }}
+                            </span>
+                          </div>
+
+                          <p class="permission-item__description">
+                            {{ perm.descripcion || 'Sin descripción registrada.' }}
+                          </p>
+
+                          @if (perm.depende_de) {
+                            <span class="permission-item__dependency">
+                              Requiere: {{ dependencyName(perm.depende_de) }}
+                            </span>
+                          }
+                        </div>
+                      </div>
+
+                      <p-tag
+                        [value]="perm.activo ? 'Activo' : 'Inactivo'"
+                        [severity]="perm.activo ? 'success' : 'danger'">
+                      </p-tag>
+                    </div>
+                  </div>
+                }
+              </div>
+            </article>
+          } @empty {
+            <div class="roles-empty-state">
+              <div class="roles-empty-state__icon">
+                <i class="pi pi-ban"></i>
+              </div>
+              <h4>Este rol no tiene permisos asignados</h4>
+              <p>
+                Puedes editar el rol para agregar accesos por módulo y definir su alcance operativo.
+              </p>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  } @else {
+    <div class="p-2">
+      <p-card styleClass="roles-header-card roles-header-bordered">
+        <div class="roles-error-state">
+          <i class="pi pi-exclamation-triangle roles-error-state__icon"></i>
+          <h3>No se pudo cargar el rol</h3>
+          <p>{{ errorMsg() ?? 'El rol no existe o no está disponible.' }}</p>
+          <p-button
+            label="Volver a Roles y Permisos"
+            icon="pi pi-arrow-left"
+            styleClass="roles-pill roles-pill-secondary"
+            (onClick)="volver()">
+          </p-button>
+        </div>
+      </p-card>
+    </div>
+  }
+}

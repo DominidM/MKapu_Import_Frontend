@@ -6,10 +6,11 @@ import { ThemeService } from '../../core/services/theme.service';
 import { DrawerModule } from 'primeng/drawer';
 import { RoleSocketService } from '../../core/services/role.socket.service';
 import { AuthService } from '../../auth/services/auth.service';
+import { ChatFlotante } from '../../core/components/chat-flotante/chat-flotante';
 
 @Component({
   selector: 'app-main',
-  imports: [Sidebar, Header, RouterModule, DrawerModule],
+  imports: [Sidebar, Header, RouterModule, DrawerModule, ChatFlotante],
   templateUrl: './main.html',
   styleUrl: './main.css',
 })
