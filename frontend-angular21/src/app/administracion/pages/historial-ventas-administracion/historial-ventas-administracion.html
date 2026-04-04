@@ -302,16 +302,16 @@
                     tooltipPosition="top"
                   />
 
-                  <p-button
-                    icon="pi pi-trash"
-                    (onClick)="anularComprobante(comprobante)"
-                    [rounded]="true"
-                    [text]="true"
-                    severity="danger"
-                    [disabled]="comprobante.estado !== 'EMITIDO'"
-                    pTooltip="Generar Nota de Crédito"
-                    tooltipPosition="top"
-                  />                  
+                    <p-button
+                      icon="pi pi-credit-card"
+                      (onClick)="crearNotaCredito(comprobante)"
+                      [rounded]="true"
+                      [text]="true"
+                      severity="warn"
+                      [disabled]="comprobante.estado !== 'EMITIDO'"
+                      pTooltip="Generar Nota de Crédito"
+                      tooltipPosition="top"
+                    />          
                 </div>
               </td>
             </tr>

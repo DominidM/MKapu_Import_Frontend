@@ -72,7 +72,7 @@ export class NotasCreditoComponent implements OnInit, OnDestroy {
   private subscriptions = new Subscription();
 
   readonly tituloKicker = 'VENTAS';
-  readonly subtituloKicker = 'NOTAS DE CRÃƒÆ’Ã¢â‚¬Â°DITO';
+  readonly subtituloKicker = 'NOTAS DE CREDITO';
   readonly iconoCabecera = 'pi pi-file-edit';
 
   readonly esAdmin = signal<boolean>(false);

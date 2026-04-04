@@ -593,6 +593,22 @@ export class HistorialVentasAdministracion implements OnInit, OnDestroy {
       },
     });
   }
+    
+  crearNotaCredito(comprobante: SalesReceiptSummaryAdmin): void {
+    if (comprobante.estado !== 'EMITIDO') return;
+
+    // Pass the formatted series-correlative instead of ID
+    const serieCorrelativo = this.getNumeroFormateado(comprobante);
+
+    this.router.navigate(['/admin/nota-credito/crear'], {
+      state: {
+        autoCargar:       true,
+        serieCorrelativo: serieCorrelativo,  // Use this instead of ID
+        idComprobante:    comprobante.idComprobante,
+        rutaRetorno:      '/admin/historial-ventas-administracion',
+      },
+    });
+  }
 
   exportarExcel(): void {
     if (this.comprobantesFiltrados.length === 0) {

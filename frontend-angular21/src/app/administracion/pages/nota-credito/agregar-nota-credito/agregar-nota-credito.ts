@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -21,7 +21,7 @@ import { CreditNoteService, RegisterCreditNoteDto } from '../../../services/nota
 import { StockSocketService } from '../../../../ventas/services/stock-socket.service';
 
 interface VentaItemUI {
-  id_detalle: string | number; // Cambiado para soportar cod_prod si es string
+  id_detalle: string | number;
   descripcion: string;
   cantidadOriginal: number;
   precioUnitario: number;
@@ -50,14 +50,17 @@ interface VentaItemUI {
   templateUrl: './agregar-nota-credito.html',
   styleUrl: './agregar-nota-credito.css',
 })
-export class AgregarNotaCreditoComponent implements OnInit, OnDestroy {
+export class AgregarNotaCreditoComponent implements OnInit, OnDestroy, AfterViewInit {
   private readonly router = inject(Router);
   private readonly creditNoteService = inject(CreditNoteService);
   private readonly ventasService = inject(VentasApiService);
   private readonly messageService = inject(MessageService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly stockSocket = inject(StockSocketService);
-
+  
+  readonly tituloKicker = 'VENTAS';
+  readonly subtituloKicker = 'GENERAR NOTAS DE CREDITO';
+  readonly iconoCabecera = 'pi pi-file-edit';
   private subscriptions = new Subscription();
 
   readonly tiposComprobante = [
@@ -107,12 +110,55 @@ export class AgregarNotaCreditoComponent implements OnInit, OnDestroy {
       severity: 'info',
       summary: 'Inventario Actualizado',
       detail: `Se devolvieron ${data.quantity} unidades del producto ID: ${data.productId} al almacén.`,
-      life: 6000
+      life: 6000,
     });
   };
 
   ngOnInit(): void {
     this.stockSocket.onStockActualizado(this.stockListener);
+    const navigation = this.router.getCurrentNavigation();
+    const state = navigation?.extras?.state || history.state;
+
+    if (state?.autoCargar && state?.serieCorrelativo) {
+      this.serieCorrelativoRef.set(state.serieCorrelativo);
+      this.tipoComprobanteRef.set(state.tipoComprobante || '01');
+      setTimeout(() => this.buscarComprobante(), 100);
+    }
+  }
+
+  ngAfterViewInit(): void {
+    setTimeout(() => {
+      // Limpiar dropdowns de selects que quedan abiertos
+      const selectPanels = document.querySelectorAll('.p-select-panel');
+      selectPanels.forEach(el => {
+        (el as HTMLElement).style.display = 'none';
+      });
+
+      const selectItems = document.querySelectorAll('.p-select-items');
+      selectItems.forEach(el => {
+        (el as HTMLElement).style.display = 'none';
+      });
+
+      // Limpiar handles y ranges del inputnumber
+      const handles = document.querySelectorAll('.input-number-wrapper .p-inputnumber-rearrange-handle');
+      handles.forEach(el => {
+        (el as HTMLElement).style.display = 'none';
+        (el as HTMLElement).style.width = '0';
+        (el as HTMLElement).style.height = '0';
+      });
+
+      const ranges = document.querySelectorAll('.input-number-wrapper input[type="range"]');
+      ranges.forEach(el => {
+        (el as HTMLElement).style.display = 'none';
+      });
+
+      // Forzar flexbox correcto en input groups
+      const inputGroups = document.querySelectorAll('.input-number-wrapper .p-inputnumber-input-group');
+      inputGroups.forEach(el => {
+        (el as HTMLElement).style.display = 'flex';
+        (el as HTMLElement).style.overflow = 'visible';
+      });
+    }, 150);
   }
 
   ngOnDestroy(): void {
@@ -122,17 +168,25 @@ export class AgregarNotaCreditoComponent implements OnInit, OnDestroy {
 
   buscarComprobante(): void {
     if (!this.tipoComprobanteRef()) {
-      this.messageService.add({ severity: 'warn', summary: 'Atención', detail: 'Seleccione el tipo de comprobante.' });
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Atención',
+        detail: 'Seleccione el tipo de comprobante.',
+      });
       return;
     }
     if (!this.serieCorrelativoRef() || !this.serieCorrelativoRef().includes('-')) {
-      this.messageService.add({ severity: 'error', summary: 'Formato inválido', detail: 'Use el formato Serie-Número (Ej: F001-123).' });
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Formato inválido',
+        detail: 'Use el formato Serie-Número (Ej: F001-123).',
+      });
       return;
     }
 
     this.buscandoComprobante.set(true);
     this.limpiarBuscadorBase();
-    
+
     const correlativoLimpio = this.serieCorrelativoRef().trim().toUpperCase();
 
     const sub = this.ventasService.getSaleReceiptByCorrelative(correlativoLimpio).subscribe({
@@ -140,10 +194,8 @@ export class AgregarNotaCreditoComponent implements OnInit, OnDestroy {
         try {
           if (!res) throw new Error('Respuesta vacía del servidor');
 
-          // Como el backend ya devuelve detailResponse.data directo, 'res' es la cabecera
           const cabecera = res.data ? res.data : res;
 
-          // Asignamos la data EXACTA que arroja getDetalleCompleto()
           this.ventaReferenciaCabecera.set({
             id: cabecera.id_comprobante,
             clienteNombre: cabecera.cliente?.nombre || 'Cliente sin nombre',
@@ -151,18 +203,17 @@ export class AgregarNotaCreditoComponent implements OnInit, OnDestroy {
             fechaEmision: cabecera.fec_emision,
             total: Number(cabecera.total || 0),
             subtotal: Number(cabecera.subtotal || 0),
-            igv: Number(cabecera.igv || 0)            
+            igv: Number(cabecera.igv || 0),
           });
 
-          // Mapeamos los productos según la estructura de getDetalleCompleto()
           const listaProductos = cabecera.productos || [];
 
           const itemsMapeados = listaProductos.map((p: any) => {
             return {
-              id_detalle: p.id_producto || p.productId || p.id_prod_ref || p.id, 
+              id_detalle: p.id_producto || p.productId || p.id_prod_ref || p.id,
               descripcion: p.descripcion || 'Producto Desconocido',
               cantidadOriginal: Number(p.cantidad || 0),
-              precioUnitario: Number(p.precio_unit || 0), // getDetalleCompleto lo llama precio_unit
+              precioUnitario: Number(p.precio_unit || 0),
               cantidadADevolver: 0,
               seleccionado: false,
             };
@@ -172,21 +223,36 @@ export class AgregarNotaCreditoComponent implements OnInit, OnDestroy {
           this.buscandoComprobante.set(false);
 
           if (this.itemsVenta().length > 0) {
-            this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Comprobante cargado correctamente.' });
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Éxito',
+              detail: 'Comprobante cargado correctamente.',
+            });
           } else {
-            this.messageService.add({ severity: 'warn', summary: 'Atención', detail: 'El comprobante no tiene productos para devolver.' });
+            this.messageService.add({
+              severity: 'warn',
+              summary: 'Atención',
+              detail: 'El comprobante no tiene productos para devolver.',
+            });
           }
-
         } catch (e) {
-          console.error("Error mapeando la data:", e);
+          console.error('Error mapeando la data:', e);
           this.buscandoComprobante.set(false);
-          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Estructura de comprobante irreconocible.' });
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Estructura de comprobante irreconocible.',
+          });
         }
       },
       error: (err) => {
         console.error(err);
         this.buscandoComprobante.set(false);
-        this.messageService.add({ severity: 'error', summary: 'No encontrado', detail: 'No se pudo localizar el comprobante.' });
+        this.messageService.add({
+          severity: 'error',
+          summary: 'No encontrado',
+          detail: 'No se pudo localizar el comprobante.',
+        });
       },
     });
     this.subscriptions.add(sub);
@@ -201,7 +267,7 @@ export class AgregarNotaCreditoComponent implements OnInit, OnDestroy {
 
   onMotivoChange(): void {
     const motivo = this.motivoSunatSeleccionado();
-    const nuevosItems = this.itemsVenta().map(item => {
+    const nuevosItems = this.itemsVenta().map((item) => {
       if (motivo === '01' || motivo === '06') {
         return { ...item, seleccionado: true, cantidadADevolver: item.cantidadOriginal };
       } else {
@@ -216,7 +282,7 @@ export class AgregarNotaCreditoComponent implements OnInit, OnDestroy {
     if (cant > item.cantidadOriginal) cant = item.cantidadOriginal;
     if (cant < 0) cant = 0;
 
-    const nuevosItems = this.itemsVenta().map(i => {
+    const nuevosItems = this.itemsVenta().map((i) => {
       if (i.id_detalle === item.id_detalle) {
         return { ...i, cantidadADevolver: cant, seleccionado: cant > 0 };
       }
@@ -226,9 +292,14 @@ export class AgregarNotaCreditoComponent implements OnInit, OnDestroy {
   }
 
   onCheckboxChange(item: VentaItemUI): void {
-    const nuevosItems = this.itemsVenta().map(i => {
+    const nuevosItems = this.itemsVenta().map((i) => {
       if (i.id_detalle === item.id_detalle) {
-        const cant = i.seleccionado && i.cantidadADevolver === 0 ? 1 : (!i.seleccionado ? 0 : i.cantidadADevolver);
+        const cant =
+          i.seleccionado && i.cantidadADevolver === 0
+            ? 1
+            : !i.seleccionado
+              ? 0
+              : i.cantidadADevolver;
         return { ...i, cantidadADevolver: cant };
       }
       return i;
@@ -279,7 +350,7 @@ export class AgregarNotaCreditoComponent implements OnInit, OnDestroy {
         quantity: item.cantidadADevolver,
       })),
     };
-    console.log("Payload a enviar:", payload);
+    console.log('Payload a enviar:', payload);
 
     const sub = this.creditNoteService.registrar(payload).subscribe({
       next: (res) => {
@@ -290,7 +361,7 @@ export class AgregarNotaCreditoComponent implements OnInit, OnDestroy {
           detail: 'Nota de Crédito emitida correctamente',
           life: 4000,
         });
-        setTimeout(() => this.volverListado(), 2000); 
+        setTimeout(() => this.volverListado(), 2000);
       },
       error: (err) => {
         this.guardandoNota.set(false);
