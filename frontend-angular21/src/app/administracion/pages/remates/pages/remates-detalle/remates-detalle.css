@@ -1,0 +1,30 @@
+.bg-primary-reverse {
+    background-color: var(--primary-50);
+    border: 1px solid var(--primary-200);
+}
+
+.clientes-title-icon {
+    width: 45px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    font-size: 1.3rem;
+}
+
+.clientes-kicker {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-color-secondary);
+    margin: 0;
+    margin-bottom: 2px;
+    letter-spacing: 0.5px;
+}
+
+.clientes-title {
+    font-size: 1.25rem;
+    font-weight: 800;
+    margin: 0;
+    color: var(--text-color);
+}

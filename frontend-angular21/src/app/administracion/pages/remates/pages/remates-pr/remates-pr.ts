@@ -1,7 +1,7 @@
 import { Component, signal, computed, inject, OnInit, effect } from '@angular/core';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
-import { RouterModule, Router } from '@angular/router';
+import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { InputTextModule } from 'primeng/inputtext';
 import { ToastModule } from 'primeng/toast';
@@ -9,7 +9,6 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { TableModule } from 'primeng/table';
 import { TooltipModule } from 'primeng/tooltip';
 import { TagModule } from 'primeng/tag';
-import { DialogModule } from 'primeng/dialog';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { SelectModule } from 'primeng/select';
 import { CommonModule } from '@angular/common';
@@ -50,8 +49,7 @@ type Severity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast
     TableModule,
     TooltipModule,
     TagModule,
-    DialogModule,
-    ConfirmDialogModule,
+    ConfirmDialogModule, // Se quitó DialogModule ya que no se usa modal
     SelectModule,
     CommonModule,
     SharedTableContainerComponent,
@@ -65,30 +63,27 @@ export class RematesPr implements OnInit {
   private readonly messageService = inject(MessageService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly sedeService = inject(SedeService);
   private readonly authService = inject(AuthService);
 
-  // ── Auth ──────────────────────────────────────────────────────────
-  readonly esAdmin: boolean;
-  readonly sedeNombre: string;
-  readonly sedePropiaId: string;
+  // ── Auth (Signals) ────────────────────────────────────────────────────────
+  esAdmin = signal(false);
+  sedeNombre = signal('Mi sede');
+  sedePropiaId = signal('');
 
-  // ── Permisos ──────────────────────────────────────────────────────
-  puedeCrearRemates  = false; // CREAR_REMATES  → botón "Registrar Remate"
-  puedeEditarRemates = false; // EDITAR_REMATES → botón editar
-  puedeVerRemates    = false; // VER_REMATES    → visualización de remates
-  // desactivar/activar → solo esAdmin
+  // ── Permisos (Signals) ────────────────────────────────────────────────────
+  puedeCrearRemates  = signal(false);
+  puedeEditarRemates = signal(false);
+  puedeVerRemates    = signal(false);
 
   cargando = this.auctionService.loading;
 
   busqueda = signal('');
   estadoFiltro = signal<EstadoFiltro>('ACTIVO');
-  sedeFiltro = signal(String(this.authService.getCurrentUser()?.idSede ?? ''));
+  sedeFiltro = signal('');
   page = signal(1);
   limit = signal(5);
-
-  dialogVisible = false;
-  remateSeleccionado = signal<RemateUI | null>(null);
 
   readonly estadoOptions: { label: string; value: EstadoFiltro }[] = [
     { label: 'Todos', value: 'TODOS' },
@@ -108,16 +103,27 @@ export class RematesPr implements OnInit {
   constructor() {
     const user = this.authService.getCurrentUser();
 
-    this.esAdmin = this.authService.getRoleId() === UserRole.ADMIN;
-    this.sedeNombre = user?.sedeNombre ?? 'Mi sede';
-    this.sedePropiaId = String(user?.idSede ?? '');
+    this.esAdmin.set(this.authService.getRoleId() === UserRole.ADMIN);
+    this.sedeNombre.set(user?.sedeNombre ?? 'Mi sede');
+    
+    const idSede = String(user?.idSede ?? '');
+    this.sedePropiaId.set(idSede);
+    this.sedeFiltro.set(this.esAdmin() ? '' : idSede);
+
+    // Leer el código por URL si viene redirigido desde el listado de productos
+    this.route.queryParams.subscribe(params => {
+      if (params['buscar']) {
+        this.busqueda.set(params['buscar']);
+        this.estadoFiltro.set('TODOS');
+      }
+    });
 
     effect(() => {
       const sede = this.sedeFiltro();
-      const idSede = sede ? Number(sede) : 0;
-      this.auctionService.loadAuctions(1, this.limit(), idSede).subscribe();
+      const idSedeFiltro = sede ? Number(sede) : 0;
+      this.auctionService.loadAuctions(1, this.limit(), idSedeFiltro).subscribe();
       this.page.set(1);
-    });
+    }, { allowSignalWrites: true });
   }
 
   // ── Datos ─────────────────────────────────────────────────────────────────
@@ -146,7 +152,7 @@ export class RematesPr implements OnInit {
     return data.slice(start, start + this.limit());
   });
 
-  totalPages = computed(() => Math.ceil(this.productosFiltrados().length / this.limit()));
+  totalPages = computed(() => Math.ceil(this.productosFiltrados().length / this.limit()) || 1);
 
   totalRemates = computed(() => this.remates().length);
   valorTotalRemates = computed(() =>
@@ -155,13 +161,11 @@ export class RematesPr implements OnInit {
 
   // ── Lifecycle ─────────────────────────────────────────────────────────────
   ngOnInit(): void {
-    // ── Resolver permisos ─────────────────────────────────────────
-    this.puedeCrearRemates  = this.authService.hasPermiso('CREAR_REMATES');
-    this.puedeEditarRemates = this.authService.hasPermiso('EDITAR_REMATES');
-    this.puedeVerRemates    = this.authService.hasPermiso('VER_REMATES');
+    this.puedeCrearRemates.set(this.authService.hasPermiso('CREAR_REMATES'));
+    this.puedeEditarRemates.set(this.authService.hasPermiso('EDITAR_REMATES'));
+    this.puedeVerRemates.set(this.authService.hasPermiso('VER_REMATES'));
 
     this.sedeService.loadSedes().subscribe();
-    // el effect dispara la carga inicial automáticamente
   }
 
   // ── Mapper ────────────────────────────────────────────────────────────────
@@ -208,7 +212,7 @@ export class RematesPr implements OnInit {
   limpiarFiltros(): void {
     this.busqueda.set('');
     this.estadoFiltro.set('TODOS');
-    this.sedeFiltro.set(this.esAdmin ? '' : this.sedePropiaId);
+    this.sedeFiltro.set(this.esAdmin() ? '' : this.sedePropiaId());
     this.page.set(1);
     this.messageService.add({
       severity: 'info',
@@ -226,23 +230,21 @@ export class RematesPr implements OnInit {
     this.page.set(1);
   }
 
-  // ── Modal ─────────────────────────────────────────────────────────────────
+  // ── Navegación (Detalle y Edición) ─────────────────────────────────────────
   verDetalle(remate: RemateUI): void {
-    this.remateSeleccionado.set({ ...remate });
-    this.dialogVisible = true;
-  }
-
-  cerrarModalDetalle(): void {
-    this.dialogVisible = false;
-    this.remateSeleccionado.set(null);
+    // Redirige al nuevo componente de detalle de remate que has creado
+    this.router.navigate(['/admin/remates/detalle-remate', remate.id_remate]);
   }
 
   editarRemate(remate: RemateUI): void {
-    this.cerrarModalDetalle();
     this.router.navigate(['/admin', 'remates', 'editar-remate', remate.id_remate]);
   }
 
-  // ── Estado ─────────────��──────────────────────────────────────────────────
+  abrirRegistro(): void {
+    this.router.navigate(['/admin', 'remates', 'registro-remate']);
+  }
+
+  // ── Estado ────────────────────────────────────────────────────────────────
   confirmarCambioEstado(remate: RemateUI): void {
     const esActivo = remate.estado === 'ACTIVO';
     this.confirmationService.confirm({
@@ -266,7 +268,6 @@ export class RematesPr implements OnInit {
           detail: `El remate ${remate.codigo} fue finalizado.`,
           life: 3000,
         });
-        this.cerrarModalDetalle();
         const sede = this.sedeFiltro();
         this.auctionService.loadAuctions(1, 50, sede ? Number(sede) : 0).subscribe();
       },
@@ -278,10 +279,6 @@ export class RematesPr implements OnInit {
           life: 3000,
         }),
     });
-  }
-
-  abrirRegistro(): void {
-    this.router.navigate(['/admin', 'remates', 'registro-remate']);
   }
 
   getEstadoSeverity(estado: string): Severity {

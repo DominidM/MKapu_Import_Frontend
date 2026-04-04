@@ -27,10 +27,21 @@ import { UserRole } from '../../../../core/constants/roles.constants';
   selector: 'app-gestion-productos',
   standalone: true,
   imports: [
-    CommonModule, FormsModule, ButtonModule, TableModule, CardModule, TagModule,
-    AutoCompleteModule, SelectModule, ToggleButtonModule,
-    InputTextModule, TooltipModule, RouterModule,
-    ConfirmDialog, DialogModule, ToastModule,
+    CommonModule,
+    FormsModule,
+    ButtonModule,
+    TableModule,
+    CardModule,
+    TagModule,
+    AutoCompleteModule,
+    SelectModule,
+    ToggleButtonModule,
+    InputTextModule,
+    TooltipModule,
+    RouterModule,
+    ConfirmDialog,
+    DialogModule,
+    ToastModule,
     SharedTableContainerComponent,
   ],
   templateUrl: './gestion-listado.html',
@@ -38,59 +49,55 @@ import { UserRole } from '../../../../core/constants/roles.constants';
   providers: [ConfirmationService, MessageService],
 })
 export class GestionListado implements OnInit {
-  public router               = inject(Router);
-  private productoService     = inject(ProductoService);
-  private sedeService         = inject(SedeService);
-  private categoriaService    = inject(CategoriaService);
+  public router = inject(Router);
+  private productoService = inject(ProductoService);
+  private sedeService = inject(SedeService);
+  private categoriaService = inject(CategoriaService);
   private confirmationService = inject(ConfirmationService);
-  private messageService      = inject(MessageService);
-  private authService         = inject(AuthService);
+  private messageService = inject(MessageService);
+  private authService = inject(AuthService);
 
   // ── Auth ──────────────────────────────────────────────────────────
-  esAdmin    = signal<boolean>(false);
+  esAdmin = signal<boolean>(false);
   sedeNombre = signal<string>('Mi sede');
 
   // ── Permisos ──────────────────────────────────────────────────────
-  puedeCrearProducto  = false; // CREAR_PRODUCTOS  → botón "Agregar Producto"
+  puedeCrearProducto = false; // CREAR_PRODUCTOS  → botón "Agregar Producto"
   puedeEditarProducto = false; // EDITAR_PRODUCTOS → botón lápiz
-  puedeVerDetalle     = false; // VER_PRODUCTOS    → botón ojo
+  puedeVerDetalle = false; // VER_PRODUCTOS    → botón ojo
   // eliminar → solo esAdmin
 
-  productos    = signal<ProductoStock[]>([]);
-  loading      = signal<boolean>(false);
-  categorias   = signal<{ label: string; value: string }[]>([]);
+  productos = signal<ProductoStock[]>([]);
+  loading = signal<boolean>(false);
+  categorias = signal<{ label: string; value: string }[]>([]);
 
   categoriaSeleccionada = signal<string | null>(null);
-  buscarValue           = signal<ProductoAutocomplete | string | null>(null);
-  sugerencias           = signal<ProductoAutocomplete[]>([]);
+  buscarValue = signal<ProductoAutocomplete | string | null>(null);
+  sugerencias = signal<ProductoAutocomplete[]>([]);
 
-  totalRecords  = signal<number>(0);
-  rows          = signal<number>(5);
-  currentPage   = signal<number>(1);
-  idSedeActual  = signal<number | null>(null);
+  totalRecords = signal<number>(0);
+  rows = signal<number>(5);
+  currentPage = signal<number>(1);
+  idSedeActual = signal<number | null>(null);
 
-  modalMermaVisible   = false;
+  modalMermaVisible = false;
   productoSeleccionado: ProductoStock | null = null;
   tipoOperacion: 'MERMA' | 'REMATE' | 'MERMA_DESC' | 'REMATE_DESC' | null = null;
 
-  readonly totalPages = computed(() =>
-    Math.ceil(this.totalRecords() / this.rows())
-  );
+  readonly totalPages = computed(() => Math.ceil(this.totalRecords() / this.rows()));
 
-  tituloKicker    = 'ADMINISTRADOR · ADMINISTRACIÓN · PRODUCTOS';
+  tituloKicker = 'ADMINISTRADOR · ADMINISTRACIÓN · PRODUCTOS';
   subtituloKicker = 'GESTIÓN DE PRODUCTOS';
-  iconoCabecera   = 'pi pi-box';
+  iconoCabecera = 'pi pi-box';
 
   sedesOptions = computed(() =>
-    this.sedeService.sedes().map(sede => ({
+    this.sedeService.sedes().map((sede) => ({
       label: sede.nombre,
       value: sede.id_sede,
-    }))
+    })),
   );
 
-  stockTotalVisible = computed(() =>
-    this.productos().reduce((suma, p) => suma + p.stock, 0)
-  );
+  stockTotalVisible = computed(() => this.productos().reduce((suma, p) => suma + p.stock, 0));
 
   constructor() {
     this.esAdmin.set(this.authService.getRoleId() === UserRole.ADMIN);
@@ -99,9 +106,9 @@ export class GestionListado implements OnInit {
 
   ngOnInit() {
     // ── Resolver permisos ─────────────────────────────────────────
-    this.puedeCrearProducto  = this.authService.hasPermiso('CREAR_PRODUCTOS');
+    this.puedeCrearProducto = this.authService.hasPermiso('CREAR_PRODUCTOS');
     this.puedeEditarProducto = this.authService.hasPermiso('EDITAR_PRODUCTOS');
-    this.puedeVerDetalle     = this.authService.hasPermiso('VER_PRODUCTOS');
+    this.puedeVerDetalle = this.authService.hasPermiso('VER_PRODUCTOS');
 
     this.sedeService.loadSedes().subscribe({
       error: (err) => console.error('Error cargando sedes', err),
@@ -110,7 +117,7 @@ export class GestionListado implements OnInit {
     this.categoriaService.getCategorias(true).subscribe({
       next: (resp) => {
         this.categorias.set(
-          resp.categories.map((cat: any) => ({ label: cat.nombre, value: cat.nombre }))
+          resp.categories.map((cat: any) => ({ label: cat.nombre, value: cat.nombre })),
         );
       },
       error: (err) => console.error('Error cargando categorías', err),
@@ -124,7 +131,7 @@ export class GestionListado implements OnInit {
       const userString = localStorage.getItem('user');
       if (userString) {
         const user = JSON.parse(userString);
-        if (user.idSede)     this.idSedeActual.set(user.idSede);
+        if (user.idSede) this.idSedeActual.set(user.idSede);
         if (user.sedeNombre) this.sedeNombre.set(user.sedeNombre);
       }
     } catch (e) {
@@ -133,49 +140,85 @@ export class GestionListado implements OnInit {
   }
 
   private resolverIdSedePorNombre(sedeNombre: string): number | null {
-    const match = this.sedesOptions().find(s => s.label === sedeNombre);
+    const match = this.sedesOptions().find((s) => s.label === sedeNombre);
     return match?.value ?? this.idSedeActual();
   }
 
   abrirModalMermaRemate(producto: ProductoStock) {
     this.productoSeleccionado = producto;
-    this.tipoOperacion        = null;
-    this.modalMermaVisible    = true;
+    this.tipoOperacion = null;
+    this.modalMermaVisible = true;
   }
 
   cerrarModalMermaRemate() {
-    this.modalMermaVisible    = false;
+    this.modalMermaVisible = false;
     this.productoSeleccionado = null;
-    this.tipoOperacion        = null;
+    this.tipoOperacion = null;
   }
 
   confirmarMermaRemate() {
     if (!this.tipoOperacion || !this.productoSeleccionado) return;
-    console.log('Operación:', this.tipoOperacion, 'Producto:', this.productoSeleccionado);
+
+    const idProducto = this.productoSeleccionado.id_producto;
+    const idSede =
+      this.resolverIdSedePorNombre(this.productoSeleccionado.sede) || this.idSedeActual();
+
+    // Data completa para los formularios de registro
+    const navigationExtras = {
+      queryParams: { id_producto: idProducto, id_sede: idSede },
+      state: { dataProducto: this.productoSeleccionado },
+    };
+
+    switch (this.tipoOperacion) {
+      case 'MERMA':
+        this.router.navigate(['/admin/mermas/registro-merma'], navigationExtras);
+        break;
+
+      case 'MERMA_DESC':
+        // Vamos directamente al detalle usando el ID real de la merma
+        this.router.navigate(['/admin/mermas/detalle-merma', this.productoSeleccionado.id_merma]);
+        break;
+
+      case 'REMATE':
+        this.router.navigate(['/admin/remates/registro-remate'], navigationExtras);
+        break;
+
+      case 'REMATE_DESC':
+        // Vamos directamente al detalle usando el ID real del remate
+        this.router.navigate([
+          '/admin/remates/detalle-remate',
+          this.productoSeleccionado.id_remate,
+        ]);
+        break;
+    }
+
     this.cerrarModalMermaRemate();
   }
+
   cargarProductos() {
     const sedeId = this.idSedeActual();
     if (!sedeId) return;
 
     this.loading.set(true);
-    this.productoService.getProductosConStock(
-      sedeId,
-      this.currentPage(),
-      this.rows(),
-      this.categoriaSeleccionada() ?? undefined,
-      true,
-    ).subscribe({
-      next: (response) => {
-        this.productos.set(response.data);
-        this.totalRecords.set(response.pagination.total_records);
-        this.loading.set(false);
-      },
-      error: (err) => {
-        console.error('Error al cargar productos:', err);
-        this.loading.set(false);
-      },
-    });
+    this.productoService
+      .getProductosConStock(
+        sedeId,
+        this.currentPage(),
+        this.rows(),
+        this.categoriaSeleccionada() ?? undefined,
+        true,
+      )
+      .subscribe({
+        next: (response) => {
+          this.productos.set(response.data);
+          this.totalRecords.set(response.pagination.total_records);
+          this.loading.set(false);
+        },
+        error: (err) => {
+          console.error('Error al cargar productos:', err);
+          this.loading.set(false);
+        },
+      });
   }
 
   onSedeChange(nuevaSedeId: number | null) {
@@ -196,8 +239,15 @@ export class GestionListado implements OnInit {
     this.cargarProductos();
   }
 
-  onPageChange(page: number)   { this.currentPage.set(page); this.cargarProductos(); }
-  onLimitChange(limit: number) { this.rows.set(limit); this.currentPage.set(1); this.cargarProductos(); }
+  onPageChange(page: number) {
+    this.currentPage.set(page);
+    this.cargarProductos();
+  }
+  onLimitChange(limit: number) {
+    this.rows.set(limit);
+    this.currentPage.set(1);
+    this.cargarProductos();
+  }
 
   limpiarFiltros() {
     this.buscarValue.set(null);
@@ -207,13 +257,16 @@ export class GestionListado implements OnInit {
   }
 
   searchBuscar(event: any) {
-    const query  = event.query;
+    const query = event.query;
     const sedeId = this.idSedeActual();
-    if (!sedeId || !query) { this.sugerencias.set([]); return; }
+    if (!sedeId || !query) {
+      this.sugerencias.set([]);
+      return;
+    }
 
     this.productoService.getProductosAutocomplete(query, sedeId).subscribe({
-      next:  (response) => this.sugerencias.set(response.data),
-      error: (err)      => console.error('Error en autocomplete:', err),
+      next: (response) => this.sugerencias.set(response.data),
+      error: (err) => console.error('Error en autocomplete:', err),
     });
   }
 
@@ -225,25 +278,30 @@ export class GestionListado implements OnInit {
     if (!sedeId) return;
 
     this.loading.set(true);
-    this.productoService.getProductoDetalleStock(productoSeleccionado.id_producto, sedeId).subscribe({
-      next: (detalleResponse) => {
-        const productoParaTabla: ProductoStock = {
-          id_producto: detalleResponse.producto.id_producto,
-          codigo:      detalleResponse.producto.codigo,
-          nombre:      detalleResponse.producto.nombre,
-          familia:     detalleResponse.producto.categoria.nombre,
-          sede:        detalleResponse.stock.sede,
-          stock:       detalleResponse.stock.cantidad,
-        };
-        this.productos.set([productoParaTabla]);
-        this.totalRecords.set(1);
-        this.loading.set(false);
-      },
-      error: (err) => {
-        console.error('Error al cargar detalle del producto:', err);
-        this.loading.set(false);
-      },
-    });
+    this.productoService
+      .getProductoDetalleStock(productoSeleccionado.id_producto, sedeId)
+      .subscribe({
+        next: (detalleResponse) => {
+          const productoParaTabla: ProductoStock = {
+            id_producto: detalleResponse.producto.id_producto,
+            codigo: detalleResponse.producto.codigo,
+            nombre: detalleResponse.producto.nombre,
+            familia: detalleResponse.producto.categoria.nombre,
+            sede: detalleResponse.stock.sede,
+            stock: detalleResponse.stock.cantidad,
+            id_merma: (detalleResponse.producto as any).id_merma ?? null,
+            id_remate: (detalleResponse.producto as any).id_remate ?? null,
+          };
+
+          this.productos.set([productoParaTabla]);
+          this.totalRecords.set(1);
+          this.loading.set(false);
+        },
+        error: (err) => {
+          console.error('Error al cargar detalle del producto:', err);
+          this.loading.set(false);
+        },
+      });
   }
 
   limpiarBusqueda() {
@@ -252,8 +310,10 @@ export class GestionListado implements OnInit {
     this.cargarProductos();
   }
 
-  irCrear()              { this.router.navigate(['/admin/gestion-productos/crear-producto']); }
-  irEditar(id: number)   {
+  irCrear() {
+    this.router.navigate(['/admin/gestion-productos/crear-producto']);
+  }
+  irEditar(id: number) {
     this.router.navigate(['/admin/gestion-productos/editar-producto', id], {
       queryParams: { idSede: this.idSedeActual() },
     });
@@ -261,17 +321,16 @@ export class GestionListado implements OnInit {
 
   irDetalle(idProducto: number, sedeNombre: string) {
     const idSede = this.resolverIdSedePorNombre(sedeNombre);
-    this.router.navigate(
-      ['/admin/gestion-productos/ver-detalle-producto', idProducto],
-      { queryParams: { idSede } }
-    );
+    this.router.navigate(['/admin/gestion-productos/ver-detalle-producto', idProducto], {
+      queryParams: { idSede },
+    });
   }
 
   confirmarEliminar(id: number) {
     this.confirmationService.confirm({
-      message:     '¿Estás seguro de que deseas eliminar este producto?',
-      header:      'Confirmar Eliminación',
-      icon:        'pi pi-exclamation-triangle',
+      message: '¿Estás seguro de que deseas eliminar este producto?',
+      header: 'Confirmar Eliminación',
+      icon: 'pi pi-exclamation-triangle',
       acceptLabel: 'Sí, eliminar',
       rejectLabel: 'No, cancelar',
       accept: () => this.eliminarProducto(id),
@@ -282,14 +341,16 @@ export class GestionListado implements OnInit {
     this.productoService.actualizarProductoEstado(id, false).subscribe({
       next: () => {
         this.messageService.add({
-          severity: 'success', summary: 'Eliminado',
+          severity: 'success',
+          summary: 'Eliminado',
           detail: 'El producto fue eliminado correctamente',
         });
         this.cargarProductos();
       },
       error: () => {
         this.messageService.add({
-          severity: 'error', summary: 'Error',
+          severity: 'error',
+          summary: 'Error',
           detail: 'No se pudo eliminar el producto',
         });
       },

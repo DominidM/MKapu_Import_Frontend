@@ -37,6 +37,10 @@ export interface ProductoStock {
   familia: string;
   sede: string;
   stock: number;
+  id_merma?: number | null;
+  id_remate?: number | null;
+  tiene_mermas?: boolean;
+  tiene_remates?: boolean;
 }
 interface DetalleItem {
   id_prod_ref: number;
