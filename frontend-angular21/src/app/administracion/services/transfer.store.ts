@@ -140,11 +140,7 @@ export class TransferStore {
       .subscribe({
         next: (response) => {
           this.lastLoadedHqId.set(headquartersId);
-          const normalizedPagination = this.normalizePagination(
-            response,
-            page,
-            pageSize,
-          );
+          const normalizedPagination = this.normalizePagination(response, page, pageSize);
 
           this.transfers.set(response?.data ?? []);
           this.pagination.set(normalizedPagination);
@@ -400,7 +396,6 @@ export class TransferStore {
     };
   }
 
-
   private normalizePagination(
     response: TransferListPaginatedResponseDto | null | undefined,
     fallbackPage: number,
@@ -420,14 +415,12 @@ export class TransferStore {
         ? Math.floor(Number(pagination.page))
         : fallbackPage;
     const pageSize =
-      Number.isFinite(Number(pagination.pageSize)) &&
-      Number(pagination.pageSize) > 0
+      Number.isFinite(Number(pagination.pageSize)) && Number(pagination.pageSize) > 0
         ? Math.floor(Number(pagination.pageSize))
         : fallbackPageSize;
     const totalRecords = Math.max(0, Number(pagination.totalRecords ?? 0));
     const totalPages =
-      Number.isFinite(Number(pagination.totalPages)) &&
-      Number(pagination.totalPages) >= 0
+      Number.isFinite(Number(pagination.totalPages)) && Number(pagination.totalPages) >= 0
         ? Math.floor(Number(pagination.totalPages))
         : totalRecords === 0
           ? 0
@@ -453,4 +446,3 @@ export class TransferStore {
     return error?.message || 'No se pudo completar la operación de transferencias.';
   }
 }
-

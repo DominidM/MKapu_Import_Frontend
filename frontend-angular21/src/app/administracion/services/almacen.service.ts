@@ -19,8 +19,13 @@ export interface SedeAlmacenRelacion {
   total: number;
 }
 
-export type CreateWarehouseRequest = Omit<Headquarter, 'id' | 'id_almacen' | 'activo' | 'sede' | 'createdAt' | 'updatedAt'>;
-export type UpdateWarehouseRequest = Partial<Omit<Headquarter, 'id' | 'id_almacen' | 'sede' | 'createdAt' | 'updatedAt'>>;
+export type CreateWarehouseRequest = Omit<
+  Headquarter,
+  'id' | 'id_almacen' | 'activo' | 'sede' | 'createdAt' | 'updatedAt'
+>;
+export type UpdateWarehouseRequest = Partial<
+  Omit<Headquarter, 'id' | 'id_almacen' | 'sede' | 'createdAt' | 'updatedAt'>
+>;
 
 @Injectable({ providedIn: 'root' })
 export class AlmacenService {
@@ -60,15 +65,15 @@ export class AlmacenService {
         switchMap((res) =>
           this.buildSedeMap(role).pipe(
             tap((sedeMap) => this.enrichWithSedeMap(sedeMap)),
-            map(() => res) // devolvemos el response original
-          )
+            map(() => res), // devolvemos el response original
+          ),
         ),
 
         catchError((err) => {
           this._error.set('No se pudo cargar almacenes.');
           return throwError(() => err);
         }),
-        finalize(() => this._loading.set(false))
+        finalize(() => this._loading.set(false)),
       );
   }
 
@@ -91,11 +96,10 @@ export class AlmacenService {
           // Por cada sede consultamos sus almacenes asignados
           const requests$ = sedesList.map((sede) =>
             this.http
-              .get<SedeAlmacenRelacion>(
-                `${this.api}/admin/sede-almacen/sede/${sede.id_sede}`,
-                { headers: this.buildHeaders(role) }
-              )
-              .pipe(catchError(() => of({ id_sede: sede.id_sede, sede, almacenes: [], total: 0 })))
+              .get<SedeAlmacenRelacion>(`${this.api}/admin/sede-almacen/sede/${sede.id_sede}`, {
+                headers: this.buildHeaders(role),
+              })
+              .pipe(catchError(() => of({ id_sede: sede.id_sede, sede, almacenes: [], total: 0 }))),
           );
 
           return forkJoin(requests$).pipe(
@@ -107,10 +111,10 @@ export class AlmacenService {
                 }
               }
               return map;
-            })
+            }),
           );
         }),
-        catchError(() => of(new Map<number, SedeBasica>()))
+        catchError(() => of(new Map<number, SedeBasica>())),
       );
   }
 
@@ -128,24 +132,37 @@ export class AlmacenService {
 
   // ─── CRUD ────────────────────────────────────────────────────────────────────
 
-  createAlmacen(payload: CreateWarehouseRequest, role: string = 'Administrador'): Observable<Headquarter> {
+  createAlmacen(
+    payload: CreateWarehouseRequest,
+    role: string = 'Administrador',
+  ): Observable<Headquarter> {
     this._loading.set(true);
     this._error.set(null);
     return this.http
-      .post<Headquarter>(`${this.api}/logistics/warehouses`, payload, { headers: this.buildHeaders(role) })
+      .post<Headquarter>(`${this.api}/logistics/warehouses`, payload, {
+        headers: this.buildHeaders(role),
+      })
       .pipe(
         tap((created) => {
           const prev = this._almacenResponse();
           if (!prev) return;
-          this._almacenResponse.set({ ...prev, warehouses: [created, ...prev.warehouses], total: prev.total + 1 });
+          this._almacenResponse.set({
+            ...prev,
+            warehouses: [created, ...prev.warehouses],
+            total: prev.total + 1,
+          });
         }),
         catchError((err: any) => {
           let msg = 'No se pudo registrar el almacén.';
-          if (err?.error) msg = typeof err.error === 'string' ? err.error : (err.error.message ?? JSON.stringify(err.error));
+          if (err?.error)
+            msg =
+              typeof err.error === 'string'
+                ? err.error
+                : (err.error.message ?? JSON.stringify(err.error));
           this._error.set(msg);
           return throwError(() => err);
         }),
-        finalize(() => this._loading.set(false))
+        finalize(() => this._loading.set(false)),
       );
   }
 
@@ -153,10 +170,15 @@ export class AlmacenService {
     this._loading.set(true);
     this._error.set(null);
     return this.http
-      .get<Headquarter>(`${this.api}/logistics/warehouses/${id}`, { headers: this.buildHeaders(role) })
+      .get<Headquarter>(`${this.api}/logistics/warehouses/${id}`, {
+        headers: this.buildHeaders(role),
+      })
       .pipe(
-        catchError((err) => { this._error.set('No se pudo cargar el almacén.'); return throwError(() => err); }),
-        finalize(() => this._loading.set(false))
+        catchError((err) => {
+          this._error.set('No se pudo cargar el almacén.');
+          return throwError(() => err);
+        }),
+        finalize(() => this._loading.set(false)),
       );
   }
 
@@ -172,38 +194,57 @@ export class AlmacenService {
     return this.http.put(
       `${this.api}/admin/sede-almacen/${id_almacen}/sede`,
       { id_sede },
-      { headers: this.buildHeaders() }
+      { headers: this.buildHeaders() },
     );
   }
 
   unassignSede(id_almacen: number): Observable<any> {
-    return this.http.delete(
-      `${this.api}/admin/sede-almacen/${id_almacen}/sede`,
-      { headers: this.buildHeaders() }
-    );
+    return this.http.delete(`${this.api}/admin/sede-almacen/${id_almacen}/sede`, {
+      headers: this.buildHeaders(),
+    });
   }
-  updateAlmacen(id: number, payload: UpdateWarehouseRequest, role: string = 'Administrador'): Observable<Headquarter> {
+  updateAlmacen(
+    id: number,
+    payload: UpdateWarehouseRequest,
+    role: string = 'Administrador',
+  ): Observable<Headquarter> {
     this._loading.set(true);
     this._error.set(null);
     return this.http
-      .put<Headquarter>(`${this.api}/logistics/warehouses/${id}`, payload, { headers: this.buildHeaders(role) })
+      .put<Headquarter>(`${this.api}/logistics/warehouses/${id}`, payload, {
+        headers: this.buildHeaders(role),
+      })
       .pipe(
         tap((updated) => this.patchCachedHeadquarter(id, updated)),
-        catchError((err) => { this._error.set('No se pudo actualizar el almacén.'); return throwError(() => err); }),
-        finalize(() => this._loading.set(false))
+        catchError((err) => {
+          this._error.set('No se pudo actualizar el almacén.');
+          return throwError(() => err);
+        }),
+        finalize(() => this._loading.set(false)),
       );
   }
 
-  updateAlmacenStatus(id: number, activo: boolean, role: string = 'Administrador'): Observable<Headquarter> {
+  updateAlmacenStatus(
+    id: number,
+    activo: boolean,
+    role: string = 'Administrador',
+  ): Observable<Headquarter> {
     this._loading.set(true);
     this._error.set(null);
     const headers = this.buildHeaders(role).set('Content-Type', 'application/json');
     return this.http
-      .put<Headquarter>(`${this.api}/logistics/warehouses/${id}/status`, { activo: !!activo }, { headers })
+      .put<Headquarter>(
+        `${this.api}/logistics/warehouses/${id}/status`,
+        { activo: !!activo },
+        { headers },
+      )
       .pipe(
         tap((updated) => this.patchCachedHeadquarter(id, updated)),
-        catchError((err) => { this._error.set('No se pudo actualizar el estado del almacén.'); return throwError(() => err); }),
-        finalize(() => this._loading.set(false))
+        catchError((err) => {
+          this._error.set('No se pudo actualizar el estado del almacén.');
+          return throwError(() => err);
+        }),
+        finalize(() => this._loading.set(false)),
       );
   }
 
@@ -219,10 +260,9 @@ export class AlmacenService {
   }
 
   getAlmacenesPorSede(id_sede: number): Observable<SedeAlmacenRelacion> {
-    return this.http.get<SedeAlmacenRelacion>(
-      `${this.api}/admin/sede-almacen/sede/${id_sede}`,
-      { headers: this.buildHeaders() }
-    );
+    return this.http.get<SedeAlmacenRelacion>(`${this.api}/admin/sede-almacen/sede/${id_sede}`, {
+      headers: this.buildHeaders(),
+    });
   }
 
   private patchCachedHeadquarter(id: number, updated: Headquarter): void {

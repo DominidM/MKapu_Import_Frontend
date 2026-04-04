@@ -1,4 +1,3 @@
-
 // src/app/core/interfaces/route-config.interface.ts
 export interface RouteConfig {
   path: string;

@@ -43,9 +43,7 @@ export class EmpleadosService {
   private apiUrl = environment.apiUrl || 'http://localhost:3000';
   private empleadoActual: Empleado | null = null;
 
-  private empleadosMock: Empleado[] = [
-   
-  ];
+  private empleadosMock: Empleado[] = [];
 
   constructor() {
     this.inicializarSesion();
@@ -72,10 +70,10 @@ export class EmpleadosService {
 
   cargoToRoleId(cargo: Empleado['cargo']): UserRole {
     const map = {
-      'ADMIN': UserRole.ADMIN,
-      'VENTAS': UserRole.VENTAS,
-      'ALMACENERO': UserRole.ALMACEN,
-      'LOGISTICA': UserRole.LOGISTICA
+      ADMIN: UserRole.ADMIN,
+      VENTAS: UserRole.VENTAS,
+      ALMACENERO: UserRole.ALMACEN,
+      LOGISTICA: UserRole.LOGISTICA,
     };
     return map[cargo];
   }
@@ -85,7 +83,7 @@ export class EmpleadosService {
       [UserRole.ADMIN]: 'ADMIN' as const,
       [UserRole.VENTAS]: 'VENTAS' as const,
       [UserRole.ALMACEN]: 'ALMACENERO' as const,
-      [UserRole.LOGISTICA]: 'LOGISTICA' as const
+      [UserRole.LOGISTICA]: 'LOGISTICA' as const,
     };
     return map[roleId];
   }
@@ -103,7 +101,7 @@ export class EmpleadosService {
       nombre_sede: apiEmp.sedeNombre,
       usuario: apiEmp.email,
       estado: apiEmp.activo,
-      fecha_contratacion: new Date()
+      fecha_contratacion: new Date(),
     };
   }
 
@@ -121,12 +119,12 @@ export class EmpleadosService {
   }
 
   getEmpleados(): Observable<Empleado[]> {
-    return this.http.get<{ users: ApiEmpleado[], total: number }>(`${this.apiUrl}/users`).pipe(
-      map(response => response.users.map(emp => this.transformApiEmpleado(emp))),
-      catchError(error => {
+    return this.http.get<{ users: ApiEmpleado[]; total: number }>(`${this.apiUrl}/users`).pipe(
+      map((response) => response.users.map((emp) => this.transformApiEmpleado(emp))),
+      catchError((error) => {
         console.warn('API no disponible, usando datos mock:', error);
         return of(this.empleadosMock);
-      })
+      }),
     );
   }
 
@@ -140,7 +138,7 @@ export class EmpleadosService {
 
   loginMock(usuario: string, password: string): boolean {
     const empleado = this.empleadosMock.find(
-      (emp) => emp.usuario === usuario && emp.password === password && emp.estado
+      (emp) => emp.usuario === usuario && emp.password === password && emp.estado,
     );
 
     if (empleado) {
@@ -186,9 +184,7 @@ export class EmpleadosService {
   }
 
   cambiarEmpleado(idEmpleado: string): boolean {
-    const empleado = this.empleadosMock.find(
-      (emp) => emp.id_empleado === idEmpleado && emp.estado
-    );
+    const empleado = this.empleadosMock.find((emp) => emp.id_empleado === idEmpleado && emp.estado);
 
     if (empleado) {
       this.empleadoActual = empleado;
@@ -204,18 +200,18 @@ export class EmpleadosService {
       ADMIN: 'Administrador',
       VENTAS: 'Vendedor',
       ALMACENERO: 'Almacenero',
-      LOGISTICA: 'Logistica'
+      LOGISTICA: 'Logistica',
     };
     return etiquetas[cargo];
   }
 
   sincronizarDesdeAuth(): void {
     const userStr = localStorage.getItem('user');
-    
+
     if (userStr) {
       try {
         const user = JSON.parse(userStr);
-        
+
         this.empleadoActual = {
           id_empleado: `EMP-${user.userId}`,
           nombres: user.username,
@@ -228,9 +224,9 @@ export class EmpleadosService {
           nombre_sede: '',
           usuario: user.username,
           estado: true,
-          fecha_contratacion: new Date()
+          fecha_contratacion: new Date(),
         };
-        
+
         this.guardarSesion();
       } catch (error) {
         console.error('Error al sincronizar empleado:', error);

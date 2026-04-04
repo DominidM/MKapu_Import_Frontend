@@ -52,7 +52,7 @@ export class TransferUserContextService {
   getCurrentHeadquarterId(): string | null {
     const user = this.readStoredUser();
     const storedHeadquarterId = user?.idSede ?? user?.id_sede;
-    
+
     if (storedHeadquarterId !== undefined && storedHeadquarterId !== null) {
       return String(storedHeadquarterId);
     }
@@ -68,10 +68,7 @@ export class TransferUserContextService {
     return this.getCurrentRole() === 'ADMINISTRADOR';
   }
 
-  private mapRole(
-    roleId?: number | null,
-    roleName?: string | null,
-  ): TransferRole | null {
+  private mapRole(roleId?: number | null, roleName?: string | null): TransferRole | null {
     if (roleId === UserRole.ADMIN) {
       return 'ADMINISTRADOR';
     }
@@ -80,7 +77,9 @@ export class TransferUserContextService {
       return 'JEFE DE ALMACEN';
     }
 
-    const normalized = String(roleName ?? '').trim().toUpperCase();
+    const normalized = String(roleName ?? '')
+      .trim()
+      .toUpperCase();
     if (!normalized) {
       return null;
     }

@@ -98,17 +98,13 @@ export class CustomerTrackingService {
 
         return forkJoin(requests).pipe(
           map((responses) => {
-            const remaining = responses.flatMap((response) =>
-              this.mapSales(response.ventas ?? []),
-            );
+            const remaining = responses.flatMap((response) => this.mapSales(response.ventas ?? []));
             return [...firstItems, ...remaining];
           }),
         );
       }),
       map((items) =>
-        [...items].sort(
-          (left, right) => right.fecha.getTime() - left.fecha.getTime(),
-        ),
+        [...items].sort((left, right) => right.fecha.getTime() - left.fecha.getTime()),
       ),
     );
   }
@@ -141,9 +137,7 @@ export class CustomerTrackingService {
         );
       }),
       map((items) =>
-        [...items].sort(
-          (left, right) => right.fecha.getTime() - left.fecha.getTime(),
-        ),
+        [...items].sort((left, right) => right.fecha.getTime() - left.fecha.getTime()),
       ),
     );
   }
@@ -174,9 +168,7 @@ export class CustomerTrackingService {
     });
   }
 
-  private mapSales(
-    items: CustomerSalesResponse['ventas'],
-  ): CustomerTrackingSale[] {
+  private mapSales(items: CustomerSalesResponse['ventas']): CustomerTrackingSale[] {
     return items.map((item) => ({
       nroComprobante: item.nroComprobante,
       fecha: new Date(item.fecha),
@@ -185,9 +177,7 @@ export class CustomerTrackingService {
     }));
   }
 
-  private mapQuotes(
-    items: CustomerQuotesResponse['cotizaciones'],
-  ): CustomerTrackingQuote[] {
+  private mapQuotes(items: CustomerQuotesResponse['cotizaciones']): CustomerTrackingQuote[] {
     return items.map((item) => ({
       codigo: item.codigo,
       fecha: new Date(item.fecha),
@@ -196,14 +186,8 @@ export class CustomerTrackingService {
     }));
   }
 
-  private buildParams(
-    filters: CustomerTrackingFilters,
-    page: number,
-    limit: number,
-  ): HttpParams {
-    let params = new HttpParams()
-      .set('page', String(page))
-      .set('limit', String(limit));
+  private buildParams(filters: CustomerTrackingFilters, page: number, limit: number): HttpParams {
+    let params = new HttpParams().set('page', String(page)).set('limit', String(limit));
 
     if (filters.dateFrom) {
       params = params.set('dateFrom', filters.dateFrom);

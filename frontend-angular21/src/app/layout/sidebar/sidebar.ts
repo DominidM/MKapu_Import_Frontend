@@ -14,139 +14,247 @@ import { RoleService } from '../../core/services/role.service';
 import { CashboxSocketService } from '../../ventas/services/cashbox-socket.service';
 import { EmpresaService } from '../../administracion/services/empresa.service';
 
-interface MenuItem    { path: string; label: string; icon: string; permiso: string; }
-interface MenuSection { label: string; icon: string; permisoSeccion: string; items: MenuItem[]; }
+interface MenuItem {
+  path: string;
+  label: string;
+  icon: string;
+  permiso: string;
+}
+interface MenuSection {
+  label: string;
+  icon: string;
+  permisoSeccion: string;
+  items: MenuItem[];
+}
 
 @Component({
   selector: 'app-sidebar',
   standalone: true,
   imports: [
-    CommonModule, ButtonModule, AvatarModule, DrawerModule, BadgeModule,
-    RouterModule, ToastModule, ConfirmDialog, TitleCasePipe,
+    CommonModule,
+    ButtonModule,
+    AvatarModule,
+    DrawerModule,
+    BadgeModule,
+    RouterModule,
+    ToastModule,
+    ConfirmDialog,
+    TitleCasePipe,
   ],
   templateUrl: './sidebar.html',
   styleUrl: './sidebar.css',
   providers: [ConfirmationService, MessageService],
 })
 export class Sidebar implements OnInit {
-
-  visible     = true;
+  visible = true;
   activeMenu: string | null = null;
   menuSections: MenuSection[] = [];
-  roleName  = 'Invitado';
-  username  = '';
+  roleName = 'Invitado';
+  username = '';
 
-  private cashboxSocket  = inject(CashboxSocketService);
-  private cdr            = inject(ChangeDetectorRef);
+  private cashboxSocket = inject(CashboxSocketService);
+  private cdr = inject(ChangeDetectorRef);
   private empresaService = inject(EmpresaService);
-  private authService    = inject(AuthService);
+  private authService = inject(AuthService);
   empresa = this.empresaService.empresaActual;
 
   // ── Items especiales que siempre aparecen en INICIO ─────────────────
   // Dashboard y Caja son PÚBLICOS — no requieren permisos
   private readonly INICIO_ITEMS: MenuItem[] = [
     {
-      path:    '/admin/dashboard-admin',
-      label:   'Dashboard',
-      icon:    'pi pi-home',
+      path: '/admin/dashboard-admin',
+      label: 'Dashboard',
+      icon: 'pi pi-home',
       permiso: '', // PÚBLICO — sin permiso requerido
     },
     {
-      path:    '/admin/caja',
-      label:   'Caja',
-      icon:    'pi pi-money-bill',
+      path: '/admin/caja',
+      label: 'Caja',
+      icon: 'pi pi-money-bill',
       permiso: '', // PÚBLICO — sin permiso requerido (solo botón cerrar necesita CERRAR_CAJA)
     },
   ];
 
   // ── Permisos que existen en BD pero NO tienen página frontend ─────
   private readonly SIN_PAGINA = new Set([
-    'VENTAS', 'ALMACEN', 'PRINCIPAL',
-    'VER_LIBRO_VENTAS', 'VER_REPORTES', 'VER_NOTAS_CREDITO',
+    'VENTAS',
+    'ALMACEN',
+    'PRINCIPAL',
+    'VER_LIBRO_VENTAS',
+    'VER_REPORTES',
+    'VER_NOTAS_CREDITO',
     'CREAR_NOTA_CREDITO',
     'VER_DASHBOARD_ADMIN', // ← Dashboard Admin es PÚBLICO
-    'VER_CAJA',            // ← Caja es PÚBLICO
-    'CERRAR_CAJA',         // ← Permiso solo para el botón, no para la página
+    'VER_CAJA', // ← Caja es PÚBLICO
+    'CERRAR_CAJA', // ← Permiso solo para el botón, no para la página
   ]);
 
   // ── Mapa permiso → datos del item ────────────────────────────────
   private readonly ITEM: Record<string, Omit<MenuItem, 'permiso'>> = {
     // Ventas Admin
-    CREAR_VENTA:             { path: '/admin/generar-ventas-administracion',   label: 'Crear Venta',        icon: 'pi pi-plus-circle' },
-    VER_VENTAS:              { path: '/admin/historial-ventas-administracion', label: 'Historial Ventas',   icon: 'pi pi-list' },
-    VER_NC:                { path: '/admin/nota-credito',                    label: 'Notas de Crédito',   icon: 'pi pi-credit-card' },
-    VER_DESCUENTO:           { path: '/admin/descuentos',                      label: 'Descuentos',         icon: 'pi pi-tag' },
-    VER_PROMOCION:           { path: '/admin/promociones',                     label: 'Promociones',        icon: 'pi pi-percentage' },
-    
-    VER_VENTA_POR_COBRAR:  { path: '/admin/ventas-por-cobrar',               label: 'Ventas por Cobrar',  icon: 'pi pi-wallet' },
-    VER_CLIENTE:             { path: '/admin/clientes',                        label: 'Clientes',           icon: 'pi pi-users' },
-    VER_COTIZACIONES_VENTA:  { path: '/admin/cotizaciones-venta',              label: 'Cotizaciones Venta', icon: 'pi pi-id-card' },
-    VER_COTIZACIONES_COMPRA: { path: '/admin/cotizaciones-compra',             label: 'Cotizaciones Compra',icon: 'pi pi-id-card' },
-    VER_RECLAMO:             { path: '/admin/reclamos-listado',                label: 'Reclamos',           icon: 'pi pi-exclamation-circle' },
+    CREAR_VENTA: {
+      path: '/admin/generar-ventas-administracion',
+      label: 'Crear Venta',
+      icon: 'pi pi-plus-circle',
+    },
+    VER_VENTAS: {
+      path: '/admin/historial-ventas-administracion',
+      label: 'Historial Ventas',
+      icon: 'pi pi-list',
+    },
+    VER_NC: { path: '/admin/nota-credito', label: 'Notas de Crédito', icon: 'pi pi-credit-card' },
+    VER_DESCUENTO: { path: '/admin/descuentos', label: 'Descuentos', icon: 'pi pi-tag' },
+    VER_PROMOCION: { path: '/admin/promociones', label: 'Promociones', icon: 'pi pi-percentage' },
+
+    VER_VENTA_POR_COBRAR: {
+      path: '/admin/ventas-por-cobrar',
+      label: 'Ventas por Cobrar',
+      icon: 'pi pi-wallet',
+    },
+    VER_CLIENTE: { path: '/admin/clientes', label: 'Clientes', icon: 'pi pi-users' },
+    VER_COTIZACIONES_VENTA: {
+      path: '/admin/cotizaciones-venta',
+      label: 'Cotizaciones Venta',
+      icon: 'pi pi-id-card',
+    },
+    VER_COTIZACIONES_COMPRA: {
+      path: '/admin/cotizaciones-compra',
+      label: 'Cotizaciones Compra',
+      icon: 'pi pi-id-card',
+    },
+    VER_RECLAMO: {
+      path: '/admin/reclamos-listado',
+      label: 'Reclamos',
+      icon: 'pi pi-exclamation-circle',
+    },
 
     // Almacén
-    VER_DASHBOARD_ALMACEN:   { path: '/admin/dashboard-almacen',               label: 'Dashboard Almacén',  icon: 'pi pi-chart-bar' },
-    VER_ALMACEN:             { path: '/admin/almacen',                         label: 'Almacén',            icon: 'pi pi-box' },
-    CREAR_REMISION:          { path: '/logistica/remision',                    label: 'Remisión',           icon: 'pi pi-truck' },
-    CONTEO_INVENTARIO:       { path: '/admin/conteo-inventario',               label: 'Conteo Inventario',  icon: 'pi pi-folder' },
-    CREAR_MOV_INVENTARIO:    { path: '/logistica/movimiento-inventario',       label: 'Mov. Inventario',    icon: 'pi pi-database' },
-    CREAR_AJUSTE_INVENTARIO: { path: '/logistica/ajuste-inventario',           label: 'Ajuste Inventario',  icon: 'pi pi-cog' },
+    VER_DASHBOARD_ALMACEN: {
+      path: '/admin/dashboard-almacen',
+      label: 'Dashboard Almacén',
+      icon: 'pi pi-chart-bar',
+    },
+    VER_ALMACEN: { path: '/admin/almacen', label: 'Almacén', icon: 'pi pi-box' },
+    CREAR_REMISION: { path: '/logistica/remision', label: 'Remisión', icon: 'pi pi-truck' },
+    CONTEO_INVENTARIO: {
+      path: '/admin/conteo-inventario',
+      label: 'Conteo Inventario',
+      icon: 'pi pi-folder',
+    },
+    CREAR_MOV_INVENTARIO: {
+      path: '/logistica/movimiento-inventario',
+      label: 'Mov. Inventario',
+      icon: 'pi pi-database',
+    },
+    CREAR_AJUSTE_INVENTARIO: {
+      path: '/logistica/ajuste-inventario',
+      label: 'Ajuste Inventario',
+      icon: 'pi pi-cog',
+    },
 
     // Administración
-    VER_TRANSFERENCIA:       { path: '/admin/transferencia',                   label: 'Transferencias',     icon: 'pi pi-arrows-h' },
-    VER_DESPACHO:          { path: '/admin/despacho-productos',              label: 'Despacho',           icon: 'pi pi-truck' },
-    VER_USUARIOS:            { path: '/admin/usuarios',                        label: 'Empleados',          icon: 'pi pi-user-plus' },
-    VER_PRODUCTOS:           { path: '/admin/gestion-productos',               label: 'Productos',          icon: 'pi pi-tags' },
-    VER_CATEGORIAS:          { path: '/admin/categoria',                       label: 'Categorías',         icon: 'pi pi-list' },
-    VER_SEDES:               { path: '/admin/sedes',                           label: 'Sedes',              icon: 'pi pi-building' },
-    VER_COMISIONES:          { path: '/admin/comision',                        label: 'Comisiones',         icon: 'pi pi-wallet' },
-    VER_MERMAS:              { path: '/admin/mermas',                          label: 'Mermas',             icon: 'pi pi-exclamation-triangle' },
-    VER_REMATES:             { path: '/admin/remates',                         label: 'Remates',            icon: 'pi pi-tag' },
-    VER_PROVEEDORES:         { path: '/admin/proveedores',                     label: 'Proveedores',        icon: 'pi pi-truck' },
-    AGREGAR_DOCUMENTO:       { path: '/admin/documento-contador',              label: 'Documentos',         icon: 'pi pi-file' },
-    CREAR_PERMISOS:          { path: '/admin/roles-permisos',                  label: 'Permisos',           icon: 'pi pi-key' },
-    ASIGNAR_DELIVERY:        { path: '/admin/gestion-delivery',                label: 'Control Delivery',   icon: 'pi pi-car' },
+    VER_TRANSFERENCIA: {
+      path: '/admin/transferencia',
+      label: 'Transferencias',
+      icon: 'pi pi-arrows-h',
+    },
+    VER_DESPACHO: { path: '/admin/despacho-productos', label: 'Despacho', icon: 'pi pi-truck' },
+    VER_USUARIOS: { path: '/admin/usuarios', label: 'Empleados', icon: 'pi pi-user-plus' },
+    VER_PRODUCTOS: { path: '/admin/gestion-productos', label: 'Productos', icon: 'pi pi-tags' },
+    VER_CATEGORIAS: { path: '/admin/categoria', label: 'Categorías', icon: 'pi pi-list' },
+    VER_SEDES: { path: '/admin/sedes', label: 'Sedes', icon: 'pi pi-building' },
+    VER_COMISIONES: { path: '/admin/comision', label: 'Comisiones', icon: 'pi pi-wallet' },
+    VER_MERMAS: { path: '/admin/mermas', label: 'Mermas', icon: 'pi pi-exclamation-triangle' },
+    VER_REMATES: { path: '/admin/remates', label: 'Remates', icon: 'pi pi-tag' },
+    VER_PROVEEDORES: { path: '/admin/proveedores', label: 'Proveedores', icon: 'pi pi-truck' },
+    AGREGAR_DOCUMENTO: {
+      path: '/admin/documento-contador',
+      label: 'Documentos',
+      icon: 'pi pi-file',
+    },
+    CREAR_PERMISOS: { path: '/admin/roles-permisos', label: 'Permisos', icon: 'pi pi-key' },
+    ASIGNAR_DELIVERY: {
+      path: '/admin/gestion-delivery',
+      label: 'Control Delivery',
+      icon: 'pi pi-car',
+    },
   };
 
   // ── Secciones fijas ───────────────────────────────────────────────
   private readonly SECCIONES: {
-    label: string; icon: string; permisoSeccion: string; permisos: string[];
+    label: string;
+    icon: string;
+    permisoSeccion: string;
+    permisos: string[];
   }[] = [
     {
-      label: 'VENTAS', icon: 'pi pi-shopping-cart', permisoSeccion: 'VENTAS',
+      label: 'VENTAS',
+      icon: 'pi pi-shopping-cart',
+      permisoSeccion: 'VENTAS',
       permisos: [
-        'CREAR_VENTA', 'VER_VENTAS_ADMIN', 'VER_VENTAS',
-        'CREAR_NC', 'VER_PROMOCION', 'CREAR_VENTA_POR_COBRAR',
-        'VER_NC', 'VER_VENTA_POR_COBRAR',
-        'VER_CLIENTE', 'VER_COTIZACIONES_VENTA', 'VER_COTIZACIONES_COMPRA', 'VER_RECLAMO',
+        'CREAR_VENTA',
+        'VER_VENTAS_ADMIN',
+        'VER_VENTAS',
+        'CREAR_NC',
+        'VER_PROMOCION',
+        'CREAR_VENTA_POR_COBRAR',
+        'VER_NC',
+        'VER_VENTA_POR_COBRAR',
+        'VER_CLIENTE',
+        'VER_COTIZACIONES_VENTA',
+        'VER_COTIZACIONES_COMPRA',
+        'VER_RECLAMO',
       ],
     },
     {
-      label: 'ALMACÉN', icon: 'pi pi-box', permisoSeccion: 'ALMACEN',
+      label: 'ALMACÉN',
+      icon: 'pi pi-box',
+      permisoSeccion: 'ALMACEN',
       permisos: [
-        'VER_DASHBOARD_ALMACEN', 'VER_ALMACEN', 'CREAR_REMISION',
-        'CONTEO_INVENTARIO', 'CREAR_MOV_INVENTARIO', 'CREAR_AJUSTE_INVENTARIO',
+        'VER_DASHBOARD_ALMACEN',
+        'VER_ALMACEN',
+        'CREAR_REMISION',
+        'CONTEO_INVENTARIO',
+        'CREAR_MOV_INVENTARIO',
+        'CREAR_AJUSTE_INVENTARIO',
       ],
     },
     {
-      label: 'ADMINISTRADOR', icon: 'pi pi-cog', permisoSeccion: 'ADMINISTRACION',
+      label: 'ADMINISTRADOR',
+      icon: 'pi pi-cog',
+      permisoSeccion: 'ADMINISTRACION',
       permisos: [
-        'CREAR_PERMISOS', 'VER_TRANSFERENCIA', 'VER_DESPACHO', 'VER_PRODUCTOS',
-        'VER_CATEGORIAS', 'VER_SEDES', 'VER_MERMAS',
-        'VER_REMATES', 'SEGUIMIENTO_EMPLEADO', 'VER_PROVEEDORES',
-        'EDITAR_TERMINOS_CONDICIONES', 'ADMINISTRACION', 'MODIFICAR_EMPRESA',
+        'CREAR_PERMISOS',
+        'VER_TRANSFERENCIA',
+        'VER_DESPACHO',
+        'VER_PRODUCTOS',
+        'VER_CATEGORIAS',
+        'VER_SEDES',
+        'VER_MERMAS',
+        'VER_REMATES',
+        'SEGUIMIENTO_EMPLEADO',
+        'VER_PROVEEDORES',
+        'EDITAR_TERMINOS_CONDICIONES',
+        'ADMINISTRACION',
+        'MODIFICAR_EMPRESA',
       ],
     },
     {
-      label: 'DELIVERY', icon: 'pi pi-truck', permisoSeccion: 'ADMINISTRACION',
+      label: 'DELIVERY',
+      icon: 'pi pi-truck',
+      permisoSeccion: 'ADMINISTRACION',
       permisos: ['ASIGNAR_DELIVERY'],
     },
     {
-      label: 'CONTABILIDAD', icon: 'pi pi-money-bill', permisoSeccion: 'ADMINISTRACION',
+      label: 'CONTABILIDAD',
+      icon: 'pi pi-money-bill',
+      permisoSeccion: 'ADMINISTRACION',
       permisos: ['AGREGAR_DOCUMENTO'],
     },
     {
-      label: 'RRHH', icon: 'pi pi-users', permisoSeccion: 'ADMINISTRACION',
+      label: 'RRHH',
+      icon: 'pi pi-users',
+      permisoSeccion: 'ADMINISTRACION',
       permisos: ['VER_USUARIOS', 'VER_COMISIONES', 'VER_DESCUENTO'],
     },
   ];
@@ -184,26 +292,26 @@ export class Sidebar implements OnInit {
   private loadUserInfo(): void {
     const raw = localStorage.getItem('user');
     if (raw) {
-      const user    = JSON.parse(raw);
+      const user = JSON.parse(raw);
       this.username = user.username;
       this.roleName = user.roleName ?? 'Invitado';
     }
   }
 
   private loadMenu(): void {
-    const raw  = localStorage.getItem('user');
+    const raw = localStorage.getItem('user');
     const user = raw ? JSON.parse(raw) : null;
 
     const permisosRaw: string[] = user?.permisos || [];
-    const roleName: string      = user?.roleName  || 'Invitado';
+    const roleName: string = user?.roleName || 'Invitado';
 
     // ── Sección INICIO — siempre visible, SIN restricción de permisos ──
     // Dashboard y Caja son PÚBLICOS para todos
     const seccionInicio: MenuSection = {
-      label:         'INICIO',
-      icon:          'pi pi-home',
+      label: 'INICIO',
+      icon: 'pi pi-home',
       permisoSeccion: 'INICIO',
-      items:         this.INICIO_ITEMS,
+      items: this.INICIO_ITEMS,
     };
 
     // Sin permisos → solo Dashboard y Caja (ambos públicos)
@@ -222,21 +330,19 @@ export class Sidebar implements OnInit {
     if (esAdmin) {
       this.menuSections = [
         seccionInicio,
-        ...this.SECCIONES
-          .map(s => ({
-            label:          s.label,
-            icon:           s.icon,
-            permisoSeccion: s.permisoSeccion,
-            items: s.permisos
-              .filter(p => permisos.includes(p) && this.ITEM[p])
-              .map(p => ({ permiso: p, ...this.ITEM[p] })),
-          }))
-          .filter(s => s.items.length > 0),
+        ...this.SECCIONES.map((s) => ({
+          label: s.label,
+          icon: s.icon,
+          permisoSeccion: s.permisoSeccion,
+          items: s.permisos
+            .filter((p) => permisos.includes(p) && this.ITEM[p])
+            .map((p) => ({ permiso: p, ...this.ITEM[p] })),
+        })).filter((s) => s.items.length > 0),
       ];
     } else {
       const items: MenuItem[] = permisos
-        .filter(p => !this.SIN_PAGINA.has(p) && this.ITEM[p])
-        .map(p => ({ permiso: p, ...this.ITEM[p] }));
+        .filter((p) => !this.SIN_PAGINA.has(p) && this.ITEM[p])
+        .map((p) => ({ permiso: p, ...this.ITEM[p] }));
 
       this.menuSections = [
         seccionInicio,
@@ -260,9 +366,9 @@ export class Sidebar implements OnInit {
         event.stopPropagation();
         this.messageService.add({
           severity: 'warn',
-          summary:  'Caja Cerrada',
-          detail:   'Debes abrir la caja antes de poder realizar ventas.',
-          life:     3500,
+          summary: 'Caja Cerrada',
+          detail: 'Debes abrir la caja antes de poder realizar ventas.',
+          life: 3500,
         });
       }
     }
@@ -270,28 +376,28 @@ export class Sidebar implements OnInit {
 
   confirm2(event: Event): void {
     this.confirmationService.confirm({
-      target:  event.target as EventTarget,
+      target: event.target as EventTarget,
       message: '¿Estás seguro de que deseas cerrar sesión?',
-      header:  'Alerta',
-      icon:    'pi pi-info-circle',
-      rejectLabel:         'Cancelar',
-      acceptLabel:         'Aceptar',
-      acceptButtonProps:   { severity: 'danger' },
-      rejectButtonProps:   { severity: 'secondary', outlined: true },
+      header: 'Alerta',
+      icon: 'pi pi-info-circle',
+      rejectLabel: 'Cancelar',
+      acceptLabel: 'Aceptar',
+      acceptButtonProps: { severity: 'danger' },
+      rejectButtonProps: { severity: 'secondary', outlined: true },
       accept: () => {
         this.authService.logout();
         this.messageService.add({
           severity: 'success',
-          summary:  'Confirmación',
-          detail:   'Cierre de sesión exitoso',
+          summary: 'Confirmación',
+          detail: 'Cierre de sesión exitoso',
         });
         setTimeout(() => this.router.navigate(['/login']), 1000);
       },
       reject: () => {
         this.messageService.add({
           severity: 'info',
-          summary:  'Cancelado',
-          detail:   'Cierre de sesión cancelado',
+          summary: 'Cancelado',
+          detail: 'Cierre de sesión cancelado',
         });
       },
     });

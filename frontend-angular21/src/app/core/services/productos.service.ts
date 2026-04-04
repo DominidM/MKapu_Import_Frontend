@@ -93,8 +93,8 @@ export class ProductosService {
         variantes: [
           { sede: 'LAS FLORES', stock: 45 },
           { sede: 'LURIN', stock: 20 },
-          { sede: 'VES', stock: 8 }
-        ]
+          { sede: 'VES', stock: 8 },
+        ],
       },
       {
         id: 2,
@@ -114,8 +114,8 @@ export class ProductosService {
         fechaActualizacion: new Date('2026-01-10'),
         variantes: [
           { sede: 'LAS FLORES', stock: 20 },
-          { sede: 'LURIN', stock: 15 }
-        ]
+          { sede: 'LURIN', stock: 15 },
+        ],
       },
       {
         id: 3,
@@ -133,9 +133,7 @@ export class ProductosService {
         estado: 'Activo',
         fechaCreacion: new Date('2024-01-20'),
         fechaActualizacion: new Date('2026-01-10'),
-        variantes: [
-          { sede: 'LAS FLORES', stock: 12 }
-        ]
+        variantes: [{ sede: 'LAS FLORES', stock: 12 }],
       },
       {
         id: 4,
@@ -153,9 +151,7 @@ export class ProductosService {
         estado: 'Activo',
         fechaCreacion: new Date('2024-03-05'),
         fechaActualizacion: new Date('2026-01-10'),
-        variantes: [
-          { sede: 'LAS FLORES', stock: 30 }
-        ]
+        variantes: [{ sede: 'LAS FLORES', stock: 30 }],
       },
       {
         id: 5,
@@ -173,9 +169,7 @@ export class ProductosService {
         estado: 'Activo',
         fechaCreacion: new Date('2024-02-25'),
         fechaActualizacion: new Date('2026-01-10'),
-        variantes: [
-          { sede: 'LURIN', stock: 18 }
-        ]
+        variantes: [{ sede: 'LURIN', stock: 18 }],
       },
       {
         id: 6,
@@ -193,9 +187,7 @@ export class ProductosService {
         estado: 'Activo',
         fechaCreacion: new Date('2024-03-12'),
         fechaActualizacion: new Date('2026-01-10'),
-        variantes: [
-          { sede: 'LAS FLORES', stock: 25 }
-        ]
+        variantes: [{ sede: 'LAS FLORES', stock: 25 }],
       },
       {
         id: 7,
@@ -215,8 +207,8 @@ export class ProductosService {
         fechaActualizacion: new Date('2026-01-10'),
         variantes: [
           { sede: 'LAS FLORES', stock: 40 },
-          { sede: 'VES', stock: 15 }
-        ]
+          { sede: 'VES', stock: 15 },
+        ],
       },
       {
         id: 8,
@@ -234,10 +226,8 @@ export class ProductosService {
         estado: 'Activo',
         fechaCreacion: new Date('2024-03-18'),
         fechaActualizacion: new Date('2026-01-10'),
-        variantes: [
-          { sede: 'LAS FLORES', stock: 15 }
-        ]
-      }
+        variantes: [{ sede: 'LAS FLORES', stock: 15 }],
+      },
     ];
 
     this.productosSubject.next(datosIniciales);
@@ -255,19 +245,17 @@ export class ProductosService {
   getProductos(sede?: string, estado: 'Activo' | 'Eliminado' = 'Activo'): Producto[] {
     let productos = this.productosSubject.value
       .filter((p) => p.estado === estado)
-      .map(p => this.calcularPropiedadesDerivadas({...p}));
-    
+      .map((p) => this.calcularPropiedadesDerivadas({ ...p }));
+
     if (sede) {
-      productos = productos.filter((p) => 
-        p.variantes?.some(v => v.sede === sede)
-      );
+      productos = productos.filter((p) => p.variantes?.some((v) => v.sede === sede));
     }
     return productos;
   }
 
   getProductoPorId(id: number): Producto | null {
     const producto = this.productosSubject.value.find((p) => p.id === id);
-    return producto ? this.calcularPropiedadesDerivadas({...producto}) : null;
+    return producto ? this.calcularPropiedadesDerivadas({ ...producto }) : null;
   }
 
   getProductoById(id: number): Producto | null {
@@ -275,8 +263,10 @@ export class ProductosService {
   }
 
   getProductoPorCodigo(codigo: string): Producto | undefined {
-    const producto = this.productosSubject.value.find((p) => p.codigo === codigo && p.estado === 'Activo');
-    return producto ? this.calcularPropiedadesDerivadas({...producto}) : undefined;
+    const producto = this.productosSubject.value.find(
+      (p) => p.codigo === codigo && p.estado === 'Activo',
+    );
+    return producto ? this.calcularPropiedadesDerivadas({ ...producto }) : undefined;
   }
 
   getProductosPorCodigo(codigo: string, incluirEliminados: boolean = false): Producto[] {
@@ -284,7 +274,7 @@ export class ProductosService {
     if (!incluirEliminados) {
       productos = productos.filter((p) => p.estado === 'Activo');
     }
-    return productos.map(p => this.calcularPropiedadesDerivadas({...p}));
+    return productos.map((p) => this.calcularPropiedadesDerivadas({ ...p }));
   }
 
   buscarProductos(termino: string, sede?: string): Producto[] {
@@ -296,10 +286,10 @@ export class ProductosService {
     );
 
     if (sede) {
-      productos = productos.filter((p) => p.variantes?.some(v => v.sede === sede));
+      productos = productos.filter((p) => p.variantes?.some((v) => v.sede === sede));
     }
 
-    return productos.map(p => this.calcularPropiedadesDerivadas({...p}));
+    return productos.map((p) => this.calcularPropiedadesDerivadas({ ...p }));
   }
 
   getProductosEliminados(sede?: string): Producto[] {
@@ -308,8 +298,8 @@ export class ProductosService {
 
   getSedes(): string[] {
     const sedesSet = new Set<string>();
-    this.productosSubject.value.forEach(p => {
-      p.variantes?.forEach(v => sedesSet.add(v.sede));
+    this.productosSubject.value.forEach((p) => {
+      p.variantes?.forEach((v) => sedesSet.add(v.sede));
     });
     return Array.from(sedesSet).sort();
   }
@@ -325,10 +315,10 @@ export class ProductosService {
     );
 
     if (sede) {
-      productos = productos.filter((p) => p.variantes?.some(v => v.sede === sede));
+      productos = productos.filter((p) => p.variantes?.some((v) => v.sede === sede));
     }
 
-    return productos.map(p => this.calcularPropiedadesDerivadas({...p}));
+    return productos.map((p) => this.calcularPropiedadesDerivadas({ ...p }));
   }
 
   getUnidadesMedida(): string[] {
@@ -476,8 +466,8 @@ export class ProductosService {
 
   existeCodigo(codigo: string, sede?: string): boolean {
     if (sede) {
-      return this.productosSubject.value.some((p) => 
-        p.codigo === codigo && p.variantes?.some(v => v.sede === sede)
+      return this.productosSubject.value.some(
+        (p) => p.codigo === codigo && p.variantes?.some((v) => v.sede === sede),
       );
     }
     return this.productosSubject.value.some((p) => p.codigo === codigo);
@@ -526,7 +516,7 @@ export class ProductosService {
         if (!codigosPorSedes.has(p.codigo)) {
           codigosPorSedes.set(p.codigo, new Set());
         }
-        p.variantes?.forEach(v => codigosPorSedes.get(p.codigo)!.add(v.sede));
+        p.variantes?.forEach((v) => codigosPorSedes.get(p.codigo)!.add(v.sede));
       });
 
     return Array.from(codigosPorSedes.entries())
@@ -641,5 +631,4 @@ export class ProductosService {
       ...familiasUnicas.map((f) => ({ label: f, value: f })),
     ];
   }
-  
 }

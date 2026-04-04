@@ -145,46 +145,34 @@ export class EmployeeTrackingService {
       firstQuotesPage: this.getUserQuotes(userId, filters, 1),
       firstCommissionsPage: this.getUserCommissions(userId, filters, 1),
     }).pipe(
-      switchMap(
-        ({ user, firstSalesPage, firstQuotesPage, firstCommissionsPage }) =>
-          forkJoin({
-            remainingSalesPages: this.getRemainingPages(
-              firstSalesPage.totalPages,
-              (page) => this.getUserSales(userId, filters, page),
-            ),
-            remainingQuotesPages: this.getRemainingPages(
-              firstQuotesPage.totalPages,
-              (page) => this.getUserQuotes(userId, filters, page),
-            ),
-            remainingCommissionsPages: this.getRemainingPages(
-              firstCommissionsPage.totalPages,
-              (page) => this.getUserCommissions(userId, filters, page),
-            ),
-          }).pipe(
-            map(
-              ({
-                remainingSalesPages,
-                remainingQuotesPages,
-                remainingCommissionsPages,
-              }) =>
-                this.buildTrackingData(
-                  user,
-                  [firstSalesPage, ...remainingSalesPages],
-                  [firstQuotesPage, ...remainingQuotesPages],
-                  [firstCommissionsPage, ...remainingCommissionsPages],
-                ),
+      switchMap(({ user, firstSalesPage, firstQuotesPage, firstCommissionsPage }) =>
+        forkJoin({
+          remainingSalesPages: this.getRemainingPages(firstSalesPage.totalPages, (page) =>
+            this.getUserSales(userId, filters, page),
+          ),
+          remainingQuotesPages: this.getRemainingPages(firstQuotesPage.totalPages, (page) =>
+            this.getUserQuotes(userId, filters, page),
+          ),
+          remainingCommissionsPages: this.getRemainingPages(
+            firstCommissionsPage.totalPages,
+            (page) => this.getUserCommissions(userId, filters, page),
+          ),
+        }).pipe(
+          map(({ remainingSalesPages, remainingQuotesPages, remainingCommissionsPages }) =>
+            this.buildTrackingData(
+              user,
+              [firstSalesPage, ...remainingSalesPages],
+              [firstQuotesPage, ...remainingQuotesPages],
+              [firstCommissionsPage, ...remainingCommissionsPages],
             ),
           ),
+        ),
       ),
     );
   }
 
-  private getUserWithAccount(
-    userId: number,
-  ): Observable<UserWithAccountResponse> {
-    return this.http.get<UserWithAccountResponse>(
-      `${this.usersUrl}/${userId}/full`,
-    );
+  private getUserWithAccount(userId: number): Observable<UserWithAccountResponse> {
+    return this.http.get<UserWithAccountResponse>(`${this.usersUrl}/${userId}/full`);
   }
 
   private getUserSales(
@@ -192,12 +180,9 @@ export class EmployeeTrackingService {
     filters: EmployeeTrackingFilters,
     page: number,
   ): Observable<EmployeeSalesPageResponse> {
-    return this.http.get<EmployeeSalesPageResponse>(
-      `${this.usersUrl}/${userId}/sales`,
-      {
-        params: this.buildTrackingParams(filters, page),
-      },
-    );
+    return this.http.get<EmployeeSalesPageResponse>(`${this.usersUrl}/${userId}/sales`, {
+      params: this.buildTrackingParams(filters, page),
+    });
   }
 
   private getUserQuotes(
@@ -205,12 +190,9 @@ export class EmployeeTrackingService {
     filters: EmployeeTrackingFilters,
     page: number,
   ): Observable<EmployeeQuotesPageResponse> {
-    return this.http.get<EmployeeQuotesPageResponse>(
-      `${this.usersUrl}/${userId}/quotes`,
-      {
-        params: this.buildTrackingParams(filters, page),
-      },
-    );
+    return this.http.get<EmployeeQuotesPageResponse>(`${this.usersUrl}/${userId}/quotes`, {
+      params: this.buildTrackingParams(filters, page),
+    });
   }
 
   private getUserCommissions(
@@ -226,10 +208,7 @@ export class EmployeeTrackingService {
     );
   }
 
-  private buildTrackingParams(
-    filters: EmployeeTrackingFilters,
-    page: number,
-  ): HttpParams {
+  private buildTrackingParams(filters: EmployeeTrackingFilters, page: number): HttpParams {
     let params = new HttpParams()
       .set('page', String(page))
       .set('limit', String(this.aggregationLimit));
@@ -253,9 +232,7 @@ export class EmployeeTrackingService {
       return of([]);
     }
 
-    const requests = Array.from({ length: totalPages - 1 }, (_, index) =>
-      fetchPage(index + 2),
-    );
+    const requests = Array.from({ length: totalPages - 1 }, (_, index) => fetchPage(index + 2));
 
     return forkJoin(requests);
   }
@@ -267,7 +244,9 @@ export class EmployeeTrackingService {
     commissionPages: EmployeeCommissionsPageResponse[],
   ): EmployeeTrackingData {
     const sales = salesPages.flatMap((page) => page.ventas).map((sale) => this.mapSale(sale));
-    const quotes = quotePages.flatMap((page) => page.cotizaciones).map((quote) => this.mapQuote(quote));
+    const quotes = quotePages
+      .flatMap((page) => page.cotizaciones)
+      .map((quote) => this.mapQuote(quote));
     const commissions = commissionPages
       .flatMap((page) => page.comisiones)
       .map((commission) => this.mapCommission(commission));
@@ -293,9 +272,7 @@ export class EmployeeTrackingService {
     };
   }
 
-  private mapEmployee(
-    response: UserWithAccountResponse,
-  ): EmployeeTrackingEmployee {
+  private mapEmployee(response: UserWithAccountResponse): EmployeeTrackingEmployee {
     const { usuario, cuenta_usuario } = response;
 
     return {
@@ -328,9 +305,7 @@ export class EmployeeTrackingService {
     };
   }
 
-  private mapCommission(
-    commission: EmployeeCommissionResponse,
-  ): EmployeeTrackedCommission {
+  private mapCommission(commission: EmployeeCommissionResponse): EmployeeTrackedCommission {
     return {
       idComision: Number(commission.idComision),
       comprobante: commission.comprobante,
@@ -346,10 +321,7 @@ export class EmployeeTrackingService {
     sales: EmployeeTrackedSale[],
     commissions: EmployeeTrackedCommission[],
   ): EmployeeMonthlyTrend[] {
-    const buckets = new Map<
-      string,
-      { date: Date; salesTotal: number; commissionsTotal: number }
-    >();
+    const buckets = new Map<string, { date: Date; salesTotal: number; commissionsTotal: number }>();
 
     for (const sale of sales) {
       const bucketDate = new Date(sale.fecha.getFullYear(), sale.fecha.getMonth(), 1);
@@ -364,11 +336,7 @@ export class EmployeeTrackingService {
     }
 
     for (const commission of commissions) {
-      const bucketDate = new Date(
-        commission.fecha.getFullYear(),
-        commission.fecha.getMonth(),
-        1,
-      );
+      const bucketDate = new Date(commission.fecha.getFullYear(), commission.fecha.getMonth(), 1);
       const key = this.buildMonthKey(bucketDate);
       const current = buckets.get(key) ?? {
         date: bucketDate,

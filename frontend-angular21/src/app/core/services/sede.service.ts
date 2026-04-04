@@ -18,7 +18,7 @@ export interface Sede {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class SedeService {
   private sedesSubject = new BehaviorSubject<Sede[]>([]);
@@ -31,9 +31,7 @@ export class SedeService {
     this.inicializarSedes();
   }
 
-  private inicializarSedes(): void {
-
-  }
+  private inicializarSedes(): void {}
 
   getSedes(): Observable<Sede[]> {
     return this.sedesSubject.asObservable();
@@ -41,31 +39,31 @@ export class SedeService {
 
   getSedeActual(): Observable<Sede> {
     return this.sedeActualSubject.asObservable().pipe(
-      map(sede => {
+      map((sede) => {
         if (!sede) {
           throw new Error('No hay sede seleccionada');
         }
         return sede;
-      })
+      }),
     );
   }
 
   getSedeById(idSede: string): Observable<Sede> {
     return this.getSedes().pipe(
-      map(sedes => {
-        const sede = sedes.find(s => s.id_sede === idSede);
+      map((sedes) => {
+        const sede = sedes.find((s) => s.id_sede === idSede);
         if (!sede) {
           throw new Error(`Sede con ID ${idSede} no encontrada`);
         }
         return sede;
-      })
+      }),
     );
   }
 
   setSedeActual(idSede: string): void {
     const sedes = this.sedesSubject.value;
-    const sede = sedes.find(s => s.id_sede === idSede);
-    
+    const sede = sedes.find((s) => s.id_sede === idSede);
+
     if (sede) {
       this.sedeActualSubject.next(sede);
     }
@@ -74,10 +72,10 @@ export class SedeService {
   crearSede(sede: Omit<Sede, 'id_sede'>): Sede {
     const sedes = this.sedesSubject.value;
     const nuevoId = `SEDE${String(sedes.length + 1).padStart(3, '0')}`;
-    
+
     const nuevaSede: Sede = {
       ...sede,
-      id_sede: nuevoId
+      id_sede: nuevoId,
     };
 
     this.sedesSubject.next([...sedes, nuevaSede]);
@@ -86,7 +84,7 @@ export class SedeService {
 
   actualizarSede(idSede: string, cambios: Partial<Sede>): boolean {
     const sedes = [...this.sedesSubject.value];
-    const index = sedes.findIndex(s => s.id_sede === idSede);
+    const index = sedes.findIndex((s) => s.id_sede === idSede);
 
     if (index !== -1) {
       sedes[index] = { ...sedes[index], ...cambios };
@@ -97,10 +95,8 @@ export class SedeService {
   }
 
   eliminarSede(idSede: string): boolean {
-    const sedes = this.sedesSubject.value.filter(s => s.id_sede !== idSede);
+    const sedes = this.sedesSubject.value.filter((s) => s.id_sede !== idSede);
     this.sedesSubject.next(sedes);
     return true;
   }
-
-
 }

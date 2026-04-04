@@ -38,7 +38,13 @@ export interface ConfirmacionDespachoData {
 export class ConfirmacionDespachoStateService {
   private _data = signal<ConfirmacionDespachoData | null>(null);
 
-  set(data: ConfirmacionDespachoData): void { this._data.set(data); }
-  get(): ConfirmacionDespachoData | null { return this._data(); }
-  clear(): void { this._data.set(null); }
+  set(data: ConfirmacionDespachoData): void {
+    this._data.set(data);
+  }
+  get(): ConfirmacionDespachoData | null {
+    return this._data();
+  }
+  clear(): void {
+    this._data.set(null);
+  }
 }

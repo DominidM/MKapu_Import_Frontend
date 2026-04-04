@@ -7,7 +7,6 @@ import { TerminosDto, TerminosResponse } from '../interfaces/terminos-condicione
 
 @Injectable({ providedIn: 'root' })
 export class TerminosCondicionesService {
-
   private http = inject(HttpClient);
   private base = `${environment.apiUrl}/admin/terminos-condiciones`;
 

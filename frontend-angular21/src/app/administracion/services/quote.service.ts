@@ -10,65 +10,65 @@ import { SupplierResponse } from '../interfaces/supplier.interface';
 export type CreateQuoteRequest = Omit<Quote, 'id_cotizacion' | 'cliente' | 'sede'>;
 
 export interface LoadQuotesFilters {
-  search?:  string;
-  estado?:  string | null;
-  tipo?:    'VENTA' | 'COMPRA' | null;
+  search?: string;
+  estado?: string | null;
+  tipo?: 'VENTA' | 'COMPRA' | null;
   id_sede?: number | null;
-  page?:    number;
-  limit?:   number;
+  page?: number;
+  limit?: number;
 }
 
 @Injectable({ providedIn: 'root' })
 export class QuoteService {
-  private readonly http            = inject(HttpClient);
-  private          proveedorService = inject(ProveedorService);
-  private readonly api             = `${environment.apiUrl}/sales/quote`;
+  private readonly http = inject(HttpClient);
+  private proveedorService = inject(ProveedorService);
+  private readonly api = `${environment.apiUrl}/sales/quote`;
 
   // ── Proveedor utils ───────────────────────────────────────────────
-  proveedoresMap        = signal<Map<number, string>>(new Map());
-  proveedorEncontrado   = signal<SupplierResponse | null>(null);
+  proveedoresMap = signal<Map<number, string>>(new Map());
+  proveedorEncontrado = signal<SupplierResponse | null>(null);
   busquedaProvSinResult = signal(false);
-  cargandoProveedor     = signal(false);
+  cargandoProveedor = signal(false);
 
   // ── Estado compartido (lista + paginación) ────────────────────────
-  private readonly _quoteList  = signal<QuoteListItem[]>([]);
-  private readonly _total      = signal<number>(0);
-  private readonly _page       = signal<number>(1);
+  private readonly _quoteList = signal<QuoteListItem[]>([]);
+  private readonly _total = signal<number>(0);
+  private readonly _page = signal<number>(1);
   private readonly _totalPages = signal<number>(1);
-  private readonly _quote      = signal<Quote | null>(null);
-  private readonly _loading    = signal(false);
-  private readonly _error      = signal<string | null>(null);
+  private readonly _quote = signal<Quote | null>(null);
+  private readonly _loading = signal(false);
+  private readonly _error = signal<string | null>(null);
 
-  readonly quotes     = computed(() => this._quoteList());
-  readonly total      = computed(() => this._total());
-  readonly page       = computed(() => this._page());
+  readonly quotes = computed(() => this._quoteList());
+  readonly total = computed(() => this._total());
+  readonly page = computed(() => this._page());
   readonly totalPages = computed(() => this._totalPages());
-  readonly quote      = computed(() => this._quote());
-  readonly loading    = computed(() => this._loading());
-  readonly error      = computed(() => this._error());
+  readonly quote = computed(() => this._quote());
+  readonly loading = computed(() => this._loading());
+  readonly error = computed(() => this._error());
 
   // ── KPIs separados por tipo ───────────────────────────────────────
   // VENTA
-  readonly kpiTotalVenta      = signal<number>(0);
-  readonly kpiAprobadasVenta  = signal<number>(0);
+  readonly kpiTotalVenta = signal<number>(0);
+  readonly kpiAprobadasVenta = signal<number>(0);
   readonly kpiPendientesVenta = signal<number>(0);
 
   // COMPRA
-  readonly kpiTotalCompra      = signal<number>(0);
-  readonly kpiAprobadasCompra  = signal<number>(0);
+  readonly kpiTotalCompra = signal<number>(0);
+  readonly kpiAprobadasCompra = signal<number>(0);
   readonly kpiPendientesCompra = signal<number>(0);
 
   // ── Compatibilidad hacia atrás (apuntan al último tipo cargado) ───
   private readonly _lastTipo = signal<'VENTA' | 'COMPRA'>('VENTA');
 
   readonly kpiTotal = computed(() =>
-    this._lastTipo() === 'COMPRA' ? this.kpiTotalCompra() : this.kpiTotalVenta()
+    this._lastTipo() === 'COMPRA' ? this.kpiTotalCompra() : this.kpiTotalVenta(),
   );
   readonly kpiAprobadas = computed(() =>
-    this._lastTipo() === 'COMPRA' ? this.kpiAprobadasCompra() : this.kpiAprobadasVenta()
+    this._lastTipo() === 'COMPRA' ? this.kpiAprobadasCompra() : this.kpiAprobadasVenta(),
   );
   readonly kpiPendientes = computed(() =>
-    this._lastTipo() === 'COMPRA' ? this.kpiPendientesCompra() : this.kpiPendientesVenta()
+    this._lastTipo() === 'COMPRA' ? this.kpiPendientesCompra() : this.kpiPendientesVenta(),
   );
 
   // ── Nombre contraparte ────────────────────────────────────────────
@@ -89,12 +89,12 @@ export class QuoteService {
     this._lastTipo.set(tipo);
 
     let params = new HttpParams();
-    if (filters?.search)  params = params.set('search',  filters.search);
-    if (filters?.estado)  params = params.set('estado',  filters.estado);
-    if (filters?.tipo)    params = params.set('tipo',    filters.tipo);
+    if (filters?.search) params = params.set('search', filters.search);
+    if (filters?.estado) params = params.set('estado', filters.estado);
+    if (filters?.tipo) params = params.set('tipo', filters.tipo);
     if (filters?.id_sede) params = params.set('id_sede', filters.id_sede.toString());
-    if (filters?.page)    params = params.set('page',    filters.page.toString());
-    if (filters?.limit)   params = params.set('limit',   filters.limit.toString());
+    if (filters?.page) params = params.set('page', filters.page.toString());
+    if (filters?.limit) params = params.set('limit', filters.limit.toString());
 
     // Carga KPIs filtrados por el mismo tipo
     this._loadKpis(tipo);
@@ -110,34 +110,37 @@ export class QuoteService {
         this._error.set('No se pudo cargar cotizaciones.');
         return throwError(() => err);
       }),
-      finalize(() => this._loading.set(false))
+      finalize(() => this._loading.set(false)),
     );
   }
 
   // ── KPIs filtrados por tipo ───────────────────────────────────────
   private _loadKpis(tipo: 'VENTA' | 'COMPRA'): void {
-    const base = new HttpParams()
-      .set('tipo',  tipo)
-      .set('page',  '1')
-      .set('limit', '1');
+    const base = new HttpParams().set('tipo', tipo).set('page', '1').set('limit', '1');
 
     Promise.all([
       firstValueFrom(this.http.get<QuotePagedResponse>(this.api, { params: base })),
-      firstValueFrom(this.http.get<QuotePagedResponse>(this.api, { params: base.set('estado', 'APROBADA') })),
-      firstValueFrom(this.http.get<QuotePagedResponse>(this.api, { params: base.set('estado', 'PENDIENTE') })),
-    ]).then(([totalRes, aprobRes, pendRes]) => {
-
-      if (tipo === 'COMPRA') {
-        this.kpiTotalCompra.set(totalRes.total);
-        this.kpiAprobadasCompra.set(aprobRes.total);
-        this.kpiPendientesCompra.set(pendRes.total);
-      } else {
-        this.kpiTotalVenta.set(totalRes.total);
-        this.kpiAprobadasVenta.set(aprobRes.total);
-        this.kpiPendientesVenta.set(pendRes.total);
-      }
-
-    }).catch(() => { /* silencioso — los KPIs no son críticos */ });
+      firstValueFrom(
+        this.http.get<QuotePagedResponse>(this.api, { params: base.set('estado', 'APROBADA') }),
+      ),
+      firstValueFrom(
+        this.http.get<QuotePagedResponse>(this.api, { params: base.set('estado', 'PENDIENTE') }),
+      ),
+    ])
+      .then(([totalRes, aprobRes, pendRes]) => {
+        if (tipo === 'COMPRA') {
+          this.kpiTotalCompra.set(totalRes.total);
+          this.kpiAprobadasCompra.set(aprobRes.total);
+          this.kpiPendientesCompra.set(pendRes.total);
+        } else {
+          this.kpiTotalVenta.set(totalRes.total);
+          this.kpiAprobadasVenta.set(aprobRes.total);
+          this.kpiPendientesVenta.set(pendRes.total);
+        }
+      })
+      .catch(() => {
+        /* silencioso — los KPIs no son críticos */
+      });
   }
 
   // ── Obtener por ID ────────────────────────────────────────────────
@@ -150,7 +153,7 @@ export class QuoteService {
         this._error.set('No se pudo obtener la cotización.');
         return throwError(() => err);
       }),
-      finalize(() => this._loading.set(false))
+      finalize(() => this._loading.set(false)),
     );
   }
 
@@ -164,22 +167,15 @@ export class QuoteService {
         this._error.set('No se pudo crear la cotización.');
         return throwError(() => err);
       }),
-      finalize(() => this._loading.set(false))
+      finalize(() => this._loading.set(false)),
     );
   }
 
-  autocomplete(
-    q: string,
-    tipo?: string,
-    id_sede?: number,
-  ): Observable<QuoteListItem[]> {
+  autocomplete(q: string, tipo?: string, id_sede?: number): Observable<QuoteListItem[]> {
     const params: Record<string, any> = { q };
-    if (tipo)    params['tipo']    = tipo;
+    if (tipo) params['tipo'] = tipo;
     if (id_sede) params['id_sede'] = id_sede;
-    return this.http.get<QuoteListItem[]>(
-      `${this.api}/quote/autocomplete/search`,
-      { params },
-    );
+    return this.http.get<QuoteListItem[]>(`${this.api}/quote/autocomplete/search`, { params });
   }
 
   // ── Aprobar ───────────────────────────────────────────────────────
@@ -192,7 +188,7 @@ export class QuoteService {
         this._error.set('No se pudo aprobar la cotización.');
         return throwError(() => err);
       }),
-      finalize(() => this._loading.set(false))
+      finalize(() => this._loading.set(false)),
     );
   }
 
@@ -206,7 +202,7 @@ export class QuoteService {
         this._error.set('No se pudo actualizar el estado.');
         return throwError(() => err);
       }),
-      finalize(() => this._loading.set(false))
+      finalize(() => this._loading.set(false)),
     );
   }
 
@@ -219,7 +215,7 @@ export class QuoteService {
         this._error.set('No se pudo eliminar la cotización.');
         return throwError(() => err);
       }),
-      finalize(() => this._loading.set(false))
+      finalize(() => this._loading.set(false)),
     );
   }
 
@@ -233,7 +229,7 @@ export class QuoteService {
         this._error.set('No se pudo obtener cotizaciones del cliente.');
         return throwError(() => err);
       }),
-      finalize(() => this._loading.set(false))
+      finalize(() => this._loading.set(false)),
     );
   }
 
@@ -245,8 +241,16 @@ export class QuoteService {
           const url = window.URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }));
           const win = window.open(url, '_blank');
           if (win) {
-            win.onload = () => { win.focus(); win.print(); };
-            setTimeout(() => { try { win.focus(); win.print(); } catch { } }, 1500);
+            win.onload = () => {
+              win.focus();
+              win.print();
+            };
+            setTimeout(() => {
+              try {
+                win.focus();
+                win.print();
+              } catch {}
+            }, 1500);
           }
           setTimeout(() => window.URL.revokeObjectURL(url), 60_000);
           observer.next();
@@ -259,10 +263,10 @@ export class QuoteService {
 
   downloadThermalVoucher(id: number): Observable<void> {
     return new Observable((observer) => {
-      const link    = document.createElement('a');
-      link.href     = `${this.api}/${id}/export/thermal`;
+      const link = document.createElement('a');
+      link.href = `${this.api}/${id}/export/thermal`;
       link.download = `voucher-${id}.pdf`;
-      link.target   = '_blank';
+      link.target = '_blank';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -283,8 +287,16 @@ export class QuoteService {
           const blobUrl = window.URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }));
           const win = window.open(blobUrl, '_blank');
           if (win) {
-            win.onload = () => { win.focus(); win.print(); };
-            setTimeout(() => { try { win.focus(); win.print(); } catch { } }, 1500);
+            win.onload = () => {
+              win.focus();
+              win.print();
+            };
+            setTimeout(() => {
+              try {
+                win.focus();
+                win.print();
+              } catch {}
+            }, 1500);
           }
           setTimeout(() => window.URL.revokeObjectURL(blobUrl), 60_000);
           observer.next();
@@ -297,10 +309,10 @@ export class QuoteService {
 
   downloadPdf(id: number): Observable<void> {
     return new Observable((observer) => {
-      const link    = document.createElement('a');
-      link.href     = `${this.api}/${id}/export/pdf`;
+      const link = document.createElement('a');
+      link.href = `${this.api}/${id}/export/pdf`;
       link.download = `cotizacion-${id}.pdf`;
-      link.target   = '_blank';
+      link.target = '_blank';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -313,27 +325,26 @@ export class QuoteService {
   sendByEmail(id: number): Observable<{ message: string; sentTo: string }> {
     this._loading.set(true);
     this._error.set(null);
-    return this.http.post<{ message: string; sentTo: string }>(
-      `${this.api}/${id}/send-email`, {}
-    ).pipe(
-      catchError((err) => {
-        this._error.set('No se pudo enviar el email.');
-        return throwError(() => err);
-      }),
-      finalize(() => this._loading.set(false))
-    );
+    return this.http
+      .post<{ message: string; sentTo: string }>(`${this.api}/${id}/send-email`, {})
+      .pipe(
+        catchError((err) => {
+          this._error.set('No se pudo enviar el email.');
+          return throwError(() => err);
+        }),
+        finalize(() => this._loading.set(false)),
+      );
   }
 
   // ── WhatsApp ──────────────────────────────────────────────────────
   getWhatsAppStatus(): Observable<{ ready: boolean; qr: string | null }> {
-    return this.http.get<{ ready: boolean; qr: string | null }>(
-      `${this.api}/whatsapp/status`
-    );
+    return this.http.get<{ ready: boolean; qr: string | null }>(`${this.api}/whatsapp/status`);
   }
 
   sendByWhatsApp(id: number): Observable<{ message: string; sentTo: string }> {
     return this.http.post<{ message: string; sentTo: string }>(
-      `${this.api}/${id}/send-whatsapp`, {}
+      `${this.api}/${id}/send-whatsapp`,
+      {},
     );
   }
 

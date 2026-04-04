@@ -9,7 +9,7 @@ export interface RegisterWarrantyDto {
   id_comprobante: number;
   cod_prod: string;
   prod_nombre: string;
-  motivo: string;        
+  motivo: string;
   observaciones?: string;
   num_garantia?: string;
   id_sede_ref: number;
@@ -63,7 +63,7 @@ export interface WarrantyResponseDto {
   id_usuario_recepcion?: string;
   fec_registro: string;
   fec_recepcion?: string;
-  fec_vencimiento?: string; 
+  fec_vencimiento?: string;
   tracking: WarrantyTrackingDto[];
 }
 

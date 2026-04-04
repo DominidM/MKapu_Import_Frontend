@@ -17,8 +17,7 @@ export class RoleSocketService {
     });
 
     // 👇 2. LISTENERS DE DEPURACIÓN (Obligatorio para saber qué pasa)
-    this.socket.on('connect', () => {
-    });
+    this.socket.on('connect', () => {});
 
     this.socket.on('connect_error', (err) => {
       console.error('❌ [Roles Socket] Falló la conexión:', err.message);

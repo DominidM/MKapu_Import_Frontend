@@ -17,10 +17,7 @@ export class TransferSocketService {
   readonly lastStatusUpdate = signal<TransferSocketEventDto | null>(null);
   readonly lastError = signal<string | null>(null);
 
-  connect(
-    headquartersId: string | number | null | undefined,
-    owner: string = 'default',
-  ): void {
+  connect(headquartersId: string | number | null | undefined, owner: string = 'default'): void {
     const normalizedHeadquarterId = String(headquartersId ?? '').trim();
     if (!normalizedHeadquarterId) {
       this.disconnect(owner);
@@ -52,9 +49,7 @@ export class TransferSocketService {
   }
 
   private resolveTargetHeadquarterId(): string | null {
-    const requestedHeadquarters = Array.from(
-      new Set(this.consumerHeadquarters.values()),
-    );
+    const requestedHeadquarters = Array.from(new Set(this.consumerHeadquarters.values()));
 
     if (requestedHeadquarters.length === 0) {
       return null;
@@ -104,8 +99,7 @@ export class TransferSocketService {
       this.runInZone(() => {
         this.connectionState.set('disconnected');
         this.lastError.set(
-          error.message ||
-            'No se pudo conectar al canal en tiempo real de transferencias.',
+          error.message || 'No se pudo conectar al canal en tiempo real de transferencias.',
         );
       }),
     );
@@ -125,9 +119,7 @@ export class TransferSocketService {
 
   private resolveSocketBaseUrl(): string {
     const apiBaseUrl = this.normalizeBaseUrl(environment.apiUrl);
-    const configuredSocketBaseUrl = this.normalizeBaseUrl(
-      environment.apiUrlSocket,
-    );
+    const configuredSocketBaseUrl = this.normalizeBaseUrl(environment.apiUrlSocket);
 
     if (!environment.production && apiBaseUrl) {
       return apiBaseUrl;
@@ -137,7 +129,9 @@ export class TransferSocketService {
   }
 
   private normalizeBaseUrl(url: string | null | undefined): string {
-    return String(url ?? '').trim().replace(/\/api\/?$/i, '');
+    return String(url ?? '')
+      .trim()
+      .replace(/\/api\/?$/i, '');
   }
 
   private teardownSocket(resetEvents: boolean): void {
@@ -175,4 +169,3 @@ export class TransferSocketService {
     this.zone.run(callback);
   }
 }
-

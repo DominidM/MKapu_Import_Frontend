@@ -1,14 +1,14 @@
 <div class="flex h-screen">
   <div class="sidebar-root flex flex-column h-full">
-
-  <!-- HEADER -->
+    <!-- HEADER -->
     <div class="sidebar-header flex align-items-center gap-3 px-4 py-3">
       <div class="logo-badge">
         <img
           *ngIf="empresa()?.logoUrl"
           [src]="empresa()?.logoUrl"
           [alt]="empresa()?.nombreComercial"
-          class="img-custom" />
+          class="img-custom"
+        />
       </div>
       <div class="brand-info">
         <span class="brand-name">{{ empresa()?.nombreComercial || 'Mkapu Import' }}</span>
@@ -25,21 +25,24 @@
     <!-- NAV -->
     <div class="flex-1 overflow-auto nav-scroll px-2 py-1">
       <ng-container *ngFor="let section of menuSections; let last = last">
-
         <!-- SECTION HEADER -->
         <div
           class="menu-section flex align-items-center gap-2 px-2 py-2 cursor-pointer"
           [class.menu-section--open]="activeMenu === section.label"
-          (click)="toggleMenu(section.label)">
-
+          (click)="toggleMenu(section.label)"
+        >
           <div class="section-icon-wrap">
             <i [class]="section.icon" class="section-icon"></i>
           </div>
 
           <span class="menu-title flex-1">{{ section.label }}</span>
 
-          <i class="pi menu-arrow"
-            [ngClass]="activeMenu === section.label ? 'pi-chevron-right rotate' : 'pi-chevron-right'">
+          <i
+            class="pi menu-arrow"
+            [ngClass]="
+              activeMenu === section.label ? 'pi-chevron-right rotate' : 'pi-chevron-right'
+            "
+          >
           </i>
         </div>
 
@@ -51,27 +54,30 @@
             [routerLink]="item.path"
             routerLinkActive=" bg-primary menu-active"
             [routerLinkActiveOptions]="{ exact: true }"
-            (click)="navigateTo($event, item.path)">
-            <i [class]="item.icon" class="item-icon" style="text-decoration: none; color: white"></i>
+            (click)="navigateTo($event, item.path)"
+          >
+            <i
+              [class]="item.icon"
+              class="item-icon"
+              style="text-decoration: none; color: white"
+            ></i>
             <span>{{ item.label }}</span>
           </a>
         </div>
 
         <!-- DIVIDER entre secciones -->
         <div *ngIf="!last" class="nav-divider my-2"></div>
-
       </ng-container>
     </div>
 
-      <!-- FOOTER -->
+    <!-- FOOTER -->
     <div class="sidebar-footer flex align-items-center gap-2 px-3 py-3">
-      
       <!-- Avatar con inicial del usuario -->
       <div class="user-avatar-initial">
         {{ username.charAt(0).toUpperCase() }}
       </div>
 
-      <div class="flex flex-column flex-1" style="min-width:0">
+      <div class="flex flex-column flex-1" style="min-width: 0">
         <span class="user-name">{{ username }}</span>
         <span class="user-role">{{ roleName | titlecase }}</span>
       </div>
@@ -83,10 +89,10 @@
         [rounded]="true"
         [text]="false"
         size="small"
-        (onClick)="confirm2($event)">
+        (onClick)="confirm2($event)"
+      >
       </p-button>
     </div>
-
   </div>
 
   <p-toast></p-toast>

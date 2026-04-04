@@ -30,7 +30,7 @@ export class AccessibilityService {
   }
 
   updateSettings(newSettings: Partial<AccessibilitySettings>) {
-    this.settings.update(current => ({ ...current, ...newSettings }));
+    this.settings.update((current) => ({ ...current, ...newSettings }));
   }
 
   resetSettings() {

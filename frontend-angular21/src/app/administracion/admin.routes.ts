@@ -123,8 +123,7 @@ export const ADMIN_ROUTES: Routes = [
     children: [
       {
         path: '',
-        loadComponent: () =>
-          import('./pages/sedes/pages/sedes/sedes').then((m) => m.Sedes),
+        loadComponent: () => import('./pages/sedes/pages/sedes/sedes').then((m) => m.Sedes),
         canActivate: [roleGuard],
         data: { permiso: 'VER_SEDES' },
       },
@@ -149,9 +148,7 @@ export const ADMIN_ROUTES: Routes = [
       {
         path: ':id',
         loadComponent: () =>
-          import('./pages/sedes/pages/detalle-sede/detalle-sede').then(
-            (m) => m.DetalleSede,
-          ),
+          import('./pages/sedes/pages/detalle-sede/detalle-sede').then((m) => m.DetalleSede),
       },
     ],
   },

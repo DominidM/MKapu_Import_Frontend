@@ -8,17 +8,13 @@
 
 @if (panelAbierto()) {
   <div class="chat-panel">
-
     <!-- ── VISTA: lista conversaciones ── -->
     @if (vista() === 'conversaciones') {
       <div class="chat-panel-header">
         <span>Mensajes</span>
         <div class="header-actions">
-          <i class="pi pi-plus cursor-pointer"
-             title="Nuevo chat"
-             (click)="abrirNuevoChat()"></i>
-          <i class="pi pi-times cursor-pointer"
-             (click)="togglePanel()"></i>
+          <i class="pi pi-plus cursor-pointer" title="Nuevo chat" (click)="abrirNuevoChat()"></i>
+          <i class="pi pi-times cursor-pointer" (click)="togglePanel()"></i>
         </div>
       </div>
       <div class="chat-conversaciones">
@@ -52,7 +48,9 @@
         <span>{{ conversacionActiva()?.nombre_chat }}</span>
         <div class="header-actions">
           <i
-            [class]="muteado() ? 'pi pi-volume-off cursor-pointer' : 'pi pi-volume-up cursor-pointer'"
+            [class]="
+              muteado() ? 'pi pi-volume-off cursor-pointer' : 'pi pi-volume-up cursor-pointer'
+            "
             [title]="muteado() ? 'Activar sonido' : 'Silenciar'"
             (click)="toggleMute()"
           ></i>
@@ -66,7 +64,7 @@
               <small class="burbuja-remitente">{{ msg.remitente }}</small>
             }
             <p class="burbuja-texto">{{ msg.contenido }}</p>
-            <span class="burbuja-hora">{{ msg.enviado_en | date:'HH:mm' }}</span>
+            <span class="burbuja-hora">{{ msg.enviado_en | date: 'HH:mm' }}</span>
           </div>
         }
       </div>
@@ -93,12 +91,11 @@
       <div class="chat-tipo-toggle">
         <button
           [class.activo]="tipoNuevoChat() === 'individual'"
-          (click)="tipoNuevoChat.set('individual')">
+          (click)="tipoNuevoChat.set('individual')"
+        >
           <i class="pi pi-user"></i> Individual
         </button>
-        <button
-          [class.activo]="tipoNuevoChat() === 'grupo'"
-          (click)="tipoNuevoChat.set('grupo')">
+        <button [class.activo]="tipoNuevoChat() === 'grupo'" (click)="tipoNuevoChat.set('grupo')">
           <i class="pi pi-users"></i> Grupo
         </button>
       </div>
@@ -147,7 +144,10 @@
             <div
               class="chat-conv-item"
               [class.seleccionado]="estaSeleccionado(usuario.id_cuenta)"
-              (click)="tipoNuevoChat() === 'grupo' ? toggleSeleccion(usuario) : iniciarChatCon(usuario)">
+              (click)="
+                tipoNuevoChat() === 'grupo' ? toggleSeleccion(usuario) : iniciarChatCon(usuario)
+              "
+            >
               <div class="conv-avatar">
                 <i class="pi pi-user"></i>
               </div>
@@ -159,7 +159,8 @@
                 <i
                   class="pi check-icon"
                   [class.pi-check-circle]="estaSeleccionado(usuario.id_cuenta)"
-                  [class.pi-circle]="!estaSeleccionado(usuario.id_cuenta)">
+                  [class.pi-circle]="!estaSeleccionado(usuario.id_cuenta)"
+                >
                 </i>
               }
             </div>
@@ -179,7 +180,8 @@
           <button
             class="btn-crear-grupo"
             [class.disabled]="usuariosSeleccionados().length === 0 || !nombreGrupo.trim()"
-            (click)="onCrearGrupoClick()">
+            (click)="onCrearGrupoClick()"
+          >
             <i class="pi pi-check"></i>
             Crear grupo
             @if (usuariosSeleccionados().length > 0) {
@@ -189,6 +191,5 @@
         </div>
       }
     }
-
   </div>
 }

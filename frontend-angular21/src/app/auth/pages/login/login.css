@@ -1,21 +1,20 @@
 .img-custom {
-    width: 90px;
-    /* tamaño base */
-    height: auto;
-    /* mantiene proporción */
-    display: block;
-    margin: 0 auto;
-    /* centrado horizontal */
-    border-radius: 10px;
-    transform: scale(1.0);
-    margin-top: 20px;
+  width: 90px;
+  /* tamaño base */
+  height: auto;
+  /* mantiene proporción */
+  display: block;
+  margin: 0 auto;
+  /* centrado horizontal */
+  border-radius: 10px;
+  transform: scale(1);
+  margin-top: 20px;
 }
 
 :host ::ng-deep .login-card2 .p-card-title,
 :host ::ng-deep .login-card2 .p-card-subtitle {
-    text-align: center;
+  text-align: center;
 }
-
 
 .login-page {
   min-height: 100vh;
@@ -42,11 +41,7 @@
 .background-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 162, 0, 0.20),
-    rgba(0, 0, 0, 0.4)
-  );
+  background: linear-gradient(135deg, rgba(255, 162, 0, 0.2), rgba(0, 0, 0, 0.4));
 }
 
 .login-card {
@@ -55,7 +50,7 @@
   width: 100%;
   max-width: 420px;
   border-radius: 20px;
-  box-shadow: 0 20px 40px rgba(0,0,0,.2);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
 }
 
 .card-content {
@@ -80,7 +75,7 @@
 }
 
 .brand-tagline {
-  font-size: .75rem;
+  font-size: 0.75rem;
   letter-spacing: 2px;
 }
 
@@ -90,18 +85,18 @@
 
 .form-label {
   font-weight: 600;
-  font-size: .85rem;
-  margin-bottom: .25rem;
+  font-size: 0.85rem;
+  margin-bottom: 0.25rem;
   display: block;
 }
 
 .card-footer {
   margin-top: 1.5rem;
-  font-size: .8rem;
+  font-size: 0.8rem;
   display: flex;
   justify-content: center;
-  gap: .5rem;
-  opacity: .7;
+  gap: 0.5rem;
+  opacity: 0.7;
 }
 
 .theme-toggle {
@@ -111,25 +106,25 @@
   z-index: 10;
 }
 
- .logo-area {
-      text-align: center;
-    }
+.logo-area {
+  text-align: center;
+}
 
-    .logo {
-      font-size: 3.8rem;
-      font-weight: 800;
-      letter-spacing: -3px;
-      color: rgb(236, 175, 83);
-      line-height: 0.92;
-      text-shadow: 0 4px 20px rgba(255,149,0,0.25);
-      animation: glow 3s ease-in-out infinite alternate;
-    }
+.logo {
+  font-size: 3.8rem;
+  font-weight: 800;
+  letter-spacing: -3px;
+  color: rgb(236, 175, 83);
+  line-height: 0.92;
+  text-shadow: 0 4px 20px rgba(255, 149, 0, 0.25);
+  animation: glow 3s ease-in-out infinite alternate;
+}
 
-    .logo-subtitle {
-      font-size: 1.05rem;
-      color: #888;
-      margin-top: 0.4rem;
-      font-weight: 400;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-    }
+.logo-subtitle {
+  font-size: 1.05rem;
+  color: #888;
+  margin-top: 0.4rem;
+  font-weight: 400;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
