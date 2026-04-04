@@ -1,0 +1,313 @@
+<p-toast position="top-right" />
+<p-confirmDialog />
+
+<!-- ── LOADING ──────────────────────────────────────────────────────── -->
+<ng-container *ngIf="loading(); else formContent">
+  <div class="sede-loading">
+    <i class="pi pi-spin pi-spinner sede-loading-icon"></i>
+  </div>
+</ng-container>
+
+<!-- ── FORMULARIO ───────────────────────────────────────────────────── -->
+<ng-template #formContent>
+  <form #sedeForm="ngForm" (ngSubmit)="onSubmit(sedeForm)" class="sede-page" novalidate>
+    <!-- HEADER -->
+    <p-card class="sede-header-card sede-header-bordered">
+      <div class="sede-header-inner">
+        <!-- Icono + título -->
+        <div class="sede-header-left">
+          <div class="sede-title-icon">
+            <i class="pi" [ngClass]="isEditMode() ? 'pi-pen-to-square' : 'pi-building'"></i>
+          </div>
+          <div>
+            <p class="sede-kicker">
+              {{ isEditMode() ? 'ADMINISTRACION - EDITAR SEDE' : 'ADMINISTRACION - CREAR SEDE' }}
+            </p>
+            <p class="sede-title">{{ title() }}</p>
+          </div>
+        </div>
+
+        <!-- Acciones -->
+        <div class="sede-header-actions">
+          <p-button
+            type="button"
+            label="Cancelar"
+            icon="pi pi-times"
+            severity="secondary"
+            [outlined]="false"
+            (onClick)="confirmCancel()"
+          />
+          <p-button
+            type="submit"
+            [label]="submitLabel()"
+            [icon]="submitIcon()"
+            [loading]="loading()"
+          />
+        </div>
+      </div>
+    </p-card>
+
+    <!-- ── SECCIÓN: IDENTIFICACIÓN ─────────────────────────────────── -->
+    <div class="sede-section-card">
+      <div class="sede-section-header">
+        <h3>
+          <i class="pi pi-id-card"></i>
+          Identificación
+        </h3>
+      </div>
+
+      <div class="sede-fields-grid">
+        <!-- Código -->
+        <div class="sede-field">
+          <label for="codigo">
+            <i class="pi pi-hashtag sede-field-icon"></i>
+            Código
+          </label>
+          <div
+            class="sede-field-input-wrap"
+            [class.sede-field-error]="submitted() && codigoCtrl.invalid"
+          >
+            <input
+              pInputText
+              id="codigo"
+              name="codigo"
+              #codigoCtrl="ngModel"
+              [(ngModel)]="sede.codigo"
+              (input)="toUpperCase('codigo')"
+              placeholder="Ej. SEDE-LIM-01"
+              maxlength="20"
+              required
+              class="sede-input"
+            />
+          </div>
+          <small class="sede-hint" *ngIf="submitted() && codigoCtrl.invalid">
+            El código es requerido.
+          </small>
+        </div>
+
+        <!-- Nombre -->
+        <div class="sede-field">
+          <label for="nombre">
+            <i class="pi pi-building sede-field-icon"></i>
+            Nombre
+          </label>
+          <div
+            class="sede-field-input-wrap"
+            [class.sede-field-error]="submitted() && nombreCtrl.invalid"
+          >
+            <input
+              pInputText
+              id="nombre"
+              name="nombre"
+              #nombreCtrl="ngModel"
+              [(ngModel)]="sede.nombre"
+              (input)="toUpperCase('nombre')"
+              placeholder="Ej. SEDE LIMA NORTE"
+              maxlength="80"
+              required
+              class="sede-input"
+            />
+          </div>
+          <small class="sede-hint" *ngIf="submitted() && nombreCtrl.invalid">
+            El nombre es requerido.
+          </small>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SECCIÓN: UBICACIÓN ──────────────────────────────────────── -->
+    <div class="sede-section-card">
+      <div class="sede-section-header">
+        <h3>
+          <i class="pi pi-map-marker"></i>
+          Ubicación
+        </h3>
+        <span class="sede-section-badge" *ngIf="sede.departamento && sede.provincia && sede.ciudad">
+          <i class="pi pi-check-circle"></i>
+          Completa
+        </span>
+      </div>
+
+      <div class="sede-fields-grid sede-fields-grid--three">
+        <!-- Departamento -->
+        <div class="sede-field">
+          <label for="departamento">
+            <i class="pi pi-globe sede-field-icon"></i>
+            Departamento
+          </label>
+          <p-autoComplete
+            inputId="departamento"
+            name="departamento"
+            #departamentoCtrl="ngModel"
+            [(ngModel)]="sede.departamento"
+            [suggestions]="filteredDepartamentos"
+            (completeMethod)="filterDepartamentos($event)"
+            (onSelect)="onDepartamentoSelect()"
+            [forceSelection]="true"
+            [dropdown]="true"
+            placeholder="Buscar departamento..."
+            styleClass="sede-autocomplete"
+            [inputStyleClass]="
+              'sede-input' + (submitted() && departamentoCtrl.invalid ? ' sede-input-invalid' : '')
+            "
+            appNoNumbers
+            required
+          />
+          <small class="sede-hint" *ngIf="submitted() && departamentoCtrl.invalid">
+            Seleccione un departamento.
+          </small>
+        </div>
+
+        <!-- Provincia -->
+        <div class="sede-field">
+          <label for="provincia">
+            <i class="pi pi-map sede-field-icon"></i>
+            Provincia
+          </label>
+          <p-autoComplete
+            inputId="provincia"
+            name="provincia"
+            #provinciaCtrl="ngModel"
+            [(ngModel)]="sede.provincia"
+            [suggestions]="filteredProvincias"
+            (completeMethod)="filterProvincias($event)"
+            (onSelect)="onProvinciaSelect()"
+            [forceSelection]="true"
+            [dropdown]="true"
+            [disabled]="!sede.departamento"
+            placeholder="Buscar provincia..."
+            styleClass="sede-autocomplete"
+            [inputStyleClass]="
+              'sede-input' + (submitted() && provinciaCtrl.invalid ? ' sede-input-invalid' : '')
+            "
+            appNoNumbers
+            required
+          />
+          <small class="sede-hint" *ngIf="submitted() && provinciaCtrl.invalid">
+            Seleccione una provincia.
+          </small>
+        </div>
+
+        <!-- Distrito -->
+        <div class="sede-field">
+          <label for="ciudad">
+            <i class="pi pi-flag sede-field-icon"></i>
+            Distrito
+          </label>
+          <p-autoComplete
+            inputId="ciudad"
+            name="ciudad"
+            #ciudadCtrl="ngModel"
+            [(ngModel)]="sede.ciudad"
+            [suggestions]="filteredDistritos"
+            (completeMethod)="filterDistritos($event)"
+            [forceSelection]="true"
+            [dropdown]="true"
+            [disabled]="!sede.provincia"
+            placeholder="Buscar distrito..."
+            styleClass="sede-autocomplete"
+            [inputStyleClass]="
+              'sede-input' + (submitted() && ciudadCtrl.invalid ? ' sede-input-invalid' : '')
+            "
+            appNoNumbers
+            required
+          />
+          <small class="sede-hint" *ngIf="submitted() && ciudadCtrl.invalid">
+            Seleccione un distrito.
+          </small>
+        </div>
+      </div>
+
+      <!-- Pill de ubicación seleccionada -->
+      <div class="sede-location-preview" *ngIf="sede.departamento || sede.provincia || sede.ciudad">
+        <i class="pi pi-map-marker"></i>
+        <span>
+          <ng-container *ngIf="sede.departamento">{{ sede.departamento }}</ng-container>
+          <ng-container *ngIf="sede.provincia"> › {{ sede.provincia }}</ng-container>
+          <ng-container *ngIf="sede.ciudad"> › {{ sede.ciudad }}</ng-container>
+        </span>
+      </div>
+    </div>
+
+    <!-- ── SECCIÓN: CONTACTO ───────────────────────────────────────── -->
+    <div class="sede-section-card">
+      <div class="sede-section-header">
+        <h3>
+          <i class="pi pi-phone"></i>
+          Contacto y dirección
+        </h3>
+      </div>
+
+      <div class="sede-fields-grid">
+        <!-- Teléfono -->
+        <div class="sede-field">
+          <label for="telefono">
+            <i class="pi pi-phone sede-field-icon"></i>
+            Teléfono
+          </label>
+          <div
+            class="sede-field-input-wrap"
+            [class.sede-field-error]="submitted() && telefonoCtrl.invalid"
+          >
+            <span class="sede-input-prefix">+51</span>
+            <input
+              pInputText
+              id="telefono"
+              name="telefono"
+              #telefonoCtrl="ngModel"
+              [(ngModel)]="sede.telefono"
+              (keypress)="onlyNumbers($event)"
+              placeholder="999 999 999"
+              maxlength="9"
+              required
+              class="sede-input sede-input-with-prefix"
+            />
+          </div>
+          <small class="sede-hint" *ngIf="submitted() && telefonoCtrl.invalid">
+            El teléfono es requerido (9 dígitos).
+          </small>
+        </div>
+
+        <!-- Dirección -->
+        <div class="sede-field">
+          <label for="direccion">
+            <i class="pi pi-map-marker sede-field-icon"></i>
+            Dirección
+          </label>
+          <div
+            class="sede-field-input-wrap"
+            [class.sede-field-error]="submitted() && direccionCtrl.invalid"
+          >
+            <input
+              pInputText
+              id="direccion"
+              name="direccion"
+              #direccionCtrl="ngModel"
+              [(ngModel)]="sede.direccion"
+              (input)="toUpperCase('direccion')"
+              placeholder="Ej. AV. JAVIER PRADO 1234"
+              maxlength="200"
+              required
+              class="sede-input"
+            />
+          </div>
+          <small class="sede-hint" *ngIf="submitted() && direccionCtrl.invalid">
+            La dirección es requerida.
+          </small>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── FOOTER ACTIONS ──────────────────────────────────────────── -->
+    <div class="sede-footer-actions">
+      <p-button
+        type="button"
+        label="Cancelar"
+        icon="pi pi-times"
+        severity="secondary"
+        (onClick)="confirmCancel()"
+      />
+      <p-button type="submit" [label]="submitLabel()" [icon]="submitIcon()" [loading]="loading()" />
+    </div>
+  </form>
+</ng-template>

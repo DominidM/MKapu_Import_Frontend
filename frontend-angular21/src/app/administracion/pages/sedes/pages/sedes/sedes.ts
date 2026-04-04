@@ -1,19 +1,26 @@
+import {
+  Component,
+  OnInit,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
 import { catchError, switchMap } from 'rxjs/operators';
-import { DialogModule } from 'primeng/dialog';
 import { AutoCompleteModule } from 'primeng/autocomplete';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { MessageModule } from 'primeng/message';
+import { SelectModule } from 'primeng/select';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
-import { SelectModule } from 'primeng/select';
 import { TooltipModule } from 'primeng/tooltip';
 import { ConfirmationService, MessageService } from 'primeng/api';
 
@@ -29,29 +36,37 @@ type ViewMode = 'todas' | 'activas' | 'inactivas';
   selector: 'app-sedes',
   standalone: true,
   imports: [
-    CommonModule, FormsModule, RouterModule,
-    DialogModule, CardModule, ButtonModule,
-    AutoCompleteModule, TableModule, TagModule,
-    ToastModule, ConfirmDialogModule, MessageModule,
-    SelectModule, TooltipModule,
+    CommonModule,
+    FormsModule,
+    RouterModule,
+    CardModule,
+    ButtonModule,
+    AutoCompleteModule,
+    TableModule,
+    TagModule,
+    ToastModule,
+    ConfirmDialogModule,
+    MessageModule,
+    SelectModule,
+    TooltipModule,
     SharedTableContainerComponent,
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './sedes.html',
   styleUrl: './sedes.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Sedes implements OnInit {
   private readonly sedeService         = inject(SedeService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly messageService      = inject(MessageService);
   private readonly authService         = inject(AuthService);
+  private readonly router              = inject(Router);
+  private readonly cdr                 = inject(ChangeDetectorRef);
 
   readonly loadingAlmacenes = this.sedeService.loadingAlmacenes;
   readonly loading          = this.sedeService.loading;
   readonly error            = this.sedeService.error;
-
-  dialogVisible             = false;
-  readonly sedeSeleccionada = signal<Headquarter | null>(null);
 
   readonly searchTerm = signal<string>('');
   readonly sedes      = computed(() => this.sedeService.sedes());
@@ -62,10 +77,9 @@ export class Sedes implements OnInit {
 
   // ── Permisos ──────────────────────────────────────────────────────
   esAdmin          = false;
-  puedeCrearSede   = false; // CREAR_SEDES   → botón "Agregar Sede"
-  puedeEditarSede  = false; // EDITAR_SEDES  → botón lápiz + editar en modal
-  puedeVerDetalle  = false; // VER_SEDES     → botón ojo
-  // desactivar/activar → solo esAdmin
+  puedeCrearSede   = false;
+  puedeEditarSede  = false;
+  puedeVerDetalle  = false;
 
   readonly viewOptions: { label: string; value: ViewMode }[] = [
     { label: 'Todos',     value: 'todas'     },
@@ -104,7 +118,6 @@ export class Sedes implements OnInit {
   readonly sedeSuggestions = computed(() => this.filteredSedes());
 
   ngOnInit(): void {
-    // ── Resolver permisos ─────────────────────────────────────────
     this.esAdmin         = this.authService.getRoleId() === UserRole.ADMIN;
     this.puedeCrearSede  = this.authService.hasPermiso('CREAR_SEDES');
     this.puedeEditarSede = this.authService.hasPermiso('EDITAR_SEDES');
@@ -120,7 +133,7 @@ export class Sedes implements OnInit {
           )
         );
       })
-    ).subscribe();
+    ).subscribe({ next: () => this.cdr.markForCheck() });
   }
 
   getAlmacenesRestantes(sede: Headquarter): string {
@@ -131,26 +144,42 @@ export class Sedes implements OnInit {
   }
 
   verDetalle(sede: Headquarter): void {
-    const enriquecida = this.sedeService.sedes().find(s => s.id_sede === sede.id_sede) ?? sede;
-    this.sedeSeleccionada.set(enriquecida);
-    this.dialogVisible = true;
+    this.router.navigate(['/admin/sedes', sede.id_sede]);
   }
 
-  onViewModeChange(mode: ViewMode): void { this.viewMode.set(mode); this.paginaActual.set(1); }
+  onViewModeChange(mode: ViewMode): void {
+    this.viewMode.set(mode);
+    this.paginaActual.set(1);
+  }
 
-  onSearch(event: { query: string }): void { this.searchTerm.set(event.query); this.paginaActual.set(1); }
+  onSearch(event: { query: string }): void {
+    this.searchTerm.set(event.query);
+    this.paginaActual.set(1);
+  }
 
   onSearchChange(term: unknown): void {
-    if (typeof term === 'string') { this.searchTerm.set(term); this.paginaActual.set(1); return; }
+    if (typeof term === 'string') {
+      this.searchTerm.set(term);
+      this.paginaActual.set(1);
+      return;
+    }
     if (term && typeof term === 'object' && 'nombre' in (term as any)) {
-      this.searchTerm.set(String((term as any).nombre ?? '')); this.paginaActual.set(1); return;
+      this.searchTerm.set(String((term as any).nombre ?? ''));
+      this.paginaActual.set(1);
+      return;
     }
     this.searchTerm.set('');
   }
 
-  onSelectSede(event: any): void { this.searchTerm.set(String(event?.value?.nombre ?? '')); this.paginaActual.set(1); }
+  onSelectSede(event: any): void {
+    this.searchTerm.set(String(event?.value?.nombre ?? ''));
+    this.paginaActual.set(1);
+  }
 
-  clearSearch(): void { this.searchTerm.set(''); this.paginaActual.set(1); }
+  clearSearch(): void {
+    this.searchTerm.set('');
+    this.paginaActual.set(1);
+  }
 
   onPageChange(page: number): void   { this.paginaActual.set(page); }
   onLimitChange(limit: number): void { this.limitePagina.set(limit); this.paginaActual.set(1); }
@@ -159,7 +188,7 @@ export class Sedes implements OnInit {
     const nextStatus = !sede.activo;
     this.confirmationService.confirm({
       header:      'Confirmación',
-      message:     `¿Deseas ${nextStatus ? 'activar' : 'desactivar'} la sede ${sede.nombre} (${sede.codigo})?`,
+      message:     `¿Deseas ${nextStatus ? 'activar' : 'desactivar'} la sede "${sede.nombre}" (${sede.codigo})?`,
       icon:        'pi pi-exclamation-triangle',
       acceptLabel: nextStatus ? 'Activar' : 'Desactivar',
       rejectLabel: 'Cancelar',
@@ -171,13 +200,15 @@ export class Sedes implements OnInit {
             this.messageService.add({
               severity: 'success',
               summary:  nextStatus ? 'Sede activada' : 'Sede desactivada',
-              detail:   `Se ${nextStatus ? 'activó' : 'desactivó'} la sede ${sede.nombre}.`,
+              detail:   `Se ${nextStatus ? 'activó' : 'desactivó'} la sede "${sede.nombre}".`,
             });
+            this.cdr.markForCheck();
           },
           error: (err) => {
             this.messageService.add({
-              severity: 'error', summary: 'Error',
-              detail: err?.error?.message ?? 'No se pudo cambiar el estado de la sede.',
+              severity: 'error',
+              summary:  'Error',
+              detail:   err?.error?.message ?? 'No se pudo cambiar el estado de la sede.',
             });
           },
         });
