@@ -551,101 +551,6 @@
 }
 
 /* =========================================================
-   DIALOG DETALLE
-========================================================= */
-.detalle-comprobante {
-  padding: 0.5rem 0;
-}
-
-.detalle-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1.25rem;
-  padding-bottom: 1rem;
-  border-bottom: 2px solid #e5e7eb;
-}
-
-.detalle-numero {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  font-size: 1rem;
-}
-
-:host ::ng-deep .detalle-tipo-tag {
-  font-size: 0.875rem !important;
-}
-
-.detalle-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
-  margin-bottom: 1.25rem;
-}
-
-.detalle-grupo {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.detalle-label {
-  font-size: 0.6875rem;
-  font-weight: 600;
-  color: #9ca3af;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.detalle-valor {
-  font-size: 0.9rem;
-  color: #1f2937;
-  font-weight: 500;
-}
-
-.detalle-totales {
-  background: #f9fafb;
-  border-radius: 8px;
-  padding: 1rem 1.25rem;
-  margin-bottom: 1rem;
-}
-
-.total-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.35rem 0;
-  font-size: 0.875rem;
-  color: #374151;
-}
-
-.total-final {
-  margin-top: 0.5rem;
-  padding-top: 0.5rem;
-  border-top: 2px solid #e5e7eb;
-  font-size: 1rem;
-  font-weight: 700;
-  color: #1f2937;
-}
-
-.detalle-observacion {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.detalle-observacion p {
-  margin: 0;
-  font-size: 0.875rem;
-  color: #374151;
-  background: #fef9ee;
-  border-left: 3px solid #f6af33;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0 4px 4px 0;
-}
-
-/* =========================================================
    DARK MODE
 ========================================================= */
 :host-context(.app-dark) .ventas-title {
@@ -701,7 +606,7 @@
 }
 
 :host-context(.app-dark) .fecha-separador {
-  color: #a1a1aa;
+  color: #a1a1aa !important;
 }
 
 :host-context(.app-dark) .numero-comprobante {
@@ -733,32 +638,6 @@
 :host-context(.app-dark) .paginador-btn.activo {
   background: #f6af33;
   color: #09090b;
-}
-
-:host-context(.app-dark) .detalle-header {
-  border-bottom-color: #27272a;
-}
-
-:host-context(.app-dark) .detalle-valor {
-  color: #e4e4e7;
-}
-
-:host-context(.app-dark) .detalle-totales {
-  background: #09090b;
-}
-
-:host-context(.app-dark) .total-row {
-  color: #d4d4d8;
-}
-
-:host-context(.app-dark) .total-final {
-  color: #ffffff;
-  border-top-color: #27272a;
-}
-
-:host-context(.app-dark) .detalle-observacion p {
-  background: #1a1608;
-  color: #d4d4d8;
 }
 
 /* =========================================================
@@ -821,6 +700,10 @@
 
   .estadistica-card:last-child {
     border-bottom: none;
+  }
+
+  :host-context(.app-dark) .estadistica-card {
+    border-bottom-color: #27272a;
   }
 
   .filtros-linea-1 {
@@ -889,9 +772,5 @@
     flex-direction: column;
     align-items: center;
     gap: 0.75rem;
-  }
-
-  .detalle-grid {
-    grid-template-columns: 1fr;
   }
 }

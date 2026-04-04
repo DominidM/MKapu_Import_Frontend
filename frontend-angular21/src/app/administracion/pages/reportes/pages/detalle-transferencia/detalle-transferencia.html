@@ -1,7 +1,8 @@
 <p-toast position="top-right" />
 <p-confirmDialog />
 
-<div class="detalle-wrap p-2">
+<!-- ── BLOQUE 1: CABECERA ─────────────────────────── -->
+<div class="p-2 mb-4">
   <p-card class="detalle-header-card">
     <div class="detalle-header-content">
       <div class="detalle-header-left">
@@ -9,35 +10,30 @@
           <i class="pi pi-arrow-right-arrow-left"></i>
         </span>
         <div>
-          <p class="detalle-kicker mb-0">ADMINISTRACION - LOGISTICA - TRANSFERENCIAS</p>
-          <h2 class="detalle-title mb-0">
-            Solicitud Transferencia
-            @if (transferencia?.codigo) {
-              <span class="detalle-id">#{{ transferencia?.codigo }}</span>
-            }
-          </h2>
+          <p class="detalle-kicker mb-0">ADMINISTRACION · LOGISTICA · TRANSFERENCIAS</p>
+          <h2 class="detalle-title mb-0">SOLICITUD TRANSFERENCIA</h2>
         </div>
       </div>
+
       <div class="detalle-header-right">
         @if (transferencia) {
           <p-tag
             [value]="transferencia.estado"
             [severity]="getEstadoSeverity(transferencia.estado)"
             class="detalle-status-tag"
-          ></p-tag>
+          />
         }
         @if (canResolverSolicitud) {
           <div class="detalle-actions-group">
             <p-button
-              label="Aprobar solicitud"
+              label="Aprobar"
               icon="pi pi-check-circle"
-              severity="success"
-              styleClass="detalle-action-approve"
+              severity="primary"
               [disabled]="submittingDecision"
               (onClick)="aprobarSolicitud()"
             />
             <p-button
-              label="Rechazar solicitud"
+              label="Rechazar"
               icon="pi pi-times-circle"
               severity="danger"
               [outlined]="true"
@@ -69,16 +65,24 @@
       </div>
     </div>
   </p-card>
+</div>
 
-  @if (loading) {
-    <p-card class="detalle-main-card mt-3">
+<!-- ── BLOQUE 2: LOADING / CONTENT ───────────────── -->
+@if (loading) {
+  <div class="p-2 mb-4">
+    <p-card class="detalle-main-card">
       <div class="empty-state">
         <i class="pi pi-spin pi-spinner"></i>
         <p>Cargando detalle de transferencia...</p>
       </div>
     </p-card>
-  } @else if (transferencia) {
-    <section class="metrics-strip mt-3">
+  </div>
+
+} @else if (transferencia) {
+
+  <!-- ── BLOQUE 3: MÉTRICAS ──────────────────────── -->
+  <div class="p-2 mb-4">
+    <section class="metrics-strip">
       <article class="metric">
         <span class="metric-label"><i class="pi pi-box"></i> Cantidad Total</span>
         <span class="metric-value">{{ transferencia.cantidad }} uds</span>
@@ -96,8 +100,13 @@
         <span class="metric-value">{{ transferencia.responsable }}</span>
       </article>
     </section>
+  </div>
 
-    <section class="panel-grid mt-3">
+  <!-- ── BLOQUE 4: PANEL PRODUCTO + GENERAL ─────── -->
+  <div class="p-2 mb-4">
+    <section class="panel-grid">
+
+      <!-- Producto -->
       <p-card class="detalle-main-card panel-producto">
         <div class="section-header">
           <h3><i class="pi pi-box"></i> Producto</h3>
@@ -122,15 +131,15 @@
 
         <div class="detalle-grid">
           <div class="detalle-field detalle-field-wide">
-            <label><i class="pi pi-align-left field-icon"></i> Descripcion</label>
+            <label><i class="field-icon pi pi-align-left"></i> Descripción</label>
             <p>{{ transferencia.productoDescripcion }}</p>
           </div>
           <div class="detalle-field">
-            <label><i class="pi pi-hashtag field-icon"></i> Codigo producto</label>
+            <label><i class="field-icon pi pi-hashtag"></i> Código producto</label>
             <p>{{ transferencia.productoCodigo }}</p>
           </div>
           <div class="detalle-field">
-            <label><i class="pi pi-sitemap field-icon"></i> Categoria</label>
+            <label><i class="field-icon pi pi-sitemap"></i> Categoría</label>
             <p>{{ transferencia.productoCategoria }}</p>
           </div>
         </div>
@@ -147,9 +156,10 @@
         </div>
       </p-card>
 
+      <!-- General -->
       <p-card class="detalle-main-card panel-general">
         <div class="section-header">
-          <h3><i class="pi pi-chart-line"></i> Informacion General</h3>
+          <h3><i class="pi pi-chart-line"></i> Información General</h3>
           <div class="section-header-actions">
             <span class="mini-chip mini-chip-soft">
               <i class="pi pi-sync"></i>
@@ -183,27 +193,31 @@
           <div class="timeline-item">
             <i class="pi pi-warehouse timeline-icon"></i>
             <div>
-              <span class="timeline-label">Almacen de origen</span>
+              <span class="timeline-label">Almacén origen</span>
               <p>{{ transferencia.almacenOrigen }}</p>
             </div>
           </div>
           <div class="timeline-item">
             <i class="pi pi-warehouse timeline-icon"></i>
             <div>
-              <span class="timeline-label">Almacen de destino</span>
+              <span class="timeline-label">Almacén destino</span>
               <p>{{ transferencia.almacenDestino }}</p>
             </div>
           </div>
         </div>
 
         <div class="observacion-box mt-2">
-          <label><i class="pi pi-comment field-icon"></i> Observacion</label>
-          <p>{{ transferencia.observacion || '-' }}</p>
+          <label><i class="field-icon pi pi-comment"></i> Observación</label>
+          <p>{{ transferencia.observacion || '—' }}</p>
         </div>
       </p-card>
-    </section>
 
-    <p-card class="detalle-main-card mt-3">
+    </section>
+  </div>
+
+  <!-- ── BLOQUE 5: ITEMS DE LA TRANSFERENCIA ─────── -->
+  <div class="p-2 mb-4">
+    <p-card class="detalle-main-card">
       <div class="section-header">
         <h3><i class="pi pi-list"></i> Items de la transferencia</h3>
       </div>
@@ -222,11 +236,11 @@
                   <p>{{ item.producto }}</p>
                 </div>
                 <div class="item-field">
-                  <label><i class="pi pi-hashtag"></i> Codigo</label>
+                  <label><i class="pi pi-hashtag"></i> Código</label>
                   <p>{{ item.codigo }}</p>
                 </div>
                 <div class="item-field">
-                  <label><i class="pi pi-sitemap"></i> Categoria</label>
+                  <label><i class="pi pi-sitemap"></i> Categoría</label>
                   <p>{{ item.categoria }}</p>
                 </div>
               </div>
@@ -237,12 +251,18 @@
         <div class="empty-inline">No hay items registrados para esta transferencia.</div>
       }
     </p-card>
-  } @else {
-    <p-card class="detalle-main-card mt-3">
+  </div>
+
+} @else {
+
+  <!-- ── BLOQUE ERROR / NO ENCONTRADO ──────────────── -->
+  <div class="p-2 mb-4">
+    <p-card class="detalle-main-card">
       <div class="empty-state">
         <i class="pi pi-inbox"></i>
-        <p>{{ errorMensaje || 'No se encontro la transferencia' }}</p>
+        <p>{{ errorMensaje || 'No se encontró la transferencia' }}</p>
       </div>
     </p-card>
-  }
-</div>
+  </div>
+
+}

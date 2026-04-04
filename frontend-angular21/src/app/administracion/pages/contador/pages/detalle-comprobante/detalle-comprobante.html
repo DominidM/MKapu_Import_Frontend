@@ -1,0 +1,322 @@
+<div class="dc-page p-2">
+  <p-toast />
+  <p-confirmDialog />
+
+  <p-card class="dc-header-card mb-4">
+    <div class="flex align-items-center justify-content-between flex-wrap gap-3">
+      <div class="flex align-items-center gap-3">
+        <span class="dc-title-icon"><i class="pi pi-book"></i></span>
+        <div>
+          <p class="dc-kicker mb-0">CONTABILIDAD — DOCUMENTOS TRIBUTARIOS</p>
+          <h2 class="dc-title mb-0">DETALLE DE COMPROBANTE</h2>
+        </div>
+      </div>
+      <div class="flex gap-2 flex-wrap">
+        <p-button
+          label="Volver"
+          icon="pi pi-arrow-left"
+          severity="secondary"
+          [outlined]="true"
+          styleClass="dc-pill"
+          (onClick)="volver()"
+        />
+        <p-button
+          *ngIf="esEmitido()"
+          label="Nota de Crédito"
+          icon="pi pi-replay"
+          severity="warn"
+          [outlined]="true"
+          styleClass="dc-pill"
+          (onClick)="generarNotaCredito()"
+        />
+        <p-button
+          *ngIf="esEmitido()"
+          label="Anular"
+          icon="pi pi-ban"
+          severity="danger"
+          [outlined]="true"
+          styleClass="dc-pill"
+          (onClick)="confirmarAnulacion()"
+        />
+        <p-button
+          label="Descargar PDF"
+          icon="pi pi-file-pdf"
+          severity="danger"
+          styleClass="dc-pill"
+          (onClick)="descargarPdf()"
+          [disabled]="!comprobante()"
+        />
+      </div>
+    </div>
+  </p-card>
+
+  <div class="dc-loading" *ngIf="loading()">
+    <i class="pi pi-spin pi-spinner dc-loading-icon"></i>
+  </div>
+
+  <div class="dc-section-card dc-error-state" *ngIf="!loading() && notFound()">
+    <div class="dc-error-icon"><i class="pi pi-exclamation-triangle"></i></div>
+    <h3>Comprobante no encontrado</h3>
+    <p>El comprobante que buscas no existe o fue eliminado.</p>
+    <p-button
+      label="Volver al listado"
+      icon="pi pi-arrow-left"
+      severity="secondary"
+      [outlined]="true"
+      styleClass="dc-pill mt-3"
+      (onClick)="volver()"
+    />
+  </div>
+
+  <ng-container *ngIf="!loading() && comprobante()">
+
+    <div class="dc-summary-grid mb-4">
+      <div class="dc-summary-card dc-summary-card--doc">
+        <i class="pi pi-hashtag"></i>
+        <div>
+          <span class="dc-summary-label">N° Comprobante</span>
+          <span class="dc-summary-value">
+            {{ comprobante()!.serie }}-{{ comprobante()!.numero | number:'8.0-0' }}
+          </span>
+          <span class="dc-summary-detail">
+            <i class="pi pi-tag"></i>{{ comprobante()!.tipoComprobante }}
+          </span>
+        </div>
+      </div>
+      <div class="dc-summary-card dc-summary-card--fecha">
+        <i class="pi pi-calendar"></i>
+        <div>
+          <span class="dc-summary-label">Fecha de Emisión</span>
+          <span class="dc-summary-value">{{ comprobante()!.fechaEmision | date:'dd/MM/yyyy' }}</span>
+          <span class="dc-summary-detail">
+            <i class="pi pi-clock"></i>{{ comprobante()!.fechaEmision | date:'EEEE, MMMM y' }}
+          </span>
+        </div>
+      </div>
+      <div class="dc-summary-card dc-summary-card--venc">
+        <i class="pi pi-calendar-times"></i>
+        <div>
+          <span class="dc-summary-label">Vencimiento</span>
+          <span class="dc-summary-value" [class]="getClaseVencimiento(comprobante()!.fechaVencimiento)">
+            {{ comprobante()!.fechaVencimiento | date:'dd/MM/yyyy' }}
+          </span>
+          <span class="dc-summary-detail" [class]="getClaseVencimiento(comprobante()!.fechaVencimiento)">
+            <i class="pi pi-info-circle"></i>{{ getLabelVencimiento(comprobante()!.fechaVencimiento) }}
+          </span>
+        </div>
+      </div>
+      <div class="dc-summary-card dc-summary-card--estado">
+        <i class="pi pi-shield"></i>
+        <div>
+          <span class="dc-summary-label">Estado</span>
+          <span class="dc-summary-value">{{ comprobante()!.estado }}</span>
+          <span class="dc-summary-detail">
+            <i class="pi pi-user"></i>{{ comprobante()!.responsable }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="dc-panel-grid">
+
+      <div class="flex flex-column gap-4">
+
+        <div class="dc-section-card">
+          <div class="dc-section-header">
+            <h3><i class="pi pi-file-edit"></i> Datos del Comprobante</h3>
+            <div class="flex gap-2 align-items-center">
+              <p-tag
+                [value]="comprobante()!.tipoComprobante"
+                [severity]="getSeverityTipo(comprobante()!.tipoComprobante)"
+              />
+              <p-tag
+                [value]="comprobante()!.estado"
+                [severity]="getSeverityEstado(comprobante()!.estado)"
+              />
+            </div>
+          </div>
+          <div class="dc-fields-grid">
+            <div class="dc-field">
+              <label>Serie</label>
+              <div class="dc-field-display">
+                <i class="pi pi-tag dc-field-icon"></i>
+                <span>{{ comprobante()!.serie }}</span>
+              </div>
+            </div>
+            <div class="dc-field">
+              <label>Número</label>
+              <div class="dc-field-display">
+                <i class="pi pi-hashtag dc-field-icon"></i>
+                <span>{{ comprobante()!.numero | number:'8.0-0' }}</span>
+              </div>
+            </div>
+            <div class="dc-field">
+              <label>Tipo de Comprobante</label>
+              <div class="dc-field-display">
+                <i class="pi pi-file dc-field-icon"></i>
+                <span>{{ comprobante()!.tipoComprobante }}</span>
+              </div>
+            </div>
+            <div class="dc-field">
+              <label>Moneda</label>
+              <div class="dc-field-display">
+                <i class="pi pi-dollar dc-field-icon"></i>
+                <span>{{ comprobante()!.moneda === 'PEN' ? 'Soles (PEN)' : 'Dólares (USD)' }}</span>
+              </div>
+            </div>
+            <div class="dc-field">
+              <label>Fecha de Emisión</label>
+              <div class="dc-field-display">
+                <i class="pi pi-calendar dc-field-icon"></i>
+                <span>{{ comprobante()!.fechaEmision | date:'dd/MM/yyyy' }}</span>
+              </div>
+            </div>
+            <div class="dc-field">
+              <label>Fecha de Vencimiento</label>
+              <div class="dc-field-display">
+                <i class="pi pi-calendar-times dc-field-icon"></i>
+                <span [class]="getClaseVencimiento(comprobante()!.fechaVencimiento)">
+                  {{ comprobante()!.fechaVencimiento | date:'dd/MM/yyyy' }}
+                </span>
+              </div>
+            </div>
+            <div class="dc-field dc-field--wide">
+              <label>Responsable</label>
+              <div class="dc-field-display">
+                <i class="pi pi-user dc-field-icon"></i>
+                <span>{{ comprobante()!.responsable }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dc-section-card" *ngIf="comprobante()!.observacion">
+          <div class="dc-section-header">
+            <h3><i class="pi pi-comment"></i> Observación</h3>
+          </div>
+          <div class="dc-field">
+            <div class="dc-field-display dc-field-display--multiline">
+              <i class="pi pi-align-left dc-field-icon"></i>
+              <span>{{ comprobante()!.observacion }}</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="flex flex-column gap-4">
+
+        <div class="dc-section-card">
+          <div class="dc-section-header">
+            <h3><i class="pi pi-building"></i> Cliente / Proveedor</h3>
+          </div>
+          <div class="dc-fields-grid">
+            <div class="dc-field dc-field--wide">
+              <label>Nombre / Razón Social</label>
+              <div class="dc-field-display">
+                <i class="pi pi-briefcase dc-field-icon"></i>
+                <span>{{ comprobante()!.clienteNombre }}</span>
+              </div>
+            </div>
+            <div class="dc-field dc-field--wide">
+              <label>RUC / DNI</label>
+              <div class="dc-field-display dc-field-display--between">
+                <div class="flex align-items-center gap-2">
+                  <i class="pi pi-id-card dc-field-icon"></i>
+                  <span>{{ comprobante()!.clienteDocumento }}</span>
+                </div>
+                <p-button
+                  icon="pi pi-copy"
+                  [text]="true"
+                  [rounded]="true"
+                  severity="secondary"
+                  size="small"
+                  pTooltip="Copiar RUC/DNI"
+                  (onClick)="copiar(comprobante()!.clienteDocumento, 'RUC/DNI')"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dc-section-card">
+          <div class="dc-section-header">
+            <h3><i class="pi pi-calculator"></i> Importes</h3>
+          </div>
+          <div class="dc-importes">
+            <div class="dc-importe-row">
+              <div class="flex align-items-center gap-2">
+                <i class="pi pi-percentage dc-field-icon"></i>
+                <span class="dc-importe-label">Base Imponible</span>
+              </div>
+              <span class="dc-importe-valor">
+                {{ getSimboloMoneda() }} {{ comprobante()!.baseImponible | number:'1.2-2' }}
+              </span>
+            </div>
+            <div class="dc-importe-row">
+              <div class="flex align-items-center gap-2">
+                <i class="pi pi-receipt dc-field-icon"></i>
+                <span class="dc-importe-label">IGV (18%)</span>
+              </div>
+              <span class="dc-importe-valor">
+                {{ getSimboloMoneda() }} {{ comprobante()!.igv | number:'1.2-2' }}
+              </span>
+            </div>
+            <div class="dc-importe-row dc-importe-row--total">
+              <div class="flex align-items-center gap-2">
+                <i class="pi pi-wallet dc-field-icon"></i>
+                <span class="dc-importe-label">TOTAL</span>
+              </div>
+              <span class="dc-importe-total">
+                {{ getSimboloMoneda() }} {{ comprobante()!.total | number:'1.2-2' }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="dc-section-card">
+          <div class="dc-section-header">
+            <h3><i class="pi pi-cog"></i> Acciones</h3>
+          </div>
+          <div class="dc-acciones">
+            <p-button
+              label="Descargar PDF"
+              icon="pi pi-file-pdf"
+              severity="danger"
+              styleClass="dc-pill w-full"
+              (onClick)="descargarPdf()"
+            />
+            <p-button
+              *ngIf="esEmitido()"
+              label="Generar Nota de Crédito"
+              icon="pi pi-replay"
+              severity="warn"
+              [outlined]="true"
+              styleClass="dc-pill w-full"
+              (onClick)="generarNotaCredito()"
+            />
+            <p-button
+              *ngIf="esEmitido()"
+              label="Anular Comprobante"
+              icon="pi pi-ban"
+              severity="danger"
+              [outlined]="true"
+              styleClass="dc-pill w-full"
+              (onClick)="confirmarAnulacion()"
+            />
+            <p-button
+              label="Volver al Listado"
+              icon="pi pi-arrow-left"
+              severity="secondary"
+              [outlined]="true"
+              styleClass="dc-pill w-full"
+              (onClick)="volver()"
+            />
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </ng-container>
+</div>

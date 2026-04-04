@@ -795,17 +795,28 @@ export const ADMIN_ROUTES: Routes = [
   },
 
   {
-    path: 'documento-contador',
-    loadComponent: () =>
-      import('./pages/contador/pages/documento-contador/documento-contador').then(
-        (m) => m.DocumentoContador,
-      ),
-    canActivate: [roleGuard],
-    data: { permiso: 'AGREGAR_DOCUMENTO' }
-  },
-
-
-
+  path: 'documento-contador',
+  children: [
+    {
+      path: '',
+      loadComponent: () =>
+        import('./pages/contador/pages/documento-contador/documento-contador').then(
+          (m) => m.DocumentoContador,
+        ),
+      canActivate: [roleGuard],
+      data: { permiso: 'AGREGAR_DOCUMENTO' },
+    },
+    {
+      path: ':id',
+      loadComponent: () =>
+        import('./pages/contador/pages/detalle-comprobante/detalle-comprobante').then(
+          (m) => m.DetalleComprobante,
+        ),
+      canActivate: [roleGuard],
+      data: { permiso: 'AGREGAR_DOCUMENTO' },
+    },
+  ],
+},
 
   {
     path: 'despacho-productos',

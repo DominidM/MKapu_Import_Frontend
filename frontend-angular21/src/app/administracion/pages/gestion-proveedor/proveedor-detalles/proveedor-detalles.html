@@ -1,284 +1,279 @@
-<div class="p-2" *ngIf="proveedor()">
-  <div class="surface-card border-1 border-300 border-round-xl shadow-1 p-3 mb-3">
-    <div class="flex justify-content-between align-items-center flex-wrap gap-2">
-      <div class="flex align-items-center gap-3">
-        <span class="proveedores-title-icon">
-          <i class="pi pi-eye"></i>
-        </span>
-        <div>
-          <p class="proveedores-kicker mb-0">DETALLES DEL PROVEEDOR</p>
-          <h2 class="proveedores-title mb-0">{{ proveedor()!.razon_social }}</h2>
+<p-toast />
+<p-confirmDialog />
+
+<ng-container *ngIf="proveedor()">
+  <!-- ── BLOQUE 1: CABECERA ─────────────────────────── -->
+  <div class="p-2 mb-4">
+    <p-card class="proveedor-header-card">
+      <div class="proveedor-header-content">
+        <div class="proveedor-header-left">
+          <span class="proveedor-title-icon">
+            <i class="pi pi-eye"></i>
+          </span>
+          <div>
+            <p class="proveedor-kicker mb-0">ADMINISTRACIÓN · COMPRAS · PROVEEDORES</p>
+            <h2 class="proveedor-title mb-0">{{ proveedor()!.razon_social }}</h2>
+          </div>
+        </div>
+        <p-button
+          label="Volver"
+          icon="pi pi-arrow-left"
+          severity="secondary"
+          styleClass="proveedor-pill"
+          (onClick)="volver()"
+        />
+      </div>
+    </p-card>
+  </div>
+
+  <!-- ── BLOQUE 2: INFO GENERAL + CONTACTO ─────────── -->
+  <div class="p-2 mb-4">
+    <div class="grid">
+      <!-- Información General -->
+      <div class="col-12 lg:col-8">
+        <p-card class="proveedor-section-card h-full">
+          <div class="section-header">
+            <h3><i class="pi pi-info-circle"></i> Información General</h3>
+          </div>
+          <div class="grid">
+            <div class="col-12 md:col-6 mb-2">
+              <div class="proveedor-field">
+                <label><i class="field-icon pi pi-id-card"></i> RUC</label>
+                <div class="proveedor-field-display">
+                  <span class="proveedor-ruc-value flex-1">{{ proveedor()!.ruc }}</span>
+                  <p-button
+                    icon="pi pi-copy"
+                    [text]="true"
+                    [rounded]="true"
+                    severity="secondary"
+                    size="small"
+                    pTooltip="Copiar RUC"
+                    (onClick)="copiarAlPortapapeles(proveedor()!.ruc, 'RUC')"
+                  />
+                </div>
+              </div>
+            </div>
+            <div class="col-12 md:col-6 mb-2">
+              <div class="proveedor-field">
+                <label><i class="field-icon pi pi-circle-fill"></i> Estado</label>
+                <div class="proveedor-field-display">
+                  <p-tag
+                    [value]="estadoLabel()"
+                    [severity]="estadoSeverity()"
+                    styleClass="font-bold"
+                  />
+                </div>
+              </div>
+            </div>
+            <div class="col-12 mb-2">
+              <div class="proveedor-field">
+                <label><i class="field-icon pi pi-building"></i> Razón Social</label>
+                <div class="proveedor-field-display">
+                  <span>{{ proveedor()!.razon_social }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="col-12 mb-2" *ngIf="tieneDireccion()">
+              <div class="proveedor-field">
+                <label><i class="field-icon pi pi-map-marker"></i> Dirección Fiscal</label>
+                <div class="proveedor-field-display">
+                  <span>{{ proveedor()!.dir_fiscal }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </p-card>
+      </div>
+
+      <!-- Contacto -->
+      <div class="col-12 lg:col-4">
+        <p-card class="proveedor-section-card h-full">
+          <div class="section-header">
+            <h3><i class="pi pi-phone"></i> Contacto</h3>
+          </div>
+          <div class="flex flex-column gap-2">
+            <div class="contacto-item contacto-blue mb-2" *ngIf="tieneContacto()">
+              <label class="contacto-label">PERSONA DE CONTACTO</label>
+              <div class="flex align-items-center gap-2">
+                <i class="pi pi-user contacto-icono"></i>
+                <span class="contacto-valor">{{ proveedor()!.contacto }}</span>
+              </div>
+            </div>
+            <div class="contacto-item contacto-green mb-2" *ngIf="tieneTelefono()">
+              <label class="contacto-label">TELÉFONO</label>
+              <div class="flex align-items-center justify-content-between gap-2">
+                <div class="flex align-items-center gap-2">
+                  <i class="pi pi-phone contacto-icono"></i>
+                  <span class="contacto-valor">{{ proveedor()!.telefono }}</span>
+                </div>
+                <p-button
+                  icon="pi pi-copy"
+                  [text]="true"
+                  [rounded]="true"
+                  severity="success"
+                  size="small"
+                  pTooltip="Copiar teléfono"
+                  (onClick)="copiarAlPortapapeles(proveedor()!.telefono!, 'Teléfono')"
+                />
+              </div>
+            </div>
+            <div class="contacto-item contacto-orange" *ngIf="tieneEmail()">
+              <label class="contacto-label">EMAIL</label>
+              <div class="flex align-items-center justify-content-between gap-2">
+                <div class="flex align-items-center gap-2 flex-1 overflow-hidden">
+                  <i class="pi pi-envelope contacto-icono"></i>
+                  <span class="contacto-valor truncate">{{ proveedor()!.email }}</span>
+                </div>
+                <p-button
+                  icon="pi pi-copy"
+                  [text]="true"
+                  [rounded]="true"
+                  severity="warn"
+                  size="small"
+                  pTooltip="Copiar email"
+                  (onClick)="copiarAlPortapapeles(proveedor()!.email!, 'Email')"
+                />
+              </div>
+            </div>
+            <div
+              class="proveedor-empty-contact"
+              *ngIf="!tieneContacto() && !tieneTelefono() && !tieneEmail()"
+            >
+              <i class="pi pi-info-circle"></i>
+              <p>Sin información de contacto</p>
+            </div>
+          </div>
+        </p-card>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── BLOQUE 3: DATOS ADICIONALES ───────────────── -->
+  <div class="p-2 mb-4">
+    <p-card class="proveedor-section-card">
+      <div class="section-header">
+        <h3><i class="pi pi-chart-bar"></i> Datos Adicionales</h3>
+      </div>
+      <div class="grid">
+        <div class="col-6 md:col-3">
+          <div class="estadistica-box estadistica-promedio p-2 border-round-lg text-center">
+            <label class="block text-xs font-bold mb-1 uppercase estadistica-label"
+              >RUC Verificado</label
+            >
+            <div class="flex align-items-center justify-content-center gap-1">
+              <i class="pi pi-verified estadistica-icono"></i>
+              <span class="text-base font-black estadistica-valor">Sí</span>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 md:col-3">
+          <div class="estadistica-box estadistica-minimo p-2 border-round-lg text-center">
+            <label class="block text-xs font-bold mb-1 uppercase estadistica-label"
+              >Datos Completos</label
+            >
+            <div class="flex align-items-center justify-content-center gap-1">
+              <i class="pi pi-check-circle estadistica-icono"></i>
+              <span class="text-base font-black estadistica-valor">
+                {{
+                  (tieneContacto() ? 25 : 0) +
+                    (tieneEmail() ? 25 : 0) +
+                    (tieneTelefono() ? 25 : 0) +
+                    (tieneDireccion() ? 25 : 0)
+                }}%
+              </span>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 md:col-3">
+          <div class="estadistica-box estadistica-maximo p-2 border-round-lg text-center">
+            <label class="block text-xs font-bold mb-1 uppercase estadistica-label"
+              >Campos Opcionales</label
+            >
+            <div class="flex align-items-center justify-content-center gap-1">
+              <i class="pi pi-list estadistica-icono"></i>
+              <span class="text-base font-black estadistica-valor">
+                {{
+                  (tieneContacto() ? 1 : 0) +
+                    (tieneEmail() ? 1 : 0) +
+                    (tieneTelefono() ? 1 : 0) +
+                    (tieneDireccion() ? 1 : 0)
+                }}/4
+              </span>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 md:col-3">
+          <div class="estadistica-box estadistica-diferencia p-2 border-round-lg text-center">
+            <label class="block text-xs font-bold mb-1 uppercase estadistica-label"
+              >Estado Actual</label
+            >
+            <div class="flex align-items-center justify-content-center gap-1">
+              <i
+                [class]="
+                  proveedor()!.estado
+                    ? 'pi pi-check-circle estadistica-icono'
+                    : 'pi pi-times-circle estadistica-icono'
+                "
+              ></i>
+              <span class="text-base font-black estadistica-valor">{{ estadoLabel() }}</span>
+            </div>
+          </div>
         </div>
       </div>
+    </p-card>
+  </div>
+
+  <!-- ── BLOQUE 4: ACCIONES ─────────────────────────── -->
+  <div class="p-2 mb-4">
+    <p-card class="proveedor-section-card">
+      <div class="section-header">
+        <h3><i class="pi pi-cog"></i> Acciones</h3>
+        <div class="flex gap-2 flex-wrap">
+          <p-button
+            [label]="proveedor()!.estado ? 'Desactivar' : 'Activar'"
+            [icon]="proveedor()!.estado ? 'pi pi-times' : 'pi pi-check'"
+            [severity]="proveedor()!.estado ? 'warn' : 'success'"
+            [outlined]="true"
+            styleClass="proveedor-pill"
+            (onClick)="cambiarEstado($event)"
+          />
+          <p-button
+            label="Eliminar"
+            icon="pi pi-trash"
+            severity="danger"
+            [outlined]="true"
+            styleClass="proveedor-pill proveedor-pill-danger-outlined"
+            (onClick)="eliminarProveedor($event)"
+          />
+          <p-button
+            label="Editar"
+            icon="pi pi-pencil"
+            severity="warn"
+            [outlined]="true"
+            styleClass="proveedor-pill proveedor-pill-warning-outlined"
+            (onClick)="irEditar()"
+          />
+        </div>
+      </div>
+    </p-card>
+  </div>
+</ng-container>
+
+<!-- ── ESTADO VACÍO ───────────────────────────────────── -->
+<div *ngIf="!proveedor() && !loading()" class="p-2 mb-4">
+  <p-card class="proveedor-section-card">
+    <div class="proveedor-error-state">
+      <div class="proveedor-error-icon">
+        <i class="pi pi-exclamation-triangle"></i>
+      </div>
+      <h3>Proveedor No Encontrado</h3>
+      <p>El proveedor que buscas no existe o fue eliminado.</p>
       <p-button
-        label="Volver"
+        label="Volver a Proveedores"
         icon="pi pi-arrow-left"
-        severity="secondary"
-        styleClass="proveedores-pill proveedores-pill-secondary"
+        [outlined]="true"
         (onClick)="volver()"
-      >
-      </p-button>
+      />
     </div>
-  </div>
-
-  <div class="grid">
-    <div class="col-12 lg:col-8">
-      <p-card styleClass="border-1 border-300 border-round-xl shadow-1 h-full">
-        <div class="flex align-items-center gap-2 mb-3">
-          <i class="pi pi-info-circle text-2xl text-primary"></i>
-          <h3 class="m-0 text-lg font-bold text-900">Información General</h3>
-        </div>
-        <p-divider styleClass="my-2"></p-divider>
-
-        <div class="grid">
-          <div class="col-12 md:col-6 mb-2">
-            <label class="block text-xs font-semibold text-600 mb-1">RUC</label>
-            <div class="campo-display flex align-items-center gap-2">
-              <i class="pi pi-id-card text-primary"></i>
-              <span class="text-xl font-black text-primary flex-1">{{ proveedor()!.ruc }}</span>
-              <p-button
-                icon="pi pi-copy"
-                [text]="true"
-                [rounded]="true"
-                severity="secondary"
-                size="small"
-                pTooltip="Copiar RUC"
-                (onClick)="copiarAlPortapapeles(proveedor()!.ruc, 'RUC')"
-              >
-              </p-button>
-            </div>
-          </div>
-
-          <div class="col-12 md:col-6 mb-2">
-            <label class="block text-xs font-semibold text-600 mb-1">ESTADO</label>
-            <div class="p-2">
-              <p-tag
-                [value]="estadoLabel()"
-                [severity]="estadoSeverity()"
-                styleClass="text-base font-bold px-3 py-1"
-              >
-              </p-tag>
-            </div>
-          </div>
-
-          <div class="col-12 mb-2">
-            <label class="block text-xs font-semibold text-600 mb-1">RAZÓN SOCIAL</label>
-            <div class="campo-display">
-              <p class="m-0 text-base font-semibold text-900">{{ proveedor()!.razon_social }}</p>
-            </div>
-          </div>
-
-          <div class="col-12 mb-2" *ngIf="tieneDireccion()">
-            <label class="block text-xs font-semibold text-600 mb-1">DIRECCIÓN FISCAL</label>
-            <div class="campo-display">
-              <p class="m-0 text-sm text-700">{{ proveedor()!.dir_fiscal }}</p>
-            </div>
-          </div>
-        </div>
-      </p-card>
-    </div>
-
-    <div class="col-12 lg:col-4">
-      <p-card styleClass="border-1 border-300 border-round-xl shadow-1 h-full">
-        <div class="flex align-items-center gap-2 mb-3">
-          <i class="pi pi-phone text-2xl text-green-600"></i>
-          <h3 class="m-0 text-lg font-bold text-900">Contacto</h3>
-        </div>
-        <p-divider styleClass="my-2"></p-divider>
-
-        <div class="flex flex-column gap-2">
-          <div class="contacto-item contacto-blue" *ngIf="tieneContacto()">
-            <label class="contacto-label">PERSONA DE CONTACTO</label>
-            <div class="flex align-items-center gap-2">
-              <i class="pi pi-user contacto-icono"></i>
-              <span class="contacto-valor">{{ proveedor()!.contacto }}</span>
-            </div>
-          </div>
-
-          <div class="contacto-item contacto-green" *ngIf="tieneTelefono()">
-            <label class="contacto-label">TELÉFONO</label>
-            <div class="flex align-items-center justify-content-between gap-2">
-              <div class="flex align-items-center gap-2">
-                <i class="pi pi-phone contacto-icono"></i>
-                <span class="contacto-valor">{{ proveedor()!.telefono }}</span>
-              </div>
-              <p-button
-                icon="pi pi-copy"
-                [text]="true"
-                [rounded]="true"
-                severity="success"
-                size="small"
-                pTooltip="Copiar teléfono"
-                (onClick)="copiarAlPortapapeles(proveedor()!.telefono!, 'Teléfono')"
-              >
-              </p-button>
-            </div>
-          </div>
-
-          <div class="contacto-item contacto-orange" *ngIf="tieneEmail()">
-            <label class="contacto-label">EMAIL</label>
-            <div class="flex align-items-center justify-content-between gap-2">
-              <div class="flex align-items-center gap-2 flex-1 overflow-hidden">
-                <i class="pi pi-envelope contacto-icono"></i>
-                <span class="contacto-valor truncate">{{ proveedor()!.email }}</span>
-              </div>
-              <p-button
-                icon="pi pi-copy"
-                [text]="true"
-                [rounded]="true"
-                severity="warn"
-                size="small"
-                pTooltip="Copiar email"
-                (onClick)="copiarAlPortapapeles(proveedor()!.email!, 'Email')"
-              >
-              </p-button>
-            </div>
-          </div>
-
-          <div
-            class="campo-display text-center"
-            *ngIf="!tieneContacto() && !tieneTelefono() && !tieneEmail()"
-          >
-            <i class="pi pi-info-circle text-2xl text-400 mb-1"></i>
-            <p class="m-0 text-sm text-600">Sin información de contacto</p>
-          </div>
-        </div>
-      </p-card>
-    </div>
-
-    <div class="col-12">
-      <p-card styleClass="border-1 border-300 border-round-xl shadow-1">
-        <div class="flex align-items-center gap-2 mb-3">
-          <i class="pi pi-chart-bar text-2xl text-purple-600"></i>
-          <h3 class="m-0 text-lg font-bold text-900">Datos Adicionales</h3>
-        </div>
-        <p-divider styleClass="my-2"></p-divider>
-
-        <div class="grid">
-          <div class="col-6 md:col-3">
-            <div class="estadistica-box estadistica-promedio p-2 border-round-lg text-center">
-              <label class="block text-xs font-bold mb-1 uppercase estadistica-label"
-                >RUC Verificado</label
-              >
-              <div class="flex align-items-center justify-content-center gap-1">
-                <i class="pi pi-verified estadistica-icono"></i>
-                <span class="text-base font-black estadistica-valor">Sí</span>
-              </div>
-            </div>
-          </div>
-          <div class="col-6 md:col-3">
-            <div class="estadistica-box estadistica-minimo p-2 border-round-lg text-center">
-              <label class="block text-xs font-bold mb-1 uppercase estadistica-label"
-                >Datos Completos</label
-              >
-              <div class="flex align-items-center justify-content-center gap-1">
-                <i class="pi pi-check-circle estadistica-icono"></i>
-                <span class="text-base font-black estadistica-valor">
-                  {{
-                    (tieneContacto() ? 25 : 0) +
-                      (tieneEmail() ? 25 : 0) +
-                      (tieneTelefono() ? 25 : 0) +
-                      (tieneDireccion() ? 25 : 0)
-                  }}%
-                </span>
-              </div>
-            </div>
-          </div>
-          <div class="col-6 md:col-3">
-            <div class="estadistica-box estadistica-maximo p-2 border-round-lg text-center">
-              <label class="block text-xs font-bold mb-1 uppercase estadistica-label"
-                >Campos Opcionales</label
-              >
-              <div class="flex align-items-center justify-content-center gap-1">
-                <i class="pi pi-list estadistica-icono"></i>
-                <span class="text-base font-black estadistica-valor">
-                  {{
-                    (tieneContacto() ? 1 : 0) +
-                      (tieneEmail() ? 1 : 0) +
-                      (tieneTelefono() ? 1 : 0) +
-                      (tieneDireccion() ? 1 : 0)
-                  }}/4
-                </span>
-              </div>
-            </div>
-          </div>
-          <div class="col-6 md:col-3">
-            <div class="estadistica-box estadistica-diferencia p-2 border-round-lg text-center">
-              <label class="block text-xs font-bold mb-1 uppercase estadistica-label"
-                >Estado Actual</label
-              >
-              <div class="flex align-items-center justify-content-center gap-1">
-                <i
-                  [class]="
-                    proveedor()!.estado
-                      ? 'pi pi-check-circle estadistica-icono'
-                      : 'pi pi-times-circle estadistica-icono'
-                  "
-                ></i>
-                <span class="text-base font-black estadistica-valor">{{ estadoLabel() }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </p-card>
-    </div>
-
-    <div class="col-12">
-      <p-card styleClass="border-1 border-300 border-round-xl shadow-1">
-        <div class="flex justify-content-between align-items-center flex-wrap gap-2">
-          <div class="flex align-items-center gap-2">
-            <i class="pi pi-cog text-xl text-600"></i>
-            <h3 class="m-0 text-base font-bold text-900">Acciones</h3>
-          </div>
-          <div class="flex gap-2 flex-wrap">
-            <p-button
-              [label]="proveedor()!.estado ? 'Desactivar' : 'Activar'"
-              [icon]="proveedor()!.estado ? 'pi pi-times' : 'pi pi-check'"
-              [severity]="proveedor()!.estado ? 'warn' : 'success'"
-              [outlined]="true"
-              styleClass="proveedores-pill"
-              (onClick)="cambiarEstado($event)"
-            >
-            </p-button>
-            <p-button
-              label="Eliminar"
-              icon="pi pi-trash"
-              severity="danger"
-              [outlined]="true"
-              styleClass="proveedores-pill proveedores-pill-danger"
-              (onClick)="eliminarProveedor($event)"
-            >
-            </p-button>
-            <p-button
-              label="Editar"
-              icon="pi pi-pencil"
-              severity="warn"
-              [outlined]="true"
-              styleClass="proveedores-pill proveedores-pill-warning"
-              (onClick)="irEditar()"
-            >
-            </p-button>
-          </div>
-        </div>
-      </p-card>
-    </div>
-  </div>
+  </p-card>
 </div>
-
-<div *ngIf="!proveedor() && !loading()" class="surface-card p-6 text-center border-round-xl">
-  <div class="flex flex-column align-items-center gap-3">
-    <i class="pi pi-exclamation-triangle text-5xl text-warning"></i>
-    <h3 class="text-xl font-bold text-900 mb-1">Proveedor No Encontrado</h3>
-    <p class="text-base text-600 m-0">El proveedor que buscas no existe o fue eliminado</p>
-    <p-button
-      label="Volver a Proveedores"
-      icon="pi pi-arrow-left"
-      [outlined]="true"
-      (onClick)="volver()"
-    >
-    </p-button>
-  </div>
-</div>
-
-<p-toast></p-toast>
-<p-confirmdialog></p-confirmdialog>

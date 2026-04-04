@@ -8,6 +8,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 
 import { Card } from 'primeng/card';
 import { Button } from 'primeng/button';
@@ -19,14 +20,12 @@ import { ConfirmDialog } from 'primeng/confirmdialog';
 import { DatePicker } from 'primeng/datepicker';
 import { Tooltip } from 'primeng/tooltip';
 import { AutoComplete } from 'primeng/autocomplete';
-import { Dialog } from 'primeng/dialog';
 import { MessageService, ConfirmationService } from 'primeng/api';
-import { AuthService } from '../../../../../auth/services/auth.service';
-import { LoadingOverlayComponent } from '../../../../../shared/components/loading-overlay/loading-overlay.component';
-import { PaginadorComponent } from '../../../../../shared/components/paginador/paginador.components';
-import { getDomingoSemanaActualPeru, getLunesSemanaActualPeru, getPrimerDiaMesActualPeru, getUltimoDiaMesActualPeru } from '../../../../../shared/utils/date-peru.utils';
 
-// ─── Tipos locales ────────────────────────────────────────────────────────────r
+import {
+  getPrimerDiaMesActualPeru,
+  getUltimoDiaMesActualPeru,
+} from '../../../../../shared/utils/date-peru.utils';
 
 type TipoComprobante = 'Boleta' | 'Factura' | 'Nota de Crédito';
 type EstadoComprobante = 'EMITIDO' | 'ANULADO' | 'PENDIENTE' | 'RECHAZADO';
@@ -59,8 +58,6 @@ interface FiltrosComprobante {
   estado: EstadoComprobante | null;
   periodo: string | null;
 }
-
-// ─── Datos aleatorios ─────────────────────────────────────────────────────────
 
 const CLIENTES: { nombre: string; doc: string }[] = [
   { nombre: 'IMPORTACIONES SANTA ROSA S.A.C.', doc: '20512345678' },
@@ -97,18 +94,22 @@ function fechaAleatoria(desdeDias: number, hastaDias: number): Date {
 
 function generarComprobantes(): Comprobante[] {
   const tipos: TipoComprobante[] = ['Boleta', 'Boleta', 'Factura', 'Factura', 'Nota de Crédito'];
-  const estados: EstadoComprobante[] = ['EMITIDO', 'EMITIDO', 'EMITIDO', 'ANULADO', 'PENDIENTE', 'RECHAZADO'];
+  const estados: EstadoComprobante[] = [
+    'EMITIDO',
+    'EMITIDO',
+    'EMITIDO',
+    'ANULADO',
+    'PENDIENTE',
+    'RECHAZADO',
+  ];
   const monedas: Moneda[] = ['PEN', 'PEN', 'PEN', 'USD'];
-
   const series: Record<TipoComprobante, string> = {
-    'Boleta': 'B001',
-    'Factura': 'F001',
+    Boleta: 'B001',
+    Factura: 'F001',
     'Nota de Crédito': 'NC01',
   };
 
-  const comprobantes: Comprobante[] = [];
-
-  for (let i = 1; i <= 45; i++) {
+  return Array.from({ length: 45 }, (_, i) => {
     const tipo = aleatorio(tipos);
     const moneda = aleatorio(monedas);
     const baseImponible = parseFloat((Math.random() * 4800 + 200).toFixed(2));
@@ -116,12 +117,14 @@ function generarComprobantes(): Comprobante[] {
     const total = parseFloat((baseImponible + igv).toFixed(2));
     const cliente = aleatorio(CLIENTES);
     const emision = fechaAleatoria(-90, -1);
-    const vencimiento = new Date(emision.getTime() + (Math.floor(Math.random() * 45) + 15) * 24 * 60 * 60 * 1000);
+    const vencimiento = new Date(
+      emision.getTime() + (Math.floor(Math.random() * 45) + 15) * 24 * 60 * 60 * 1000,
+    );
 
-    comprobantes.push({
-      idComprobante: i,
+    return {
+      idComprobante: i + 1,
       serie: series[tipo],
-      numero: 1000 + i,
+      numero: 1000 + i + 1,
       tipoComprobante: tipo,
       fechaEmision: emision,
       fechaVencimiento: vencimiento,
@@ -134,16 +137,12 @@ function generarComprobantes(): Comprobante[] {
       estado: aleatorio(estados),
       responsable: aleatorio(RESPONSABLES),
       observacion: Math.random() > 0.7 ? 'Pago a 30 días según acuerdo comercial.' : undefined,
-    });
-  }
-
-  return comprobantes;
+    };
+  });
 }
 
-// ─── Componente ───────────────────────────────────────────────────────────────
-
 @Component({
-  selector: 'app-historial-comprobantes',
+  selector: 'app-documento-contador',
   standalone: true,
   imports: [
     CommonModule,
@@ -158,7 +157,6 @@ function generarComprobantes(): Comprobante[] {
     DatePicker,
     Tooltip,
     AutoComplete,
-    Dialog,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './documento-contador.html',
@@ -166,28 +164,25 @@ function generarComprobantes(): Comprobante[] {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DocumentoContador implements OnInit {
-  private readonly messageService      = inject(MessageService);
+  private readonly router = inject(Router);
+  private readonly messageService = inject(MessageService);
   private readonly confirmationService = inject(ConfirmationService);
-  private readonly cdr                 = inject(ChangeDetectorRef);
+  private readonly cdr = inject(ChangeDetectorRef);
 
-  // ── Datos ────────────────────────────────────────────────────────
   private todosLosComprobantes: Comprobante[] = [];
-  comprobantesFiltrados: Comprobante[]        = [];
-  sugerenciasBusqueda: string[]               = [];
+  comprobantesFiltrados: Comprobante[] = [];
+  sugerenciasBusqueda: string[] = [];
   loading = false;
 
-  // ── KPIs ─────────────────────────────────────────────────────────
-  totalFacturado    = 0;
-  cantidadBoletas   = 0;
-  cantidadFacturas  = 0;
+  totalFacturado = 0;
+  cantidadBoletas = 0;
+  cantidadFacturas = 0;
   cantidadNotasCredito = 0;
 
-  // ── Paginación ───────────────────────────────────────────────────
-  //comentario
-  paginaActual    = 1;
+  paginaActual = 1;
   limitePorPagina = 5;
-  totalRegistros  = 0;
-  totalPaginas    = 1;
+  totalRegistros = 0;
+  totalPaginas = 1;
 
   readonly opcionesLimite = [
     { label: '5', value: 5 },
@@ -196,55 +191,44 @@ export class DocumentoContador implements OnInit {
     { label: '50', value: 50 },
   ];
 
-  // ── Dialog ───────────────────────────────────────────────────────
-  detalleVisible          = false;
-  comprobanteSeleccionado: Comprobante | null = null;
-
-  // ── Filtros ──────────────────────────────────────────────────────
   filtros: FiltrosComprobante = {
-    busqueda:        '',
-    fechaInicio:     getPrimerDiaMesActualPeru(),
-    fechaFin:        getUltimoDiaMesActualPeru(),
+    busqueda: '',
+    fechaInicio: getPrimerDiaMesActualPeru(),
+    fechaFin: getUltimoDiaMesActualPeru(),
     tipoComprobante: null,
-    moneda:          null,
-    estado:          null,
-    periodo:         null,
+    moneda: null,
+    estado: null,
+    periodo: null,
   };
 
-  fechaInicio = signal<Date | null>(getPrimerDiaMesActualPeru());
-  fechaFin    = signal<Date | null>(getUltimoDiaMesActualPeru());
-
-
   readonly tiposComprobante = [
-    { label: 'Todos',           value: null },
-    { label: 'Boleta',          value: 'Boleta' },
-    { label: 'Factura',         value: 'Factura' },
+    { label: 'Todos', value: null },
+    { label: 'Boleta', value: 'Boleta' },
+    { label: 'Factura', value: 'Factura' },
     { label: 'Nota de Crédito', value: 'Nota de Crédito' },
   ];
 
   readonly monedas = [
     { label: 'Todas', value: null },
-    { label: 'Soles (PEN)',  value: 'PEN' },
+    { label: 'Soles (PEN)', value: 'PEN' },
     { label: 'Dólares (USD)', value: 'USD' },
   ];
 
   readonly estadosComprobante = [
-    { label: 'Todos',     value: null },
-    { label: 'Emitido',   value: 'EMITIDO' },
-    { label: 'Anulado',   value: 'ANULADO' },
+    { label: 'Todos', value: null },
+    { label: 'Emitido', value: 'EMITIDO' },
+    { label: 'Anulado', value: 'ANULADO' },
     { label: 'Pendiente', value: 'PENDIENTE' },
     { label: 'Rechazado', value: 'RECHAZADO' },
   ];
 
   readonly periodos = [
-    { label: 'Seleccionar',     value: null },
-    { label: 'Esta semana',     value: 'semana' },
-    { label: 'Este mes',        value: 'mes' },
+    { label: 'Seleccionar', value: null },
+    { label: 'Esta semana', value: 'semana' },
+    { label: 'Este mes', value: 'mes' },
     { label: 'Último trimestre', value: 'trimestre' },
-    { label: 'Este año',        value: 'anio' },
+    { label: 'Este año', value: 'anio' },
   ];
-
-  // ─── Lifecycle ────────────────────────────────────────────────────
 
   ngOnInit(): void {
     this.todosLosComprobantes = generarComprobantes();
@@ -252,70 +236,58 @@ export class DocumentoContador implements OnInit {
     this.calcularKpis();
   }
 
-  // ─── KPIs ─────────────────────────────────────────────────────────
-
   private calcularKpis(): void {
-    const emitidos = this.todosLosComprobantes.filter(c => c.estado === 'EMITIDO');
-
-    this.totalFacturado     = emitidos.reduce((acc, c) => acc + c.total, 0);
-    this.cantidadBoletas    = this.todosLosComprobantes.filter(c => c.tipoComprobante === 'Boleta').length;
-    this.cantidadFacturas   = this.todosLosComprobantes.filter(c => c.tipoComprobante === 'Factura').length;
-    this.cantidadNotasCredito = this.todosLosComprobantes.filter(c => c.tipoComprobante === 'Nota de Crédito').length;
+    const emitidos = this.todosLosComprobantes.filter((c) => c.estado === 'EMITIDO');
+    this.totalFacturado = emitidos.reduce((acc, c) => acc + c.total, 0);
+    this.cantidadBoletas = this.todosLosComprobantes.filter(
+      (c) => c.tipoComprobante === 'Boleta',
+    ).length;
+    this.cantidadFacturas = this.todosLosComprobantes.filter(
+      (c) => c.tipoComprobante === 'Factura',
+    ).length;
+    this.cantidadNotasCredito = this.todosLosComprobantes.filter(
+      (c) => c.tipoComprobante === 'Nota de Crédito',
+    ).length;
   }
-
-  // ─── Filtros ──────────────────────────────────────────────────────
 
   aplicarFiltros(): void {
     let resultado = [...this.todosLosComprobantes];
 
-    if (this.filtros.tipoComprobante) {
-      resultado = resultado.filter(c => c.tipoComprobante === this.filtros.tipoComprobante);
-    }
+    if (this.filtros.tipoComprobante)
+      resultado = resultado.filter((c) => c.tipoComprobante === this.filtros.tipoComprobante);
 
-    if (this.filtros.moneda) {
-      resultado = resultado.filter(c => c.moneda === this.filtros.moneda);
-    }
+    if (this.filtros.moneda) resultado = resultado.filter((c) => c.moneda === this.filtros.moneda);
 
-    if (this.filtros.estado) {
-      resultado = resultado.filter(c => c.estado === this.filtros.estado);
-    }
+    if (this.filtros.estado) resultado = resultado.filter((c) => c.estado === this.filtros.estado);
 
     if (this.filtros.busqueda?.trim()) {
       const q = this.filtros.busqueda.trim().toLowerCase();
-      resultado = resultado.filter(c =>
-        c.clienteNombre.toLowerCase().includes(q) ||
-        c.clienteDocumento.includes(q)
+      resultado = resultado.filter(
+        (c) => c.clienteNombre.toLowerCase().includes(q) || c.clienteDocumento.includes(q),
       );
     }
 
-    if (this.filtros.fechaInicio) {
-      resultado = resultado.filter(c => c.fechaEmision >= this.filtros.fechaInicio!);
-    }
+    if (this.filtros.fechaInicio)
+      resultado = resultado.filter((c) => c.fechaEmision >= this.filtros.fechaInicio!);
 
     if (this.filtros.fechaFin) {
       const fin = new Date(this.filtros.fechaFin);
       fin.setHours(23, 59, 59, 999);
-      resultado = resultado.filter(c => c.fechaEmision <= fin);
+      resultado = resultado.filter((c) => c.fechaEmision <= fin);
     }
 
-    // Ordenar por fecha desc
     resultado.sort((a, b) => b.fechaEmision.getTime() - a.fechaEmision.getTime());
 
     this.totalRegistros = resultado.length;
-    this.totalPaginas   = Math.ceil(this.totalRegistros / this.limitePorPagina) || 1;
+    this.totalPaginas = Math.ceil(this.totalRegistros / this.limitePorPagina) || 1;
 
-    if (this.paginaActual > this.totalPaginas) {
-      this.paginaActual = 1;
-    }
+    if (this.paginaActual > this.totalPaginas) this.paginaActual = 1;
 
     const desde = (this.paginaActual - 1) * this.limitePorPagina;
     this.comprobantesFiltrados = resultado.slice(desde, desde + this.limitePorPagina);
 
-    // Sugerencias búsqueda
     const set = new Set<string>();
-    resultado.forEach(c => {
-      set.add(`${c.clienteNombre} - ${c.clienteDocumento}`);
-    });
+    resultado.forEach((c) => set.add(`${c.clienteNombre} - ${c.clienteDocumento}`));
     this.sugerenciasBusqueda = Array.from(set).slice(0, 15);
 
     this.cdr.markForCheck();
@@ -323,13 +295,13 @@ export class DocumentoContador implements OnInit {
 
   limpiarFiltros(): void {
     this.filtros = {
-      busqueda:        '',
-      fechaInicio:     getPrimerDiaMesActualPeru(),
-      fechaFin:        getUltimoDiaMesActualPeru(),
+      busqueda: '',
+      fechaInicio: getPrimerDiaMesActualPeru(),
+      fechaFin: getUltimoDiaMesActualPeru(),
       tipoComprobante: null,
-      moneda:          null,
-      estado:          null,
-      periodo:         null,
+      moneda: null,
+      estado: null,
+      periodo: null,
     };
     this.paginaActual = 1;
     this.aplicarFiltros();
@@ -348,27 +320,27 @@ export class DocumentoContador implements OnInit {
         const lunes = new Date(hoy);
         lunes.setDate(hoy.getDate() - hoy.getDay() + 1);
         this.filtros.fechaInicio = lunes;
-        this.filtros.fechaFin    = new Date();
+        this.filtros.fechaFin = new Date();
         break;
       }
       case 'mes':
         this.filtros.fechaInicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
-        this.filtros.fechaFin    = new Date();
+        this.filtros.fechaFin = new Date();
         break;
       case 'trimestre': {
-        const inicioTrimestre = new Date(hoy);
-        inicioTrimestre.setMonth(hoy.getMonth() - 3);
-        this.filtros.fechaInicio = inicioTrimestre;
-        this.filtros.fechaFin    = new Date();
+        const t = new Date(hoy);
+        t.setMonth(hoy.getMonth() - 3);
+        this.filtros.fechaInicio = t;
+        this.filtros.fechaFin = new Date();
         break;
       }
       case 'anio':
         this.filtros.fechaInicio = new Date(hoy.getFullYear(), 0, 1);
-        this.filtros.fechaFin    = new Date();
+        this.filtros.fechaFin = new Date();
         break;
       default:
         this.filtros.fechaInicio = null;
-        this.filtros.fechaFin    = null;
+        this.filtros.fechaFin = null;
     }
     this.aplicarFiltros();
   }
@@ -376,19 +348,17 @@ export class DocumentoContador implements OnInit {
   buscarSugerencias(event: any): void {
     const q = (event.query ?? '').toLowerCase();
     const set = new Set<string>();
-    this.todosLosComprobantes.forEach(c => {
+    this.todosLosComprobantes.forEach((c) => {
       const label = `${c.clienteNombre} - ${c.clienteDocumento}`;
       if (label.toLowerCase().includes(q)) set.add(label);
     });
     this.sugerenciasBusqueda = Array.from(set).slice(0, 15);
   }
 
-  // ─── Paginación ───────────────────────────────────────────────────
-
   getPaginas(): number[] {
     const paginas: number[] = [];
     const inicio = Math.max(1, this.paginaActual - 2);
-    const fin    = Math.min(this.totalPaginas, inicio + 4);
+    const fin = Math.min(this.totalPaginas, inicio + 4);
     for (let i = inicio; i <= fin; i++) paginas.push(i);
     return paginas;
   }
@@ -408,7 +378,7 @@ export class DocumentoContador implements OnInit {
 
   onLimitChange(event: any): void {
     this.limitePorPagina = event.value;
-    this.paginaActual    = 1;
+    this.paginaActual = 1;
     this.aplicarFiltros();
   }
 
@@ -416,41 +386,8 @@ export class DocumentoContador implements OnInit {
     return Math.min(a, b);
   }
 
-  // ─── Acciones ─────────────────────────────────────────────────────
-
-  nuevoComprobante(): void {
-    this.messageService.add({
-      severity: 'info',
-      summary: 'Nuevo Comprobante',
-      detail: 'Redirigiendo al formulario de creación...',
-      life: 2500,
-    });
-  }
-
   verDetalle(comprobante: Comprobante): void {
-    this.comprobanteSeleccionado = comprobante;
-    this.detalleVisible          = true;
-    this.cdr.markForCheck();
-  }
-
-  descargarPdf(comprobante: Comprobante | null): void {
-    if (!comprobante) return;
-    this.messageService.add({
-      severity: 'success',
-      summary: 'PDF generado',
-      detail: `Descargando ${comprobante.serie}-${String(comprobante.numero).padStart(8, '0')}.pdf`,
-      life: 3000,
-    });
-  }
-
-  generarNotaCredito(comprobante: Comprobante): void {
-    if (comprobante.estado !== 'EMITIDO') return;
-    this.messageService.add({
-      severity: 'info',
-      summary: 'Nota de Crédito',
-      detail: `Generando nota de crédito para ${comprobante.serie}-${String(comprobante.numero).padStart(8, '0')}`,
-      life: 3000,
-    });
+    this.router.navigate(['/admin/documento-contador', comprobante.idComprobante]);
   }
 
   anularComprobante(comprobante: Comprobante): void {
@@ -463,10 +400,10 @@ export class DocumentoContador implements OnInit {
       rejectLabel: 'Cancelar',
       acceptButtonStyleClass: 'p-button-danger',
       accept: () => {
-        const idx = this.todosLosComprobantes.findIndex(c => c.idComprobante === comprobante.idComprobante);
-        if (idx !== -1) {
-          this.todosLosComprobantes[idx].estado = 'ANULADO';
-        }
+        const idx = this.todosLosComprobantes.findIndex(
+          (c) => c.idComprobante === comprobante.idComprobante,
+        );
+        if (idx !== -1) this.todosLosComprobantes[idx].estado = 'ANULADO';
         this.aplicarFiltros();
         this.messageService.add({
           severity: 'success',
@@ -479,7 +416,7 @@ export class DocumentoContador implements OnInit {
   }
 
   exportarExcel(): void {
-    if (this.comprobantesFiltrados.length === 0) {
+    if (!this.comprobantesFiltrados.length) {
       this.messageService.add({
         severity: 'warn',
         summary: 'Sin datos',
@@ -497,7 +434,7 @@ export class DocumentoContador implements OnInit {
   }
 
   exportarPdf(): void {
-    if (this.comprobantesFiltrados.length === 0) {
+    if (!this.comprobantesFiltrados.length) {
       this.messageService.add({
         severity: 'warn',
         summary: 'Sin datos',
@@ -514,30 +451,34 @@ export class DocumentoContador implements OnInit {
     });
   }
 
-  // ─── Helpers de severity ──────────────────────────────────────────
-
   getSeverityTipo(tipo: TipoComprobante): 'info' | 'warn' | 'secondary' {
     switch (tipo) {
-      case 'Boleta':          return 'info';
-      case 'Factura':         return 'warn';
-      case 'Nota de Crédito': return 'secondary';
+      case 'Boleta':
+        return 'info';
+      case 'Factura':
+        return 'warn';
+      case 'Nota de Crédito':
+        return 'secondary';
     }
   }
 
   getSeverityEstado(estado: EstadoComprobante): 'success' | 'danger' | 'warn' | 'info' {
     switch (estado) {
-      case 'EMITIDO':   return 'success';
-      case 'ANULADO':   return 'danger';
-      case 'RECHAZADO': return 'warn';
-      default:          return 'info';
+      case 'EMITIDO':
+        return 'success';
+      case 'ANULADO':
+        return 'danger';
+      case 'RECHAZADO':
+        return 'warn';
+      default:
+        return 'info';
     }
   }
 
   getClaseVencimiento(fecha: Date): string {
-    const hoy   = new Date();
-    const diff  = (fecha.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24);
-    if (diff < 0)   return 'vencimiento-vencido';
-    if (diff <= 7)  return 'vencimiento-proximo';
+    const diff = (fecha.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24);
+    if (diff < 0) return 'vencimiento-vencido';
+    if (diff <= 7) return 'vencimiento-proximo';
     return 'vencimiento-ok';
   }
 }
