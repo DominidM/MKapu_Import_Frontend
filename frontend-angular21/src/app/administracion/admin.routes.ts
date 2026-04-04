@@ -791,6 +791,15 @@ export const ADMIN_ROUTES: Routes = [
           canActivate: [roleGuard],
           data: { permiso: 'EDITAR_REMATES' },
       },
+      {
+        path: 'detalle-remate/:id',
+        loadComponent: () =>
+          import('./pages/remates/pages/remates-detalle/remates-detalle').then(
+            (m) => m.DetalleRemateComponent,
+          ),
+          canActivate: [roleGuard],
+          data: { permiso: 'VER_REMATES' },
+      }
     ],
   },
 
