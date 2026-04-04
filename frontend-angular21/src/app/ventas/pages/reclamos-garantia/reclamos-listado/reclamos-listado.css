@@ -493,6 +493,10 @@
   border-color: #27272a !important;
 }
 
+:host-context(.app-dark) :host ::ng-deep .codigo-comprobante {
+  background-color: #fdb314 !important;
+  color: #000000 !important;
+}
 :host-context(.app-dark) :host ::ng-deep .text-900 {
   color: #f1f5f9 !important;
 }

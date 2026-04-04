@@ -1100,11 +1100,11 @@
 }
 
 :host-context(.app-dark) .unidad-info-icon {
-  color: #92400e !important;
+  color: #e26111 !important;
 }
 
 :host-context(.app-dark) .unidad-info-text {
-  color: #1f2937 !important;
+  color: #ffffff !important;
   font-weight: 600 !important;
 }
 
@@ -1368,12 +1368,12 @@
 }
 
 :host-context(.app-dark) ::ng-deep .unidad-selector-card .input-label {
-  color: #1f2937 !important;
+  color: #ffffff !important;
   font-weight: 700 !important;
 }
 
 :host-context(.app-dark) ::ng-deep .unidad-selector-card .text-500 {
-  color: #374151 !important;
+  color: #ffffff !important;
   font-weight: 600 !important;
 }
 
@@ -1529,3 +1529,32 @@
   color: #fb923c !important;
 }
 
+/* ── Agregar al final de reclamos-crear.css ── */
+
+.filtro-fechas-reclamo {
+  background: var(--surface-50, #fafafa);
+  border: 1px solid var(--surface-border);
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+}
+:host-context(.app-dark) ::ng-deep .filtro-fechas-reclamo {
+  background: #0f0f12 !important;
+  border-color: #3f3f46 !important;
+}
+
+.fechas-reclamo-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+
+:host-context(.app-dark) ::ng-deep .fechas-reclamo-row 
+
+
+.fecha-separador-reclamo {
+  font-weight: bold;
+  color: var(--text-color-secondary);
+  font-size: 1.1rem;
+}

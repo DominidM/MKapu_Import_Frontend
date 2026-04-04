@@ -58,7 +58,7 @@
           <span>{{ sedeNombreVentas }}</span>
         </div>
 
-        <!-- Switch Producto / Remate ── en la misma fila -->
+        <!-- Switch Producto / Remate -->
         <div class="pos-search-mode-toggle">
           <button
             class="pos-mode-btn"
@@ -407,7 +407,7 @@
       <p>Busca y selecciona productos desde el campo de arriba</p>
     </div>
 
-    <!-- Comprobante generado -->
+    <!-- ── Comprobante generado ───────────────────────────────────── -->
     <div *ngIf="comprobanteGenerado()" class="pos-success-card">
       <div class="pos-success-icon"><i class="pi pi-check-circle"></i></div>
       <div class="pos-success-info">
@@ -455,6 +455,17 @@
           "
           styleClass="ventas-pill"
         />
+        <!-- ── NUEVO: Registrar Garantía ── -->
+        <p-button
+          label="Registrar Garantía"
+          icon="pi pi-shield"
+          severity="warn"
+          [outlined]="true"
+          (onClick)="abrirSidebarGarantia()"
+          styleClass="ventas-pill"
+          pTooltip="Registrar garantía para esta venta"
+          tooltipPosition="bottom"
+        />
         <p-button
           label="Historial de Ventas"
           icon="pi pi-list"
@@ -466,7 +477,7 @@
       </div>
     </div>
 
-    <!-- Carrito -->
+    <!-- ── Carrito ────────────────────────────────────────────────── -->
     <div
       *ngIf="productosSeleccionados().length > 0 && !comprobanteGenerado()"
       class="pos-cart-card"
@@ -636,8 +647,7 @@
                   />
                   <div *ngIf="tiposServicioOptions().length === 0" class="pos-banco-sin-servicio">
                     <i class="pi pi-exclamation-triangle"></i>
-                    Este banco no tiene servicios registrados para este tipo de tarjeta. Contacta al
-                    administrador.
+                    Este banco no tiene servicios registrados. Contacta al administrador.
                   </div>
                 </ng-container>
                 <div *ngIf="tiposServicioLoading()" class="pos-banco-sin-servicio">
@@ -819,7 +829,7 @@
   </div>
 </div>
 
-<!-- Sidebar cliente -->
+<!-- ── Sidebar cliente ────────────────────────────────────────────── -->
 <p-drawer
   [(visible)]="sidebarClienteVisible"
   position="right"
@@ -1058,6 +1068,131 @@
         </div>
       </div>
     </div>
+  </div>
+</p-drawer>
+
+<!-- ── Sidebar garantía ───────────────────────────────────────────── -->
+<p-drawer
+  [(visible)]="sidebarGarantiaVisible"
+  position="right"
+  [style]="{ width: '440px' }"
+  header="Registrar Garantía"
+>
+  <div class="pos-sb-body">
+
+    <!-- Estado: garantía ya registrada -->
+    <div *ngIf="garantiaRegistrada()" class="pos-garantia-success">
+      <div class="pos-garantia-success-icon">
+        <i class="pi pi-shield"></i>
+      </div>
+      <h4>¡Garantía registrada!</h4>
+      <p class="pos-success-num">{{ garantiaRegistrada()!.num_garantia }}</p>
+      <div class="pos-sb-meta" style="margin-top: 8px;">
+        <span><i class="pi pi-box"></i> {{ garantiaRegistrada()?.prod_nombre }}</span>
+        <span><i class="pi pi-file-check"></i> Comprobante #{{ garantiaRegistrada()?.id_comprobante }}</span>
+        <span><i class="pi pi-calendar"></i> {{ garantiaRegistrada()?.fec_registro | date: 'dd/MM/yyyy HH:mm' }}</span>
+        <span><i class="pi pi-calendar-times"></i> Vence: {{ garantiaRegistrada()?.fec_vencimiento | date: 'dd/MM/yyyy' }}</span>
+      </div>
+      <p-button
+        label="Cerrar"
+        icon="pi pi-times"
+        styleClass="w-full mt-3"
+        severity="secondary"
+        [outlined]="true"
+        (onClick)="sidebarGarantiaVisible = false"
+      />
+    </div>
+
+    <!-- Formulario de garantía -->
+    <ng-container *ngIf="!garantiaRegistrada()">
+
+      <!-- Comprobante vinculado -->
+      <div class="pos-sb-section">
+        <p class="pos-sb-label"><i class="pi pi-file-check"></i> Comprobante vinculado</p>
+        <div class="pos-sb-cliente-card">
+          <div class="pos-sb-cliente-name">
+            {{ comprobanteGenerado()?.numeroCompleto }}
+            <span class="pos-sb-verified"><i class="pi pi-check-circle"></i> Emitido</span>
+          </div>
+          <div class="pos-sb-meta">
+            <span>
+              <i class="pi pi-calendar"></i>
+              {{ comprobanteGenerado()?.fecEmision | date: 'dd/MM/yyyy HH:mm' }}
+            </span>
+            <span *ngIf="clienteEncontrado()">
+              <i class="pi pi-user"></i> {{ clienteEncontrado()!.name }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <p-divider />
+
+      <!-- Selección de producto -->
+      <div class="pos-sb-section">
+        <p class="pos-sb-label"><i class="pi pi-box"></i> Producto con garantía *</p>
+        <p-select
+          [options]="productosDelComprobante()"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Selecciona el producto…"
+          styleClass="w-full"
+          [ngModel]="productoGarantiaSeleccionadoSignal()"
+          (ngModelChange)="onProductoGarantiaChange($event)"
+        />
+        <small
+          *ngIf="garantiaForm.cod_prod"
+          style="color: var(--text-color-secondary); margin-top: 4px; display: block;"
+        >
+          <i class="pi pi-info-circle"></i> {{ garantiaForm.prod_nombre }}
+        </small>
+      </div>
+
+      <!-- Motivo -->
+      <div class="pos-sb-section">
+        <p class="pos-sb-label"><i class="pi pi-comment"></i> Motivo *</p>
+        <textarea
+          pTextarea
+          [(ngModel)]="garantiaForm.motivo"
+          placeholder="Describe el motivo de la garantía (defecto, daño, mal funcionamiento…)"
+          [rows]="3"
+          style="width: 100%; resize: vertical;"
+        ></textarea>
+      </div>
+
+      <!-- Observaciones -->
+      <div class="pos-sb-section">
+        <p class="pos-sb-label"><i class="pi pi-align-left"></i> Observaciones <small>(opcional)</small></p>
+        <textarea
+          pTextarea
+          [(ngModel)]="garantiaForm.observaciones"
+          placeholder="Información adicional, condición del producto…"
+          [rows]="2"
+          style="width: 100%; resize: vertical;"
+        ></textarea>
+      </div>
+
+      <!-- Botón registrar -->
+      <div class="pos-sb-section">
+        <p-button
+          label="Registrar Garantía"
+          icon="pi pi-shield"
+          styleClass="w-full"
+          severity="warn"
+          (onClick)="registrarGarantia()"
+          [loading]="guardandoGarantia()"
+          [disabled]="!garantiaForm.cod_prod || !garantiaForm.motivo.trim() || guardandoGarantia()"
+        />
+        <p-button
+          label="Cancelar"
+          styleClass="w-full mt-2"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="sidebarGarantiaVisible = false"
+        />
+      </div>
+
+    </ng-container>
   </div>
 </p-drawer>
 
