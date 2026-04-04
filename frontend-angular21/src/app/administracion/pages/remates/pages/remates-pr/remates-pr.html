@@ -9,9 +9,8 @@
         </div>
       </div>
       <div class="flex align-items-center gap-2">
-        <!-- Botón "Registrar Remate" — solo si tiene CREAR_REMATES -->
         <p-button
-          *ngIf="puedeCrearRemates"
+          *ngIf="puedeCrearRemates()"
           (onClick)="abrirRegistro()"
           label="Registrar Remate"
           icon="pi pi-plus"
@@ -21,7 +20,6 @@
     </div>
   </p-card>
 
-  <!-- MÉTRICAS -->
   <div class="grid mb-4 mermas-metrics">
     <div class="col-12 md:col-6">
       <p-card styleClass="stat-card">
@@ -49,7 +47,6 @@
     </div>
   </div>
 
-  <!-- FILTROS -->
   <div class="filtros-container mb-4">
     <div class="seccion-filtros">
       <h3><i class="pi pi-filter"></i> Filtros de búsqueda</h3>
@@ -71,9 +68,8 @@
       <div class="filtros-linea-2">
         <div class="filtro-item filtro-compacto">
           <label>SEDE</label>
-
           <p-select
-            *ngIf="esAdmin"
+            *ngIf="esAdmin()"
             [options]="sedesOpciones()"
             [ngModel]="sedeFiltro()"
             (ngModelChange)="sedeFiltro.set($event)"
@@ -85,7 +81,7 @@
           ></p-select>
 
           <div
-            *ngIf="!esAdmin"
+            *ngIf="!esAdmin()"
             class="flex align-items-center gap-2 px-3 py-2 border-round"
             style="
               background: var(--surface-100);
@@ -94,7 +90,7 @@
             "
           >
             <i class="pi pi-map-marker" style="color: #ffa726"></i>
-            <span class="font-semibold">{{ sedeNombre }}</span>
+            <span class="font-semibold">{{ sedeNombre() }}</span>
           </div>
         </div>
         <div class="filtro-item filtro-compacto">
@@ -127,7 +123,6 @@
     </div>
   </div>
 
-  <!-- TABLA -->
   <app-shared-table-container
     titulo="Remates Registrados"
     iconoTitulo="pi pi-list"
@@ -219,9 +214,9 @@
                 (onClick)="verDetalle(remate)"
               >
               </p-button>
-              <!-- EDITAR — requiere EDITAR_REMATES -->
+              
               <p-button
-                *ngIf="puedeEditarRemates"
+                *ngIf="puedeEditarRemates()"
                 icon="pi pi-pencil"
                 [rounded]="true"
                 [text]="true"
@@ -231,9 +226,9 @@
                 (onClick)="editarRemate(remate)"
               >
               </p-button>
-              <!-- CAMBIAR ESTADO — solo ADMIN -->
+              
               <p-button
-                *ngIf="esAdmin && remate.estado === 'ACTIVO'"
+                *ngIf="esAdmin() && remate.estado === 'ACTIVO'"
                 icon="pi pi-times"
                 [rounded]="true"
                 [text]="true"
@@ -244,7 +239,7 @@
               >
               </p-button>
               <p-button
-                *ngIf="esAdmin && remate.estado === 'FINALIZADO'"
+                *ngIf="esAdmin() && remate.estado === 'FINALIZADO'"
                 icon="pi pi-refresh"
                 [rounded]="true"
                 [text]="true"
@@ -271,124 +266,6 @@
       </ng-template>
     </p-table>
   </app-shared-table-container>
-
-  <!-- MODAL DETALLE -->
-  <p-dialog
-    [(visible)]="dialogVisible"
-    [modal]="true"
-    [draggable]="false"
-    [style]="{ width: '520px', 'border-radius': '16px', overflow: 'hidden' }"
-    [contentStyle]="{ padding: '0' }"
-    (onHide)="cerrarModalDetalle()"
-  >
-    <ng-template pTemplate="header"><span></span></ng-template>
-
-    <ng-container *ngIf="remateSeleccionado() as r">
-      <div class="remate-detail-modal">
-        <div class="rdm-banner">
-          <div class="rdm-banner-icon"><i class="pi pi-tag"></i></div>
-          <div class="rdm-banner-info">
-            <span class="rdm-kicker">REMATE</span>
-            <h3 class="rdm-nombre">{{ r.nombre }}</h3>
-          </div>
-          <button class="rdm-close-btn" (click)="cerrarModalDetalle()">
-            <i class="pi pi-times"></i>
-          </button>
-        </div>
-
-        <div class="rdm-code-row">
-          <span class="rdm-code-badge"><i class="pi pi-barcode"></i>{{ r.codigo }}</span>
-          <span
-            class="rdm-status-badge"
-            [class.rdm-status--activo]="r.estado === 'ACTIVO'"
-            [class.rdm-status--finalizado]="r.estado === 'FINALIZADO'"
-            [class.rdm-status--cancelado]="r.estado === 'CANCELADO'"
-          >
-            <span class="rdm-status-dot"></span>{{ r.estado }}
-          </span>
-        </div>
-
-        <div class="rdm-info-grid">
-          <div class="rdm-info-item">
-            <span class="rdm-info-icon"><i class="pi pi-box"></i></span>
-            <div class="rdm-info-content">
-              <span class="rdm-info-label">Cantidad</span>
-              <span class="rdm-info-value">{{ r.cantidad }} unidades</span>
-            </div>
-          </div>
-          <div class="rdm-info-item">
-            <span class="rdm-info-icon"><i class="pi pi-percentage"></i></span>
-            <div class="rdm-info-content">
-              <span class="rdm-info-label">Descuento</span>
-              <span class="rdm-info-value text-green-600 font-bold">-{{ r.descuento }}%</span>
-            </div>
-          </div>
-          <div class="rdm-info-item">
-            <span class="rdm-info-icon"><i class="pi pi-map-marker"></i></span>
-            <div class="rdm-info-content">
-              <span class="rdm-info-label">Sede</span>
-              <span class="rdm-info-value">{{ r.nombreSede }}</span>
-            </div>
-          </div>
-          <div class="rdm-info-item">
-            <span class="rdm-info-icon"><i class="pi pi-wallet"></i></span>
-            <div class="rdm-info-content">
-              <span class="rdm-info-label">Precio original</span>
-              <span class="rdm-info-value">S/ {{ r.precioOriginal | number: '1.2-2' }}</span>
-            </div>
-          </div>
-          <div class="rdm-info-item">
-            <span class="rdm-info-icon"><i class="pi pi-dollar"></i></span>
-            <div class="rdm-info-content">
-              <span class="rdm-info-label">Precio remate</span>
-              <span class="rdm-info-value font-bold text-primary"
-                >S/ {{ r.precioRemate | number: '1.2-2' }}</span
-              >
-            </div>
-          </div>
-          <div class="rdm-info-item rdm-info-item--full" *ngIf="r.observacion">
-            <span class="rdm-info-icon"><i class="pi pi-comment"></i></span>
-            <div class="rdm-info-content">
-              <span class="rdm-info-label">Observación</span>
-              <span class="rdm-info-value">{{ r.observacion }}</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="rdm-footer">
-          <p-button
-            label="Cerrar"
-            icon="pi pi-times"
-            severity="secondary"
-            [outlined]="true"
-            styleClass="rdm-btn-close"
-            (onClick)="cerrarModalDetalle()"
-          >
-          </p-button>
-          <!-- CAMBIAR ESTADO — solo ADMIN -->
-          <p-button
-            *ngIf="esAdmin && r.estado === 'ACTIVO'"
-            label="Finalizar Remate"
-            icon="pi pi-check"
-            severity="danger"
-            [outlined]="true"
-            styleClass="rdm-btn-toggle"
-            (onClick)="confirmarCambioEstado(r)"
-          >
-          </p-button>
-          <!-- EDITAR — requiere EDITAR_REMATES -->
-          <p-button
-            *ngIf="puedeEditarRemates"
-            label="Editar Remate"
-            icon="pi pi-pencil"
-            styleClass="rdm-btn-edit"
-            (onClick)="editarRemate(r)"
-          >
-          </p-button>
-        </div>
-      </div>
-    </ng-container>
-  </p-dialog>
 
   <p-confirmdialog />
   <p-toast></p-toast>

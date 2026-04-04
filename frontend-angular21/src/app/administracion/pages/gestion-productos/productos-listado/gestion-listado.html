@@ -260,16 +260,20 @@
   [closable]="true"
   [draggable]="false"
   [resizable]="false"
-  [style]="{ width: '460px', 'border-radius': '14px' }">
+  [style]="{ width: '500px', 'border-radius': '16px' }"
+  styleClass="modal-acciones-custom">
 
   <ng-template pTemplate="header">
-    <div class="flex align-items-center gap-2">
-      <div style="background:#7c3aed; border-radius:8px; padding:6px 8px;">
-        <i class="pi pi-exclamation-triangle" style="color:white; font-size:1rem"></i>
+    <div class="flex align-items-center gap-3 w-full">
+      <div class="header-icon-box">
+        <i class="pi pi-box"></i>
       </div>
       <div class="flex flex-column">
-        <span class="font-bold text-base">{{ productoSeleccionado?.nombre }}</span>
-        <span class="text-xs text-500">{{ productoSeleccionado?.codigo }}</span>
+        <span class="font-bold text-lg text-900 line-height-2">{{ productoSeleccionado?.nombre }}</span>
+        <span class="text-sm text-500 font-medium mt-1">
+          <i class="pi pi-barcode mr-1"></i>{{ productoSeleccionado?.codigo }} &nbsp;&bull;&nbsp; 
+          <i class="pi pi-database mr-1"></i>Stock: <span class="text-primary font-bold">{{ productoSeleccionado?.stock }}</span>
+        </span>
       </div>
     </div>
   </ng-template>
@@ -277,54 +281,74 @@
   <ng-template pTemplate="content">
     <div class="merma-remate-body">
 
-      <!-- SECCIÓN MERMA -->
-      <div class="seccion-label">
-        <i class="pi pi-times-circle"></i> MERMA
-      </div>
-      <div class="acciones-grid">
-        <button class="accion-btn" (click)="tipoOperacion = 'MERMA'; confirmarMermaRemate()">
-          <span class="accion-icono" style="background: rgba(239,68,68,0.15)">
-            <i class="pi pi-times-circle" style="color:#ef4444"></i>
-          </span>
-          <span>Registrar Merma</span>
-        </button>
-        <button class="accion-btn" (click)="tipoOperacion = 'MERMA_DESC'; confirmarMermaRemate()">
-          <span class="accion-icono" style="background: rgba(239,68,68,0.15)">
-            <i class="pi pi-file-edit" style="color:#ef4444"></i>
-          </span>
-          <span>Ver Mermas</span>
-        </button>
+      <div class="seccion-container">
+        <div class="seccion-label merma-label">
+          <i class="pi pi-times-circle"></i> Gestión de Merma
+        </div>
+        <div class="acciones-grid">
+          <button class="accion-btn btn-merma" 
+                  [disabled]="productoSeleccionado?.stock === 0"
+                  (click)="tipoOperacion = 'MERMA'; confirmarMermaRemate()">
+            <div class="accion-icono">
+              <i class="pi pi-minus-circle"></i>
+            </div>
+            <span class="accion-texto">Registrar Merma</span>
+          </button>
+          
+          <button class="accion-btn btn-merma" 
+                  [disabled]="!productoSeleccionado?.id_merma"
+                  pTooltip="El producto no tiene mermas registradas" 
+                  [tooltipDisabled]="!!productoSeleccionado?.id_merma"
+                  tooltipPosition="bottom"
+                  (click)="tipoOperacion = 'MERMA_DESC'; confirmarMermaRemate()">
+            <div class="accion-icono">
+              <i class="pi pi-file-edit"></i>
+            </div>
+            <span class="accion-texto">Ver Detalles</span>
+          </button>
+        </div>
       </div>
 
-      <!-- SECCIÓN REMATE -->
-      <div class="seccion-label mt-3">
-        <i class="pi pi-tag"></i> REMATE
-      </div>
-      <div class="acciones-grid">
-        <button class="accion-btn" (click)="tipoOperacion = 'REMATE'; confirmarMermaRemate()">
-          <span class="accion-icono" style="background: rgba(255,167,38,0.15)">
-            <i class="pi pi-tag" style="color:#ffa726"></i>
-          </span>
-          <span>Registrar Remate</span>
-        </button>
-        <button class="accion-btn" (click)="tipoOperacion = 'REMATE_DESC'; confirmarMermaRemate()">
-          <span class="accion-icono" style="background: rgba(255,167,38,0.15)">
-            <i class="pi pi-list" style="color:#ffa726"></i>
-          </span>
-          <span>Ver Remates</span>
-        </button>
+      <div class="seccion-container mt-3">
+        <div class="seccion-label remate-label">
+          <i class="pi pi-tag"></i> Gestión de Remate
+        </div>
+        <div class="acciones-grid">
+          <button class="accion-btn btn-remate" 
+                  [disabled]="productoSeleccionado?.stock === 0"
+                  (click)="tipoOperacion = 'REMATE'; confirmarMermaRemate()">
+            <div class="accion-icono">
+              <i class="pi pi-percentage"></i>
+            </div>
+            <span class="accion-texto">Registrar Remate</span>
+          </button>
+          
+          <button class="accion-btn btn-remate" 
+                  [disabled]="!productoSeleccionado?.id_remate"
+                  pTooltip="El producto no tiene remates registrados" 
+                  [tooltipDisabled]="!!productoSeleccionado?.id_remate"
+                  tooltipPosition="bottom"
+                  (click)="tipoOperacion = 'REMATE_DESC'; confirmarMermaRemate()">
+            <div class="accion-icono">
+              <i class="pi pi-list"></i>
+            </div>
+            <span class="accion-texto">Ver Detalles</span>
+          </button>
+        </div>
       </div>
 
     </div>
   </ng-template>
 
   <ng-template pTemplate="footer">
-    <p-button
-      label="Cerrar"
-      icon="pi pi-times"
-      severity="secondary"
-      [text]="true"
-      (onClick)="cerrarModalMermaRemate()"/>
+    <div class="w-full flex justify-content-end pt-2 border-top-1 surface-border">
+      <p-button
+        label="Cerrar ventana"
+        icon="pi pi-times"
+        severity="secondary"
+        [text]="true"
+        (onClick)="cerrarModalMermaRemate()"/>
+    </div>
   </ng-template>
 </p-dialog>
 
