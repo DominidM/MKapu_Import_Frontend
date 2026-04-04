@@ -1,0 +1,548 @@
+:host {
+  display: block;
+}
+
+.sede-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.sede-loading {
+  min-height: 60vh;
+  display: grid;
+  place-items: center;
+}
+
+.sede-loading-icon {
+  font-size: 3rem;
+  color: #f6af33;
+}
+
+.sede-header-card .p-card-body {
+  padding: 1rem 1.25rem;
+}
+
+.sede-header-bordered {
+  border-radius: 12px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+  overflow: hidden;
+}
+
+.sede-header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.sede-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.sede-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.sede-title-icon {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #f5c34d;
+  color: #1f2937;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.sede-kicker {
+  margin: 0;
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.sede-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+:host ::ng-deep .sede-pill.p-button {
+  padding: 1.05rem 1.6rem !important;
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
+  min-height: 48px !important;
+  border: none !important;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15) !important;
+  transition: all 0.2s ease !important;
+}
+
+:host ::ng-deep .sede-pill-compact.p-button {
+  padding: 0.95rem 1.35rem !important;
+  min-height: 44px !important;
+  font-size: 0.9rem !important;
+}
+
+:host ::ng-deep .sede-pill-warning.p-button {
+  background: #f6af33 !important;
+  border: none !important;
+  color: #1f2937 !important;
+}
+
+:host ::ng-deep .sede-pill-secondary.p-button {
+  background: #64748b !important;
+  border: none !important;
+  color: #ffffff !important;
+}
+
+:host ::ng-deep .sede-pill-danger-outlined.p-button {
+  background: transparent !important;
+  border: none !important;
+  color: #ef4444 !important;
+}
+
+:host ::ng-deep .sede-pill-danger-outlined.p-button:hover:not(:disabled) {
+  background: #ef4444 !important;
+  color: #ffffff !important;
+}
+
+.sede-section-card {
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.sede-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.625rem;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.sede-section-header h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1f2937;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sede-section-header h3 i {
+  color: #f6af33;
+  font-size: 1.1rem;
+}
+
+.sede-section-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: #dcfce7;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+  padding: 0.2rem 0.65rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.sede-fields-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 0.875rem;
+}
+
+.sede-fields-grid:last-child {
+  margin-bottom: 0;
+}
+
+.sede-fields-grid--three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.sede-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.sede-field label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  margin: 0;
+  line-height: 1;
+  min-height: 14px;
+}
+
+.sede-field-icon {
+  color: #f6af33;
+  font-size: 0.72rem;
+}
+
+.sede-field-input-wrap {
+  display: flex;
+  align-items: center;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  min-height: 48px;
+  overflow: hidden;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+  background: #ffffff;
+}
+
+.sede-field-input-wrap:focus-within {
+  border-color: #f6af33;
+  box-shadow: 0 0 0 3px rgba(246, 175, 51, 0.12);
+}
+
+.sede-field-input-wrap.sede-field-error {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.08);
+}
+
+.sede-input {
+  width: 100%;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  outline: none !important;
+  background: transparent !important;
+  padding: 0.75rem 1rem !important;
+  font-size: 0.9rem !important;
+  color: #1f2937 !important;
+  min-height: 46px;
+}
+
+.sede-input::placeholder {
+  color: #9ca3af;
+  font-size: 0.85rem;
+}
+
+.sede-input-prefix {
+  padding: 0.75rem 0.75rem 0.75rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #6b7280;
+  border-right: 1px solid #e5e7eb;
+  background: #f9fafb;
+  white-space: nowrap;
+  flex-shrink: 0;
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+}
+
+.sede-input-with-prefix {
+  padding-left: 0.75rem !important;
+}
+
+:host ::ng-deep .sede-autocomplete {
+  width: 100%;
+}
+
+:host ::ng-deep .sede-autocomplete .p-autocomplete {
+  width: 100%;
+}
+
+:host ::ng-deep .sede-autocomplete .p-autocomplete-input {
+  width: 100% !important;
+  border-radius: 8px !important;
+  border: 1px solid #d1d5db !important;
+  min-height: 48px !important;
+  padding: 0.75rem 1rem !important;
+  font-size: 0.9rem !important;
+  color: #1f2937 !important;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease !important;
+}
+
+:host ::ng-deep .sede-autocomplete .p-autocomplete-input:focus {
+  border-color: #f6af33 !important;
+  box-shadow: 0 0 0 3px rgba(246, 175, 51, 0.12) !important;
+  outline: none !important;
+}
+
+:host ::ng-deep .sede-autocomplete .p-autocomplete-input.sede-input-invalid {
+  border-color: #ef4444 !important;
+}
+
+:host ::ng-deep .sede-autocomplete .p-autocomplete-dropdown {
+  border-radius: 0 8px 8px 0 !important;
+  border: 1px solid #d1d5db !important;
+  border-left: none !important;
+  background: #f9fafb !important;
+  color: #6b7280 !important;
+  min-height: 48px !important;
+}
+
+:host ::ng-deep .sede-autocomplete .p-autocomplete-dropdown:hover {
+  background: #f3f4f6 !important;
+  color: #1f2937 !important;
+}
+
+:host ::ng-deep .p-autocomplete-panel {
+  border-radius: 10px !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12) !important;
+  border: 1px solid #e5e7eb !important;
+  overflow: hidden;
+}
+
+:host ::ng-deep .p-autocomplete-item {
+  padding: 0.65rem 1rem !important;
+  font-size: 0.9rem !important;
+  transition: background 0.15s ease !important;
+}
+
+:host ::ng-deep .p-autocomplete-item:hover {
+  background: #fefce8 !important;
+}
+
+.sede-location-preview {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+  padding: 0.4rem 0.85rem;
+  background: #fff8e9;
+  border: 1px solid #f5c34d;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #92400e;
+}
+
+.sede-location-preview i {
+  font-size: 0.75rem;
+  color: #f6af33;
+}
+
+.sede-hint {
+  font-size: 0.72rem;
+  color: #ef4444;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.1rem;
+}
+
+.sede-footer-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding: 0.25rem 0 0.5rem;
+}
+
+:host-context(.app-dark) .sede-header-bordered {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35) !important;
+}
+
+:host-context(.app-dark) .sede-title-icon {
+  background: #e8a424 !important;
+  color: #1f2937 !important;
+}
+
+:host-context(.app-dark) .sede-kicker {
+  color: #94a3b8 !important;
+}
+
+:host-context(.app-dark) .sede-title {
+  color: #f1f5f9 !important;
+}
+
+:host-context(.app-dark) ::ng-deep .sede-pill-warning.p-button {
+  background: #e8a424 !important;
+  border: none !important;
+  color: #1f2937 !important;
+}
+
+:host-context(.app-dark) ::ng-deep .sede-pill-secondary.p-button {
+  background: #475569 !important;
+  border: none !important;
+}
+
+:host-context(.app-dark) ::ng-deep .sede-pill-danger-outlined.p-button {
+  border: none !important;
+  color: #f87171 !important;
+}
+
+:host-context(.app-dark) ::ng-deep .sede-pill-danger-outlined.p-button:hover:not(:disabled) {
+  background: #7f1d1d !important;
+  color: #ffffff !important;
+}
+
+:host-context(.app-dark) .sede-section-card {
+  background: #18181b;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
+}
+
+:host-context(.app-dark) .sede-section-header {
+  border-bottom-color: #27272a;
+}
+
+:host-context(.app-dark) .sede-section-header h3 {
+  color: #f4f4f5;
+}
+
+:host-context(.app-dark) .sede-section-header h3 i {
+  color: #fbbf24;
+}
+
+:host-context(.app-dark) .sede-section-badge {
+  background: rgba(20, 83, 45, 0.3);
+  color: #4ade80;
+  border-color: rgba(74, 222, 128, 0.2);
+}
+
+:host-context(.app-dark) .sede-field label {
+  color: #a1a1aa;
+}
+
+:host-context(.app-dark) .sede-field-icon {
+  color: #fbbf24;
+}
+
+:host-context(.app-dark) .sede-field-input-wrap {
+  background: #09090b;
+  border-color: #27272a;
+}
+
+:host-context(.app-dark) .sede-field-input-wrap:focus-within {
+  border-color: #fbbf24;
+  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1);
+}
+
+:host-context(.app-dark) .sede-input {
+  color: #f4f4f5 !important;
+  background: transparent !important;
+}
+
+:host-context(.app-dark) .sede-input::placeholder {
+  color: #52525b;
+}
+
+:host-context(.app-dark) .sede-input-prefix {
+  background: #18181b;
+  border-right-color: #27272a;
+  color: #a1a1aa;
+}
+
+:host-context(.app-dark) ::ng-deep .sede-autocomplete .p-autocomplete-input {
+  background: #09090b !important;
+  border-color: #27272a !important;
+  color: #f4f4f5 !important;
+}
+
+:host-context(.app-dark) ::ng-deep .sede-autocomplete .p-autocomplete-input:focus {
+  border-color: #fbbf24 !important;
+  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1) !important;
+}
+
+:host-context(.app-dark) ::ng-deep .sede-autocomplete .p-autocomplete-dropdown {
+  background: #18181b !important;
+  border-color: #27272a !important;
+  color: #a1a1aa !important;
+}
+
+:host-context(.app-dark) ::ng-deep .p-autocomplete-panel {
+  background: #18181b !important;
+  border-color: #27272a !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4) !important;
+}
+
+:host-context(.app-dark) ::ng-deep .p-autocomplete-item {
+  color: #e4e4e7 !important;
+}
+
+:host-context(.app-dark) ::ng-deep .p-autocomplete-item:hover {
+  background: #27272a !important;
+}
+
+:host-context(.app-dark) .sede-location-preview {
+  background: #1c1710;
+  border-color: #52401e;
+  color: #fbbf24;
+}
+
+:host-context(.app-dark) .sede-location-preview i {
+  color: #fbbf24;
+}
+
+@media (max-width: 900px) {
+  .sede-fields-grid--three {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .sede-fields-grid,
+  .sede-fields-grid--three {
+    grid-template-columns: 1fr;
+  }
+
+  .sede-section-card {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .sede-header-card .p-card-body {
+    padding: 0.85rem 1rem;
+  }
+
+  .sede-title {
+    font-size: 0.95rem;
+  }
+
+  .sede-kicker {
+    font-size: 0.56rem;
+  }
+
+  .sede-title-icon {
+    width: 34px;
+    height: 34px;
+    font-size: 15px;
+  }
+
+  :host ::ng-deep .sede-pill.p-button,
+  :host ::ng-deep .sede-pill-compact.p-button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .sede-header-actions {
+    width: 100%;
+  }
+
+  .sede-footer-actions {
+    flex-direction: column;
+  }
+
+  .sede-footer-actions ::ng-deep .p-button {
+    width: 100%;
+    justify-content: center;
+  }
+}

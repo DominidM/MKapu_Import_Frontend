@@ -117,14 +117,16 @@ exports.ADMIN_ROUTES = [
         children: [
             {
                 path: '',
-                loadComponent: function () { return Promise.resolve().then(function () { return require('./pages/sedes/pages/sedes/sedes'); }).then(function (m) { return m.Sedes; }); },
+                loadComponent: function () {
+                    return Promise.resolve().then(function () { return require('./pages/sedes/pages/sedes/sedes'); }).then(function (m) { return m.Sedes; });
+                },
                 canActivate: [role_guard_1.roleGuard],
                 data: { permiso: 'VER_SEDES' }
             },
             {
                 path: 'agregar-sede',
                 loadComponent: function () {
-                    return Promise.resolve().then(function () { return require('./pages/sedes/pages/agregar-sede/agregar-sede'); }).then(function (m) { return m.AgregarSede; });
+                    return Promise.resolve().then(function () { return require('./pages/sedes/pages/formulario-sede/formulario-sede'); }).then(function (m) { return m.FormularioSede; });
                 },
                 canActivate: [role_guard_1.roleGuard],
                 data: { permiso: 'CREAR_SEDES' }
@@ -132,10 +134,16 @@ exports.ADMIN_ROUTES = [
             {
                 path: 'editar-sede',
                 loadComponent: function () {
-                    return Promise.resolve().then(function () { return require('./pages/sedes/pages/editar-sede/editar-sede'); }).then(function (m) { return m.EditarSede; });
+                    return Promise.resolve().then(function () { return require('./pages/sedes/pages/formulario-sede/formulario-sede'); }).then(function (m) { return m.FormularioSede; });
                 },
                 canActivate: [role_guard_1.roleGuard],
                 data: { permiso: 'EDITAR_SEDES' }
+            },
+            {
+                path: ':id',
+                loadComponent: function () {
+                    return Promise.resolve().then(function () { return require('./pages/sedes/pages/detalle-sede/detalle-sede'); }).then(function (m) { return m.DetalleSede; });
+                }
             },
         ]
     },
@@ -734,6 +742,14 @@ exports.ADMIN_ROUTES = [
                 },
                 canActivate: [role_guard_1.roleGuard],
                 data: { permiso: 'EDITAR_REMATES' }
+            },
+            {
+                path: 'detalle-remate/:id',
+                loadComponent: function () {
+                    return Promise.resolve().then(function () { return require('./pages/remates/pages/remates-detalle/remates-detalle'); }).then(function (m) { return m.DetalleRemateComponent; });
+                },
+                canActivate: [role_guard_1.roleGuard],
+                data: { permiso: 'VER_REMATES' }
             },
         ]
     },

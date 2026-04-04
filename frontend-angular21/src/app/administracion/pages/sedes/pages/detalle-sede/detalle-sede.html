@@ -1,0 +1,264 @@
+<div class="ds-page p-2">
+  <p-toast />
+  <p-confirmDialog />
+
+  <!-- CABECERA -->
+  <p-card class="ds-header-card mb-4">
+    <div class="flex align-items-center justify-content-between flex-wrap gap-3">
+      <div class="flex align-items-center gap-3">
+        <span class="ds-title-icon"><i class="pi pi-building"></i></span>
+        <div>
+          <p class="ds-kicker mb-0">ADMINISTRACIÓN — SEDES</p>
+          <h2 class="ds-title mb-0">DETALLE DE SEDE</h2>
+        </div>
+      </div>
+      <div class="flex gap-2 flex-wrap">
+        <p-button
+          label="Volver"
+          icon="pi pi-arrow-left"
+          severity="secondary"
+          [outlined]="true"
+          styleClass="ds-pill"
+          (onClick)="volver()"
+        />
+        <p-button
+          *ngIf="puedeEditarSede && sede()"
+          label="Editar Sede"
+          icon="pi pi-pencil"
+          severity="warn"
+          [outlined]="true"
+          styleClass="ds-pill"
+          (onClick)="editarSede()"
+        />
+        <p-button
+          *ngIf="esAdmin && sede()"
+          [label]="sede()!.activo ? 'Desactivar' : 'Activar'"
+          [icon]="sede()!.activo ? 'pi pi-times' : 'pi pi-check'"
+          [severity]="sede()!.activo ? 'danger' : 'success'"
+          [outlined]="true"
+          styleClass="ds-pill"
+          (onClick)="confirmarToggle()"
+        />
+      </div>
+    </div>
+  </p-card>
+
+  <!-- LOADING -->
+  <div class="ds-loading" *ngIf="loading()">
+    <i class="pi pi-spin pi-spinner ds-loading-icon"></i>
+  </div>
+
+  <!-- NOT FOUND -->
+  <div class="ds-section-card ds-error-state" *ngIf="!loading() && notFound()">
+    <div class="ds-error-icon"><i class="pi pi-exclamation-triangle"></i></div>
+    <h3>Sede no encontrada</h3>
+    <p>La sede que buscas no existe o fue eliminada.</p>
+    <p-button
+      label="Volver al listado"
+      icon="pi pi-arrow-left"
+      severity="secondary"
+      [outlined]="true"
+      styleClass="ds-pill mt-3"
+      (onClick)="volver()"
+    />
+  </div>
+
+  <ng-container *ngIf="!loading() && sede()">
+
+    <!-- SUMMARY GRID -->
+    <div class="ds-summary-grid mb-4">
+
+      <div class="ds-summary-card ds-summary-card--codigo">
+        <i class="pi pi-tag"></i>
+        <div>
+          <span class="ds-summary-label">Código</span>
+          <span class="ds-summary-value">{{ sede()!.codigo }}</span>
+          <span class="ds-summary-detail">
+            <i class="pi pi-building"></i>{{ sede()!.nombre }}
+          </span>
+        </div>
+      </div>
+
+      <div class="ds-summary-card ds-summary-card--ciudad">
+        <i class="pi pi-map-marker"></i>
+        <div>
+          <span class="ds-summary-label">Ciudad</span>
+          <span class="ds-summary-value">{{ sede()!.ciudad }}</span>
+          <span class="ds-summary-detail">
+            <i class="pi pi-map"></i>{{ sede()!.departamento }}
+          </span>
+        </div>
+      </div>
+
+      <div class="ds-summary-card ds-summary-card--almacenes">
+        <i class="pi pi-warehouse"></i>
+        <div>
+          <span class="ds-summary-label">Almacenes</span>
+          <span class="ds-summary-value">{{ sede()!.almacenes?.length ?? 0 }}</span>
+          <span class="ds-summary-detail">
+            <i class="pi pi-info-circle"></i>Asignados a esta sede
+          </span>
+        </div>
+      </div>
+
+      <div
+        class="ds-summary-card"
+        [class.ds-summary-card--activo]="sede()!.activo"
+        [class.ds-summary-card--inactivo]="!sede()!.activo">
+        <i [class]="sede()!.activo ? 'pi pi-check-circle' : 'pi pi-times-circle'"></i>
+        <div>
+          <span class="ds-summary-label">Estado</span>
+          <span class="ds-summary-value">{{ sede()!.activo ? 'Activa' : 'Inactiva' }}</span>
+          <span class="ds-summary-detail">
+            <i class="pi pi-shield"></i>
+            {{ sede()!.activo ? 'Sede operativa' : 'Sede desactivada' }}
+          </span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- PANEL GRID -->
+    <div class="ds-panel-grid">
+
+      <!-- COLUMNA IZQUIERDA -->
+      <div class="flex flex-column gap-4">
+
+        <div class="ds-section-card">
+          <div class="ds-section-header">
+            <h3><i class="pi pi-info-circle"></i> Información General</h3>
+            <p-tag
+              [value]="sede()!.activo ? 'Activa' : 'Inactiva'"
+              [severity]="sede()!.activo ? 'success' : 'danger'"
+            />
+          </div>
+
+          <div class="ds-fields-grid">
+            <div class="ds-field">
+              <label>Código</label>
+              <div class="ds-field-display">
+                <i class="pi pi-tag ds-field-icon"></i>
+                <span>{{ sede()!.codigo }}</span>
+              </div>
+            </div>
+            <div class="ds-field">
+              <label>Teléfono</label>
+              <div class="ds-field-display">
+                <i class="pi pi-phone ds-field-icon"></i>
+                <span>{{ sede()!.telefono }}</span>
+              </div>
+            </div>
+            <div class="ds-field ds-field--wide">
+              <label>Nombre / Razón Social</label>
+              <div class="ds-field-display">
+                <i class="pi pi-building ds-field-icon"></i>
+                <span>{{ sede()!.nombre }}</span>
+              </div>
+            </div>
+            <div class="ds-field">
+              <label>Departamento</label>
+              <div class="ds-field-display">
+                <i class="pi pi-map ds-field-icon"></i>
+                <span>{{ sede()!.departamento }}</span>
+              </div>
+            </div>
+            <div class="ds-field">
+              <label>Ciudad</label>
+              <div class="ds-field-display">
+                <i class="pi pi-map-marker ds-field-icon"></i>
+                <span>{{ sede()!.ciudad }}</span>
+              </div>
+            </div>
+            <div class="ds-field ds-field--wide">
+              <label>Dirección</label>
+              <div class="ds-field-display ds-field-display--multiline">
+                <i class="pi pi-home ds-field-icon"></i>
+                <span>{{ sede()!.direccion }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- COLUMNA DERECHA -->
+      <div class="flex flex-column gap-4">
+
+        <div class="ds-section-card">
+          <div class="ds-section-header">
+            <h3><i class="pi pi-warehouse"></i> Almacenes Asignados</h3>
+            <span class="ds-badge-count">{{ sede()!.almacenes?.length ?? 0 }}</span>
+          </div>
+
+          <div class="ds-loading-inline" *ngIf="loadingAlmacenes()">
+            <i class="pi pi-spin pi-spinner"></i>
+            <span>Cargando almacenes...</span>
+          </div>
+
+          <div
+            class="ds-empty-inline"
+            *ngIf="!loadingAlmacenes() && (!sede()!.almacenes || sede()!.almacenes!.length === 0)">
+            <i class="pi pi-inbox"></i>
+            <span>Sin almacenes asignados</span>
+          </div>
+
+          <div
+            class="ds-almacenes-list"
+            *ngIf="!loadingAlmacenes() && sede()!.almacenes && sede()!.almacenes!.length > 0">
+            <div class="ds-almacen-item" *ngFor="let alm of sede()!.almacenes">
+              <div class="ds-almacen-icon">
+                <i class="pi pi-warehouse"></i>
+              </div>
+              <div class="ds-almacen-info">
+                <span class="ds-almacen-nombre">{{ alm.nombre }}</span>
+                <span class="ds-almacen-meta">
+                  {{ alm.codigo }}<span *ngIf="alm.ciudad"> · {{ alm.ciudad }}</span>
+                </span>
+              </div>
+              <p-tag
+                [value]="alm.activo ? 'Activo' : 'Inactivo'"
+                [severity]="alm.activo ? 'success' : 'danger'"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div class="ds-section-card">
+          <div class="ds-section-header">
+            <h3><i class="pi pi-cog"></i> Acciones</h3>
+          </div>
+          <div class="ds-acciones">
+            <p-button
+              *ngIf="puedeEditarSede"
+              label="Editar Sede"
+              icon="pi pi-pencil"
+              severity="warn"
+              [outlined]="true"
+              styleClass="ds-pill w-full"
+              (onClick)="editarSede()"
+            />
+            <p-button
+              *ngIf="esAdmin"
+              [label]="sede()!.activo ? 'Desactivar Sede' : 'Activar Sede'"
+              [icon]="sede()!.activo ? 'pi pi-times' : 'pi pi-check'"
+              [severity]="sede()!.activo ? 'danger' : 'success'"
+              [outlined]="true"
+              styleClass="ds-pill w-full"
+              (onClick)="confirmarToggle()"
+            />
+            <p-button
+              label="Volver al Listado"
+              icon="pi pi-arrow-left"
+              severity="secondary"
+              [outlined]="true"
+              styleClass="ds-pill w-full"
+              (onClick)="volver()"
+            />
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </ng-container>
+</div>
