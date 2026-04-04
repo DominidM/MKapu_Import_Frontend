@@ -1,4 +1,6 @@
 import { Injectable } from '@angular/core';
+import { map, catchError } from 'rxjs/operators';
+import { of } from 'rxjs';
 import { environment } from '../../../enviroments/enviroment';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import {
@@ -61,6 +63,10 @@ export class ProductoService {
     return this.http.get<ProductoStockResponse>(`${this.api}/logistics/products/productos_stock`, {
       params,
     });
+  }
+
+  getCajasByProducto(idProducto: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.api}/logistics/cajas/producto/${idProducto}`);
   }
 
   getProductosAutocomplete(
@@ -136,5 +142,12 @@ export class ProductoService {
   getProductosAutocompleteConPrecio(search: string, idSede: number): Observable<any> {
     const params = new HttpParams().set('search', search).set('id_sede', idSede);
     return this.http.get<any>(`${this.api}/logistics/products/ventas/autocomplete`, { params });
+  }
+
+  existsByCode(codigo: string): Observable<boolean> {
+    return this.getProductoByCodigo(codigo).pipe(
+      map((resp: any) => !!resp?.id_producto || !!resp?.producto?.id_producto),
+      catchError(() => of(false)) 
+    );
   }
 }

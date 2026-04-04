@@ -38,9 +38,8 @@
       </div>
     </p-card>
 
-    <!-- CONTADORES — datos del producto -->
+    <!-- CONTADORES -->
     <div class="contadores-productos mb-4">
-
       <div class="contador-card contador-card--primary">
         <i class="pi pi-tag"></i>
         <div>
@@ -69,8 +68,8 @@
       </div>
 
       <div class="contador-card"
-        [class.contador-card--success]="productoDetalle()!.estado"
-        [class.contador-card--danger]="!productoDetalle()!.estado">
+           [class.contador-card--success]="productoDetalle()!.estado"
+           [class.contador-card--danger]="!productoDetalle()!.estado">
         <i class="pi pi-power-off"></i>
         <div>
           <span class="contador-label">Estado</span>
@@ -78,10 +77,9 @@
           <span class="contador-detalle"><i class="pi pi-info-circle"></i> Disponibilidad</span>
         </div>
       </div>
-
     </div>
 
-    <!-- INFORMACIÓN DEL PRODUCTO -->
+    <!-- INFORMACIÓN -->
     <div class="filtros-container mb-4">
       <div class="seccion-filtros">
         <h3><i class="pi pi-info-circle"></i> Información del Producto</h3>
@@ -124,7 +122,6 @@
             </div>
           </div>
         </div>
-
       </div>
     </div>
 
@@ -133,49 +130,56 @@
       <div class="seccion-filtros">
         <h3><i class="pi pi-dollar"></i> Precios del Producto</h3>
 
-        <div class="filtros-linea-2">
-
-          <div class="filtro-item filtro-compacto">
-            <label>PRECIO COMPRA</label>
-            <div class="detalle-field-display detalle-field-precio">
-              <i class="pi pi-shopping-cart" style="color:var(--red-400)"></i>
-              <span class="precio-valor" style="color:var(--red-400)">
-                S/ {{ productoDetalle()!.precio_compra | number:'1.2-2' }}
-              </span>
+        <div class="grid mt-2">
+          <div class="col-12 md:col-6 lg:col-3">
+            <div class="filtro-item h-full">
+              <label>PRECIO COMPRA</label>
+              <div class="detalle-field-display detalle-field-precio">
+                <i class="pi pi-shopping-cart" style="color:var(--red-400)"></i>
+                <span class="precio-valor" style="color:var(--red-400)">
+                  S/ {{ productoDetalle()!.precio_compra | number:'1.2-2' }}
+                </span>
+              </div>
             </div>
           </div>
 
-          <div class="filtro-item filtro-compacto">
-            <label>PRECIO UNITARIO</label>
-            <div class="detalle-field-display detalle-field-precio">
-              <i class="pi pi-tag" style="color:var(--green-400)"></i>
-              <span class="precio-valor" style="color:var(--green-400)">
-                S/ {{ productoDetalle()!.precio_unitario | number:'1.2-2' }}
-              </span>
+          <div class="col-12 md:col-6 lg:col-3">
+            <div class="filtro-item h-full">
+              <label>PRECIO UNITARIO</label>
+              <div class="detalle-field-display detalle-field-precio">
+                <i class="pi pi-tag" style="color:var(--green-400)"></i>
+                <span class="precio-valor" style="color:var(--green-400)">
+                  S/ {{ productoDetalle()!.precio_unitario | number:'1.2-2' }}
+                </span>
+              </div>
             </div>
           </div>
 
-          <div class="filtro-item filtro-compacto">
-            <label>PRECIO MAYOR</label>
-            <div class="detalle-field-display detalle-field-precio">
-              <i class="pi pi-users" style="color:var(--blue-400)"></i>
-              <span class="precio-valor" style="color:var(--blue-400)">
-                S/ {{ productoDetalle()!.precio_mayor | number:'1.2-2' }}
-              </span>
+          <div class="col-12 md:col-6 lg:col-3">
+            <div class="filtro-item h-full">
+              <label>PRECIO MAYOR</label>
+              <div class="detalle-field-display detalle-field-precio">
+                <i class="pi pi-users" style="color:var(--blue-400)"></i>
+                <span class="precio-valor" style="color:var(--blue-400)">
+                  S/ {{ productoDetalle()!.precio_mayor | number:'1.2-2' }}
+                </span>
+              </div>
             </div>
           </div>
 
-          <div class="filtro-item filtro-compacto">
-            <label>PRECIO CAJA</label>
-            <div class="detalle-field-display detalle-field-precio">
-              <i class="pi pi-box" style="color:var(--indigo-400, #818cf8)"></i>
-              <span class="precio-valor" style="color:var(--indigo-400, #818cf8)">
-                S/ {{ productoDetalle()!.precio_caja | number:'1.2-2' }}
-              </span>
+          <div class="col-12 md:col-6 lg:col-3">
+            <div class="filtro-item h-full">
+              <label>PRECIO CAJA</label>
+              <div class="detalle-field-display detalle-field-precio">
+                <i class="pi pi-box" style="color:var(--indigo-400, #818cf8)"></i>
+                <span class="precio-valor" style="color:var(--indigo-400, #818cf8)">
+                  S/ {{ productoDetalle()!.precio_caja | number:'1.2-2' }}
+                </span>
+              </div>
             </div>
           </div>
-
         </div>
+
       </div>
     </div>
 
@@ -185,27 +189,111 @@
         <div class="seccion-filtros">
           <h3><i class="pi pi-warehouse"></i> Stock en Sede</h3>
 
-          <div class="filtros-linea-2">
-
-            <div class="filtro-item filtro-compacto">
-              <label>SEDE</label>
-              <div class="detalle-field-display">
-                <i class="pi pi-building" style="color:var(--gold)"></i>
-                <span class="font-bold">{{ stockDetalle()!.sede }}</span>
+          <div class="grid mt-2">
+            <div class="col-12 md:col-6">
+              <div class="filtro-item h-full">
+                <label>SEDE</label>
+                <div class="detalle-field-display">
+                  <i class="pi pi-building" style="color:var(--gold)"></i>
+                  <span class="font-bold">{{ stockDetalle()!.sede }}</span>
+                </div>
               </div>
             </div>
 
-            <div class="filtro-item filtro-compacto">
-              <label>STOCK DISPONIBLE</label>
-              <div class="detalle-field-display">
-                <p-tag
-                  [value]="stockDetalle()!.cantidad + ' unid.'"
-                  [severity]="getStockSeverity(stockDetalle()!.cantidad)"
-                  styleClass="font-black" />
+            <div class="col-12 md:col-6">
+              <div class="filtro-item h-full">
+                <label>STOCK DISPONIBLE</label>
+                <div class="detalle-field-display">
+                  <p-tag
+                    [value]="stockDetalle()!.cantidad + ' unid.'"
+                    [severity]="getStockSeverity(stockDetalle()!.cantidad)"
+                    styleClass="font-black" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- CAJA: limpio (sin escalera) -->
+    @if (cajaDetalle()) {
+      <div class="filtros-container mb-4">
+        <div class="seccion-filtros">
+          <h3><i class="pi pi-box"></i> Información de Caja</h3>
+
+          <!-- FILA 1 -->
+          <div class="grid mt-2">
+            <div class="col-12 md:col-6 lg:col-4">
+              <div class="filtro-item h-full">
+                <label>ID CAJA</label>
+                <div class="detalle-field-display">
+                  <i class="pi pi-hashtag text-600"></i>
+                  <span class="font-semibold">{{ cajaDetalle()!.id_caja }}</span>
+                </div>
               </div>
             </div>
 
+            <div class="col-12 md:col-6 lg:col-4">
+              <div class="filtro-item h-full">
+                <label>CÓDIGO CAJA</label>
+                <div class="detalle-field-display">
+                  <i class="pi pi-barcode text-600"></i>
+                  <span class="font-semibold">{{ cajaDetalle()!.cod_caja }}</span>
+                </div>
+              </div>
+            </div>
 
+            <div class="col-12 md:col-6 lg:col-4">
+              <div class="filtro-item h-full">
+                <label>UNIDADES POR CAJA</label>
+                <div class="detalle-field-display">
+                  <i class="pi pi-clone text-600"></i>
+                  <span class="font-semibold">{{ cajaDetalle()!.cantidad_unidades }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- FILA 2 -->
+          <div class="grid mt-1">
+            <div class="col-12 md:col-6 lg:col-4">
+              <div class="filtro-item h-full">
+                <label>PRECIO MAYORISTA CAJA</label>
+                <div class="detalle-field-display detalle-field-precio">
+                  <i class="pi pi-users text-600"></i>
+                  <span class="precio-valor">
+                    @if (cajaDetalle()!.pre_mayorista != null) {
+                      S/ {{ cajaDetalle()!.pre_mayorista | number:'1.2-2' }}
+                    } @else {
+                      —
+                    }
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            @if (stockDetalle()) {
+              <div class="col-12 md:col-6 lg:col-4">
+                <div class="filtro-item h-full">
+                  <label>CAJAS FORMABLES</label>
+                  <div class="detalle-field-display">
+                    <i class="pi pi-inbox text-600"></i>
+                    <span class="font-bold">{{ cajasFormables() }} caja(s)</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-12 md:col-12 lg:col-4">
+                <div class="filtro-item h-full">
+                  <label>UNIDADES SUELTAS</label>
+                  <div class="detalle-field-display">
+                    <i class="pi pi-circle text-600"></i>
+                    <span class="font-semibold">{{ unidadesSueltas() }} unid.</span>
+                  </div>
+                </div>
+              </div>
+            }
           </div>
         </div>
       </div>

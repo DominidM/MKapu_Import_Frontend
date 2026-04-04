@@ -43,12 +43,12 @@
 :host-context(.app-dark) .nota-credito-title {
   color: #f1f5f9 !important;
 }
-/* ══════════════════════════════════════════════════
-   TABLA DE ITEMS - LAYOUT PERFECTO SIN DEFORMACIÓN
-   ══════════════════════════════════════════════════ */
 
+/* ══════════════════════════════════════════════════
+   TABLA DE ITEMS
+   ══════════════════════════════════════════════════ */
 .surface-card {
-  overflow: hidden;
+  overflow: visible;
   border-radius: 8px;
 }
 
@@ -92,52 +92,40 @@
   background: #2a2a2e !important;
 }
 
-/* ═══���══════════════════════════════════════════════
+/* ══════════════════════════════════════════════════
    COMPONENTES EN TABLA
    ══════════════════════════════════════════════════ */
-
-/* Tag */
 .p-tag {
   font-size: 0.75rem !important;
   padding: 4px 8px !important;
 }
 
-/* Checkbox */
 .p-checkbox {
   display: flex !important;
   justify-content: center !important;
   align-items: center !important;
 }
+
 /* ══════════════════════════════════════════════════
-   FIXES PARA SELECTS Y DROPDOWNS
+   DARK MODE PARA SELECTS
    ══════════════════════════════════════════════════ */
-
-/* Ocultar dropdown que queda abierto */
-.p-select-panel {
-  display: none !important;
-}
-
-.p-select-items-wrapper {
-  display: none !important;
-}
-
-/* Evitar que el select tenga items visibles sin abrir */
-.p-select-items {
-  display: none !important;
-}
-
-/* Asegurar que solo se vea el label seleccionado */
-.p-select-label {
-  display: block !important;
-}
-
-.p-select-trigger {
-  pointer-events: auto !important;
-}
-
-/* Dark mode para selects */
 :host-context(.app-dark) .p-select {
   background: #18181b !important;
   border-color: #52525b !important;
   color: #f1f5f9 !important;
+}
+
+/* Fix para p-select overlay de PrimeNG */
+.p-select-overlay {
+  z-index: 9999 !important;
+  max-height: none !important;
+}
+
+.p-select-list-container {
+  max-height: 300px !important;
+  overflow-y: auto !important;
+}
+
+.p-select-list {
+  padding: 0 !important;
 }

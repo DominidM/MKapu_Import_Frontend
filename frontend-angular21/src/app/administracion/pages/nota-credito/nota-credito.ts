@@ -311,7 +311,7 @@ export class NotasCreditoComponent implements OnInit, OnDestroy {
         this.messageService.add({
           severity: 'success',
           summary: 'Nota anulada',
-          detail: 'La nota de crÃƒÆ’Ã‚Â©dito fue anulada correctamente',
+          detail: 'La nota de credito fue anulada correctamente',
           life: 3000,
         });
         this.cargarNotas();

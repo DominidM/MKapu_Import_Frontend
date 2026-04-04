@@ -51,7 +51,7 @@
           [showClear]="true"
           [showIcon]="true"
         ></p-datepicker>
-        <span class="filtro-fechas-separador">â€”</span>
+        <span class="filtro-fechas-separador">-</span>
         <p-datepicker
           [ngModel]="filtroFechaFin()"
           (ngModelChange)="filtroFechaFin.set($event)"
@@ -168,7 +168,7 @@
           <th>Correlativo</th>
           <th>Cliente</th>
           <th class="text-center">Moneda</th>
-          <th>Fecha EmisiÃ³n</th>
+          <th>Fecha Emision</th>
           <th class="text-right">Total</th>
           <th class="text-center">Estado</th>
           <th class="text-center">Acciones</th>
@@ -220,7 +220,7 @@
                 [text]="true"
                 severity="danger"
                 [disabled]="!puedeAnular(nota.status)"
-                pTooltip="Anular nota de crÃ©dito"
+                pTooltip="Anular nota de credito"
                 tooltipPosition="top"
               ></p-button>
             </div>
