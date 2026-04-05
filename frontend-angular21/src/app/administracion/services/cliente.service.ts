@@ -55,6 +55,7 @@ export interface ConsultaDocumentoResponse {
   direccion?: string;
 }
 
+
 @Injectable({ providedIn: 'root' })
 export class ClienteService {
   private readonly http = inject(HttpClient);

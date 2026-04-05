@@ -39,10 +39,10 @@ import { AuthService } from '../../../../../auth/services/auth.service';
     InputNumberModule, AutoCompleteModule, ToastModule, ConfirmDialogModule,
   ],
   providers: [MessageService, ConfirmationService],
-  templateUrl: './administracion.html',
-  styleUrls: ['./administracion.css'],
+  templateUrl: './administracion-crear.html',
+  styleUrls: ['./administracion-crear.css'],
 })
-export class Administracion implements AfterViewInit {
+export class AdministracionCrear implements AfterViewInit {
 
   roles: { label: string; value: number; icon: string; description: string; emoji: string }[] = [];
   rolCuentaSeleccionado: number | null = null;

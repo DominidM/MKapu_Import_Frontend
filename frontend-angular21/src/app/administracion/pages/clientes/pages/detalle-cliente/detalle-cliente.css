@@ -1,0 +1,346 @@
+:host {
+  display: block;
+}
+
+.detalle-cliente-page {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.detalle-loading {
+  min-height: 60vh;
+  display: grid;
+  place-items: center;
+}
+
+.detalle-loading-icon {
+  font-size: 3rem;
+  color: #f6af33;
+}
+
+.ventas-header-card .p-card-body {
+  padding: 1rem 1.25rem;
+}
+
+.ventas-header-card {
+  border-radius: 12px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+  overflow: hidden;
+}
+
+.clientes-title-icon {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #f5c34d;
+  color: #1f2937;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.clientes-kicker {
+  margin: 0;
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.clientes-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1f2937;
+  line-height: 1.2;
+}
+
+.detalle-content-card {
+  border-radius: 14px;
+  border: 1px solid #d9d9d9;
+  box-shadow: none;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+:host ::ng-deep .detalle-content-card.p-card {
+  border: none !important;
+  box-shadow: none !important;
+  background: #ffffff !important;
+  border-radius: 14px !important;
+  overflow: hidden !important;
+}
+
+:host ::ng-deep .detalle-content-card .p-card-body {
+  padding: 0 !important;
+  background: #ffffff !important;
+}
+
+:host ::ng-deep .detalle-content-card .p-card-content {
+  padding: 0 !important;
+  background: #ffffff !important;
+}
+
+.detalle-content-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #d7d7d7;
+  background: #ffffff;
+}
+
+.detalle-content-header h3 {
+  margin: 0;
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: #2f2f2f;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.detalle-content-header h3 i {
+  color: #d8a03b;
+  font-size: 0.92rem;
+}
+
+.detalle-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  padding: 1.25rem;
+  background: #ffffff;
+}
+
+.detalle-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  min-height: 76px;
+  padding: 0.95rem 1rem;
+  border: 1px solid #cdcdcd;
+  border-radius: 12px;
+}
+
+.detalle-item-full {
+  grid-column: 1 / -1;
+}
+
+.detalle-item label {
+  margin: 0;
+  font-size: 0.70rem;
+  font-weight: 600;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: #7b8794;
+}
+
+.detalle-item span {
+  font-size: 0.98rem;
+  color: #1f2937;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.estado-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.estado-chip--activo {
+  background: #cfe8d6;
+  color: #1f7a45;
+}
+
+.estado-chip--inactivo {
+  background: #f6d3d3;
+  color: #b42318;
+}
+
+.detalle-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0 1.25rem 1.25rem;
+  background: #ffffff;
+  flex-wrap: wrap;
+}
+
+:host ::ng-deep .cliente-btn-edit .p-button {
+  background: #f6af33 !important;
+  border-color: #f6af33 !important;
+  color: #1f2937 !important;
+  font-weight: 600 !important;
+  border-radius: 8px !important;
+}
+
+:host ::ng-deep .cliente-btn-edit .p-button:hover:not(:disabled),
+:host ::ng-deep .ventas-header-card .p-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.mensaje-vacio {
+  min-height: 320px;
+  padding: 2rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.85rem;
+  text-align: center;
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px dashed #d1d5db;
+}
+
+.mensaje-vacio i {
+  font-size: 2rem;
+  color: #f59e0b;
+}
+
+.mensaje-vacio p {
+  margin: 0;
+  color: #64748b;
+  max-width: 520px;
+}
+
+:host-context(.app-dark) .ventas-header-card {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35) !important;
+}
+
+:host-context(.app-dark) .clientes-title-icon {
+  background: #e8a424 !important;
+  color: #1f2937 !important;
+}
+
+:host-context(.app-dark) .clientes-kicker {
+  color: #94a3b8 !important;
+}
+
+:host-context(.app-dark) .clientes-title {
+  color: #f1f5f9 !important;
+}
+
+:host-context(.app-dark) .detalle-content-card {
+  background: #18181b;
+  border-color: #2b2b31;
+}
+
+:host-context(.app-dark) :host ::ng-deep .detalle-content-card.p-card {
+  background: #18181b !important;
+  border-color: #2b2b31 !important;
+}
+
+:host-context(.app-dark) :host ::ng-deep .detalle-content-card .p-card-body,
+:host-context(.app-dark) :host ::ng-deep .detalle-content-card .p-card-content {
+  background: #18181b !important;
+}
+
+:host-context(.app-dark) .detalle-content-header {
+  background: #16161a;
+  border-bottom-color: #2b2b31;
+}
+
+:host-context(.app-dark) .detalle-content-header h3 {
+  color: #f8fafc;
+}
+
+:host-context(.app-dark) .detalle-grid {
+  background: #18181b;
+}
+
+:host-context(.app-dark) .detalle-item {
+  background: #111214;
+  border-color: #303038;
+}
+
+:host-context(.app-dark) .detalle-item label {
+  color: #9aa4b2;
+}
+
+:host-context(.app-dark) .detalle-item span {
+  color: #f3f4f6;
+}
+
+:host-context(.app-dark) .estado-chip--activo {
+  background: rgba(34, 197, 94, 0.18);
+  color: #86efac;
+}
+
+:host-context(.app-dark) .estado-chip--inactivo {
+  background: rgba(239, 68, 68, 0.16);
+  color: #fca5a5;
+}
+
+:host-context(.app-dark) .detalle-footer {
+  background: #18181b;
+}
+
+:host-context(.app-dark) .mensaje-vacio {
+  background: #18181b;
+  border-color: #27272a;
+}
+
+:host-context(.app-dark) .mensaje-vacio p {
+  color: #a1a1aa;
+}
+
+@media (max-width: 768px) {
+  .detalle-grid {
+    grid-template-columns: 1fr;
+    padding: 1rem;
+    gap: 0.85rem;
+  }
+
+  .detalle-item-full {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 600px) {
+  .ventas-header-card .p-card-body {
+    padding: 0.85rem 1rem;
+  }
+
+  .clientes-title {
+    font-size: 0.95rem;
+  }
+
+  .clientes-kicker {
+    font-size: 0.56rem;
+  }
+
+  .clientes-title-icon {
+    width: 34px;
+    height: 34px;
+    font-size: 15px;
+  }
+
+  .detalle-content-header,
+  .detalle-footer {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .detalle-footer {
+    flex-direction: column;
+    align-items: stretch;
+    padding-bottom: 1rem;
+  }
+
+  :host ::ng-deep .cliente-btn-edit .p-button,
+  :host ::ng-deep .ventas-header-card .p-button {
+    width: 100%;
+    justify-content: center;
+  }
+}

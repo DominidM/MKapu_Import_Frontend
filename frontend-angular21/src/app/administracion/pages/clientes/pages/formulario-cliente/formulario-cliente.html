@@ -8,7 +8,9 @@
         <span class="sedes-title-icon"><i class="pi pi-tag"></i></span>
         <div>
           <p class="clientes-kicker">VENTAS - CLIENTES</p>
-          <h2 class="clientes-title">AGREGAR CLIENTE</h2>
+          <h2 class="clientes-title">
+            {{ modo() === 'crear' ? 'AGREGAR CLIENTE' : 'EDITAR CLIENTE' }}
+          </h2>
         </div>
       </div>
       <p-button
@@ -22,10 +24,12 @@
   </p-card>
 
   <p-card styleClass="cliente-card border-none">
-    <form #clienteForm="ngForm" (ngSubmit)="registrar(clienteForm)">
+    <form #clienteForm="ngForm" (ngSubmit)="guardar()">
       <div class="grid form-grid">
         <div class="col-12 md:col-6">
-          <label class="field-label">TIPO DE DOCUMENTO <span class="required">*</span></label>
+          <label class="field-label">
+            TIPO DE DOCUMENTO <span class="required">*</span>
+          </label>
           <p-select
             [options]="tiposDocumento()"
             optionLabel="description"
@@ -39,13 +43,19 @@
         </div>
 
         <div class="col-12 md:col-6">
-          <label class="field-label">NÚMERO DE DOCUMENTO <span class="required">*</span></label>
+          <label class="field-label">
+            NÚMERO DE DOCUMENTO <span class="required">*</span>
+          </label>
           <input
             pInputText
             class="w-full"
             [(ngModel)]="cliente.nro_documento"
             name="nro_documento"
-            [placeholder]="esDNI ? '8 dígitos' : esRUC ? '11 dígitos' : 'Número de documento'"
+            [placeholder]="
+              esDNI ? '8 dígitos'
+              : esRUC ? '11 dígitos'
+              : 'Número de documento'
+            "
             [maxlength]="maxLengthDocumento"
             (keydown)="soloDocumento($event)"
             (input)="sanitizarDocumento()"
@@ -63,14 +73,19 @@
           <small *ngIf="reniecLoading()" class="text-500">
             <i class="pi pi-spin pi-spinner"></i> Consultando...
           </small>
-          <small *ngIf="!reniecLoading() && nombreDesdeApi()" style="color: var(--green-600)">
+          <small
+            *ngIf="!reniecLoading() && nombreDesdeApi()"
+            style="color: var(--green-600)"
+          >
             <i class="pi pi-check-circle"></i>
             {{ esRUC ? 'Datos obtenidos de SUNAT' : 'Datos obtenidos de RENIEC' }}
           </small>
         </div>
 
         <div class="col-12" *ngIf="esRUC">
-          <label class="field-label">RAZÓN SOCIAL <span class="required">*</span></label>
+          <label class="field-label">
+            RAZÓN SOCIAL <span class="required">*</span>
+          </label>
           <input
             pInputText
             class="w-full"
@@ -86,12 +101,16 @@
             <small class="p-error" *ngIf="submitted() && !razonSocialValida">
               La razón social es obligatoria.
             </small>
-            <small class="text-500 ml-auto">{{ razonSocialLen }}/{{ LIMITS.razonsocial }}</small>
+            <small class="text-500 ml-auto">
+              {{ razonSocialLen }}/{{ LIMITS.razonsocial }}
+            </small>
           </div>
         </div>
 
         <div class="col-12 md:col-6" *ngIf="!esRUC">
-          <label class="field-label">NOMBRES <span class="required">*</span></label>
+          <label class="field-label">
+            NOMBRES <span class="required">*</span>
+          </label>
           <input
             pInputText
             class="w-full"
@@ -107,12 +126,16 @@
             <small class="p-error" *ngIf="submitted() && !nombresValido">
               Los nombres son obligatorios (mínimo 2 letras).
             </small>
-            <small class="text-500 ml-auto">{{ nombresLen }}/{{ LIMITS.nombres }}</small>
+            <small class="text-500 ml-auto">
+              {{ nombresLen }}/{{ LIMITS.nombres }}
+            </small>
           </div>
         </div>
 
         <div class="col-12 md:col-6" *ngIf="!esRUC">
-          <label class="field-label">APELLIDOS <span class="required">*</span></label>
+          <label class="field-label">
+            APELLIDOS <span class="required">*</span>
+          </label>
           <input
             pInputText
             class="w-full"
@@ -128,12 +151,16 @@
             <small class="p-error" *ngIf="submitted() && !apellidosValido">
               Los apellidos son obligatorios (mínimo 2 letras).
             </small>
-            <small class="text-500 ml-auto">{{ apellidosLen }}/{{ LIMITS.apellidos }}</small>
+            <small class="text-500 ml-auto">
+              {{ apellidosLen }}/{{ LIMITS.apellidos }}
+            </small>
           </div>
         </div>
 
         <div class="col-12">
-          <label class="field-label">DIRECCIÓN <span class="required">*</span></label>
+          <label class="field-label">
+            DIRECCIÓN <span class="required">*</span>
+          </label>
           <input
             pInputText
             class="w-full"
@@ -141,14 +168,21 @@
             name="direccion"
             placeholder="Mínimo 3 caracteres"
             [maxlength]="LIMITS.direccion"
-            (input)="sanitizarTexto('direccion')"
-            [ngClass]="{ 'p-invalid': submitted() && cliente.direccion.trim().length < 3 }"
+            (input)="sanitizarTexto()"
+            [ngClass]="{
+              'p-invalid': submitted() && cliente.direccion.trim().length < 3
+            }"
           />
           <div class="flex justify-content-between">
-            <small class="p-error" *ngIf="submitted() && cliente.direccion.trim().length < 3">
+            <small
+              class="p-error"
+              *ngIf="submitted() && cliente.direccion.trim().length < 3"
+            >
               La dirección es obligatoria (mínimo 3 caracteres).
             </small>
-            <small class="text-500 ml-auto">{{ direccionLen }}/{{ LIMITS.direccion }}</small>
+            <small class="text-500 ml-auto">
+              {{ direccionLen }}/{{ LIMITS.direccion }}
+            </small>
           </div>
         </div>
 
@@ -182,7 +216,8 @@
             (onKeyDown)="onTelefonoKeyDown($event)"
             (ngModelChange)="onTelefonoChange($event)"
             [ngClass]="{ 'p-invalid': submitted() && !telefonoValido }"
-          />
+          >
+          </p-inputnumber>
           <small class="p-error" *ngIf="submitted() && !telefonoValido">
             El teléfono debe tener exactamente 9 dígitos.
           </small>
@@ -201,15 +236,16 @@
           severity="secondary"
           styleClass="cliente-btn-cancel"
           type="button"
-          (onClick)="confirmCancel(clienteForm)"
+          (onClick)="confirmarCancelar()"
         >
         </p-button>
+
         <p-button
-          label="Registrar Cliente"
+          [label]="modo() === 'crear' ? 'Registrar Cliente' : 'Guardar Cambios'"
           icon="pi pi-check"
           styleClass="cliente-btn-primary"
           [loading]="loading()"
-          (onClick)="registrar(clienteForm)"
+          type="submit"
         >
         </p-button>
       </div>

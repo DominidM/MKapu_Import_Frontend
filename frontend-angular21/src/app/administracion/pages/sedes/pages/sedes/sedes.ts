@@ -57,41 +57,41 @@ type ViewMode = 'todas' | 'activas' | 'inactivas';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Sedes implements OnInit {
-  private readonly sedeService         = inject(SedeService);
+  private readonly sedeService = inject(SedeService);
   private readonly confirmationService = inject(ConfirmationService);
-  private readonly messageService      = inject(MessageService);
-  private readonly authService         = inject(AuthService);
-  private readonly router              = inject(Router);
-  private readonly cdr                 = inject(ChangeDetectorRef);
+  private readonly messageService = inject(MessageService);
+  private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   readonly loadingAlmacenes = this.sedeService.loadingAlmacenes;
-  readonly loading          = this.sedeService.loading;
-  readonly error            = this.sedeService.error;
+  readonly loading = this.sedeService.loading;
+  readonly error = this.sedeService.error;
 
   readonly searchTerm = signal<string>('');
-  readonly sedes      = computed(() => this.sedeService.sedes());
-  readonly viewMode   = signal<ViewMode>('activas');
+  readonly sedes = computed(() => this.sedeService.sedes());
+  readonly viewMode = signal<ViewMode>('activas');
 
   readonly paginaActual = signal<number>(1);
   readonly limitePagina = signal<number>(5);
 
   // ── Permisos ──────────────────────────────────────────────────────
-  esAdmin          = false;
-  puedeCrearSede   = false;
-  puedeEditarSede  = false;
-  puedeVerDetalle  = false;
+  esAdmin = false;
+  puedeCrearSede = false;
+  puedeEditarSede = false;
+  puedeVerDetalle = false;
 
   readonly viewOptions: { label: string; value: ViewMode }[] = [
-    { label: 'Todos',     value: 'todas'     },
-    { label: 'Activas',   value: 'activas'   },
+    { label: 'Todos', value: 'todas' },
+    { label: 'Activas', value: 'activas' },
     { label: 'Inactivas', value: 'inactivas' },
   ];
 
   readonly visibleSedes = computed(() => {
     const mode = this.viewMode();
-    const all  = this.sedes().filter(s => s && s.id_sede);
-    if (mode === 'activas')   return all.filter(s => s?.activo === true);
-    if (mode === 'inactivas') return all.filter(s => s?.activo === false);
+    const all = this.sedes().filter((s) => s && s.id_sede);
+    if (mode === 'activas') return all.filter((s) => s?.activo === true);
+    if (mode === 'inactivas') return all.filter((s) => s?.activo === false);
     return all;
   });
 
@@ -99,10 +99,12 @@ export class Sedes implements OnInit {
     const term = this.searchTerm().trim().toLowerCase();
     const base = this.visibleSedes();
     if (!term) return base;
-    return base.filter(s =>
-      [s.codigo, s.nombre, s.ciudad].some(f =>
-        String(f ?? '').toLowerCase().includes(term)
-      )
+    return base.filter((s) =>
+      [s.codigo, s.nombre, s.ciudad].some((f) =>
+        String(f ?? '')
+          .toLowerCase()
+          .includes(term),
+      ),
     );
   });
 
@@ -112,34 +114,38 @@ export class Sedes implements OnInit {
   });
 
   readonly totalPaginas = computed(() =>
-    Math.ceil(this.filteredSedes().length / this.limitePagina())
+    Math.ceil(this.filteredSedes().length / this.limitePagina()),
   );
 
   readonly sedeSuggestions = computed(() => this.filteredSedes());
 
   ngOnInit(): void {
-    this.esAdmin         = this.authService.getRoleId() === UserRole.ADMIN;
-    this.puedeCrearSede  = this.authService.hasPermiso('CREAR_SEDES');
+    this.esAdmin = this.authService.getRoleId() === UserRole.ADMIN;
+    this.puedeCrearSede = this.authService.hasPermiso('CREAR_SEDES');
     this.puedeEditarSede = this.authService.hasPermiso('EDITAR_SEDES');
     this.puedeVerDetalle = this.authService.hasPermiso('VER_SEDES');
 
-    this.sedeService.loadSedes('Administrador').pipe(
-      switchMap((res) => {
-        const sedes = res.headquarters ?? [];
-        if (sedes.length === 0) return of([]);
-        return forkJoin(
-          sedes.map(sede =>
-            this.sedeService.loadAlmacenesParaSede(sede.id_sede).pipe(catchError(() => of(null)))
-          )
-        );
-      })
-    ).subscribe({ next: () => this.cdr.markForCheck() });
+    this.sedeService
+      .loadSedes('Administrador')
+      .pipe(
+        switchMap((res) => {
+          const sedes = res.headquarters ?? [];
+          if (sedes.length === 0) return of([]);
+          return forkJoin(
+            sedes.map((sede) =>
+              this.sedeService.loadAlmacenesParaSede(sede.id_sede).pipe(catchError(() => of(null))),
+            ),
+          );
+        }),
+      )
+      .subscribe({ next: () => this.cdr.markForCheck() });
   }
 
   getAlmacenesRestantes(sede: Headquarter): string {
     if (!sede.almacenes || sede.almacenes.length <= 2) return '';
-    return sede.almacenes.slice(2)
-      .map(a => a.codigo + (a.ciudad ? ' · ' + a.ciudad : ''))
+    return sede.almacenes
+      .slice(2)
+      .map((a) => a.codigo + (a.ciudad ? ' · ' + a.ciudad : ''))
       .join('\n');
   }
 
@@ -181,15 +187,20 @@ export class Sedes implements OnInit {
     this.paginaActual.set(1);
   }
 
-  onPageChange(page: number): void   { this.paginaActual.set(page); }
-  onLimitChange(limit: number): void { this.limitePagina.set(limit); this.paginaActual.set(1); }
+  onPageChange(page: number): void {
+    this.paginaActual.set(page);
+  }
+  onLimitChange(limit: number): void {
+    this.limitePagina.set(limit);
+    this.paginaActual.set(1);
+  }
 
   confirmToggleStatus(sede: Headquarter): void {
     const nextStatus = !sede.activo;
     this.confirmationService.confirm({
-      header:      'Confirmación',
-      message:     `¿Deseas ${nextStatus ? 'activar' : 'desactivar'} la sede "${sede.nombre}" (${sede.codigo})?`,
-      icon:        'pi pi-exclamation-triangle',
+      header: 'Confirmación',
+      message: `¿Deseas ${nextStatus ? 'activar' : 'desactivar'} la sede "${sede.nombre}" (${sede.codigo})?`,
+      icon: 'pi pi-exclamation-triangle',
       acceptLabel: nextStatus ? 'Activar' : 'Desactivar',
       rejectLabel: 'Cancelar',
       acceptButtonProps: { severity: (nextStatus ? 'success' : 'danger') as any },
@@ -199,16 +210,16 @@ export class Sedes implements OnInit {
           next: () => {
             this.messageService.add({
               severity: 'success',
-              summary:  nextStatus ? 'Sede activada' : 'Sede desactivada',
-              detail:   `Se ${nextStatus ? 'activó' : 'desactivó'} la sede "${sede.nombre}".`,
+              summary: nextStatus ? 'Sede activada' : 'Sede desactivada',
+              detail: `Se ${nextStatus ? 'activó' : 'desactivó'} la sede "${sede.nombre}".`,
             });
             this.cdr.markForCheck();
           },
           error: (err) => {
             this.messageService.add({
               severity: 'error',
-              summary:  'Error',
-              detail:   err?.error?.message ?? 'No se pudo cambiar el estado de la sede.',
+              summary: 'Error',
+              detail: err?.error?.message ?? 'No se pudo cambiar el estado de la sede.',
             });
           },
         });

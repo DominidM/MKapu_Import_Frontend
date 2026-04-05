@@ -60,7 +60,7 @@ export class RolesListadoComponent implements OnInit {
     { label: 'Inactivos', value: 'inactivos' },
   ];
 
-  // ── Roles filtrados por vista (todos/activos/inactivos) ────
+  // ── Roles filtrados solo por viewMode (para la tabla) ──
   readonly visibleRoles = computed(() => {
     const mode = this.viewMode();
     const all = this.svc.roles();
@@ -69,19 +69,10 @@ export class RolesListadoComponent implements OnInit {
     return all;
   });
 
-  // ── Roles filtrados por búsqueda ────────────────────────
-  readonly filteredRoles = computed(() => {
-    const term = this.searchTerm().trim().toLowerCase();
-    const base = this.visibleRoles();
-    if (!term) return base;
-    return base.filter(r =>
-      [r.nombre, r.descripcion].some(f =>
-        String(f ?? '').toLowerCase().includes(term)
-      )
-    );
-  });
+  // ── La tabla NO filtra por texto, solo por viewMode ────
+  readonly filteredRoles = computed(() => this.visibleRoles());
 
-  // ── Roles paginados ─────────────────────────────────────
+  // ── Roles paginados ────────────────────────────────────
   readonly rolesPaginados = computed(() => {
     const data = this.filteredRoles();
     const start = (this.paginaActual() - 1) * this.limitePagina();
@@ -92,7 +83,17 @@ export class RolesListadoComponent implements OnInit {
     Math.ceil(this.filteredRoles().length / this.limitePagina())
   );
 
-  readonly suggestions = computed(() => this.filteredRoles());
+  // ── Sugerencias del autocomplete (sí filtran por texto) ─
+  readonly suggestions = computed(() => {
+    const term = this.searchTerm().trim().toLowerCase();
+    const base = this.visibleRoles();
+    if (!term) return base;
+    return base.filter(r =>
+      [r.nombre, r.descripcion].some(f =>
+        String(f ?? '').toLowerCase().includes(term)
+      )
+    );
+  });
 
   ngOnInit() {
     this.svc.loadRoles().subscribe({
@@ -100,14 +101,31 @@ export class RolesListadoComponent implements OnInit {
     });
   }
 
-  onSearch(event: { query: string }) { this.searchTerm.set(event.query); this.paginaActual.set(1); }
-  onViewModeChange(mode: ViewMode) { this.viewMode.set(mode); this.paginaActual.set(1); }
-  clearSearch() { this.searchTerm.set(''); this.paginaActual.set(1); }
+  onSearch(event: { query: string }) {
+    this.searchTerm.set(event.query);
+    this.paginaActual.set(1);
+  }
+
+  onViewModeChange(mode: ViewMode) {
+    this.viewMode.set(mode);
+    this.paginaActual.set(1);
+  }
+
+  clearSearch() {
+    this.searchTerm.set('');
+    this.paginaActual.set(1);
+  }
 
   onSearchChange(term: unknown) {
-    if (typeof term === 'string') { this.searchTerm.set(term); this.paginaActual.set(1); return; }
+    if (typeof term === 'string') {
+      this.searchTerm.set(term);
+      this.paginaActual.set(1);
+      return;
+    }
     if (term && typeof term === 'object' && 'nombre' in (term as any)) {
-      this.searchTerm.set(String((term as any).nombre ?? '')); this.paginaActual.set(1); return;
+      this.searchTerm.set(String((term as any).nombre ?? ''));
+      this.paginaActual.set(1);
+      return;
     }
     this.searchTerm.set('');
   }
@@ -146,7 +164,8 @@ export class RolesListadoComponent implements OnInit {
             detail: `"${rol.nombre}" fue ${next ? 'activado' : 'desactivado'}.`,
           }),
           error: err => this.msgService.add({
-            severity: 'error', summary: 'Error',
+            severity: 'error',
+            summary: 'Error',
             detail: err?.error?.message ?? 'No se pudo cambiar el estado.',
           }),
         });
@@ -167,7 +186,8 @@ export class RolesListadoComponent implements OnInit {
         this.svc.deleteRole(rol.id_rol).pipe(take(1)).subscribe({
           next: () => {
             this.msgService.add({
-              severity: 'info', summary: 'Rol eliminado',
+              severity: 'info',
+              summary: 'Rol eliminado',
               detail: `"${rol.nombre}" fue eliminado.`,
             });
             if (this.rolSeleccionado()?.id_rol === rol.id_rol) {
@@ -175,7 +195,8 @@ export class RolesListadoComponent implements OnInit {
             }
           },
           error: err => this.msgService.add({
-            severity: 'error', summary: 'Error',
+            severity: 'error',
+            summary: 'Error',
             detail: err?.error?.message ?? 'No se pudo eliminar.',
           }),
         });

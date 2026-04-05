@@ -1,0 +1,135 @@
+<!-- HEADER -->
+<p-card class="p-2 usuarios-header-card mb-3">
+  <div
+    class="usuarios-header-row flex flex-column md:flex-row md:align-items-center md:justify-content-between gap-3"
+  >
+    <div class="usuarios-header-title flex align-items-center gap-3">
+      <span class="usuarios-title-icon">
+        <i class="pi pi-user"></i>
+      </span>
+      <div>
+        <p class="usuarios-kicker">ADMINISTRACIÓN · DETALLE DE USUARIO</p>
+        <h2 class="usuarios-title">{{ tituloPagina() }}</h2>
+      </div>
+    </div>
+
+    <div class="usuarios-header-actions flex gap-2">
+      <p-button
+        label="Volver al listado"
+        icon="pi pi-arrow-left"
+        severity="secondary"
+        [outlined]="true"
+        (onClick)="volverAlListado()"
+      >
+      </p-button>
+
+      <p-button
+        label="Editar usuario"
+        icon="pi pi-pencil"
+        class="user-btn-edit"
+        (onClick)="irAEditar()"
+        *ngIf="usuario()"
+      >
+      </p-button>
+    </div>
+  </div>
+</p-card>
+
+<p-toast></p-toast>
+
+<!-- CONTENIDO / LOADING -->
+<ng-container *ngIf="cargando(); else contenido">
+  <div class="p-2">
+    <div class="detalle-loading">
+      <i class="pi pi-spin pi-spinner detalle-loading-icon"></i>
+    </div>
+  </div>
+</ng-container>
+
+<ng-template #contenido>
+  <ng-container *ngIf="usuario() as u; else errorTpl">
+    <!-- CARD DE DETALLE -->
+    <div class="p-2">
+      <div class="detalle-content-card mb-4">
+        <div class="detalle-content-header">
+          <h3><i class="pi pi-id-card"></i> Información del usuario</h3>
+        </div>
+
+        <div class="detalle-grid">
+          <div class="detalle-item">
+            <label>Nombres</label>
+            <span>{{ u.usu_nom || '—' }}</span>
+          </div>
+
+          <div class="detalle-item">
+            <label>Apellido paterno</label>
+            <span>{{ u.ape_pat || '—' }}</span>
+          </div>
+
+          <div class="detalle-item">
+            <label>Apellido materno</label>
+            <span>{{ u.ape_mat || '—' }}</span>
+          </div>
+
+          <div class="detalle-item">
+            <label>DNI</label>
+            <span>{{ u.dni || '—' }}</span>
+          </div>
+
+          <div class="detalle-item">
+            <label>Email</label>
+            <span>{{ u.email || '—' }}</span>
+          </div>
+
+          <div class="detalle-item">
+            <label>Celular</label>
+            <span>{{ u.celular || '—' }}</span>
+          </div>
+
+          <div class="detalle-item">
+            <label>Rol</label>
+            <span>{{ u.rolNombre || u.rol_nombre || u.rol || u.role || 'Sin rol' }}</span>
+          </div>
+
+          <div class="detalle-item">
+            <label>Sede</label>
+            <span>{{ u.sedeNombre || '—' }}</span>
+          </div>
+
+          <div class="detalle-item detalle-item-full">
+            <label>Dirección</label>
+            <span>{{ u.direccion || '—' }}</span>
+          </div>
+
+          <div class="detalle-item">
+            <label>Estado</label>
+            <div>
+              <p-tag
+                [value]="u.activo ? 'Activo' : 'Inactivo'"
+                [severity]="u.activo ? 'success' : 'danger'"
+              >
+              </p-tag>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+</ng-template>
+
+<!-- ERROR -->
+<ng-template #errorTpl>
+  <div class="p-2">
+    <div class="mensaje-vacio text-center mb-4">
+      <i class="pi pi-exclamation-triangle"></i>
+      <p>{{ error() || 'No se encontró el usuario.' }}</p>
+      <p-button
+        label="Volver al listado"
+        icon="pi pi-arrow-left"
+        severity="secondary"
+        (onClick)="volverAlListado()"
+      >
+      </p-button>
+    </div>
+  </div>
+</ng-template>

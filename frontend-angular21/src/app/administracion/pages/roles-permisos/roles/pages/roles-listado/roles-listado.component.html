@@ -117,7 +117,6 @@
 
       <ng-template pTemplate="header">
         <tr>
-          <th style="width:8%">ID</th>
           <th style="width:28%">NOMBRE</th>
           <th style="width:38%">DESCRIPCIÓN</th>
           <th style="width:10%">ESTADO</th>
@@ -127,7 +126,6 @@
 
       <ng-template pTemplate="body" let-rol>
         <tr>
-          <td class="text-500 text-sm">{{ rol.id_rol }}</td>
           <td class="font-medium">{{ rol.nombre }}</td>
           <td class="text-600">{{ rol.descripcion || '—' }}</td>
           <td>

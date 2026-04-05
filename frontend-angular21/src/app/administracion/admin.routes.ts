@@ -51,8 +51,17 @@ export const ADMIN_ROUTES: Routes = [
       {
         path: '',
         loadComponent: () =>
-          import('./pages/usuarios/pages/administracion-crear-usuario/administracion-crear-usuario').then(
-            (m) => m.AdministracionCrearUsuario,
+          import('./pages/usuarios/pages/administracion-listado/administracion-listado').then(
+            (m) => m.AdministracionListado,
+          ),
+        canActivate: [roleGuard],
+        data: { permiso: 'VER_USUARIOS' },
+      },
+      {
+        path: 'detalle/:id',
+        loadComponent: () =>
+          import('./pages/usuarios/pages/administracion-detalles/administracion-detalles').then(
+            (m) => m.AdministracionDetalles,
           ),
         canActivate: [roleGuard],
         data: { permiso: 'VER_USUARIOS' },
@@ -60,8 +69,8 @@ export const ADMIN_ROUTES: Routes = [
       {
         path: 'crear-usuario',
         loadComponent: () =>
-          import('./pages/usuarios/pages/administracion/administracion').then(
-            (m) => m.Administracion,
+          import('./pages/usuarios/pages/administracion-crear/administracion-crear').then(
+            (m) => m.AdministracionCrear,
           ),
         canActivate: [roleGuard],
         data: { permiso: 'CREAR_USUARIOS' },
@@ -75,6 +84,15 @@ export const ADMIN_ROUTES: Routes = [
         canActivate: [roleGuard],
         data: { permiso: 'EDITAR_USUARIOS' },
       },
+
+      {
+  path: 'password/:id',
+  loadComponent: () =>
+    import('./pages/usuarios/pages/administracion-password/administracion-password')
+      .then((m) => m.AdministracionPassword),
+  canActivate: [roleGuard],
+  data: { permiso: 'EDITAR_USUARIOS' },
+},
     ],
   },
 
@@ -123,8 +141,7 @@ export const ADMIN_ROUTES: Routes = [
     children: [
       {
         path: '',
-        loadComponent: () =>
-          import('./pages/sedes/pages/sedes/sedes').then((m) => m.Sedes),
+        loadComponent: () => import('./pages/sedes/pages/sedes/sedes').then((m) => m.Sedes),
         canActivate: [roleGuard],
         data: { permiso: 'VER_SEDES' },
       },
@@ -149,9 +166,7 @@ export const ADMIN_ROUTES: Routes = [
       {
         path: ':id',
         loadComponent: () =>
-          import('./pages/sedes/pages/detalle-sede/detalle-sede').then(
-            (m) => m.DetalleSede,
-          ),
+          import('./pages/sedes/pages/detalle-sede/detalle-sede').then((m) => m.DetalleSede),
       },
     ],
   },
@@ -290,11 +305,19 @@ export const ADMIN_ROUTES: Routes = [
         canActivate: [roleGuard],
         data: { permiso: 'VER_CLIENTE' },
       },
+          {
+      path: 'detalle/:id',
+      loadComponent: () =>
+        import('./pages/clientes/pages/detalle-cliente/detalle-cliente')
+          .then(m => m.DetalleCliente),
+      canActivate: [roleGuard],
+      data: { permiso: 'VER_CLIENTE' },
+    },
       {
         path: 'agregar-cliente',
         loadComponent: () =>
-          import('./pages/clientes/pages/agregar-cliente/agregar-cliente').then(
-            (m) => m.AgregarCliente,
+          import('./pages/clientes/pages/formulario-cliente/formulario-cliente').then(
+            (m) => m.FormularioCliente,
           ),
         canActivate: [roleGuard],
         data: { permiso: 'CREAR_CLIENTE' },
@@ -302,8 +325,8 @@ export const ADMIN_ROUTES: Routes = [
       {
         path: 'editar-cliente/:id',
         loadComponent: () =>
-          import('./pages/clientes/pages/editar-cliente/editar-cliente').then(
-            (m) => m.EditarCliente,
+          import('./pages/clientes/pages/formulario-cliente/formulario-cliente').then(
+            (m) => m.FormularioCliente,
           ),
         canActivate: [roleGuard],
         data: { permiso: 'EDITAR_CLIENTE' },

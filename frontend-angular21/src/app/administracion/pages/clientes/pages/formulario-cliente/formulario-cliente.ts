@@ -1,7 +1,7 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, ViewChild, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
-import { RouterModule, Router } from '@angular/router';
+import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
@@ -13,7 +13,13 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ToastModule } from 'primeng/toast';
 import { MessageModule } from 'primeng/message';
 import { ConfirmationService, MessageService } from 'primeng/api';
-import { ClienteService, CreateCustomerRequest } from '../../../../services/cliente.service';
+
+import {
+  ClienteService,
+  CreateCustomerRequest,
+  UpdateCustomerRequest,
+  Customer,
+} from '../../../../services/cliente.service';
 
 interface TipoDocumento {
   documentTypeId: number;
@@ -21,8 +27,10 @@ interface TipoDocumento {
   description: string;
 }
 
+type ModoFormulario = 'crear' | 'editar';
+
 @Component({
-  selector: 'app-agregar-cliente',
+  selector: 'app-formulario-cliente',
   standalone: true,
   imports: [
     CommonModule,
@@ -38,22 +46,31 @@ interface TipoDocumento {
     ToastModule,
     MessageModule,
   ],
-  templateUrl: './agregar-cliente.html',
-  styleUrl: './agregar-cliente.css',
+  templateUrl: './formulario-cliente.html',
+  styleUrl: './formulario-cliente.css',
   providers: [ConfirmationService, MessageService],
 })
-export class AgregarCliente implements OnInit {
-  private readonly clienteService = inject(ClienteService);
-  private readonly router = inject(Router);
-  private readonly confirmationService = inject(ConfirmationService);
-  private readonly messageService = inject(MessageService);
+export class FormularioCliente implements OnInit {
+  @ViewChild('clienteForm') clienteForm?: NgForm;
 
-  submitted = signal(false);
-  tiposDocumento = signal<TipoDocumento[]>([]);
-  reniecLoading = signal(false);
-  nombreDesdeApi = signal(false);
+  private readonly clienteService = inject(ClienteService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly messageService = inject(MessageService);
+  private readonly confirmationService = inject(ConfirmationService);
+  private readonly cdr = inject(ChangeDetectorRef);
+
+  readonly reniecLoading = signal(false);
+  readonly nombreDesdeApi = signal('');
 
   readonly loading = this.clienteService.loading;
+
+  readonly modo = signal<ModoFormulario>('crear');
+  readonly submitted = signal(false);
+  readonly tiposDocumento = signal<TipoDocumento[]>([]);
+  readonly allowNavigate = signal(false);
+
+  private customerId: string | null = null;
 
   readonly LIMITS = {
     nombres: 50,
@@ -79,13 +96,55 @@ export class AgregarCliente implements OnInit {
   };
 
   ngOnInit(): void {
+    const id = this.route.snapshot.paramMap.get('id');
+    this.modo.set(id ? 'editar' : 'crear');
+    this.customerId = id;
+
     this.clienteService.obtenerTiposDocumento().subscribe({
       next: (tipos) => {
         this.tiposDocumento.set(tipos);
-        const dni = tipos.find((t) => t.sunatCode === '01');
-        this.cliente.documentTypeSunatCode = dni?.sunatCode ?? tipos[0]?.sunatCode ?? '';
+
+        if (this.modo() === 'crear') {
+          const dni = tipos.find((t) => t.sunatCode === '01');
+          this.cliente.documentTypeSunatCode = dni?.sunatCode ?? tipos[0]?.sunatCode ?? '';
+        }
+
+        if (this.modo() === 'editar' && id) {
+          this.loadCliente(id);
+        }
       },
-      error: () => console.warn('No se pudieron cargar tipos de documento'),
+      error: () => {
+        if (this.modo() === 'editar' && id) {
+          this.loadCliente(id);
+        }
+      },
+    });
+  }
+
+  private loadCliente(id: string): void {
+    this.clienteService.getCustomerById(id).subscribe({
+      next: (data: Customer) => {
+        const esRuc = data.documentTypeSunatCode === '06';
+        this.cliente = {
+          documentTypeSunatCode: data.documentTypeSunatCode ?? '',
+          nro_documento: data.documentValue ?? '',
+          razonsocial: esRuc ? (data.razonsocial ?? data.name ?? '') : '',
+          nombres: !esRuc ? (data.name ?? '') : '',
+          apellidos: !esRuc ? (data.apellidos ?? '') : '',
+          direccion: data.address ?? '',
+          email: data.email ?? '',
+          telefono: data.phone ? Number(data.phone) : null,
+        };
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudo cargar la información del cliente',
+        });
+        this.router.navigate(['/admin/clientes']);
+      },
     });
   }
 
@@ -108,7 +167,6 @@ export class AgregarCliente implements OnInit {
       case '06':
         return 11;
       case '04':
-        return 12;
       case '07':
         return 12;
       default:
@@ -191,6 +249,7 @@ export class AgregarCliente implements OnInit {
   soloDocumento(event: KeyboardEvent): boolean {
     const allowedKeys = ['Backspace', 'Tab', 'Delete', 'ArrowLeft', 'ArrowRight'];
     if (allowedKeys.includes(event.key)) return true;
+
     if (this.esDNI || this.esRUC) {
       if (!/^\d$/.test(event.key)) {
         event.preventDefault();
@@ -202,6 +261,7 @@ export class AgregarCliente implements OnInit {
         return false;
       }
     }
+
     const input = event.target as HTMLInputElement;
     if (input.value.length >= this.maxLengthDocumento) {
       event.preventDefault();
@@ -217,6 +277,7 @@ export class AgregarCliente implements OnInit {
         : field === 'apellidos'
           ? this.LIMITS.apellidos
           : this.LIMITS.nombres;
+
     let val = String((this.cliente as any)[field] ?? '');
     val = this.cleanStringInput(val)
       .replace(this.REGEX_LETRAS, '')
@@ -227,23 +288,19 @@ export class AgregarCliente implements OnInit {
     (this.cliente as any)[field] = val;
   }
 
-  sanitizarTexto(field: 'direccion'): void {
-    let v = String((this.cliente as any)[field] ?? '');
-    v = this.cleanStringInput(v)
+  sanitizarTexto(): void {
+    this.cliente.direccion = this.cleanStringInput(this.cliente.direccion)
       .replace(this.REGEX_DIRECCION, '')
       .replace(/\s{2,}/g, ' ')
       .trimStart()
       .toUpperCase()
       .slice(0, this.LIMITS.direccion);
-    (this.cliente as any)[field] = v;
   }
 
   sanitizarDocumento(): void {
     let val = this.cleanStringInput(String(this.cliente.nro_documento ?? ''));
     val = this.esDNI || this.esRUC ? val.replace(/\D/g, '') : val.replace(/[^a-zA-Z0-9]/g, '');
     this.cliente.nro_documento = val.slice(0, this.maxLengthDocumento).toUpperCase();
-    this.nombreDesdeApi.set(false);
-    this.consultarDocumento();
   }
 
   sanitizarEmail(): void {
@@ -280,128 +337,36 @@ export class AgregarCliente implements OnInit {
     this.cliente.apellidos = '';
     this.cliente.razonsocial = '';
     this.cliente.direccion = '';
-    this.nombreDesdeApi.set(false);
   }
 
-  consultarDocumento(): void {
-    const doc = this.cliente.nro_documento.trim();
-    const esDniCompleto = this.esDNI && doc.length === 8;
-    const esRucCompleto = this.esRUC && doc.length === 11;
-    if (!esDniCompleto && !esRucCompleto) return;
-
-    this.reniecLoading.set(true);
-    this.nombreDesdeApi.set(false);
-
-    this.clienteService.consultarDocumentoIdentidad(doc).subscribe({
-      next: (res) => {
-        this.reniecLoading.set(false);
-        if (res?.nombreCompleto) {
-          if (this.esRUC) {
-            this.cliente.razonsocial = res.nombreCompleto.slice(0, this.LIMITS.razonsocial);
-            if (res.direccion)
-              this.cliente.direccion = res.direccion.slice(0, this.LIMITS.direccion);
-          } else {
-            this.cliente.nombres = (res.nombres ?? '').slice(0, this.LIMITS.nombres);
-            this.cliente.apellidos = `${res.apellidoPaterno ?? ''} ${res.apellidoMaterno ?? ''}`
-              .trim()
-              .slice(0, this.LIMITS.apellidos);
-          }
-          this.nombreDesdeApi.set(true);
-          this.messageService.add({
-            severity: 'success',
-            summary: this.esRUC ? 'SUNAT' : 'RENIEC',
-            detail: res.nombreCompleto,
-            life: 3000,
-          });
-        } else {
-          this.messageService.add({
-            severity: 'warn',
-            summary: 'No encontrado',
-            detail: 'Ingrese el nombre manualmente.',
-            life: 3000,
-          });
-        }
-      },
-      error: () => {
-        this.reniecLoading.set(false);
-        this.messageService.add({
-          severity: 'warn',
-          summary: 'Sin conexión',
-          detail: 'No se pudo consultar. Ingrese el nombre manualmente.',
-          life: 3000,
-        });
-      },
-    });
-  }
-
-  private looksTooConcatenated(s: string): boolean {
-    const cleaned = String(s ?? '').trim();
-    if (!cleaned) return false;
-    return cleaned.replace(/\s+/g, '').length > 20 && cleaned.split(/\s+/).length <= 1;
-  }
-
-  private hasEmailLike(s: string): boolean {
-    return /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/.test(s);
-  }
-
-  private hasPhoneLike(s: string): boolean {
-    return /(\d[ \-]?){6,}/.test(s);
-  }
-
-  private detectConcatenationIssues(): string[] {
-    const issues: string[] = [];
-    const c = this.cliente;
-    if (this.looksTooConcatenated(c.nombres))
-      issues.push('El campo "NOMBRES" parece contener texto pegado sin separadores.');
-    if (this.looksTooConcatenated(c.apellidos))
-      issues.push('El campo "APELLIDOS" parece contener texto pegado sin separadores.');
-    if (this.looksTooConcatenated(c.direccion))
-      issues.push('La "DIRECCIÓN" parece contener texto pegado sin separadores.');
-    if (this.hasEmailLike(c.nombres) || this.hasPhoneLike(c.nombres))
-      issues.push('El campo "NOMBRES" contiene un email o teléfono.');
-    if (this.hasEmailLike(c.apellidos) || this.hasPhoneLike(c.apellidos))
-      issues.push('El campo "APELLIDOS" contiene un email o teléfono.');
-    if (!this.hasEmailLike(c.email) && c.email.trim().length > 0 && c.email.includes(' ')) {
-      issues.push('El campo "EMAIL" contiene espacios o texto extraño.');
-    }
-    return issues;
-  }
-
-  confirmCancel(form?: NgForm): void {
-    if (!form?.dirty) {
+  confirmarCancelar(): void {
+    if (!this.clienteForm?.dirty) {
       this.router.navigate(['/admin/clientes']);
       return;
     }
+
     this.confirmationService.confirm({
       header: 'Cambios sin guardar',
-      message: 'Tienes cambios sin guardar. ¿Deseas salir?',
+      message: '¿Deseas descartar los cambios realizados?',
       icon: 'pi pi-exclamation-triangle',
       acceptLabel: 'Sí, salir',
-      rejectLabel: 'Continuar',
+      rejectLabel: 'Continuar editando',
       acceptButtonProps: { severity: 'danger' },
-      accept: () => this.router.navigate(['/admin/clientes']),
+      accept: () => {
+        this.allowNavigate.set(true);
+        this.router.navigate(['/admin/clientes']);
+      },
     });
   }
 
-  registrar(form?: NgForm): void {
+  guardar(): void {
     this.submitted.set(true);
     this.sanitizarDocumento();
     this.sanitizarSoloLetras('nombres');
     this.sanitizarSoloLetras('apellidos');
     this.sanitizarSoloLetras('razonsocial');
-    this.sanitizarTexto('direccion');
+    this.sanitizarTexto();
     this.sanitizarEmail();
-
-    const issues = this.detectConcatenationIssues();
-    if (issues.length > 0) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Revisa los campos',
-        detail: issues[0],
-        life: 6000,
-      });
-      return;
-    }
 
     if (!this.formularioValido) {
       this.messageService.add({
@@ -412,6 +377,14 @@ export class AgregarCliente implements OnInit {
       return;
     }
 
+    if (this.modo() === 'crear') {
+      this.crearCliente();
+    } else {
+      this.editarCliente();
+    }
+  }
+
+  private crearCliente(): void {
     const payload: CreateCustomerRequest = {
       documentTypeId: this.getDocumentTypeId(this.cliente.documentTypeSunatCode),
       documentValue: this.cliente.nro_documento.trim(),
@@ -440,6 +413,48 @@ export class AgregarCliente implements OnInit {
           severity: 'error',
           summary: 'Error',
           detail: err?.error?.message ?? 'No se pudo crear el cliente.',
+        });
+      },
+    });
+  }
+
+  private editarCliente(): void {
+    if (!this.customerId) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Id de cliente no válido.',
+      });
+      return;
+    }
+
+    const payload: UpdateCustomerRequest = {
+      documentTypeId: this.getDocumentTypeId(this.cliente.documentTypeSunatCode),
+      documentValue: this.cliente.nro_documento.trim(),
+      name: this.esRUC ? this.cliente.razonsocial.trim() : this.cliente.nombres.trim(),
+      apellidos: !this.esRUC ? this.cliente.apellidos.trim() || null : null,
+      razonsocial: this.esRUC ? this.cliente.razonsocial.trim() || null : null,
+      address: this.cliente.direccion.trim() || null,
+      email: this.cliente.email.trim() || null,
+      phone: this.cliente.telefono ? String(this.cliente.telefono) : null,
+    };
+
+    this.clienteService.updateCustomer(this.customerId, payload).subscribe({
+      next: () => {
+        this.allowNavigate.set(true);
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Edición Exitosa',
+          detail: 'Los datos se actualizaron correctamente',
+          life: 3000,
+        });
+        setTimeout(() => this.router.navigate(['/admin/clientes']), 1500);
+      },
+      error: (err) => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: err?.error?.message ?? 'Ocurrió un problema al actualizar el cliente.',
         });
       },
     });

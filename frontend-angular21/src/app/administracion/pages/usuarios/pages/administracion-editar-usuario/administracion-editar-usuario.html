@@ -15,101 +15,167 @@
 
   <div class="mb-3">
     <p-message *ngIf="loading()" severity="info" text="Cargando usuario..."></p-message>
-    <p-message *ngIf="!loading() && error()" severity="error" [text]="error() || undefined"></p-message>
+    <p-message
+      *ngIf="!loading() && error()"
+      severity="error"
+      [text]="error() || undefined"
+    ></p-message>
   </div>
 
   <p-card class="usuario-form-card border-none">
     <form #userForm="ngForm" novalidate (ngSubmit)="actualizarUsuarioCompleto()">
       <div class="usuario-section">
-        <div class="usuario-section-title">DATOS DEL USUARIO:</div>
+        <h3 class="usuario-section-title">
+          <i class="pi pi-user-edit"></i>
+          Datos del usuario
+        </h3>
         <p-divider></p-divider>
       </div>
 
       <div class="grid form-grid">
-
         <!-- Nombre -->
         <div class="col-12 md:col-6">
-          <label class="field-label" for="usu_nom">NOMBRE: <small class="field-hint">(máx. 100 — solo letras)</small></label>
-          <input id="usu_nom" pInputText class="w-full"
+          <label class="field-label" for="usu_nom"
+            >NOMBRE: <small class="field-hint">(máx. 100 — solo letras)</small></label
+          >
+          <input
+            id="usu_nom"
+            pInputText
+            class="w-full"
             placeholder="Ej: CARLOS ALBERTO"
             [ngModel]="form().usu_nom"
             (ngModelChange)="setFormField('usu_nom', $event)"
-            name="usu_nom" required maxlength="100"
+            name="usu_nom"
+            required
+            maxlength="100"
             #usu_nom="ngModel"
             (keypress)="allowOnlyLetters($event)"
             (input)="toUpperCase('usu_nom')"
-            [ngClass]="{ 'p-invalid': (userForm.submitted || usu_nom.touched) && usu_nom.invalid }" />
-          <small class="field-error" *ngIf="(userForm.submitted || usu_nom.touched) && usu_nom.invalid">
+            [ngClass]="{ 'p-invalid': (userForm.submitted || usu_nom.touched) && usu_nom.invalid }"
+          />
+          <small
+            class="field-error"
+            *ngIf="(userForm.submitted || usu_nom.touched) && usu_nom.invalid"
+          >
             El nombre es obligatorio (solo letras, máx. 100).
           </small>
         </div>
 
         <!-- Apellido Paterno -->
         <div class="col-12 md:col-6">
-          <label class="field-label" for="ape_pat">APELLIDO PATERNO: <small class="field-hint">(máx. 50 — solo letras)</small></label>
-          <input id="ape_pat" pInputText class="w-full"
+          <label class="field-label" for="ape_pat"
+            >APELLIDO PATERNO: <small class="field-hint">(máx. 50 — solo letras)</small></label
+          >
+          <input
+            id="ape_pat"
+            pInputText
+            class="w-full"
             placeholder="Ej: GARCÍA"
             [ngModel]="form().ape_pat"
             (ngModelChange)="setFormField('ape_pat', $event)"
-            name="ape_pat" required maxlength="50"
+            name="ape_pat"
+            required
+            maxlength="50"
             #ape_pat="ngModel"
             (keypress)="allowOnlyLetters($event)"
             (input)="toUpperCase('ape_pat')"
-            [ngClass]="{ 'p-invalid': (userForm.submitted || ape_pat.touched) && ape_pat.invalid }" />
-          <small class="field-error" *ngIf="(userForm.submitted || ape_pat.touched) && ape_pat.invalid">
+            [ngClass]="{ 'p-invalid': (userForm.submitted || ape_pat.touched) && ape_pat.invalid }"
+          />
+          <small
+            class="field-error"
+            *ngIf="(userForm.submitted || ape_pat.touched) && ape_pat.invalid"
+          >
             El apellido paterno es obligatorio (solo letras, máx. 50).
           </small>
         </div>
 
         <!-- Apellido Materno -->
         <div class="col-12 md:col-6">
-          <label class="field-label" for="ape_mat">APELLIDO MATERNO: <small class="field-hint">(máx. 50 — solo letras)</small></label>
-          <input id="ape_mat" pInputText class="w-full"
+          <label class="field-label" for="ape_mat"
+            >APELLIDO MATERNO: <small class="field-hint">(máx. 50 — solo letras)</small></label
+          >
+          <input
+            id="ape_mat"
+            pInputText
+            class="w-full"
             placeholder="Ej: LÓPEZ"
             [ngModel]="form().ape_mat"
             (ngModelChange)="setFormField('ape_mat', $event)"
-            name="ape_mat" required maxlength="50"
+            name="ape_mat"
+            required
+            maxlength="50"
             #ape_mat="ngModel"
             (keypress)="allowOnlyLetters($event)"
             (input)="toUpperCase('ape_mat')"
-            [ngClass]="{ 'p-invalid': (userForm.submitted || ape_mat.touched) && ape_mat.invalid }" />
-          <small class="field-error" *ngIf="(userForm.submitted || ape_mat.touched) && ape_mat.invalid">
+            [ngClass]="{ 'p-invalid': (userForm.submitted || ape_mat.touched) && ape_mat.invalid }"
+          />
+          <small
+            class="field-error"
+            *ngIf="(userForm.submitted || ape_mat.touched) && ape_mat.invalid"
+          >
             El apellido materno es obligatorio (solo letras, máx. 50).
           </small>
         </div>
 
         <!-- Email -->
         <div class="col-12 md:col-6">
-          <label class="field-label" for="email">EMAIL: <small class="field-hint">(máx. 150)</small></label>
-          <input id="email" pInputText type="email" class="w-full"
+          <label class="field-label" for="email"
+            >EMAIL: <small class="field-hint">(máx. 150)</small></label
+          >
+          <input
+            id="email"
+            pInputText
+            type="email"
+            class="w-full"
             placeholder="correo@ejemplo.com"
             [ngModel]="form().email"
             (ngModelChange)="setFormField('email', trimValue($event))"
-            name="email" required email maxlength="150"
+            name="email"
+            required
+            email
+            maxlength="150"
             #email="ngModel"
-            [ngClass]="{ 'p-invalid': (userForm.submitted || email.touched) && email.invalid }" />
-          <small class="field-error" *ngIf="(userForm.submitted || email.touched) && email.errors?.['required']">
+            [ngClass]="{ 'p-invalid': (userForm.submitted || email.touched) && email.invalid }"
+          />
+          <small
+            class="field-error"
+            *ngIf="(userForm.submitted || email.touched) && email.errors?.['required']"
+          >
             El correo es obligatorio.
           </small>
-          <small class="field-error" *ngIf="(userForm.submitted || email.touched) && email.errors?.['email']">
+          <small
+            class="field-error"
+            *ngIf="(userForm.submitted || email.touched) && email.errors?.['email']"
+          >
             El formato del correo no es válido.
           </small>
         </div>
 
         <!-- Celular -->
         <div class="col-12 md:col-6">
-          <label class="field-label" for="celular">CELULAR: <small class="field-hint">(9 dígitos)</small></label>
-          <input id="celular" pInputText class="w-full"
+          <label class="field-label" for="celular"
+            >CELULAR: <small class="field-hint">(9 dígitos)</small></label
+          >
+          <input
+            id="celular"
+            pInputText
+            class="w-full"
             placeholder="987654321"
             [ngModel]="form().celular"
             (ngModelChange)="setFormField('celular', $event)"
-            name="celular" required maxlength="9"
+            name="celular"
+            required
+            maxlength="9"
             inputmode="numeric"
             #celular="ngModel"
             (keypress)="allowOnlyDigits($event)"
             (input)="onCelularEdit($event)"
-            [ngClass]="{ 'p-invalid': (userForm.submitted || celular.touched) && celular.invalid }" />
-          <small class="field-error" *ngIf="(userForm.submitted || celular.touched) && celular.invalid">
+            [ngClass]="{ 'p-invalid': (userForm.submitted || celular.touched) && celular.invalid }"
+          />
+          <small
+            class="field-error"
+            *ngIf="(userForm.submitted || celular.touched) && celular.invalid"
+          >
             El celular es obligatorio (9 dígitos numéricos).
           </small>
         </div>
@@ -117,16 +183,24 @@
         <!-- Sede -->
         <div class="col-12 md:col-6">
           <label class="field-label" for="id_sede">SEDE:</label>
-          <p-select [options]="sedesOptions()" optionLabel="label" optionValue="value"
+          <p-select
+            [options]="sedesOptions()"
+            optionLabel="label"
+            optionValue="value"
             class="w-full"
             placeholder="Seleccionar sede"
             [ngModel]="form().id_sede"
             (ngModelChange)="setFormField('id_sede', $event)"
-            name="id_sede" required
+            name="id_sede"
+            required
             #id_sede="ngModel"
-            [ngClass]="{ 'p-invalid': (userForm.submitted || id_sede.touched) && id_sede.invalid }">
+            [ngClass]="{ 'p-invalid': (userForm.submitted || id_sede.touched) && id_sede.invalid }"
+          >
           </p-select>
-          <small class="field-error" *ngIf="(userForm.submitted || id_sede.touched) && id_sede.invalid">
+          <small
+            class="field-error"
+            *ngIf="(userForm.submitted || id_sede.touched) && id_sede.invalid"
+          >
             La sede es obligatoria.
           </small>
         </div>
@@ -134,48 +208,79 @@
         <!-- Rol -->
         <div class="col-12 md:col-6">
           <label class="field-label" for="rolNombre">ROL:</label>
-          <p-select [options]="rolesOptions()" optionLabel="label" optionValue="value"
+          <p-select
+            [options]="rolesOptions()"
+            optionLabel="label"
+            optionValue="value"
             class="w-full"
             placeholder="Seleccionar rol"
             [ngModel]="form().rolNombre"
             (ngModelChange)="setFormField('rolNombre', $event)"
-            name="rolNombre" required
+            name="rolNombre"
+            required
             #rolNombre="ngModel"
-            [ngClass]="{ 'p-invalid': (userForm.submitted || rolNombre.touched) && rolNombre.invalid }">
+            [ngClass]="{
+              'p-invalid': (userForm.submitted || rolNombre.touched) && rolNombre.invalid,
+            }"
+          >
           </p-select>
-          <small class="field-error" *ngIf="(userForm.submitted || rolNombre.touched) && rolNombre.invalid">
+          <small
+            class="field-error"
+            *ngIf="(userForm.submitted || rolNombre.touched) && rolNombre.invalid"
+          >
             El rol es obligatorio.
           </small>
         </div>
 
         <!-- Dirección -->
         <div class="col-12 md:col-6">
-          <label class="field-label" for="direccion">DIRECCIÓN: <small class="field-hint">(máx. 100)</small></label>
-          <input id="direccion" pInputText class="w-full"
+          <label class="field-label" for="direccion"
+            >DIRECCIÓN: <small class="field-hint">(máx. 100)</small></label
+          >
+          <input
+            id="direccion"
+            pInputText
+            class="w-full"
             placeholder="Av. Ejemplo 123"
             [ngModel]="form().direccion"
             (ngModelChange)="setFormField('direccion', $event)"
-            name="direccion" required maxlength="100"
+            name="direccion"
+            required
+            maxlength="100"
             #direccion="ngModel"
             (input)="onDireccionInput($event)"
-            [ngClass]="{ 'p-invalid': (userForm.submitted || direccion.touched) && direccion.invalid }" />
-          <small class="field-error" *ngIf="(userForm.submitted || direccion.touched) && direccion.invalid">
+            [ngClass]="{
+              'p-invalid': (userForm.submitted || direccion.touched) && direccion.invalid,
+            }"
+          />
+          <small
+            class="field-error"
+            *ngIf="(userForm.submitted || direccion.touched) && direccion.invalid"
+          >
             La dirección es obligatoria (máx. 100).
           </small>
         </div>
-
       </div>
 
       <p-divider></p-divider>
 
-      <div class="flex align-items-center justify-content-center gap-3 mt-3">
-        <p-button label="Cancelar" outlined severity="secondary"
-          styleClass="usuario-btn-cancel" type="button"
-          (click)="goBack()">
+      <div class="flex align-items-center justify-content-end gap-3 mt-3 acciones-form">
+        <p-button
+          label="Cancelar"
+          outlined
+          severity="secondary"
+          styleClass="usuario-btn-cancel"
+          type="button"
+          (click)="goBack()"
+        >
         </p-button>
-        <p-button label="Modificar Usuario" icon="pi pi-check"
-          styleClass="usuario-btn-primary" type="submit"
-          [disabled]="userForm.invalid || loading()">
+        <p-button
+          label="Modificar Usuario"
+          icon="pi pi-check"
+          styleClass="usuario-btn-primary"
+          type="submit"
+          [disabled]="userForm.invalid || loading()"
+        >
         </p-button>
       </div>
     </form>
