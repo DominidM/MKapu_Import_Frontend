@@ -110,15 +110,9 @@ export class FormularioSede implements OnInit, CanComponentDeactivate {
   readonly submitted = signal(false);
   private allowNavigate = false;
 
-  readonly title = computed(() =>
-    this.isEditMode() ? 'EDITAR SEDE' : 'REGISTRAR SEDE',
-  );
-  readonly submitLabel = computed(() =>
-    this.isEditMode() ? 'Guardar cambios' : 'Registrar Sede',
-  );
-  readonly submitIcon = computed(() =>
-    this.isEditMode() ? 'pi pi-save' : 'pi pi-plus',
-  );
+  readonly title = computed(() => (this.isEditMode() ? 'EDITAR SEDE' : 'REGISTRAR SEDE'));
+  readonly submitLabel = computed(() => (this.isEditMode() ? 'Guardar cambios' : 'Registrar Sede'));
+  readonly submitIcon = computed(() => (this.isEditMode() ? 'pi pi-save' : 'pi pi-plus'));
 
   // ── Señales del servicio ───────────────────────────────────────────────────
   readonly loading = this.sedeService.loading;
@@ -149,8 +143,7 @@ export class FormularioSede implements OnInit, CanComponentDeactivate {
 
   ngOnInit(): void {
     const idStr =
-      this.route.snapshot.paramMap.get('id') ??
-      this.route.snapshot.queryParamMap.get('id');
+      this.route.snapshot.paramMap.get('id') ?? this.route.snapshot.queryParamMap.get('id');
 
     if (idStr) {
       this.sedeId = parseInt(idStr, 10);
@@ -187,11 +180,8 @@ export class FormularioSede implements OnInit, CanComponentDeactivate {
   }
 
   private resolveProvinciaFromCiudad(): void {
-    const provinciasData =
-      DEPARTAMENTOS_PROVINCIAS[this.sede.departamento] || [];
-    const encontrada = provinciasData.find((p) =>
-      p.distritos.includes(this.sede.ciudad),
-    );
+    const provinciasData = DEPARTAMENTOS_PROVINCIAS[this.sede.departamento] || [];
+    const encontrada = provinciasData.find((p) => p.distritos.includes(this.sede.ciudad));
 
     if (encontrada) {
       this.sede.provincia = encontrada.nombre;
@@ -220,28 +210,21 @@ export class FormularioSede implements OnInit, CanComponentDeactivate {
 
   filterDepartamentos(event: { query: string }): void {
     const q = event.query.toLowerCase();
-    this.filteredDepartamentos = this.departamentos.filter((d) =>
-      d.toLowerCase().includes(q),
-    );
+    this.filteredDepartamentos = this.departamentos.filter((d) => d.toLowerCase().includes(q));
   }
 
   filterProvincias(event: { query: string }): void {
     const q = event.query.toLowerCase();
-    this.filteredProvincias = this.provincias.filter((p) =>
-      p.toLowerCase().includes(q),
-    );
+    this.filteredProvincias = this.provincias.filter((p) => p.toLowerCase().includes(q));
   }
 
   filterDistritos(event: { query: string }): void {
     const q = event.query.toLowerCase();
-    this.filteredDistritos = this.distritos.filter((d) =>
-      d.toLowerCase().includes(q),
-    );
+    this.filteredDistritos = this.distritos.filter((d) => d.toLowerCase().includes(q));
   }
 
   onDepartamentoSelect(): void {
-    const provinciasData =
-      DEPARTAMENTOS_PROVINCIAS[this.sede.departamento] || [];
+    const provinciasData = DEPARTAMENTOS_PROVINCIAS[this.sede.departamento] || [];
     this.provincias = provinciasData.map((p) => p.nombre);
     this.sede.provincia = '';
     this.sede.ciudad = '';
@@ -251,11 +234,8 @@ export class FormularioSede implements OnInit, CanComponentDeactivate {
   }
 
   onProvinciaSelect(): void {
-    const provinciasData =
-      DEPARTAMENTOS_PROVINCIAS[this.sede.departamento] || [];
-    const seleccionada = provinciasData.find(
-      (p) => p.nombre === this.sede.provincia,
-    );
+    const provinciasData = DEPARTAMENTOS_PROVINCIAS[this.sede.departamento] || [];
+    const seleccionada = provinciasData.find((p) => p.nombre === this.sede.provincia);
     this.distritos = seleccionada?.distritos || [];
     this.sede.ciudad = '';
     this.filteredDistritos = [];
@@ -490,10 +470,7 @@ export class FormularioSede implements OnInit, CanComponentDeactivate {
       msg.includes('already exists') ||
       msg.includes('duplicado');
 
-    const isCode =
-      msg.includes('codigo') ||
-      msg.includes('code') ||
-      msg.includes('sede.codigo');
+    const isCode = msg.includes('codigo') || msg.includes('code') || msg.includes('sede.codigo');
 
     return isDuplicate && isCode;
   }

@@ -1,10 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import {
-  HttpClient,
-  HttpErrorResponse,
-  HttpHeaders,
-  HttpParams,
-} from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { environment } from '../../../enviroments/enviroment';
@@ -51,7 +46,9 @@ export class TransferApiService {
       .post<TransferResponseDto>(`${this.transferBase}/request`, dto, {
         headers: this.buildHeaders(roleHeader, modeHeader),
       })
-      .pipe(catchError((error) => this.handleHttpError(error, 'No se pudo crear la transferencia')));
+      .pipe(
+        catchError((error) => this.handleHttpError(error, 'No se pudo crear la transferencia')),
+      );
   }
 
   approve(
@@ -63,7 +60,9 @@ export class TransferApiService {
       .patch<TransferResponseDto>(`${this.transferBase}/${id}/approve`, dto, {
         headers: this.buildHeaders(roleHeader),
       })
-      .pipe(catchError((error) => this.handleHttpError(error, 'No se pudo aprobar la transferencia')));
+      .pipe(
+        catchError((error) => this.handleHttpError(error, 'No se pudo aprobar la transferencia')),
+      );
   }
 
   confirmReceipt(
@@ -96,9 +95,7 @@ export class TransferApiService {
       );
   }
 
-  listAll(
-    query: TransferListQueryDto = {},
-  ): Observable<TransferListPaginatedResponseDto> {
+  listAll(query: TransferListQueryDto = {}): Observable<TransferListPaginatedResponseDto> {
     let params = new HttpParams();
     params = this.setParamIfDefined(params, 'headquartersId', query.headquartersId);
     params = this.setParamIfDefined(params, 'page', query.page);
@@ -112,9 +109,7 @@ export class TransferApiService {
         params,
         headers: this.buildHeaders(),
       })
-      .pipe(
-        catchError((error) => this.handleHttpError(error, 'No se pudo listar transferencias')),
-      );
+      .pipe(catchError((error) => this.handleHttpError(error, 'No se pudo listar transferencias')));
   }
 
   listByHeadquarters(hqId: string): Observable<TransferResponseDto[]> {
@@ -135,7 +130,9 @@ export class TransferApiService {
         headers: this.buildHeaders(),
       })
       .pipe(
-        catchError((error) => this.handleHttpError(error, `No se pudo obtener transferencia #${id}`)),
+        catchError((error) =>
+          this.handleHttpError(error, `No se pudo obtener transferencia #${id}`),
+        ),
       );
   }
 
@@ -170,9 +167,7 @@ export class TransferApiService {
     return this.reject(id, dto, 'ADMINISTRADOR');
   }
 
-  listTransfers(
-    query: TransferListQueryDto = {},
-  ): Observable<TransferListPaginatedResponseDto> {
+  listTransfers(query: TransferListQueryDto = {}): Observable<TransferListPaginatedResponseDto> {
     return this.listAll(query);
   }
 
@@ -190,7 +185,9 @@ export class TransferApiService {
         params: this.buildProductsStockParams(query),
         headers: this.buildHeaders(),
       })
-      .pipe(catchError((error) => this.handleHttpError(error, 'No se pudo cargar productos con stock')));
+      .pipe(
+        catchError((error) => this.handleHttpError(error, 'No se pudo cargar productos con stock')),
+      );
   }
 
   getProductsAutocomplete(
@@ -213,7 +210,9 @@ export class TransferApiService {
         params: this.buildProductStockParams(query),
         headers: this.buildHeaders(),
       })
-      .pipe(catchError((error) => this.handleHttpError(error, 'No se pudo cargar stock del producto')));
+      .pipe(
+        catchError((error) => this.handleHttpError(error, 'No se pudo cargar stock del producto')),
+      );
   }
 
   getProductStockByCode(
@@ -228,7 +227,9 @@ export class TransferApiService {
           headers: this.buildHeaders(),
         },
       )
-      .pipe(catchError((error) => this.handleHttpError(error, 'No se pudo cargar stock por código')));
+      .pipe(
+        catchError((error) => this.handleHttpError(error, 'No se pudo cargar stock por código')),
+      );
   }
 
   private buildHeaders(role?: TransferRole, mode?: string): HttpHeaders {
@@ -292,10 +293,7 @@ export class TransferApiService {
     return params.set(key, String(value));
   }
 
-  private handleHttpError(
-    error: HttpErrorResponse,
-    contextMessage: string,
-  ): Observable<never> {
+  private handleHttpError(error: HttpErrorResponse, contextMessage: string): Observable<never> {
     const backendMessage = this.getBackendMessage(error);
     const friendlyMessage = this.buildFriendlyMessage(error.status, backendMessage, contextMessage);
     const apiError: TransferApiError = {
@@ -330,7 +328,11 @@ export class TransferApiService {
     return '';
   }
 
-  private buildFriendlyMessage(status: number, backendMessage: string, contextMessage: string): string {
+  private buildFriendlyMessage(
+    status: number,
+    backendMessage: string,
+    contextMessage: string,
+  ): string {
     if (status === 409) {
       return backendMessage || 'Insufficient stock for requested transfer quantity.';
     }

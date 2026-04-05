@@ -33,7 +33,7 @@ export class AuthService {
   private verificarSesionActiva(): void {
     try {
       const userStr = localStorage.getItem('user');
-      const token   = localStorage.getItem('token');
+      const token = localStorage.getItem('token');
       if (userStr && token) {
         this.currentUser = JSON.parse(userStr);
         this.empleadosService.sincronizarDesdeAuth();
@@ -48,17 +48,17 @@ export class AuthService {
 
   private transformUser(account: AuthAccountBackend): User {
     return {
-      userId:     account.usuario.id_usuario,
-      idCuenta:   account.id_cuenta, 
-      username:   account.username,
-      email:      account.email_emp,
-      roleId:     account.roles[0]?.id_rol,
-      roleName:   account.roles[0]?.nombre,
-      idSede:     account.id_sede,
+      userId: account.usuario.id_usuario,
+      idCuenta: account.id_cuenta,
+      username: account.username,
+      email: account.email_emp,
+      roleId: account.roles[0]?.id_rol,
+      roleName: account.roles[0]?.nombre,
+      idSede: account.id_sede,
       sedeNombre: account.sede_nombre,
-      permisos:   account.permisos.map((p) => p.nombre),
-      nombres:    account.usuario.nombres,
-      apellidos:  `${account.usuario.ape_pat} ${account.usuario.ape_mat}`,
+      permisos: account.permisos.map((p) => p.nombre),
+      nombres: account.usuario.nombres,
+      apellidos: `${account.usuario.ape_pat} ${account.usuario.ape_mat}`,
     };
   }
 
@@ -69,14 +69,18 @@ export class AuthService {
       // ── Redirecciones especiales por rol ──────────────────────────
       if (permisos.includes('VER_DASHBOARD_ALMACEN')) {
         this.ngZone.run(() =>
-          this.router.navigate(['/admin/dashboard-admin']).catch(e => console.error('Nav error:', e)),
+          this.router
+            .navigate(['/admin/dashboard-admin'])
+            .catch((e) => console.error('Nav error:', e)),
         );
         return;
       }
 
       if (permisos.includes('VER_DASHBOARD_VENTAS')) {
         this.ngZone.run(() =>
-          this.router.navigate(['/ventas/dashboard-ventas']).catch(e => console.error('Nav error:', e)),
+          this.router
+            .navigate(['/ventas/dashboard-ventas'])
+            .catch((e) => console.error('Nav error:', e)),
         );
         return;
       }
@@ -84,7 +88,9 @@ export class AuthService {
       // ── Fallback universal: dashboard-admin es el HOME de todos ───
       // No requiere permiso VER_DASHBOARD_ADMIN — es una ruta pública interna.
       this.ngZone.run(() =>
-        this.router.navigate(['/admin/dashboard-admin']).catch(e => console.error('Nav error:', e)),
+        this.router
+          .navigate(['/admin/dashboard-admin'])
+          .catch((e) => console.error('Nav error:', e)),
       );
     }, 0);
   }
@@ -92,23 +98,21 @@ export class AuthService {
   login(username: string, password: string): Observable<AuthInterfaceResponse> {
     const loginData: AuthInterface = { username, password };
 
-    return this.http
-      .post<AuthInterfaceResponse>(`${this.api}/auth/auth/login`, loginData)
-      .pipe(
-        tap((response) => {
-          const account         = response.account;
-          const transformedUser = this.transformUser(account);
+    return this.http.post<AuthInterfaceResponse>(`${this.api}/auth/auth/login`, loginData).pipe(
+      tap((response) => {
+        const account = response.account;
+        const transformedUser = this.transformUser(account);
 
-          this.currentUser = transformedUser;
+        this.currentUser = transformedUser;
 
-          localStorage.setItem('token', response.access_token);
-          localStorage.setItem('user', JSON.stringify(transformedUser));
+        localStorage.setItem('token', response.access_token);
+        localStorage.setItem('user', JSON.stringify(transformedUser));
 
-          this.empleadosService.sincronizarDesdeAuth();
+        this.empleadosService.sincronizarDesdeAuth();
 
-          this.redirectByPermisos(transformedUser);
-        }),
-      );
+        this.redirectByPermisos(transformedUser);
+      }),
+    );
   }
 
   logout(): void {
@@ -146,7 +150,7 @@ export class AuthService {
   getIdCuenta(): number {
     return this.currentUser?.idCuenta ?? 0;
   }
-  
+
   hasPermiso(permiso: string): boolean {
     return this.currentUser?.permisos?.includes(permiso) ?? false;
   }
@@ -170,22 +174,20 @@ export class AuthService {
     const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
 
     this.ngZone.run(() => {
-      this.http
-        .get<any>(`${this.api}/auth/auth/refresh-profile`, { headers })
-        .subscribe({
-          next: (res) => {
-            if (res && res.account) {
-              const updatedUser = this.transformUser(res.account);
-              this.currentUser  = updatedUser;
-              localStorage.setItem('user',     JSON.stringify(updatedUser));
-              localStorage.setItem('permisos', JSON.stringify(updatedUser.permisos));
+      this.http.get<any>(`${this.api}/auth/auth/refresh-profile`, { headers }).subscribe({
+        next: (res) => {
+          if (res && res.account) {
+            const updatedUser = this.transformUser(res.account);
+            this.currentUser = updatedUser;
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+            localStorage.setItem('permisos', JSON.stringify(updatedUser.permisos));
 
-              this.permisosActualizados$.next(true);
-              setTimeout(() => this.appRef.tick(), 0);
-            }
-          },
-          error: (err) => console.error('❌ Error refrescando perfil:', err),
-        });
+            this.permisosActualizados$.next(true);
+            setTimeout(() => this.appRef.tick(), 0);
+          }
+        },
+        error: (err) => console.error('❌ Error refrescando perfil:', err),
+      });
     });
   }
 }

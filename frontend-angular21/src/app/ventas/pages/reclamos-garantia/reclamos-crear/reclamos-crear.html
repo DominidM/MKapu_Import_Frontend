@@ -51,6 +51,10 @@
     <p-divider styleClass="wizard-divider" />
 
     <div class="wizard-content">
+
+      <!-- ═══════════════════════════════════════════════════════
+           STEP 0 — BUSCAR CLIENTE
+      ═══════════════════════════════════════════════════════ -->
       <div *ngIf="activeStep() === 0" class="step-content">
         <div class="step-header">
           <i class="pi pi-search step-icon"></i>
@@ -226,6 +230,10 @@
           </div>
         </div>
       </div>
+
+      <!-- ═══════════════════════════════════════════════════════
+           STEP 1 — SELECCIONAR COMPROBANTE
+      ═══════════════════════════════════════════════════════ -->
       <div *ngIf="activeStep() === 1" class="step-content">
         <div class="step-header">
           <i class="pi pi-file-check step-icon"></i>
@@ -233,6 +241,39 @@
         </div>
 
         <div class="content-centrado">
+
+          <!-- ── RANGO DE FECHAS ──────────────────────────────────── -->
+          <div class="filtro-fechas-reclamo mb-4">
+            <label class="section-label">
+              <i class="pi pi-calendar mr-1"></i> Rango de fechas
+            </label>
+            <div class="fechas-reclamo-row">
+              <p-datepicker
+                [ngModel]="fechaDesde()"
+                (ngModelChange)="onFechaDesdeChange($event)"
+                dateFormat="dd/mm/yy"
+                placeholder="Desde"
+                [showClear]="true"
+                [showIcon]="true"
+                [maxDate]="fechaHasta() ?? undefined"
+              ></p-datepicker>
+              <span class="fecha-separador-reclamo">–</span>
+              <p-datepicker
+                [ngModel]="fechaHasta()"
+                (ngModelChange)="onFechaHastaChange($event)"
+                dateFormat="dd/mm/yy"
+                placeholder="Hasta"
+                [showClear]="true"
+                [showIcon]="true"
+                [minDate]="fechaDesde() ?? undefined"
+              ></p-datepicker>
+              <small class="text-500 align-self-center">
+                {{ comprobantesCliente().length }} comprobante(s)
+              </small>
+            </div>
+          </div>
+          <!-- ─────────────────────────────────────────────────────── -->
+
           <div *ngIf="comprobantesCliente().length > 0" class="mt-3">
             <p class="text-600 mb-3">
               <i class="pi pi-info-circle mr-2"></i>
@@ -294,46 +335,68 @@
                   </div>
 
                   <div class="mt-3">
-                    <div
-                      class="garantia-box"
-                      [class.vigente]="validarGarantia(comprobante.fec_emision)"
-                      [class.vencida]="!validarGarantia(comprobante.fec_emision)"
-                    >
-                      <i
-                        [class]="
-                          validarGarantia(comprobante.fec_emision)
-                            ? 'pi pi-check-circle'
-                            : 'pi pi-times-circle'
-                        "
-                      ></i>
+                    <!-- Cargando garantías -->
+                    <div *ngIf="cargandoGarantias()" class="garantia-box" style="opacity:0.6">
+                      <i class="pi pi-spin pi-spinner"></i>
                       <div class="garantia-info">
-                        <strong>{{
-                          validarGarantia(comprobante.fec_emision)
-                            ? 'Garantía Vigente'
-                            : 'Garantía Vencida'
-                        }}</strong>
-                        <small *ngIf="validarGarantia(comprobante.fec_emision)">
-                          {{ calcularDiasRestantesComprobante(comprobante.fec_emision) }} días
-                          restantes
-                        </small>
-                        <small *ngIf="!validarGarantia(comprobante.fec_emision)">
-                          Venció hace
-                          {{ Math.abs(calcularDiasRestantesComprobante(comprobante.fec_emision)) }}
-                          días
-                        </small>
+                        <strong>Verificando garantía…</strong>
                       </div>
                     </div>
+
+                    <!-- Con garantía activa en sistema -->
+                    <ng-container *ngIf="!cargandoGarantias() && tieneGarantiaActiva(comprobante.id_comprobante)">
+                      <div class="garantia-box vigente">
+                        <i class="pi pi-shield"></i>
+                        <div class="garantia-info">
+                          <strong>Garantía Activa</strong>
+                          <small>{{ getGarantia(comprobante.id_comprobante)?.num_garantia }}</small>
+                          <small *ngIf="validarGarantia(comprobante.fec_emision)">
+                            {{ calcularDiasRestantesComprobante(comprobante.fec_emision) }} días restantes
+                          </small>
+                          <small *ngIf="!validarGarantia(comprobante.fec_emision)" style="color:#ff9800">
+                            ⚠ Período de 60 días vencido
+                          </small>
+                        </div>
+                      </div>
+                    </ng-container>
+
+                    <!-- Sin garantía registrada en sistema -->
+                    <ng-container *ngIf="!cargandoGarantias() && !tieneGarantiaActiva(comprobante.id_comprobante)">
+                      <div class="garantia-box vencida">
+                        <i class="pi pi-times-circle"></i>
+                        <div class="garantia-info">
+                          <strong>Sin Garantía Registrada</strong>
+                          <small *ngIf="validarGarantia(comprobante.fec_emision)">
+                            Dentro del período ({{ calcularDiasRestantesComprobante(comprobante.fec_emision) }} días)
+                            pero sin garantía en sistema
+                          </small>
+                          <small *ngIf="!validarGarantia(comprobante.fec_emision)">
+                            Venció hace {{ Math.abs(calcularDiasRestantesComprobante(comprobante.fec_emision)) }} días
+                          </small>
+                        </div>
+                      </div>
+                      <small style="color: #f44336; margin-top: 4px; display: block;">
+                        <i class="pi pi-lock"></i> No disponible para reclamo
+                      </small>
+                    </ng-container>
                   </div>
                 </div>
               </div>
             </div>
           </div>
+
           <div *ngIf="comprobantesCliente().length === 0" class="text-center p-5">
             <i class="pi pi-inbox text-6xl text-400 mb-3"></i>
-            <p class="text-600 text-lg">No hay comprobantes disponibles para este cliente</p>
+            <p class="text-600 text-lg">No hay comprobantes en el rango de fechas seleccionado</p>
+            <small class="text-500">Intente ampliar el rango de fechas</small>
           </div>
+
         </div>
       </div>
+
+      <!-- ═══════════════════════════════════════════════════════
+           STEP 2 — SELECCIONAR PRODUCTO
+      ═══════════════════════════════════════════════════════ -->
       <div *ngIf="activeStep() === 2" class="step-content">
         <div class="step-header">
           <i class="pi pi-box step-icon"></i>
@@ -418,6 +481,10 @@
           </div>
         </div>
       </div>
+
+      <!-- ═══════════════════════════════════════════════════════
+           STEP 3 — DATOS DEL RECLAMO
+      ═══════════════════════════════════════════════════════ -->
       <div *ngIf="activeStep() === 3" class="step-content">
         <div class="step-header">
           <i class="pi pi-file-edit step-icon"></i>
@@ -452,6 +519,10 @@
           </div>
         </div>
       </div>
+
+      <!-- ═══════════════════════════════════════════════════════
+           STEP 4 — CONFIRMACIÓN / ÉXITO
+      ═══════════════════════════════════════════════════════ -->
       <div *ngIf="activeStep() === 4" class="step-content">
         <div *ngIf="!reclamoGenerado()">
           <div class="step-header">
@@ -539,11 +610,11 @@
               <div class="comprobante-header">
                 <div class="comprobante-numero">
                   <span class="numero-label">RECLAMO N°:</span>
-                    <h3 class="numero-valor">
-                      {{ $any(reclamoGenerado()).codigoReclamo || 
-                        $any(reclamoGenerado()).claimId || 'S/N' }}
-                    </h3>              
-                  </div>
+                  <h3 class="numero-valor">
+                    {{ $any(reclamoGenerado()).codigoReclamo ||
+                      $any(reclamoGenerado()).claimId || 'S/N' }}
+                  </h3>
+                </div>
                 <p-tag [value]="$any(reclamoGenerado()).status || 'REGISTRADO'" severity="warn" />
               </div>
 
@@ -557,7 +628,7 @@
                   </span>
                   <strong>{{ resumenClienteNombre() }}</strong>
                 </div>
-                
+
                 <div class="info-item">
                   <span class="label">
                     <i class="pi pi-box"></i>
@@ -565,15 +636,18 @@
                   </span>
                   <strong>{{ resumenProductoNombre() }}</strong>
                 </div>
-                
+
                 <div class="info-item">
                   <span class="label">
                     <i class="pi pi-calendar"></i>
                     Fecha de Registro:
                   </span>
-                  <strong>{{ ($any(reclamoGenerado()).registeredAt | date: 'dd/MM/yyyy HH:mm') || ($any(reclamoGenerado()).registerDate | date: 'dd/MM/yyyy HH:mm') }}</strong>
+                  <strong>
+                    {{ ($any(reclamoGenerado()).registeredAt | date: 'dd/MM/yyyy HH:mm') ||
+                       ($any(reclamoGenerado()).registerDate | date: 'dd/MM/yyyy HH:mm') }}
+                  </strong>
                 </div>
-                
+
                 <div class="info-item">
                   <span class="label">
                     <i class="pi pi-exclamation-triangle"></i>
@@ -609,7 +683,9 @@
           </div>
         </div>
       </div>
+
     </div>
+
     <p-divider styleClass="wizard-divider" />
 
     <div *ngIf="activeStep() < 4 || !reclamoGenerado()" class="step-actions">

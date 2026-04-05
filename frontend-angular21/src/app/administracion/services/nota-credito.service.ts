@@ -18,13 +18,13 @@ export interface CreditNoteFilter {
 }
 
 export interface CreditNoteSummary {
-  noteSummaryId: number; 
+  noteSummaryId: number;
   correlative: string;
-  customerName: string; 
+  customerName: string;
   customerDocument: string;
   currency: string;
   totalAmount: number;
-  emissionDate: Date | string; 
+  emissionDate: Date | string;
   status: string;
 }
 
@@ -83,40 +83,42 @@ export interface AnnulCreditNoteDto {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class CreditNoteService {
-  private readonly http   = inject(HttpClient);
+  private readonly http = inject(HttpClient);
   private readonly apiUrl = `${environment.apiUrl}/sales/credit-note`;
 
   listar(filtros: CreditNoteFilter): Observable<CreditNoteListResponse> {
     let params = new HttpParams();
 
-    if (filtros.page)           params = params.set('page',         filtros.page.toString());
-    if (filtros.limit)          params = params.set('limit',        filtros.limit.toString());
-    if (filtros.startDate)      params = params.set('startDate',    filtros.startDate);
-    if (filtros.endDate)        params = params.set('endDate',      filtros.endDate);
-    if (filtros.status)         params = params.set('status',       filtros.status);
-    if (filtros.serie)          params = params.set('serie',        filtros.serie);
-    if (filtros.numberDoc)      params = params.set('numberDoc',    filtros.numberDoc);
-    if (filtros.serieRef)       params = params.set('serieRef',     filtros.serieRef);
-    if (filtros.numberDocRef)   params = params.set('numberDocRef', filtros.numberDocRef);
-    if (filtros.sedeId != null) params = params.set('sedeId',       filtros.sedeId.toString());
+    if (filtros.page) params = params.set('page', filtros.page.toString());
+    if (filtros.limit) params = params.set('limit', filtros.limit.toString());
+    if (filtros.startDate) params = params.set('startDate', filtros.startDate);
+    if (filtros.endDate) params = params.set('endDate', filtros.endDate);
+    if (filtros.status) params = params.set('status', filtros.status);
+    if (filtros.serie) params = params.set('serie', filtros.serie);
+    if (filtros.numberDoc) params = params.set('numberDoc', filtros.numberDoc);
+    if (filtros.serieRef) params = params.set('serieRef', filtros.serieRef);
+    if (filtros.numberDocRef) params = params.set('numberDocRef', filtros.numberDocRef);
+    if (filtros.sedeId != null) params = params.set('sedeId', filtros.sedeId.toString());
 
     return this.http.get<any>(this.apiUrl, { params }).pipe(
-      map(res => {
+      map((res) => {
         // INTERCEPTOR: Extraemos los datos dinámicamente para evitar que se pierdan
         const notasMapeadas: CreditNoteSummary[] = res.data.map((nota: any) => {
           return {
             noteSummaryId: nota.noteSummaryId || nota.noteId || nota.id,
             correlative: nota.correlative || nota.correlativo,
             // Buscamos cualquier llave que el backend use para el cliente
-            customerName: nota.customerName || nota.clientName || nota.cliente || 'CLIENTE GENÉRICO',
-            customerDocument: nota.customerDocument || nota.clientDocument || nota.clientId?.toString() || 'S/D',
+            customerName:
+              nota.customerName || nota.clientName || nota.cliente || 'CLIENTE GENÉRICO',
+            customerDocument:
+              nota.customerDocument || nota.clientDocument || nota.clientId?.toString() || 'S/D',
             currency: nota.currency || nota.moneda,
             totalAmount: nota.totalAmount || nota.total,
             emissionDate: nota.emissionDate || nota.issueDate || nota.fechaEmision,
-            status: nota.status || nota.estado
+            status: nota.status || nota.estado,
           };
         });
 
@@ -124,9 +126,9 @@ export class CreditNoteService {
           data: notasMapeadas,
           total: res.total,
           page: res.page,
-          limit: res.limit
+          limit: res.limit,
         };
-      })
+      }),
     );
   }
 
@@ -136,8 +138,9 @@ export class CreditNoteService {
         ...nota,
         noteDetailId: nota.noteDetailId || nota.noteId || nota.id,
         customerName: nota.customerName || nota.clientName || nota.cliente || 'CLIENTE GENÉRICO',
-        customerDocument: nota.customerDocument || nota.clientDocument || nota.clientId?.toString() || 'S/D'
-      }))
+        customerDocument:
+          nota.customerDocument || nota.clientDocument || nota.clientId?.toString() || 'S/D',
+      })),
     );
   }
 
@@ -152,14 +155,14 @@ export class CreditNoteService {
   exportarExcel(filtros: CreditNoteFilter): Observable<Blob> {
     let params = new HttpParams();
 
-    if (filtros.startDate)      params = params.set('startDate',    filtros.startDate);
-    if (filtros.endDate)        params = params.set('endDate',      filtros.endDate);
-    if (filtros.status)         params = params.set('status',       filtros.status);
-    if (filtros.serie)          params = params.set('serie',        filtros.serie);
-    if (filtros.numberDoc)      params = params.set('numberDoc',    filtros.numberDoc);
-    if (filtros.serieRef)       params = params.set('serieRef',     filtros.serieRef);
-    if (filtros.numberDocRef)   params = params.set('numberDocRef', filtros.numberDocRef);
-    if (filtros.sedeId != null) params = params.set('sedeId',       filtros.sedeId.toString());
+    if (filtros.startDate) params = params.set('startDate', filtros.startDate);
+    if (filtros.endDate) params = params.set('endDate', filtros.endDate);
+    if (filtros.status) params = params.set('status', filtros.status);
+    if (filtros.serie) params = params.set('serie', filtros.serie);
+    if (filtros.numberDoc) params = params.set('numberDoc', filtros.numberDoc);
+    if (filtros.serieRef) params = params.set('serieRef', filtros.serieRef);
+    if (filtros.numberDocRef) params = params.set('numberDocRef', filtros.numberDocRef);
+    if (filtros.sedeId != null) params = params.set('sedeId', filtros.sedeId.toString());
 
     return this.http.get(`${this.apiUrl}/export`, { params, responseType: 'blob' });
   }

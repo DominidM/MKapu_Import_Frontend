@@ -1,10 +1,9 @@
 import { Injectable } from '@angular/core';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class ComprobantesService {
-
   generarSerieBoleta(numero: number = 1): string {
     return `B${String(numero).padStart(3, '0')}`;
   }
@@ -54,9 +53,13 @@ export class ComprobantesService {
 
   generarHashCPE(idComprobante: string, serie: string, numero: number): string {
     const timestamp = Date.now();
-    return `${idComprobante}-${serie}-${numero}-${timestamp}`.split('').reduce((hash, char) => {
-      return ((hash << 5) - hash) + char.charCodeAt(0);
-    }, 0).toString(16).toUpperCase();
+    return `${idComprobante}-${serie}-${numero}-${timestamp}`
+      .split('')
+      .reduce((hash, char) => {
+        return (hash << 5) - hash + char.charCodeAt(0);
+      }, 0)
+      .toString(16)
+      .toUpperCase();
   }
 
   formatearNumeroComprobante(numero: number): string {
@@ -76,7 +79,7 @@ export class ComprobantesService {
       '10': 'Gravado - Operación Onerosa',
       '20': 'Exonerado - Operación Onerosa',
       '30': 'Inafecto - Operación Onerosa',
-      '40': 'Exportación'
+      '40': 'Exportación',
     };
     return tipos[codigo] || 'Desconocido';
   }
@@ -102,7 +105,7 @@ export class ComprobantesService {
       '01': 'Factura Electrónica',
       '03': 'Boleta de Venta Electrónica',
       '07': 'Nota de Crédito Electrónica',
-      '08': 'Nota de Débito Electrónica'
+      '08': 'Nota de Débito Electrónica',
     };
     return tipos[tipo] || 'Comprobante Desconocido';
   }
@@ -137,7 +140,7 @@ export class ComprobantesService {
         resolve({
           success: true,
           mensaje: 'Comprobante aceptado por SUNAT',
-          cdr: this.generarCDR(comprobante)
+          cdr: this.generarCDR(comprobante),
         });
       }, 2000);
     });

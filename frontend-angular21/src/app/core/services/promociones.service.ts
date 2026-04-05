@@ -39,7 +39,7 @@ export class PromocionesService {
   public promociones$: Observable<Promocion[]> = this.promocionesSubject.asObservable();
 
   private promocionesAplicadasSubject = new BehaviorSubject<PromocionAplicada[]>([]);
-  public promocionesAplicadas$: Observable<PromocionAplicada[]> = 
+  public promocionesAplicadas$: Observable<PromocionAplicada[]> =
     this.promocionesAplicadasSubject.asObservable();
 
   constructor() {
@@ -151,13 +151,15 @@ export class PromocionesService {
         p.estado &&
         p.fecha_inicio <= ahora &&
         p.fecha_fin >= ahora &&
-        (p.uso_maximo === null || p.uso_maximo === undefined || p.usos_actuales < p.uso_maximo)
+        (p.uso_maximo === null || p.uso_maximo === undefined || p.usos_actuales < p.uso_maximo),
     );
   }
 
   buscarPorCodigo(codigo: string): Promocion | null {
     const codigoUpper = codigo.trim().toUpperCase();
-    return this.promocionesSubject.value.find((p) => p.codigo.toUpperCase() === codigoUpper) || null;
+    return (
+      this.promocionesSubject.value.find((p) => p.codigo.toUpperCase() === codigoUpper) || null
+    );
   }
 
   validarPromocion(
@@ -168,7 +170,7 @@ export class PromocionesService {
       idCliente?: string;
       idSede?: string;
       fecha?: Date;
-    }
+    },
   ): { valida: boolean; mensaje: string; promocion?: Promocion } {
     const promocion = this.buscarPorCodigo(codigo);
 
@@ -257,7 +259,7 @@ export class PromocionesService {
       tipoComprobante: '01' | '03';
       idCliente?: string;
       idSede?: string;
-    }
+    },
   ): { exito: boolean; mensaje: string; descuento?: number; promocion?: Promocion } {
     const validacion = this.validarPromocion(codigo, opciones);
 

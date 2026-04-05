@@ -1,4 +1,6 @@
 import { Injectable } from '@angular/core';
+import { map, catchError } from 'rxjs/operators';
+import { of } from 'rxjs';
 import { environment } from '../../../enviroments/enviroment';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import {
@@ -16,12 +18,12 @@ import {
 import { Observable } from 'rxjs';
 
 export interface AjusteInventarioDto {
-  productId:   number;
+  productId: number;
   warehouseId: number;
-  idSede:      number;
-  quantity:    number;
-  reason:      string;
-  userId:      number;
+  idSede: number;
+  quantity: number;
+  reason: string;
+  userId: number;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -38,11 +40,11 @@ export class ProductoService {
     idCategoria?: number,
   ): Observable<ProductoResponse> {
     let params = new HttpParams();
-    if (page)              params = params.set('page', page);
-    if (limit)             params = params.set('limit', limit);
+    if (page) params = params.set('page', page);
+    if (limit) params = params.set('limit', limit);
     if (estado !== undefined) params = params.set('estado', estado);
-    if (search)            params = params.set('search', search);
-    if (idCategoria)       params = params.set('id_categoria', idCategoria);
+    if (search) params = params.set('search', search);
+    if (idCategoria) params = params.set('id_categoria', idCategoria);
     return this.http.get<ProductoResponse>(`${this.api}/logistics/products`, { params });
   }
 
@@ -54,40 +56,50 @@ export class ProductoService {
     activo?: boolean,
   ): Observable<ProductoStockResponse> {
     let params = new HttpParams().set('id_sede', idSede);
-    if (page)  params = params.set('page', page);
-    if (size)  params = params.set('size', size);
+    if (page) params = params.set('page', page);
+    if (size) params = params.set('size', size);
     if (categoria) params = params.set('categoria', categoria);
-    if (activo !== undefined && activo !== null)
-      params = params.set('activo', activo.toString());
-    return this.http.get<ProductoStockResponse>(
-      `${this.api}/logistics/products/productos_stock`, { params }
-    );
+    if (activo !== undefined && activo !== null) params = params.set('activo', activo.toString());
+    return this.http.get<ProductoStockResponse>(`${this.api}/logistics/products/productos_stock`, {
+      params,
+    });
   }
 
-  getProductosAutocomplete(search: string, idSede: number): Observable<ProductoAutocompleteResponse> {
+  getCajasByProducto(idProducto: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.api}/logistics/cajas/producto/${idProducto}`);
+  }
+
+  getProductosAutocomplete(
+    search: string,
+    idSede: number,
+  ): Observable<ProductoAutocompleteResponse> {
     const params = new HttpParams().set('search', search).set('id_sede', idSede);
     return this.http.get<ProductoAutocompleteResponse>(
-      `${this.api}/logistics/products/autocomplete`, { params }
+      `${this.api}/logistics/products/autocomplete`,
+      { params },
     );
   }
 
-  getProductoDetalleStock(idProducto: number, idSede: number): Observable<ProductoDetalleStockResponse> {
+  getProductoDetalleStock(
+    idProducto: number,
+    idSede: number,
+  ): Observable<ProductoDetalleStockResponse> {
     const params = new HttpParams().set('id_sede', idSede);
     return this.http.get<ProductoDetalleStockResponse>(
-      `${this.api}/logistics/products/${idProducto}/stock`, { params }
+      `${this.api}/logistics/products/${idProducto}/stock`,
+      { params },
     );
   }
 
   getProductoByCodigo(codigo: string): Observable<any> {
-    return this.http.get<any>(
-      `${this.api}/logistics/products/code/${encodeURIComponent(codigo)}`
-    );
+    return this.http.get<any>(`${this.api}/logistics/products/code/${encodeURIComponent(codigo)}`);
   }
 
   getProductoByCodigoConStock(codigo: string, idSede: number): Observable<any> {
     const params = new HttpParams().set('id_sede', idSede);
     return this.http.get<any>(
-      `${this.api}/logistics/products/code/${encodeURIComponent(codigo)}/stock`, { params }
+      `${this.api}/logistics/products/code/${encodeURIComponent(codigo)}/stock`,
+      { params },
     );
   }
 
@@ -109,10 +121,7 @@ export class ProductoService {
 
   /** Registra un ajuste de inventario — para edición de productos (POST /adjustment) */
   registrarAjusteInventario(dto: AjusteInventarioDto): Observable<any> {
-    return this.http.post<any>(
-      `${this.api}/logistics/inventory-movements/adjustment`,
-      dto,
-    );
+    return this.http.post<any>(`${this.api}/logistics/inventory-movements/adjustment`, dto);
   }
 
   actualizarProductoInfo(producto: UpdateProductoDto): Observable<any> {
@@ -132,8 +141,13 @@ export class ProductoService {
 
   getProductosAutocompleteConPrecio(search: string, idSede: number): Observable<any> {
     const params = new HttpParams().set('search', search).set('id_sede', idSede);
-    return this.http.get<any>(
-      `${this.api}/logistics/products/ventas/autocomplete`, { params }
+    return this.http.get<any>(`${this.api}/logistics/products/ventas/autocomplete`, { params });
+  }
+
+  existsByCode(codigo: string): Observable<boolean> {
+    return this.getProductoByCodigo(codigo).pipe(
+      map((resp: any) => !!resp?.id_producto || !!resp?.producto?.id_producto),
+      catchError(() => of(false)) 
     );
   }
 }

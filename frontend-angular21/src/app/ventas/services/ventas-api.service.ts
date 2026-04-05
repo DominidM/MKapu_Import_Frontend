@@ -83,7 +83,10 @@ export class VentasApiService {
     );
   }
 
-
+  getSaleReceiptById(id: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/sales-receipts/${id}`);
+  }
+  
   getKpiSemanal(): Observable<SalesReceiptKpiDto> {
     let params = new HttpParams();
     const sede = this.sedeId;

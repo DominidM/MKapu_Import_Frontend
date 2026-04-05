@@ -6,55 +6,54 @@ import { environment } from '../../../enviroments/enviroment';
 // ── Interfaces de respuesta ───────────────────────────────────────────
 
 export interface AlmacenKpisDto {
-  valorInventario:   number;
-  itemsBajoStock:    number;
+  valorInventario: number;
+  itemsBajoStock: number;
   exactitudInventario: number;
-  rotacionPromedio:  number;
+  rotacionPromedio: number;
   tendencias: {
-    valorInventario:    string;
-    itemsBajoStock:     string;
+    valorInventario: string;
+    itemsBajoStock: string;
     exactitudInventario: string;
-    rotacionPromedio:   string;
+    rotacionPromedio: string;
   };
 }
 
 export interface RendimientoDataPoint {
-  label:    string;
+  label: string;
   cantidad: number;
 }
 
 export interface RendimientoChartDto {
   labels: string[];
-  datos:  number[];
+  datos: number[];
 }
 
 export interface SaludStockDto {
-  optimo:     number;
-  bajoStock:  number;
+  optimo: number;
+  bajoStock: number;
   sobreStock: number;
 }
 
 export interface MovimientoRecienteDto {
-  fecha:      string;
-  tipo:       'INGRESO' | 'SALIDA' | 'AJUSTE';
+  fecha: string;
+  tipo: 'INGRESO' | 'SALIDA' | 'AJUSTE';
   referencia: string;
-  producto:   string;
-  cantidad:   number;
-  usuario:    string;
+  producto: string;
+  cantidad: number;
+  usuario: string;
 }
 
 export interface ProductoCriticoDto {
-  codigo:      string;
+  codigo: string;
   descripcion: string;
-  stock:       number;
+  stock: number;
   stockMinimo: number;
-  rotacion:    number;
+  rotacion: number;
 }
 
 @Injectable({ providedIn: 'root' })
 export class AlmacenDashboardService {
-
-  private readonly http    = inject(HttpClient);
+  private readonly http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiUrl}/logistics/warehouse/reports`;
 
   private buildParams(periodo: string, sedeId?: string | null): HttpParams {
@@ -83,7 +82,9 @@ export class AlmacenDashboardService {
   getMovimientosRecientes(sedeId?: string | null): Observable<MovimientoRecienteDto[]> {
     let params = new HttpParams();
     if (sedeId != null && sedeId !== '') params = params.set('sedeId', sedeId);
-    return this.http.get<MovimientoRecienteDto[]>(`${this.baseUrl}/movimientos-recientes`, { params });
+    return this.http.get<MovimientoRecienteDto[]>(`${this.baseUrl}/movimientos-recientes`, {
+      params,
+    });
   }
 
   getProductosCriticos(sedeId?: string | null): Observable<ProductoCriticoDto[]> {

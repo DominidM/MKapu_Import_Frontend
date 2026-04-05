@@ -46,12 +46,7 @@ export class TransferNotificationService {
   constructor() {
     effect(() => {
       const event = this.transferSocket.lastNewRequest();
-      if (
-        !event ||
-        !this.active() ||
-        !this.canConsume() ||
-        !this.isRelevantSocketEvent(event)
-      ) {
+      if (!event || !this.active() || !this.canConsume() || !this.isRelevantSocketEvent(event)) {
         return;
       }
 
@@ -62,12 +57,7 @@ export class TransferNotificationService {
 
     effect(() => {
       const event = this.transferSocket.lastStatusUpdate();
-      if (
-        !event ||
-        !this.active() ||
-        !this.canConsume() ||
-        !this.isRelevantSocketEvent(event)
-      ) {
+      if (!event || !this.active() || !this.canConsume() || !this.isRelevantSocketEvent(event)) {
         return;
       }
 
@@ -148,9 +138,7 @@ export class TransferNotificationService {
   markAsRead(transferId: number): void {
     this.notifications.update((items) =>
       this.sortNotifications(
-        items.map((item) =>
-          item.transferId === transferId ? { ...item, read: true } : item,
-        ),
+        items.map((item) => (item.transferId === transferId ? { ...item, read: true } : item)),
       ),
     );
     this.persistCurrentState();
@@ -167,9 +155,7 @@ export class TransferNotificationService {
     const now = new Date().toISOString();
     this.notifications.update((items) =>
       items.map((item) =>
-        item.transferId === transferId
-          ? { ...item, deletedAt: now, updatedAt: now }
-          : item,
+        item.transferId === transferId ? { ...item, deletedAt: now, updatedAt: now } : item,
       ),
     );
     this.persistCurrentState();
@@ -185,7 +171,9 @@ export class TransferNotificationService {
 
   private async refreshFromSocket(event: TransferSocketEventDto): Promise<void> {
     const transferId = Number(event.transfer?.id ?? 0);
-    const status = String(event.transfer?.status ?? '').trim().toUpperCase();
+    const status = String(event.transfer?.status ?? '')
+      .trim()
+      .toUpperCase();
     const emittedAt = String(event.emittedAt ?? '').trim();
     const fingerprint = `${transferId}:${status}:${emittedAt}`;
 
@@ -194,20 +182,14 @@ export class TransferNotificationService {
     }
 
     this.socketFingerprints.add(fingerprint);
-    const previousMap = new Map(
-      this.notifications().map((item) => [item.transferId, item]),
-    );
+    const previousMap = new Map(this.notifications().map((item) => [item.transferId, item]));
 
     try {
       const merged = await this.fetchMergedNotifications();
       this.notifications.set(merged);
       this.persistCurrentState();
 
-      const changedNotification = this.resolveChangedNotification(
-        previousMap,
-        merged,
-        transferId,
-      );
+      const changedNotification = this.resolveChangedNotification(previousMap, merged, transferId);
       if (changedNotification) {
         this.lastRealtimeNotification.set(changedNotification);
       }
@@ -248,10 +230,7 @@ export class TransferNotificationService {
 
       const existing = existingMap.get(notification.transferId);
       if (!existing) {
-        existingMap.set(
-          notification.transferId,
-          this.createStoredNotification(notification),
-        );
+        existingMap.set(notification.transferId, this.createStoredNotification(notification));
         continue;
       }
 
@@ -303,8 +282,7 @@ export class TransferNotificationService {
     transferId: number,
   ): StoredTransferNotification | null {
     const current = merged.find(
-      (notification) =>
-        notification.transferId === transferId && notification.deletedAt === null,
+      (notification) => notification.transferId === transferId && notification.deletedAt === null,
     );
     if (!current) {
       return null;
@@ -324,9 +302,7 @@ export class TransferNotificationService {
     return samePayload ? null : current;
   }
 
-  private pruneExpired(
-    notifications: StoredTransferNotification[],
-  ): StoredTransferNotification[] {
+  private pruneExpired(notifications: StoredTransferNotification[]): StoredTransferNotification[] {
     const now = Date.now();
     return notifications.filter((notification) => {
       const createdAt = Date.parse(notification.createdAt);
@@ -346,10 +322,7 @@ export class TransferNotificationService {
     );
   }
 
-  private buildStorageKey(
-    headquartersId: string | null,
-    role: TransferRole,
-  ): string | null {
+  private buildStorageKey(headquartersId: string | null, role: TransferRole): string | null {
     const normalizedHeadquartersId = String(headquartersId ?? '').trim();
     if (!normalizedHeadquartersId) {
       return null;
@@ -388,10 +361,7 @@ export class TransferNotificationService {
     const unreadVisibleCount = persistedNotifications.filter(
       (item) => item.deletedAt === null && !item.read,
     ).length;
-    localStorage.setItem(
-      NOTIFICATION_COUNT_STORAGE_KEY,
-      String(unreadVisibleCount),
-    );
+    localStorage.setItem(NOTIFICATION_COUNT_STORAGE_KEY, String(unreadVisibleCount));
 
     if (typeof window !== 'undefined') {
       window.dispatchEvent(
@@ -402,9 +372,7 @@ export class TransferNotificationService {
     }
   }
 
-  private isStoredNotification(
-    value: unknown,
-  ): value is StoredTransferNotification {
+  private isStoredNotification(value: unknown): value is StoredTransferNotification {
     if (!value || typeof value !== 'object') {
       return false;
     }
@@ -422,25 +390,20 @@ export class TransferNotificationService {
     );
   }
 
-  private isRelevantSocketEvent(
-    event: TransferSocketEventDto | null,
-  ): boolean {
+  private isRelevantSocketEvent(event: TransferSocketEventDto | null): boolean {
     if (!event) {
       return false;
     }
 
     return this.isRelevantNotificationStatus(
-      String(event.transfer?.status ?? '').trim().toUpperCase(),
+      String(event.transfer?.status ?? '')
+        .trim()
+        .toUpperCase(),
     );
   }
 
-  private isRelevantNotificationStatus(
-    value: unknown,
-  ): value is TransferNotificationStatus {
-    return (
-      typeof value === 'string' &&
-      RELEVANT_STATUSES.has(value as TransferNotificationStatus)
-    );
+  private isRelevantNotificationStatus(value: unknown): value is TransferNotificationStatus {
+    return typeof value === 'string' && RELEVANT_STATUSES.has(value as TransferNotificationStatus);
   }
 
   private resolveErrorMessage(error: unknown): string {

@@ -22,7 +22,7 @@
 
 <div class="filtros-container mb-4">
   <h3 class="seccion-filtros">
-    <i class="pi pi-filter"></i> Filtros de bÃºsqueda
+    <i class="pi pi-filter"></i> Filtros de busqueda
   </h3>
 
   <div class="filtros-flex-row">
@@ -51,7 +51,7 @@
           [showClear]="true"
           [showIcon]="true"
         ></p-datepicker>
-        <span class="filtro-fechas-separador">â€”</span>
+        <span class="filtro-fechas-separador">-</span>
         <p-datepicker
           [ngModel]="filtroFechaFin()"
           (ngModelChange)="filtroFechaFin.set($event)"
@@ -132,9 +132,9 @@
 
 <div class="p-2">
   <app-shared-table-container
-    titulo="Listado de Notas de CrÃ©dito"
+    titulo="Listado de Notas de Credito"
     iconoTitulo="pi pi-list"
-    mensajeCarga="Cargando notas de crÃ©dito..."
+    mensajeCarga="Cargando notas de credito..."
     [loading]="loading()"
     [paginaActual]="paginaActual()"
     [totalPaginas]="totalPaginas()"
@@ -168,7 +168,7 @@
           <th>Correlativo</th>
           <th>Cliente</th>
           <th class="text-center">Moneda</th>
-          <th>Fecha EmisiÃ³n</th>
+          <th>Fecha Emision</th>
           <th class="text-right">Total</th>
           <th class="text-center">Estado</th>
           <th class="text-center">Acciones</th>
@@ -220,7 +220,7 @@
                 [text]="true"
                 severity="danger"
                 [disabled]="!puedeAnular(nota.status)"
-                pTooltip="Anular nota de crÃ©dito"
+                pTooltip="Anular nota de credito"
                 tooltipPosition="top"
               ></p-button>
             </div>

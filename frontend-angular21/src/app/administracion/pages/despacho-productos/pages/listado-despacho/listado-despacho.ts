@@ -3,40 +3,39 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
-import { Subject, Subscription, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
+import { Subscription } from 'rxjs';
 
-import { CardModule } from 'primeng/card';
-import { TableModule } from 'primeng/table';
-import { ButtonModule } from 'primeng/button';
-import { InputTextModule } from 'primeng/inputtext';
-import { TagModule } from 'primeng/tag';
-import { ToastModule } from 'primeng/toast';
-import { ConfirmDialog } from 'primeng/confirmdialog';
-import { TooltipModule } from 'primeng/tooltip';
-import { SelectModule } from 'primeng/select';
-import { DialogModule } from 'primeng/dialog';
-import { DatePickerModule } from 'primeng/datepicker';
+import { CardModule }         from 'primeng/card';
+import { TableModule }        from 'primeng/table';
+import { ButtonModule }       from 'primeng/button';
+import { InputTextModule }    from 'primeng/inputtext';
+import { TagModule }          from 'primeng/tag';
+import { ToastModule }        from 'primeng/toast';
+import { ConfirmDialog }      from 'primeng/confirmdialog';
+import { TooltipModule }      from 'primeng/tooltip';
+import { SelectModule }       from 'primeng/select';
+import { DialogModule }       from 'primeng/dialog';
+import { DatePickerModule }   from 'primeng/datepicker';
 import { AutoCompleteModule } from 'primeng/autocomplete';
 import { ConfirmationService, MessageService } from 'primeng/api';
 
-import { DispatchService } from '../../../../services/dispatch.service';
+import { DispatchService }        from '../../../../services/dispatch.service';
 import { Dispatch, DispatchStatus } from '../../../../interfaces/dispatch.interfaces';
-import { UsuarioService } from '../../../../services/usuario.service';
+import { UsuarioService }         from '../../../../services/usuario.service';
 import { UsuarioInterfaceResponse } from '../../../../interfaces/usuario.interface';
-import { AuthService } from '../../../../../auth/services/auth.service';
-import { SedeService } from '../../../../services/sede.service';
-import { VentasAdminService } from '../../../../services/ventas.service';
+import { AuthService }            from '../../../../../auth/services/auth.service';
+import { SedeService }            from '../../../../services/sede.service';
+import { VentasAdminService }     from '../../../../services/ventas.service';
 
 import {
   getLunesSemanaActualPeru,
   getDomingoSemanaActualPeru,
 } from '../../../../../shared/utils/date-peru.utils';
 
-import { SedeAdmin } from '../../../../interfaces/ventas.interface';
-import { UserRole } from '../../../../../core/constants/roles.constants';
+import { SedeAdmin }   from '../../../../interfaces/ventas.interface';
+import { UserRole }    from '../../../../../core/constants/roles.constants';
 import { SharedTableContainerComponent } from '../../../../../shared/components/table.componente/shared-table-container.component';
 
-// Ã¢â€â‚¬Ã¢â€â‚¬ Interfaces locales Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 interface ProductoMapItem { nombre: string; codigo: string; }
 
 interface ReceiptDetalle {
@@ -59,8 +58,8 @@ interface ReceiptDetalle {
 
 interface FiltroDespacho {
   sedeSeleccionada: number | null;
-  busqueda: string;
-  estado: string | null;
+  busqueda:         string;
+  estado:           string | null;
 }
 
 @Component({
@@ -74,12 +73,12 @@ interface FiltroDespacho {
     SharedTableContainerComponent,
   ],
   templateUrl: './listado-despacho.html',
-  styleUrl: './listado-despacho.css',
-  providers: [ConfirmationService, MessageService],
+  styleUrl:    './listado-despacho.css',
+  providers:   [ConfirmationService, MessageService],
 })
 export class ListadoDespacho implements OnInit, OnDestroy {
 
-  readonly dispatchService         = inject(DispatchService);
+  readonly dispatchService             = inject(DispatchService);
   private readonly usuarioService      = inject(UsuarioService);
   private readonly messageService      = inject(MessageService);
   private readonly confirmationService = inject(ConfirmationService);
@@ -90,109 +89,103 @@ export class ListadoDespacho implements OnInit, OnDestroy {
   private readonly sanitizer           = inject(DomSanitizer);
 
   private subscriptions = new Subscription();
-  private busquedaSubject = new Subject<string>();
 
+  // ── Utilidades de mapa ────────────────────────────────────────────────────
   getMapEmbedUrl(direccion: string): SafeResourceUrl {
-    const q = encodeURIComponent((direccion ?? '') + ', Lima, PerÃƒÂº');
+    const q = encodeURIComponent((direccion ?? '') + ', Lima, Perú');
     return this.sanitizer.bypassSecurityTrustResourceUrl(
       `https://maps.google.com/maps?q=${q}&output=embed&hl=es&z=16`
     );
   }
 
   encodeAddress(direccion: string): string {
-    return encodeURIComponent((direccion ?? '') + ', Lima, PerÃƒÂº');
+    return encodeURIComponent((direccion ?? '') + ', Lima, Perú');
   }
 
+  // ── Cabecera ──────────────────────────────────────────────────────────────
   tituloKicker    = 'ADMINISTRADOR - DESPACHO - PRODUCTOS';
   subtituloKicker = 'LISTADO DE DESPACHO';
   iconoCabecera   = 'pi pi-truck';
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ AutenticaciÃƒÂ³n Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   readonly esAdmin: boolean;
   readonly sedeNombreVentas: string;
   readonly sedePropiaId: number | null;
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Filtros Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  // ── Filtros y paginación ──────────────────────────────────────────────────
   filtros = signal<FiltroDespacho>({
     sedeSeleccionada: null,
     busqueda: '',
     estado: 'GENERADO',
   });
 
-  searchTerm   = signal<string>('');
-  fechaDesde   = signal<Date | null>(getLunesSemanaActualPeru());
-  fechaHasta   = signal<Date | null>(getDomingoSemanaActualPeru());
-  usuarios     = signal<UsuarioInterfaceResponse[]>([]);
+  searchTerm      = signal<string>('');
+  fechaDesde      = signal<Date | null>(getLunesSemanaActualPeru());
+  fechaHasta      = signal<Date | null>(getDomingoSemanaActualPeru());
+  paginaActual    = signal(1);
+  limitePorPagina = signal(5);
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Sedes Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  // ── Usuarios (carga lazy) ─────────────────────────────────────────────────
+  usuarios            = signal<UsuarioInterfaceResponse[]>([]);
+  private usuariosCargados = false;
+
+  // ── Sedes ─────────────────────────────────────────────────────────────────
   sedes = signal<SedeAdmin[]>([]);
   readonly sedesOptions = computed(() =>
-    [{ label: 'Todas las sedes', value: null }, ...this.sedes().map((s) => ({ label: s.nombre, value: s.id_sede }))]
+    [{ label: 'Todas las sedes', value: null }, ...this.sedes().map(s => ({ label: s.nombre, value: s.id_sede }))]
   );
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Modal Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  // ── Modal detalle ─────────────────────────────────────────────────────────
   modalVisible         = signal(false);
   despachoSeleccionado = signal<Dispatch | null>(null);
   loadingDetalle       = signal(false);
 
+  // ── Modal cambio estado ───────────────────────────────────────────────────
   cambioEstadoVisible = signal(false);
   despachoParaCambio  = signal<Dispatch | null>(null);
 
+  // ── Datos de detalle ──────────────────────────────────────────────────────
   productosMap         = signal<Record<string, ProductoMapItem>>({});
   productosCodigoMap   = signal<Record<number, string>>({});
   clienteInfo          = signal<{ nombre: string; documento: string; tipo_documento?: string; telefono: string; direccion?: string; } | null>(null);
-  sedeNombreModal      = signal<string>('Ã¢â‚¬â€');
+  sedeNombreModal      = signal<string>('-', { equal: (a, b) => a === b });
   loadingVenta         = signal(false);
   receiptDetalleActual = signal<ReceiptDetalle | null>(null);
 
-  sugerenciasBusqueda  = signal<string[]>([]);
-  todasLasSugerencias  = signal<string[]>([]);
+  // ── Autocomplete: sugerencias solo desde caché local ─────────────────────
+  sugerenciasBusqueda = signal<string[]>([]);
 
+  // ── Opciones de estado ────────────────────────────────────────────────────
   estadoOptions = [
-    { label: 'Todos',          value: null         },
+    { label: 'Todos',          value: null            },
     { label: 'Generado',       value: 'GENERADO'      },
-    { label: 'En preparaciÃƒÂ³n', value: 'EN_PREPARACION'},
-    { label: 'En trÃƒÂ¡nsito',    value: 'EN_TRANSITO'   },
+    { label: 'En preparación', value: 'EN_PREPARACION'},
+    { label: 'En tránsito',    value: 'EN_TRANSITO'   },
     { label: 'Entregado',      value: 'ENTREGADO'     },
     { label: 'Cancelado',      value: 'CANCELADO'     },
   ];
 
-  dispatches      = this.dispatchService.dispatches;
-  loading         = this.dispatchService.loading;
-  error           = this.dispatchService.error;
-  totalItems      = this.dispatchService.totalItems;
-  totalPages      = this.dispatchService.totalPages;
-  paginaActual    = signal(1);
-  limitePorPagina = signal(5);
+  // ── Alias del servicio ────────────────────────────────────────────────────
+  dispatches = this.dispatchService.dispatches;
+  loading    = this.dispatchService.loading;
+  error      = this.dispatchService.error;
+  totalItems = this.dispatchService.totalItems;
+  totalPages = this.dispatchService.totalPages;
 
   constructor() {
-    const user = this.authService.getCurrentUser();
+    const user            = this.authService.getCurrentUser();
     this.esAdmin          = this.authService.getRoleId() === UserRole.ADMIN;
     this.sedeNombreVentas = user?.sedeNombre ?? 'Mi sede';
-    this.sedePropiaId     = user?.idSede ?? null;
+    this.sedePropiaId     = user?.idSede     ?? null;
   }
 
+  // ── Ciclo de vida ─────────────────────────────────────────────────────────
   ngOnInit(): void {
-    let sedeInicial: number | null = null;
-    
-    if (!this.esAdmin) {
-      // Si NO es admin, usa siempre su sedePropiaId
-      sedeInicial = this.sedePropiaId;
-    } else {
-      // Si es admin, intenta cargar desde localStorage, sino null
-      sedeInicial = this.obtenerSedeDelStorage();
-    }
-    
-    this.filtros.update(f => ({
-      ...f,
-      sedeSeleccionada: sedeInicial,
-    }));
+    const sedeInicial = this.esAdmin ? this.obtenerSedeDelStorage() : this.sedePropiaId;
 
-    this.cargarUsuarios();
-    this.configurarBusqueda();
+    this.filtros.update(f => ({ ...f, sedeSeleccionada: sedeInicial }));
 
     if (this.esAdmin) {
-      this.cargarSedes();
+      this.cargarSedes(); // cargarSedes llama a cargarDespachos al terminar
     } else {
       this.cargarDespachos();
     }
@@ -200,9 +193,9 @@ export class ListadoDespacho implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.subscriptions.unsubscribe();
-    this.busquedaSubject.complete();
   }
 
+  // ── localStorage ─────────────────────────────────────────────────────────
   private obtenerSedeDelStorage(): number | null {
     try {
       const sedeJson = localStorage.getItem('sedeSeleccionada');
@@ -220,9 +213,7 @@ export class ListadoDespacho implements OnInit, OnDestroy {
     try {
       if (sedeId) {
         const sede = this.sedes().find(s => s.id_sede === sedeId);
-        if (sede) {
-          localStorage.setItem('sedeSeleccionada', JSON.stringify(sede));
-        }
+        if (sede) localStorage.setItem('sedeSeleccionada', JSON.stringify(sede));
       } else {
         localStorage.removeItem('sedeSeleccionada');
       }
@@ -231,49 +222,24 @@ export class ListadoDespacho implements OnInit, OnDestroy {
     }
   }
 
-  private configurarBusqueda(): void {
-    const sub = this.busquedaSubject.pipe(
-      debounceTime(300),
-      distinctUntilChanged(),
-      switchMap((query) => {
-        if (query.length < 2) return [];
-        return this.dispatchService.loadDispatches('Administrador', {
-          page: 1,
-          limit: 5,
-          search: query,
-          id_sede: this.filtros().sedeSeleccionada ?? undefined,
-        });
-      }),
-    ).subscribe({
-      next: (res: any) => {
-        const data = res?.data ?? res?.dispatches ?? [];
-        const set = new Set<string>();
-        
-        data.forEach((d: any) => {
-          const nombre = d.clienteNombre?.trim();
-          const doc = d.clienteDoc?.trim();
-          const comprobante = d.comprobante?.trim();
-          
-          if (nombre && doc) set.add(`${nombre} - ${doc}`);
-          else if (nombre) set.add(nombre);
-          else if (doc) set.add(doc);
-          if (comprobante) set.add(comprobante);
-        });
-        
-        this.sugerenciasBusqueda.set(Array.from(set).slice(0, 15));
-      },
-      error: () => this.sugerenciasBusqueda.set([]),
-    });
-    this.subscriptions.add(sub);
-  }
-
+  // ── Autocomplete: sugerencias desde datos en memoria (sin HTTP) ───────────
   buscarSugerencias(event: any): void {
-    const query = (event.query ?? '').trim();
+    const query = (event.query ?? '').trim().toLowerCase();
     if (query.length < 2) {
-      this.sugerenciasBusqueda.set(this.todasLasSugerencias().slice(0, 5));
+      this.sugerenciasBusqueda.set([]);
       return;
     }
-    this.busquedaSubject.next(query);
+    const set = new Set<string>();
+    this.dispatches().forEach((d: any) => {
+      const nombre      = d.clienteNombre?.trim();
+      const doc         = d.clienteDoc?.trim();
+      const comprobante = d.comprobante?.trim();
+
+      if (nombre?.toLowerCase().includes(query)) set.add(nombre);
+      if (doc?.includes(query))                  set.add(doc);
+      if (comprobante?.toLowerCase().includes(query)) set.add(comprobante);
+    });
+    this.sugerenciasBusqueda.set(Array.from(set).slice(0, 10));
   }
 
   onSeleccionarSugerencia(event: any): void {
@@ -288,43 +254,48 @@ export class ListadoDespacho implements OnInit, OnDestroy {
   }
 
   onBusquedaKeyUp(event: KeyboardEvent): void {
-    if (event.key === 'Enter') {
-      this.aplicarFiltros();
-    }
+    if (event.key === 'Enter') this.aplicarFiltros();
   }
 
+  // ── Carga de datos ────────────────────────────────────────────────────────
   private cargarSedes(): void {
     const sub = this.sedeService.loadSedes('Administrador').subscribe({
       next: (res) => {
         const sedesActivas = (res.headquarters ?? []).filter(s => s.activo);
         this.sedes.set(sedesActivas);
-        
+
         const sedeDelStorage = this.obtenerSedeDelStorage();
         if (sedeDelStorage) {
           this.filtros.update(f => ({ ...f, sedeSeleccionada: sedeDelStorage }));
         }
-        
+
         this.cargarDespachos();
       },
       error: (err) => {
         console.error('Error cargando sedes:', err);
         this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudieron cargar las sedes',
-          life: 3000,
+          severity: 'error', summary: 'Error',
+          detail: 'No se pudieron cargar las sedes', life: 3000,
         });
       },
     });
     this.subscriptions.add(sub);
   }
 
-  private cargarUsuarios(): void {
+  /**
+   * Carga usuarios de forma lazy: solo la primera vez que se necesitan
+   * (al abrir el detalle o al exportar).
+   */
+  private cargarUsuariosSiNecesario(): void {
+    if (this.usuariosCargados) return;
+    this.usuariosCargados = true;
+
     const sub = this.usuarioService.getAllUsuarios().subscribe({
-      next: (lista) => this.usuarios.set(lista ?? []),
-      error: (err) => {
+      next:  (lista) => this.usuarios.set(lista ?? []),
+      error: (err)   => {
         console.error('Error cargando usuarios:', err);
         this.usuarios.set([]);
+        this.usuariosCargados = false; // permite reintentar
       },
     });
     this.subscriptions.add(sub);
@@ -332,12 +303,12 @@ export class ListadoDespacho implements OnInit, OnDestroy {
 
   cargarDespachos(resetPage = true): void {
     if (resetPage) this.paginaActual.set(1);
-    
+
     if (!this.esAdmin) {
       this.filtros.update(f => ({ ...f, sedeSeleccionada: this.sedePropiaId }));
     }
 
-    const f = this.filtros();
+    const f     = this.filtros();
     const desde = this.fechaDesde();
     const hasta = this.fechaHasta();
 
@@ -347,8 +318,8 @@ export class ListadoDespacho implements OnInit, OnDestroy {
       fechaDesde: desde ? desde.toISOString().split('T')[0] : undefined,
       fechaHasta: hasta ? hasta.toISOString().split('T')[0] : undefined,
       id_sede:    f.sedeSeleccionada ?? undefined,
-      estado:     f.estado ? f.estado : undefined,
-      search:     f.busqueda.trim() || undefined,
+      estado:     f.estado           ?? undefined,
+      search:     f.busqueda.trim()  || undefined,
     }).subscribe({
       error: () => this.messageService.add({
         severity: 'error', summary: 'Error',
@@ -358,6 +329,15 @@ export class ListadoDespacho implements OnInit, OnDestroy {
     this.subscriptions.add(sub);
   }
 
+  /**
+   * Recarga respetando los filtros y la página actuales.
+   * Usar después de mutaciones (cancelar, cambiar estado, etc.).
+   */
+  private recargarConFiltrosActuales(): void {
+    this.cargarDespachos(false);
+  }
+
+  // ── Manejadores de filtros ────────────────────────────────────────────────
   cambiarSede(nuevaSede: number | null): void {
     this.filtros.update(f => ({ ...f, sedeSeleccionada: nuevaSede }));
     this.guardarSedeEnStorage(nuevaSede);
@@ -369,67 +349,39 @@ export class ListadoDespacho implements OnInit, OnDestroy {
     this.aplicarFiltros();
   }
 
+  onFechaDesdeChange(fecha: Date | null): void {
+    this.fechaDesde.set(fecha);
+    this.aplicarFiltros();
+  }
+
+  onFechaHastaChange(fecha: Date | null): void {
+    this.fechaHasta.set(fecha);
+    this.aplicarFiltros();
+  }
+
   onLimitChange(nuevoLimite: number): void {
     this.limitePorPagina.set(nuevoLimite);
     this.paginaActual.set(1);
     this.cargarDespachos();
   }
 
-  exportarExcel(): void {
-    if (this.filasFiltradas().length === 0) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Sin datos',
-        detail: 'No hay registros para exportar',
-        life: 3000,
-      });
-      return;
-    }
-    
-    const datosExcel = this.filasFiltradas().map((d) => ({
-      'NÃ‚Â° Despacho': d.id_despacho,
-      'Comprobante': this.getNumeroComprobante(d),
-      'Cliente': this.getClienteNombre(d),
-      'Documento': this.getClienteDoc(d),
-      'Sede': this.getSede(d),
-      'DirecciÃƒÂ³n': d.direccion_entrega ?? 'Ã¢â‚¬â€',
-      'Estado': this.getEstadoLabel(d.estado),
-      'Fecha CreaciÃƒÂ³n': new Date(d.fecha_creacion).toLocaleString('es-PE'),
-    }));
-    
-    // AquÃƒÂ­ irÃƒÂ­a tu lÃƒÂ³gica de exportaciÃƒÂ³n a Excel
-    console.log('Exportar datos:', datosExcel);
-    this.messageService.add({
-      severity: 'success',
-      summary: 'ExportaciÃƒÂ³n exitosa',
-      detail: `Se exportaron ${datosExcel.length} despachos`,
-      life: 3000,
-    });
+  aplicarFiltros(): void {
+    this.paginaActual.set(1);
+    this.cargarDespachos(true);
   }
 
   limpiarFiltros(): void {
-    let sedeParaLimpiar: number | null = null;
-    
-    if (this.esAdmin) {
-      sedeParaLimpiar = this.obtenerSedeDelStorage();
-    } else {
-      sedeParaLimpiar = this.sedePropiaId;
-    }
-    
-    this.filtros.set({
-      sedeSeleccionada: sedeParaLimpiar,
-      busqueda: '',
-      estado: null,
-    });
+    const sedeParaLimpiar = this.esAdmin ? this.obtenerSedeDelStorage() : this.sedePropiaId;
+
+    this.filtros.set({ sedeSeleccionada: sedeParaLimpiar, busqueda: '', estado: null });
     this.searchTerm.set('');
     this.fechaDesde.set(getLunesSemanaActualPeru());
     this.fechaHasta.set(getDomingoSemanaActualPeru());
     this.cargarDespachos(true);
+
     this.messageService.add({
-      severity: 'info',
-      summary: 'Filtros limpiados',
-      detail: 'Se restablecieron los filtros',
-      life: 2000,
+      severity: 'info', summary: 'Filtros limpiados',
+      detail: 'Se restablecieron los filtros', life: 2000,
     });
   }
 
@@ -439,91 +391,80 @@ export class ListadoDespacho implements OnInit, OnDestroy {
     this.cargarDespachos(false);
   }
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Filtros Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
-  aplicarFiltros(): void {
-    this.paginaActual.set(1);
-    this.cargarDespachos(true);
-  }
+  // ── Computed de tabla ─────────────────────────────────────────────────────
+  /**
+   * Sin doble filtrado: el servidor ya filtró por estado y search.
+   * Solo ordena por id descendente.
+   */
+  readonly filasFiltradas = computed(() =>
+    [...this.dispatches()].sort((a, b) => (b.id_despacho ?? 0) - (a.id_despacho ?? 0))
+  );
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Helpers tabla Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  readonly totalGenerados     = computed(() => this.dispatches().filter(d => d.estado === 'GENERADO').length);
+  readonly totalEnPreparacion = computed(() => this.dispatches().filter(d => d.estado === 'EN_PREPARACION').length);
+  readonly totalEnTransito    = computed(() => this.dispatches().filter(d => d.estado === 'EN_TRANSITO').length);
+  readonly totalEntregados    = computed(() => this.dispatches().filter(d => d.estado === 'ENTREGADO').length);
+  readonly totalCancelados    = computed(() => this.dispatches().filter(d => d.estado === 'CANCELADO').length);
+  readonly totalPendientes    = computed(() => this.totalGenerados() + this.totalEnPreparacion());
+  readonly totalEnviados      = computed(() => this.totalEnTransito());
+  readonly totalFiltrados     = computed(() => this.totalItems());
+
+  // ── Helpers de tabla ──────────────────────────────────────────────────────
   getNumeroComprobante(d: any): string {
     const ventaRef = d.id_venta_ref ?? d.idVentaRef ?? d.id_venta ?? '?';
     return d.comprobante ?? d.numeroComprobante ?? `Venta #${ventaRef}`;
   }
 
-  getClienteNombre(d: any): string { return d.clienteNombre ?? d.cliente_nombre ?? 'Ã¢â‚¬â€'; }
+  getClienteNombre(d: any): string { return d.clienteNombre ?? d.cliente_nombre ?? '—'; }
   getClienteDoc(d: any):    string { return d.clienteDoc    ?? d.cliente_doc    ?? '';  }
-  getSede(d: any):           string { return d.sedeNombre   ?? d.sede_nombre    ?? 'Ã¢â‚¬â€'; }
+  getSede(d: any):           string { return d.sedeNombre   ?? d.sede_nombre    ?? '—'; }
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Computeds Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  // ── Computed del modal ────────────────────────────────────────────────────
   readonly totalProductosModal = computed(() =>
     this.despachoSeleccionado()?.detalles?.reduce((acc, d) => acc + (d.cantidad_solicitada ?? 0), 0) ?? 0
   );
 
   readonly numeroVentaModal = computed(() => {
     const d = this.despachoSeleccionado();
-    if (!d) return 'Ã¢â‚¬â€';
+    if (!d) return '—';
     return (d as any).comprobante ?? `#${d.id_venta_ref}`;
   });
 
   readonly despachador = computed(() => this.obtenerNombreUsuario('ALMACENERO'));
   readonly asesor      = computed(() => this.obtenerNombreUsuario('VENTAS'));
 
-  readonly totalGenerados     = computed(() => this.filasFiltradas().filter(d => d.estado === 'GENERADO').length);
-  readonly totalEnPreparacion = computed(() => this.filasFiltradas().filter(d => d.estado === 'EN_PREPARACION').length);
-  readonly totalEnTransito    = computed(() => this.filasFiltradas().filter(d => d.estado === 'EN_TRANSITO').length);
-  readonly totalEntregados    = computed(() => this.filasFiltradas().filter(d => d.estado === 'ENTREGADO').length);
-  readonly totalCancelados    = computed(() => this.filasFiltradas().filter(d => d.estado === 'CANCELADO').length);
-  readonly totalPendientes    = computed(() => this.totalGenerados() + this.totalEnPreparacion());
-  readonly totalEnviados      = computed(() => this.totalEnTransito());
-  readonly totalFiltrados     = computed(() => this.filasFiltradas().length);
+  // ── Acciones ──────────────────────────────────────────────────────────────
+  exportarExcel(): void {
+    this.cargarUsuariosSiNecesario();
 
-  readonly filasFiltradas = computed(() => {
-    let data = this.dispatches();
-
-    if (this.filtros().estado)
-      data = data.filter(d => d.estado === this.filtros().estado);
-
-    const term = this.searchTerm()?.trim().toLowerCase();
-    if (term) {
-      data = data.filter(d =>
-        String(d.id_despacho ?? '').includes(term) ||
-        String(d.id_venta_ref ?? '').includes(term) ||
-        (d.direccion_entrega ?? '').toLowerCase().includes(term) ||
-        this.getClienteNombre(d).toLowerCase().includes(term) ||
-        this.getClienteDoc(d).includes(term) ||
-        this.getNumeroComprobante(d).toLowerCase().includes(term)
-      );
+    if (this.filasFiltradas().length === 0) {
+      this.messageService.add({
+        severity: 'warn', summary: 'Sin datos',
+        detail: 'No hay registros para exportar', life: 3000,
+      });
+      return;
     }
-    return data.sort((a, b) => (b.id_despacho ?? 0) - (a.id_despacho ?? 0));
-  });
 
-  private cargarSugerenciasBusqueda(): void {
-    const set = new Set<string>();
-    this.dispatches().forEach((d) => {
-      const nombre = d.clienteNombre?.trim();
-      const doc = d.clienteDoc?.trim();
-      const comprobante = d.comprobante?.trim();
-      
-      if (nombre && doc) set.add(`${nombre} - ${doc}`);
-      else if (nombre) set.add(nombre);
-      else if (doc) set.add(doc);
-      if (comprobante) set.add(comprobante);
+    const datosExcel = this.filasFiltradas().map(d => ({
+      'N° Despacho':    d.id_despacho,
+      'Comprobante':    this.getNumeroComprobante(d),
+      'Cliente':        this.getClienteNombre(d),
+      'Documento':      this.getClienteDoc(d),
+      'Sede':           this.getSede(d),
+      'Dirección':      d.direccion_entrega ?? '—',
+      'Estado':         this.getEstadoLabel(d.estado),
+      'Fecha Creación': new Date(d.fecha_creacion).toLocaleString('es-PE'),
+    }));
+
+    console.log('Exportar datos:', datosExcel);
+    this.messageService.add({
+      severity: 'success', summary: 'Exportación exitosa',
+      detail: `Se exportaron ${datosExcel.length} despachos`, life: 3000,
     });
-    this.todasLasSugerencias.set(Array.from(set).sort());
-  }
-
-  getProductoNombre(id_producto: number): string {
-    return this.productosMap()[String(id_producto)]?.nombre ?? `Producto #${id_producto}`;
-  }
-
-  getProductoCodigo(id_producto: number): string {
-    return this.productosCodigoMap()[id_producto]
-      ?? this.productosMap()[String(id_producto)]?.codigo
-      ?? 'Ã¢â‚¬â€';
   }
 
   verDetalle(despacho: Dispatch): void {
+    this.cargarUsuariosSiNecesario();
     this.router.navigate(['/admin/despacho-productos/detalle-despacho', despacho.id_despacho]);
   }
 
@@ -542,28 +483,22 @@ export class ListadoDespacho implements OnInit, OnDestroy {
 
     const iniciarTransito = (despacho: Dispatch) =>
       this.dispatchService.iniciarTransito(despacho.id_despacho, { fecha_salida: new Date() })
-        .subscribe({ 
-          next: (u) => guardarYNavegar(u), 
-          error: () => guardarYNavegar(despacho) 
+        .subscribe({
+          next:  (u) => guardarYNavegar(u),
+          error: ()  => guardarYNavegar(despacho),
         });
 
     const marcarYTransitar = (despacho: Dispatch) => {
       const pendientes = (despacho.detalles ?? []).filter(det => det.estado === 'PENDIENTE');
-      if (!pendientes.length) { 
-        iniciarTransito(despacho); 
-        return; 
-      }
-      
+      if (!pendientes.length) { iniciarTransito(despacho); return; }
+
       let ok = 0;
       pendientes.forEach(det => {
         const sub = this.dispatchService.marcarDetallePreparado(
           det.id_detalle_despacho!,
-          { cantidad_despachada: det.cantidad_solicitada }
+          { cantidad_despachada: det.cantidad_solicitada },
         ).subscribe({
-          next:  () => { 
-            ok++; 
-            if (ok === pendientes.length) iniciarTransito(despacho); 
-          },
+          next:  () => { ok++; if (ok === pendientes.length) iniciarTransito(despacho); },
           error: ()  => iniciarTransito(despacho),
         });
         this.subscriptions.add(sub);
@@ -571,10 +506,8 @@ export class ListadoDespacho implements OnInit, OnDestroy {
     };
 
     if (d.estado === 'GENERADO') {
-      const sub = this.dispatchService.iniciarPreparacion(d.id_despacho).subscribe({ 
-        next: (u) => marcarYTransitar(u), 
-        error: () => marcarYTransitar(d) 
-      });
+      const sub = this.dispatchService.iniciarPreparacion(d.id_despacho)
+        .subscribe({ next: (u) => marcarYTransitar(u), error: () => marcarYTransitar(d) });
       this.subscriptions.add(sub);
     } else if (d.estado === 'EN_PREPARACION') {
       marcarYTransitar(d);
@@ -589,13 +522,11 @@ export class ListadoDespacho implements OnInit, OnDestroy {
       const msgs: Record<string, string> = {
         GENERADO:  'Debes confirmar la salida primero desde el detalle del despacho.',
         ENTREGADO: `El despacho #${despacho.id_despacho} ya fue entregado y no puede modificarse.`,
-        CANCELADO: `El despacho #${despacho.id_despacho} estÃƒÂ¡ cancelado y no puede modificarse.`,
+        CANCELADO: `El despacho #${despacho.id_despacho} está cancelado y no puede modificarse.`,
       };
-      this.messageService.add({ 
-        severity: 'info', 
-        summary: 'No permitido', 
-        detail: msgs[despacho.estado] ?? 'No se puede cambiar el estado', 
-        life: 3500 
+      this.messageService.add({
+        severity: 'info', summary: 'No permitido',
+        detail: msgs[despacho.estado] ?? 'No se puede cambiar el estado', life: 3500,
       });
       return;
     }
@@ -612,38 +543,63 @@ export class ListadoDespacho implements OnInit, OnDestroy {
       this.despachoParaCambio.set(null);
       this.messageService.add({
         severity: 'success',
-        summary:  nuevoEstado === 'ENTREGADO' ? 'Ã‚Â¡Entregado!' : 'Cancelado',
+        summary:  nuevoEstado === 'ENTREGADO' ? '¡Entregado!' : 'Cancelado',
         detail:   `Despacho #${d.id_despacho} marcado como ${nuevoEstado === 'ENTREGADO' ? 'entregado' : 'cancelado'}.`,
         life: 3000,
       });
-      this.dispatchService.loadDispatches('Administrador').subscribe();
+      // ✅ Recarga respetando filtros y página actuales
+      this.recargarConFiltrosActuales();
     };
 
     const onError = (err?: any) => {
       console.error('Error en cambio de estado:', err);
       this.messageService.add({
-        severity: 'error', 
-        summary: 'Error', 
-        detail: 'No se pudo cambiar el estado.', 
-        life: 3000,
+        severity: 'error', summary: 'Error',
+        detail: 'No se pudo cambiar el estado.', life: 3000,
       });
     };
 
     if (nuevoEstado === 'CANCELADO') {
-      const sub = this.dispatchService.cancelarDespacho(d.id_despacho).subscribe({ 
-        next: onSuccess, 
-        error: onError 
-      });
+      const sub = this.dispatchService.cancelarDespacho(d.id_despacho)
+        .subscribe({ next: onSuccess, error: onError });
       this.subscriptions.add(sub);
       return;
     }
 
     const sub = this.dispatchService.confirmarEntrega(d.id_despacho, { fecha_entrega: new Date() })
-      .subscribe({ 
-        next: onSuccess, 
-        error: onError 
-      });
+      .subscribe({ next: onSuccess, error: onError });
     this.subscriptions.add(sub);
+  }
+
+  cancelar(despacho: Dispatch): void {
+    this.confirmationService.confirm({
+      header:                  'Confirmar cancelación',
+      message:                 `¿Cancelar el despacho <strong>#${despacho.id_despacho}</strong>?`,
+      icon:                    'pi pi-exclamation-triangle',
+      acceptLabel:             'Sí, cancelar',
+      rejectLabel:             'Volver',
+      acceptButtonStyleClass:  'p-button-danger',
+      accept: () => {
+        const sub = this.dispatchService.cancelarDespacho(despacho.id_despacho).subscribe({
+          next: () => {
+            this.messageService.add({
+              severity: 'success', summary: 'Cancelado',
+              detail: `Despacho #${despacho.id_despacho} cancelado.`, life: 3000,
+            });
+            // ✅ Recarga respetando filtros y página actuales
+            this.recargarConFiltrosActuales();
+          },
+          error: (err) => {
+            console.error('Error cancelando:', err);
+            this.messageService.add({
+              severity: 'error', summary: 'Error',
+              detail: 'No se pudo cancelar el despacho.', life: 4000,
+            });
+          },
+        });
+        this.subscriptions.add(sub);
+      },
+    });
   }
 
   imprimirCopia(): void {
@@ -655,37 +611,33 @@ export class ListadoDespacho implements OnInit, OnDestroy {
     const tipoEntrega: 'tienda' | 'delivery' =
       dirLower.includes('tienda') || dirLower.includes('recojo') ? 'tienda' : 'delivery';
 
-    const fecha = new Date().toLocaleString('es-PE', { 
-      day: '2-digit', 
-      month: '2-digit', 
-      year: 'numeric', 
-      hour: '2-digit', 
-      minute: '2-digit' 
+    const fecha = new Date().toLocaleString('es-PE', {
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit',
     });
 
     const html = this.generarHTML({
-      numeroComprobante: cache?.comprobante ?? `#${d.id_venta_ref}`,
-      tipoComprobante: cache?.tipoComprobante ?? 'Comprobante',
+      numeroComprobante: cache?.comprobante     ?? `#${d.id_venta_ref}`,
+      tipoComprobante:   cache?.tipoComprobante ?? 'Comprobante',
       fecha,
-      clienteNombre: this.clienteInfo()?.nombre ?? 'Ã¢â‚¬â€',
-      clienteDoc: this.clienteInfo()?.documento ?? 'Ã¢â‚¬â€',
-      clienteTelefono: this.clienteInfo()?.telefono ?? 'Ã¢â‚¬â€',
+      clienteNombre:  this.clienteInfo()?.nombre    ?? '—',
+      clienteDoc:     this.clienteInfo()?.documento ?? '—',
+      clienteTelefono:this.clienteInfo()?.telefono  ?? '—',
       tipoEntrega,
-      direccion: d.direccion_entrega ?? 'Ã¢â‚¬â€',
-      total: this.receiptDetalleActual()?.total ?? 0,
+      direccion: d.direccion_entrega ?? '—',
+      total:     this.receiptDetalleActual()?.total ?? 0,
       productos: (d.detalles ?? []).map(det => ({
-        nombre: this.getProductoNombre(det.id_producto),
-        codigo: this.getProductoCodigo(det.id_producto),
+        nombre:   this.getProductoNombre(det.id_producto),
+        codigo:   this.getProductoCodigo(det.id_producto),
         cantidad: det.cantidad_solicitada,
       })),
     });
 
     const win = window.open('', '_blank', 'width=430,height=800');
     if (!win) {
-      this.messageService.add({ 
-        severity: 'warn', 
-        summary: 'Aviso', 
-        detail: 'Activa las ventanas emergentes para imprimir.' 
+      this.messageService.add({
+        severity: 'warn', summary: 'Aviso',
+        detail: 'Activa las ventanas emergentes para imprimir.',
       });
       return;
     }
@@ -694,17 +646,161 @@ export class ListadoDespacho implements OnInit, OnDestroy {
     win.document.close();
   }
 
+  // ── Helpers de productos ──────────────────────────────────────────────────
+  getProductoNombre(id_producto: number): string {
+    return this.productosMap()[String(id_producto)]?.nombre ?? `Producto #${id_producto}`;
+  }
+
+  getProductoCodigo(id_producto: number): string {
+    return this.productosCodigoMap()[id_producto]
+      ?? this.productosMap()[String(id_producto)]?.codigo
+      ?? '—';
+  }
+
+  // ── Helpers de estado ─────────────────────────────────────────────────────
+  getEstadoSeverity(estado: DispatchStatus): 'success' | 'warn' | 'danger' | 'secondary' | 'info' {
+    const map: Record<DispatchStatus, 'success' | 'warn' | 'danger' | 'secondary' | 'info'> = {
+      GENERADO:       'secondary',
+      EN_PREPARACION: 'info',
+      EN_TRANSITO:    'warn',
+      ENTREGADO:      'success',
+      CANCELADO:      'danger',
+    };
+    return map[estado] ?? 'secondary';
+  }
+
+  getEstadoLabel(estado: DispatchStatus): string {
+    const map: Record<DispatchStatus, string> = {
+      GENERADO:       'Generado',
+      EN_PREPARACION: 'En preparación',
+      EN_TRANSITO:    'En tránsito',
+      ENTREGADO:      'Entregado',
+      CANCELADO:      'Cancelado',
+    };
+    return map[estado] ?? estado;
+  }
+
+  getDetalleEstadoClass(estado: string): string {
+    const map: Record<string, string> = {
+      PREPARADO:  'dm-det-preparado',
+      DESPACHADO: 'dm-det-despachado',
+      FALTANTE:   'dm-det-faltante',
+      PENDIENTE:  'dm-det-pendiente',
+    };
+    return map[estado] ?? 'dm-det-pendiente';
+  }
+
+  getEstadoLabelFromFilter(estado: string | null): string {
+    if (!estado) return '—';
+    const map: Record<string, string> = {
+      GENERADO:       'Generado',
+      EN_PREPARACION: 'En preparación',
+      EN_TRANSITO:    'En tránsito',
+      ENTREGADO:      'Entregado',
+      CANCELADO:      'Cancelado',
+    };
+    return map[estado] ?? estado;
+  }
+
+  // ── Navegación a confirmación ─────────────────────────────────────────────
+  private navegarAConfirmacion(despacho: Dispatch, estadoForzado: string, esCopia = false): void {
+    const cliente    = this.clienteInfo();
+    const sedeNombre = this.sedeNombreModal();
+    const cache      = despacho as any;
+    const prodMap    = { ...this.productosMap() };
+    const prodCodMap = { ...this.productosCodigoMap() };
+    const receipt    = this.receiptDetalleActual();
+
+    const dirLower = (despacho.direccion_entrega ?? '').toLowerCase();
+    const tipoEntrega: 'tienda' | 'delivery' =
+      dirLower.includes('tienda') || dirLower.includes('recojo') ? 'tienda' : 'delivery';
+
+    const numComp = cache?.comprobante ?? '';
+    let tipoComprobante = 'Comprobante';
+    if      (numComp.startsWith('F')) tipoComprobante = 'Factura Electrónica';
+    else if (numComp.startsWith('B')) tipoComprobante = 'Boleta Electrónica';
+    else if (numComp.startsWith('N')) tipoComprobante = 'Nota de Venta';
+
+    const data = {
+      id_despacho:       despacho.id_despacho,
+      numeroComprobante: numComp || `#${despacho.id_venta_ref}`,
+      tipoComprobante,
+      fechaEmision:      receipt?.fec_emision       ?? String(despacho.fecha_creacion),
+      clienteNombre:     cliente?.nombre             ?? cache?.clienteNombre ?? '-',
+      clienteDoc:        cliente?.documento          ?? cache?.clienteDoc    ?? '-',
+      clienteTipoDoc:    cliente?.tipo_documento     ?? '-',
+      clienteTelefono:   cliente?.telefono           ?? '-',
+      clienteDireccion:  cliente?.direccion          ?? '-',
+      sedeNombre:        sedeNombre                  ?? cache?.sedeNombre    ?? '-',
+      responsableNombre: receipt?.responsable?.nombre ?? '-',
+      direccionEntrega:  despacho.direccion_entrega,
+      tipoEntrega,
+      observacion:       despacho.observacion ?? null,
+      estado:            estadoForzado,
+      subtotal:          Number(receipt?.subtotal  ?? 0),
+      igv:               Number(receipt?.igv       ?? 0),
+      descuento:         Number(receipt?.descuento ?? 0),
+      total:             Number(receipt?.total     ?? 0),
+      metodoPago:        receipt?.metodo_pago ?? '-',
+      esCopia,
+      productos: (despacho.detalles ?? []).map(det => {
+        const pr = (receipt?.productos ?? []).find(
+          (p: any) => String(p.id_prod_ref ?? p.productId) === String(det.id_producto)
+        );
+        return {
+          id_producto:         det.id_producto,
+          nombre:              prodMap[String(det.id_producto)]?.nombre ?? pr?.descripcion ?? `Producto #${det.id_producto}`,
+          codigo:              prodCodMap[det.id_producto] ?? prodMap[String(det.id_producto)]?.codigo ?? pr?.cod_prod ?? '—',
+          cantidad_solicitada: det.cantidad_solicitada,
+          cantidad_despachada: det.cantidad_despachada,
+          precio_unit:         Number(pr?.pre_uni ?? pr?.precio_unit ?? 0),
+          total_item:          Number(pr?.total ?? 0),
+          estado:              det.estado,
+        };
+      }),
+    };
+
+    sessionStorage.setItem('confirmar_despacho_data', JSON.stringify(data));
+    this.router.navigateByUrl('/admin/despacho-productos/confirmar-despacho').then(() => {
+      this.modalVisible.set(false);
+      // ✅ Recarga respetando filtros y página actuales
+      this.recargarConFiltrosActuales();
+    });
+  }
+
+  // ── Utilidades ────────────────────────────────────────────────────────────
+  encodeURIComponent = encodeURIComponent;
+  minVal = (a: number, b: number) => Math.min(a, b);
+
+  private obtenerNombreUsuario(rolNombre: string): string {
+    const usuarios = this.usuarios();
+    if (!usuarios.length) return 'Sin asignar';
+
+    const u = usuarios.find(
+      u => (u.rolNombre ?? u.rol_nombre ?? u.rol ?? '').toUpperCase() === rolNombre.toUpperCase()
+        && u.activo,
+    );
+    if (!u) return 'Sin asignar';
+
+    const nombres = [u.usu_nom, u.ape_pat, u.ape_mat]
+      .filter(v => v && String(v).trim().length > 0)
+      .map(v => String(v).trim())
+      .join(' ');
+
+    return nombres || 'Sin asignar';
+  }
+
+  // ── Generación de HTML para impresión ────────────────────────────────────
   private generarHTML(data: any): string {
-    const totalStr = (data.total ?? 0).toFixed(2);
+    const totalStr        = (data.total ?? 0).toFixed(2);
     const tipoEntregaLabel = data.tipoEntrega === 'delivery' ? 'DELIVERY' : 'TIENDA';
 
-    const filasProd = (data.productos ?? []).map((p: any) => {
-      return `<tr>
+    const filasProd = (data.productos ?? []).map((p: any) => `
+      <tr>
         <td class="td-desc">${p.nombre}<span class="sku">${p.codigo}</span></td>
         <td class="td-cant">${p.cantidad}</td>
         <td class="td-tot">S/ ${totalStr}</td>
-      </tr>`;
-    }).join('');
+      </tr>`).join('');
 
     const css = `
       *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -749,175 +845,9 @@ export class ListadoDespacho implements OnInit, OnDestroy {
         </table>
         <hr class="dash">
         <p class="r bold" style="font-size:13px">S/ ${totalStr}</p>
-        <div class="footer">
-          <p class="bold">**GRACIAS POR SU COMPRA**</p>
-        </div>
+        <div class="footer"><p class="bold">**GRACIAS POR SU COMPRA**</p></div>
         <script>window.onload=function(){setTimeout(function(){window.print();},300);}</script>
       </body>
       </html>`;
-  }
-
-  private navegarAConfirmacion(despacho: Dispatch, estadoForzado: string, esCopia = false): void {
-    const cliente    = this.clienteInfo();
-    const sedeNombre = this.sedeNombreModal();
-    const cache      = despacho as any;
-    const prodMap    = { ...this.productosMap() };
-    const prodCodMap = { ...this.productosCodigoMap() };
-    const receipt    = this.receiptDetalleActual();
-
-    const dirLower    = (despacho.direccion_entrega ?? '').toLowerCase();
-    const tipoEntrega: 'tienda' | 'delivery' =
-      dirLower.includes('tienda') || dirLower.includes('recojo') ? 'tienda' : 'delivery';
-
-    const numComp = cache?.comprobante ?? '';
-    let tipoComprobante = 'Comprobante';
-    if      (numComp.startsWith('F')) tipoComprobante = 'Factura ElectrÃƒÂ³nica';
-    else if (numComp.startsWith('B')) tipoComprobante = 'Boleta ElectrÃƒÂ³nica';
-    else if (numComp.startsWith('N')) tipoComprobante = 'Nota de Venta';
-
-    const data = {
-      id_despacho:       despacho.id_despacho,
-      numeroComprobante: numComp || `#${despacho.id_venta_ref}`,
-      tipoComprobante,
-      fechaEmision:      receipt?.fec_emision ?? String(despacho.fecha_creacion),
-      clienteNombre:     cliente?.nombre        ?? cache?.clienteNombre ?? 'Ã¢â‚¬â€',
-      clienteDoc:        cliente?.documento      ?? cache?.clienteDoc    ?? 'Ã¢â‚¬â€',
-      clienteTipoDoc:    cliente?.tipo_documento ?? 'Ã¢â‚¬â€',
-      clienteTelefono:   cliente?.telefono       ?? 'Ã¢â‚¬â€',
-      clienteDireccion:  cliente?.direccion      ?? 'Ã¢â‚¬â€',
-      sedeNombre:        sedeNombre              ?? cache?.sedeNombre    ?? 'Ã¢â‚¬â€',
-      responsableNombre: receipt?.responsable?.nombre ?? 'Ã¢â‚¬â€',
-      direccionEntrega:  despacho.direccion_entrega,
-      tipoEntrega,
-      observacion:       despacho.observacion ?? null,
-      estado:            estadoForzado,
-      subtotal:          Number(receipt?.subtotal  ?? 0),
-      igv:               Number(receipt?.igv       ?? 0),
-      descuento:         Number(receipt?.descuento ?? 0),
-      total:             Number(receipt?.total     ?? 0),
-      metodoPago:        receipt?.metodo_pago ?? 'Ã¢â‚¬â€',
-      esCopia,
-      productos: (despacho.detalles ?? []).map(det => {
-        const pr = (receipt?.productos ?? []).find(
-          (p: any) => String(p.id_prod_ref ?? p.productId) === String(det.id_producto)
-        );
-        return {
-          id_producto:         det.id_producto,
-          nombre:              prodMap[String(det.id_producto)]?.nombre ?? pr?.descripcion ?? `Producto #${det.id_producto}`,
-          codigo:              prodCodMap[det.id_producto] ?? prodMap[String(det.id_producto)]?.codigo ?? pr?.cod_prod ?? 'Ã¢â‚¬â€',
-          cantidad_solicitada: det.cantidad_solicitada,
-          cantidad_despachada: det.cantidad_despachada,
-          precio_unit:         Number(pr?.pre_uni ?? pr?.precio_unit ?? 0),
-          total_item:          Number(pr?.total ?? 0),
-          estado:              det.estado,
-        };
-      }),
-    };
-
-    sessionStorage.setItem('confirmar_despacho_data', JSON.stringify(data));
-    this.router.navigateByUrl('/admin/despacho-productos/confirmar-despacho').then(() => {
-      this.modalVisible.set(false);
-      this.dispatchService.loadDispatches('Administrador').subscribe();
-    });
-  }
-
-  cancelar(despacho: Dispatch): void {
-    this.confirmationService.confirm({
-      header: 'Confirmar cancelaciÃƒÂ³n',
-      message: `Ã‚Â¿Cancelar el despacho <strong>#${despacho.id_despacho}</strong>?`,
-      icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'SÃƒÂ­, cancelar', 
-      rejectLabel: 'Volver',
-      acceptButtonStyleClass: 'p-button-danger',
-      accept: () => {
-        const sub = this.dispatchService.cancelarDespacho(despacho.id_despacho).subscribe({
-          next:  () => {
-            this.messageService.add({ 
-              severity: 'success', 
-              summary: 'Cancelado', 
-              detail: `Despacho #${despacho.id_despacho} cancelado.`, 
-              life: 3000 
-            });
-            this.dispatchService.loadDispatches('Administrador').subscribe();
-          },
-          error: (err) => {
-            console.error('Error cancelando:', err);
-            this.messageService.add({ 
-              severity: 'error', 
-              summary: 'Error', 
-              detail: 'No se pudo cancelar el despacho.', 
-              life: 4000 
-            });
-          },
-        });
-        this.subscriptions.add(sub);
-      },
-    });
-  }
-
-  encodeURIComponent = encodeURIComponent;
-  minVal = (a: number, b: number) => Math.min(a, b);
-
-  getEstadoSeverity(estado: DispatchStatus): 'success' | 'warn' | 'danger' | 'secondary' | 'info' {
-    const severities: Record<DispatchStatus, 'success' | 'warn' | 'danger' | 'secondary' | 'info'> = {
-      GENERADO:       'secondary',
-      EN_PREPARACION: 'info',
-      EN_TRANSITO:    'warn',
-      ENTREGADO:      'success',
-      CANCELADO:      'danger',
-    };
-    return severities[estado] ?? 'secondary';
-  }
-
-  getEstadoLabel(estado: DispatchStatus): string {
-    const labels: Record<DispatchStatus, string> = {
-      GENERADO:       'Generado',
-      EN_PREPARACION: 'En preparaciÃƒÂ³n',
-      EN_TRANSITO:    'En trÃƒÂ¡nsito',
-      ENTREGADO:      'Entregado',
-      CANCELADO:      'Cancelado',
-    };
-    return labels[estado] ?? estado;
-  }
-
-  getDetalleEstadoClass(estado: string): string {
-    const classes: Record<string, string> = {
-      'PREPARADO':  'dm-det-preparado',
-      'DESPACHADO': 'dm-det-despachado',
-      'FALTANTE':   'dm-det-faltante',
-      'PENDIENTE':  'dm-det-pendiente',
-    };
-    return classes[estado] ?? 'dm-det-pendiente';
-  }
-
-  getEstadoLabelFromFilter(estado: string | null): string {
-    if (!estado) return 'Ã¢â‚¬â€';
-    const labels: Record<string, string> = {
-      'GENERADO':       'Generado',
-      'EN_PREPARACION': 'En preparaciÃƒÂ³n',
-      'EN_TRANSITO':    'En trÃƒÂ¡nsito',
-      'ENTREGADO':      'Entregado',
-      'CANCELADO':      'Cancelado',
-    };
-    return labels[estado] ?? estado;
-  }
-
-  private obtenerNombreUsuario(rolNombre: string): string {
-    const usuarios = this.usuarios();
-    if (!usuarios || usuarios.length === 0) return 'Sin asignar';
-    
-    const u = usuarios.find(
-      u => (u.rolNombre ?? u.rol_nombre ?? u.rol ?? '').toUpperCase() === rolNombre.toUpperCase()
-        && u.activo
-    );
-    
-    if (!u) return 'Sin asignar';
-    
-    const nombres = [u.usu_nom, u.ape_pat, u.ape_mat]
-      .filter(v => v && String(v).trim().length > 0)
-      .map(v => String(v).trim())
-      .join(' ');
-    
-    return nombres.length > 0 ? nombres : 'Sin asignar';
   }
 }

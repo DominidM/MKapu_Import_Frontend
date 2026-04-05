@@ -21,46 +21,45 @@ export interface ConteoInventario {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class ConteoService {
-
   private conteos: ConteoInventario[] = [
     {
       id: 1,
       fecha: '08/02/2026',
       detalle: 'Conteo mensual licuadoras',
       estado: 'Inicio',
-      familia: 'Licuadoras'
+      familia: 'Licuadoras',
     },
     {
       id: 2,
       fecha: '07/02/2026',
       detalle: 'Revisión anual freidoras',
       estado: 'Finalizado',
-      familia: 'Freidoras'
+      familia: 'Freidoras',
     },
     {
       id: 3,
       fecha: '06/02/2026',
       detalle: 'Conteo REFRIS - Sede Norte',
       estado: 'Anulado',
-      familia: 'Refris'
+      familia: 'Refris',
     },
     {
       id: 4,
       fecha: '05/02/2026',
       detalle: 'Stock Cocinas industriales',
       estado: 'Inicio',
-      familia: 'Cocinas'
+      familia: 'Cocinas',
     },
     {
       id: 5,
       fecha: '04/02/2026',
       detalle: 'Inventario licuadoras portátiles',
       estado: 'Finalizado',
-      familia: 'Licuadoras'
-    }
+      familia: 'Licuadoras',
+    },
   ];
 
   /* ================= GETS ================= */
@@ -70,7 +69,7 @@ export class ConteoService {
   }
 
   getConteoById(id: number) {
-    return this.conteos.find(c => c.id === id);
+    return this.conteos.find((c) => c.id === id);
   }
 
   /* 🔥 NUEVO: Obtener cantidad de productos */
@@ -82,18 +81,13 @@ export class ConteoService {
   /* ================= CREAR ================= */
 
   crearConteo(nuevo: Omit<ConteoInventario, 'id'>) {
-
-    const nuevoId =
-      this.conteos.length > 0
-        ? Math.max(...this.conteos.map(c => c.id)) + 1
-        : 1;
+    const nuevoId = this.conteos.length > 0 ? Math.max(...this.conteos.map((c) => c.id)) + 1 : 1;
 
     const conteo: ConteoInventario = {
       id: nuevoId,
-      ...nuevo
+      ...nuevo,
     };
 
     this.conteos.unshift(conteo);
   }
-
 }

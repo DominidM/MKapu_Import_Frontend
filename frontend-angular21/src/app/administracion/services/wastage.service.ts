@@ -4,83 +4,81 @@ import { Observable, throwError } from 'rxjs';
 import { catchError, finalize, tap } from 'rxjs/operators';
 import { environment } from '../../../enviroments/enviroment';
 
-
 export interface CreateWastageDto {
   id_usuario_ref: number;
-  id_sede_ref:    number;
+  id_sede_ref: number;
   id_almacen_ref: number;
-  motivo:         string;
-  id_tipo_merma:  number;
-  detalles:       WastageDetail[];
+  motivo: string;
+  id_tipo_merma: number;
+  detalles: WastageDetail[];
 }
 
 export interface WastageDetail {
-  id_detalle?:   number;
-  id_producto:   number;
-  cod_prod:      string;
-  desc_prod:     string;
-  cantidad:      number;
-  pre_unit:      number;
+  id_detalle?: number;
+  id_producto: number;
+  cod_prod: string;
+  desc_prod: string;
+  cantidad: number;
+  pre_unit: number;
   id_tipo_merma: number;
-  observacion?:  string;
+  observacion?: string;
 }
 
 export interface WastageResponseDto {
-  id_merma:         number;
-  fec_merma:        string;
-  motivo:           string;
-  total_items:      number;
-  estado:           boolean;
-  detalles:         WastageDetail[];
-  responsable:      string;
-  tipo_merma_id:    number;
+  id_merma: number;
+  fec_merma: string;
+  motivo: string;
+  total_items: number;
+  estado: boolean;
+  detalles: WastageDetail[];
+  responsable: string;
+  tipo_merma_id: number;
   tipo_merma_label: string;
-  id_sede_ref:      number;
+  id_sede_ref: number;
 }
 
 export interface WastagePaginatedResponse {
-  data:       WastageResponseDto[];
-  total:      number;
-  page:       number;
-  limit:      number;
+  data: WastageResponseDto[];
+  total: number;
+  page: number;
+  limit: number;
   totalPages: number;
 }
 
 export interface WastageTypeDto {
-  id_tipo:      number;
-  tipo:         string;
+  id_tipo: number;
+  tipo: string;
   motivo_merma: string;
-  estado:       boolean;
+  estado: boolean;
 }
 
 // ── DTO que devuelve GET /catalog/wastage/search ──────────────────────────────
 export interface WastageSuggestionDto {
-  id_merma:   number;
-  codigo:     string;  // "MER-0032"
-  motivo:     string;
+  id_merma: number;
+  codigo: string; // "MER-0032"
+  motivo: string;
   tipo_merma: string;
   descripcion: string; // "3 productos · Jeremy Antón"
-  fec_merma:  string;
+  fec_merma: string;
 }
-
 
 @Injectable({ providedIn: 'root' })
 export class WastageService {
   private readonly api = environment.apiUrl;
 
-  private readonly _loading      = signal(false);
-  private readonly _error        = signal<string | null>(null);
-  private readonly _wastages     = signal<WastageResponseDto[]>([]);
-  private readonly _totalPages   = signal(1);
-  private readonly _currentPage  = signal(1);
-  private readonly _tiposMerma   = signal<WastageTypeDto[]>([]);
+  private readonly _loading = signal(false);
+  private readonly _error = signal<string | null>(null);
+  private readonly _wastages = signal<WastageResponseDto[]>([]);
+  private readonly _totalPages = signal(1);
+  private readonly _currentPage = signal(1);
+  private readonly _tiposMerma = signal<WastageTypeDto[]>([]);
 
-  readonly loading     = computed(() => this._loading());
-  readonly error       = computed(() => this._error());
-  readonly wastages    = computed(() => this._wastages());
-  readonly totalPages  = computed(() => this._totalPages());
+  readonly loading = computed(() => this._loading());
+  readonly error = computed(() => this._error());
+  readonly wastages = computed(() => this._wastages());
+  readonly totalPages = computed(() => this._totalPages());
   readonly currentPage = computed(() => this._currentPage());
-  readonly tiposMerma  = computed(() => this._tiposMerma());
+  readonly tiposMerma = computed(() => this._tiposMerma());
 
   constructor(private http: HttpClient) {}
 
@@ -98,8 +96,8 @@ export class WastageService {
         headers: this.buildHeaders(role),
       })
       .pipe(
-        tap(created => this._wastages.update(prev => [created, ...prev])),
-        catchError(err => {
+        tap((created) => this._wastages.update((prev) => [created, ...prev])),
+        catchError((err) => {
           this._error.set('No se pudo registrar la merma.');
           return throwError(() => err);
         }),
@@ -109,17 +107,15 @@ export class WastageService {
 
   // ── Listar mermas paginadas ───────────────────────────────────────────────
   loadWastages(
-    page    = 1,
-    limit   = 10,
+    page = 1,
+    limit = 10,
     id_sede = 0,
-    role    = 'Administrador',
+    role = 'Administrador',
   ): Observable<WastagePaginatedResponse> {
     this._loading.set(true);
     this._error.set(null);
 
-    let params = new HttpParams()
-      .set('page',  page.toString())
-      .set('limit', limit.toString());
+    let params = new HttpParams().set('page', page.toString()).set('limit', limit.toString());
 
     if (id_sede > 0) {
       params = params.set('id_sede', id_sede.toString());
@@ -131,12 +127,12 @@ export class WastageService {
         params,
       })
       .pipe(
-        tap(response => {
+        tap((response) => {
           this._wastages.set(response.data ?? []);
           this._totalPages.set(response.totalPages);
           this._currentPage.set(response.page);
         }),
-        catchError(err => {
+        catchError((err) => {
           this._error.set('No se pudo cargar mermas.');
           return throwError(() => err);
         }),
@@ -154,7 +150,7 @@ export class WastageService {
         headers: this.buildHeaders(role),
       })
       .pipe(
-        catchError(err => {
+        catchError((err) => {
           this._error.set('No se pudo cargar la merma.');
           return throwError(() => err);
         }),
@@ -164,7 +160,7 @@ export class WastageService {
 
   // ── Actualizar merma ──────────────────────────────────────────────────────
   updateWastage(
-    id:      number,
+    id: number,
     payload: { motivo?: string; id_tipo_merma?: number; observacion?: string },
     role = 'Administrador',
   ): Observable<WastageResponseDto> {
@@ -172,18 +168,16 @@ export class WastageService {
     this._error.set(null);
 
     return this.http
-      .put<WastageResponseDto>(
-        `${this.api}/logistics/catalog/wastage/${id}`,
-        payload,
-        { headers: this.buildHeaders(role) },
-      )
+      .put<WastageResponseDto>(`${this.api}/logistics/catalog/wastage/${id}`, payload, {
+        headers: this.buildHeaders(role),
+      })
       .pipe(
-        tap(updated => {
-          this._wastages.update(prev =>
-            prev.map(w => w.id_merma === id ? { ...w, ...updated } : w)
+        tap((updated) => {
+          this._wastages.update((prev) =>
+            prev.map((w) => (w.id_merma === id ? { ...w, ...updated } : w)),
           );
         }),
-        catchError(err => {
+        catchError((err) => {
           this._error.set('No se pudo actualizar la merma.');
           return throwError(() => err);
         }),
@@ -198,8 +192,8 @@ export class WastageService {
         headers: this.buildHeaders(role),
       })
       .pipe(
-        tap(tipos => this._tiposMerma.set(tipos)),
-        catchError(err => {
+        tap((tipos) => this._tiposMerma.set(tipos)),
+        catchError((err) => {
           this._error.set('No se pudo cargar los tipos de merma.');
           return throwError(() => err);
         }),
@@ -207,14 +201,12 @@ export class WastageService {
   }
 
   searchWastages(
-    q:       string,
-    id_sede  = 0,
-    limit    = 8,
-    role     = 'Administrador',
+    q: string,
+    id_sede = 0,
+    limit = 8,
+    role = 'Administrador',
   ): Observable<WastageSuggestionDto[]> {
-    let params = new HttpParams()
-      .set('q',     q)
-      .set('limit', limit.toString());
+    let params = new HttpParams().set('q', q).set('limit', limit.toString());
 
     if (id_sede > 0) {
       params = params.set('id_sede', id_sede.toString());
@@ -226,7 +218,7 @@ export class WastageService {
         params,
       })
       .pipe(
-        catchError(err => {
+        catchError((err) => {
           this._error.set('No se pudo buscar mermas.');
           return throwError(() => err);
         }),

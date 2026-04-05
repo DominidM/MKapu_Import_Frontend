@@ -14,6 +14,7 @@ import { TagModule } from 'primeng/tag';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { TooltipModule } from 'primeng/tooltip';
 import { DrawerModule } from 'primeng/drawer';
+import { TextareaModule } from 'primeng/textarea';
 import { AuthService } from '../../../auth/services/auth.service';
 import { VentasAdminService } from '../../services/ventas.service';
 import { AccountReceivableService } from '../../services/account-receivable.service';
@@ -45,6 +46,7 @@ import {
   TipoServicioAdmin,
   AuctionAutocompleteItemAdmin,
 } from '../../interfaces/ventas.interface';
+import { RegisterWarrantyDto, WarrantyResponseDto, WarrantyService } from '../../services/warranty.service';
 
 export type TipoEntrega = 'recojo' | 'delivery';
 export type TipoPrecio = 'unidad' | 'caja' | 'mayorista';
@@ -84,6 +86,7 @@ export interface ProductoPendiente {
     TooltipModule,
     LoadingOverlayComponent,
     DrawerModule,
+    TextareaModule,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './generar-ventas-administracion.html',
@@ -101,6 +104,7 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
   private readonly arService = inject(AccountReceivableService);
   private readonly dispatchService = inject(DispatchService);
   private readonly cajaService = inject(CajaService);
+  private readonly warrantyService = inject(WarrantyService);
 
   readonly esAdmin: boolean;
   readonly sedeNombreVentas: string;
@@ -109,10 +113,11 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
   private readonly SIZE_PAGE = 10;
   private readonly COMISION_TARJETA = 0.05;
   private readonly COD_SUNAT_TARJETAS = ['005', '006'];
-  private readonly COD_SUNAT_CON_BANCO = ['005', '006']; 
+  private readonly COD_SUNAT_CON_BANCO = ['005', '006'];
   private searchTimeout: any = null;
 
   sidebarClienteVisible = false;
+  sidebarGarantiaVisible = false;
   promosBuscadas = false;
 
   queryBusqueda = signal('');
@@ -155,6 +160,17 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
   tiposServicioLoading = signal(false);
   tipoServicioSeleccionado = signal<number | null>(null);
   codSunatMetodoPago = signal<string>('');
+
+  // ── Garantía ──────────────────────────────────────────────────────
+  guardandoGarantia = signal(false);
+  garantiaRegistrada = signal<WarrantyResponseDto | null>(null);
+
+  garantiaForm: {
+    cod_prod: string;
+    prod_nombre: string;
+    motivo: string;
+    observaciones: string;
+  } = { cod_prod: '', prod_nombre: '', motivo: '', observaciones: '' };
 
   nuevoClienteForm: {
     documentTypeId: number | null;
@@ -211,6 +227,8 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
     this.sedeNombreVentas = user?.sedeNombre ?? 'Mi sede';
   }
 
+  // ── Computeds ─────────────────────────────────────────────────────
+
   readonly idMetodoPagoEfectivo = computed(
     () => this.metodosPago().find((m) => m.codSunat === '008')?.id ?? null,
   );
@@ -237,6 +255,13 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
 
   readonly bancosOptions = computed(() =>
     this.bancosDisponibles().map((b) => ({ label: b.nombre_banco, value: b.id_banco })),
+  );
+
+  readonly productosDelComprobante = computed(() =>
+    this.productosSeleccionados().map((p) => ({
+      label: `${p.codigo} — ${p.description}`,
+      value: { cod_prod: p.codigo, prod_nombre: p.description },
+    })),
   );
 
   private normalizarTexto(s: string): string {
@@ -405,6 +430,8 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
     this.sedes().map((s) => ({ label: s.nombre, value: s.id_sede })),
   );
 
+  // ── Lifecycle ─────────────────────────────────────────────────────
+
   ngOnInit(): void {
     this.isLoading.set(true);
     this.cargarSesion();
@@ -424,6 +451,8 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
   ngAfterViewInit(): void {
     setTimeout(() => this.cargarFamilias(), 0);
   }
+
+  // ── Búsqueda ──────────────────────────────────────────────────────
 
   onQueryChange(value: string): void {
     this.queryBusqueda.set(value);
@@ -683,6 +712,8 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
       });
   }
 
+  // ── Sesión / Carga ────────────────────────────────────────────────
+
   private cargarSesion(): void {
     const user = this.authService.getCurrentUser();
     if (!user) {
@@ -715,7 +746,9 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
   private cargarTiposComprobante(): void {
     this.ventasService.obtenerTiposComprobante().subscribe({
       next: (d) =>
-        this.tiposComprobante.set(d.filter((t) => t.codSunat === '03' || t.codSunat === '01' || t.codSunat === 'NV')),
+        this.tiposComprobante.set(
+          d.filter((t) => t.codSunat === '03' || t.codSunat === '01' || t.codSunat === 'NV'),
+        ),
     });
   }
 
@@ -870,6 +903,8 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
       },
     });
   }
+
+  // ── Cliente ───────────────────────────────────────────────────────
 
   onTipoDocBoleta(id: number): void {
     this.tipoDocBoleta.set(id);
@@ -1115,6 +1150,8 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
     this.sidebarClienteVisible = true;
   }
 
+  // ── Cotización ────────────────────────────────────────────────────
+
   private leerParamsCotizacion(): void {
     const cotizacionId = this.route.snapshot.queryParamMap.get('cotizacion');
     const tipo = this.route.snapshot.queryParamMap.get('tipo') as 'contado' | 'credito';
@@ -1194,6 +1231,8 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
       life: 4000,
     });
   }
+
+  // ── Promociones ───────────────────────────────────────────────────
 
   private cargarPromociones(): void {
     if (this.promocionesDisponibles().length > 0) return;
@@ -1310,6 +1349,8 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
     });
   }
 
+  // ── Entrega / Pago ────────────────────────────────────────────────
+
   onTipoEntregaChange(tipo: TipoEntrega): void {
     this.tipoEntrega.set(tipo);
     if (tipo === 'recojo') {
@@ -1393,6 +1434,83 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
     });
   }
 
+  // ── Garantía ──────────────────────────────────────────────────────
+
+  abrirSidebarGarantia(): void {
+    this.garantiaForm = { cod_prod: '', prod_nombre: '', motivo: '', observaciones: '' };
+    this.garantiaRegistrada.set(null);
+    this.productoGarantiaSeleccionadoSignal.set(null); // ← resetear
+    if (this.productosSeleccionados().length === 1) {
+      const p = this.productosSeleccionados()[0];
+      this.garantiaForm.cod_prod = p.codigo;
+      this.garantiaForm.prod_nombre = p.description;
+      this.productoGarantiaSeleccionadoSignal.set({ 
+        cod_prod: p.codigo, 
+        prod_nombre: p.description 
+      });
+    }
+    this.sidebarGarantiaVisible = true;
+  }
+
+  onProductoGarantiaChange(val: { cod_prod: string; prod_nombre: string } | null): void {
+    if (!val) return;
+    this.garantiaForm.cod_prod = val.cod_prod;
+    this.garantiaForm.prod_nombre = val.prod_nombre;
+      this.productoGarantiaSeleccionadoSignal.set(val); 
+  }
+
+  productoGarantiaSeleccionadoSignal = signal<{ cod_prod: string; prod_nombre: string } | null>(null);
+
+  registrarGarantia(): void {
+    const comprobante = this.comprobanteGenerado();
+    if (!comprobante) return;
+    if (!this.garantiaForm.cod_prod || !this.garantiaForm.motivo.trim()) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Campos requeridos',
+        detail: 'Selecciona el producto e ingresa el motivo',
+      });
+      return;
+    }
+    this.guardandoGarantia.set(true);
+    const dto: RegisterWarrantyDto = {
+      id_comprobante: comprobante.idComprobante,
+      cod_prod: this.garantiaForm.cod_prod,
+      prod_nombre: this.garantiaForm.prod_nombre,
+      motivo: this.garantiaForm.motivo.trim(),
+      observaciones: this.garantiaForm.observaciones.trim() || undefined,
+      id_sede_ref: this.sedeSeleccionada()!,
+      id_usuario_ref: this.idUsuarioActual(),
+    };
+
+    console.log('📤 DTO garantía:', JSON.stringify(dto, null, 2));
+
+    this.warrantyService.registerWarranty(dto).subscribe({
+      next: (res) => {
+        this.guardandoGarantia.set(false);
+        this.garantiaRegistrada.set(res);
+        this.messageService.add({
+          severity: 'success',
+          summary: '¡Garantía registrada!',
+          detail: `N° ${res.num_garantia}`,
+          life: 5000,
+        });
+      },
+      error: (err: any) => {
+        console.error('❌ Error garantía response:', err?.error);
+        this.guardandoGarantia.set(false);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: err?.error?.message ?? 'No se pudo registrar la garantía',
+          life: 5000,
+        });
+      },
+    });
+  }
+
+  // ── Venta ─────────────────────────────────────────────────────────
+
   generarVenta(): void {
     if (!this.clienteEncontrado()) {
       this.messageService.add({
@@ -1426,7 +1544,11 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
       });
       return;
     }
-    if (this.tipoPagoOrigen() !== 'credito' && this.metodoPagoRequiereBanco() && !this.bancoSeleccionado()) {
+    if (
+      this.tipoPagoOrigen() !== 'credito' &&
+      this.metodoPagoRequiereBanco() &&
+      !this.bancoSeleccionado()
+    ) {
       this.messageService.add({
         severity: 'warn',
         summary: 'Banco Requerido',
@@ -1446,7 +1568,6 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
       }
       if (!esEfectivo) {
         const numOp = this.numeroOperacion().trim();
-        
         if (!numOp) {
           this.messageService.add({
             severity: 'warn',
@@ -1455,13 +1576,12 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
           });
           return;
         }
-
         const numOpRegex = /^\d{20}$/;
         if (!numOpRegex.test(numOp)) {
           this.messageService.add({
             severity: 'warn',
             summary: 'Nº Operación Inválido',
-            detail: 'El número de operación debe tener exactamente 20 dígitos numéricos, ni más ni menos.',
+            detail: 'El número de operación debe tener exactamente 20 dígitos numéricos.',
           });
           return;
         }
@@ -1645,6 +1765,8 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
     this.rematesSugeridos.set([]);
     this.modoRemate.set(false);
     this.sidebarClienteVisible = false;
+    this.sidebarGarantiaVisible = false;
+    this.garantiaRegistrada.set(null);
     this.bancoSeleccionado.set(null);
     this.tipoServicioSeleccionado.set(null);
     this.tiposServicio.set([]);
@@ -1655,6 +1777,8 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
   verListado(): void {
     this.router.navigate(['/admin/historial-ventas-administracion']);
   }
+
+  // ── Helpers ───────────────────────────────────────────────────────
 
   getLabelMetodoPago(id: number): string {
     return this.metodosPago().find((m) => m.id === id)?.descripcion ?? 'N/A';
@@ -1694,6 +1818,7 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
       ? `${c.documentTypeDescription}: ${c.documentValue}`
       : (c.documentValue ?? '');
   }
+
   validarNumeroOperacion(event: any): void {
     const input = event.target;
     input.value = input.value.replace(/[^0-9]/g, '').slice(0, 20);

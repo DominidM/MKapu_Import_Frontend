@@ -53,10 +53,7 @@ export class CategoriaService {
             ...res,
             categories: res.categories.map((c: any) => ({
               ...c,
-              activo:
-                typeof c.activo === 'boolean'
-                  ? c.activo
-                  : c.activo?.data?.[0] === 1,
+              activo: typeof c.activo === 'boolean' ? c.activo : c.activo?.data?.[0] === 1,
             })),
           };
           this._categoriasResponse.set(normalized);
@@ -65,7 +62,7 @@ export class CategoriaService {
           this._error.set('No se pudo cargar las categorías.');
           return throwError(() => err);
         }),
-        finalize(() => this._loading.set(false))
+        finalize(() => this._loading.set(false)),
       );
   }
 
@@ -81,13 +78,13 @@ export class CategoriaService {
           this._error.set('No se pudo cargar la categoría.');
           return throwError(() => err);
         }),
-        finalize(() => this._loading.set(false))
+        finalize(() => this._loading.set(false)),
       );
   }
 
   createCategoria(
     payload: CreateCategoriaRequest,
-    role: string = 'Administrador'
+    role: string = 'Administrador',
   ): Observable<Categoria> {
     this._loading.set(true);
     this._error.set(null);
@@ -109,14 +106,14 @@ export class CategoriaService {
           this._error.set('No se pudo crear la categoría.');
           return throwError(() => err);
         }),
-        finalize(() => this._loading.set(false))
+        finalize(() => this._loading.set(false)),
       );
   }
 
   updateCategoria(
     id: number,
     payload: UpdateCategoriaRequest,
-    role: string = 'Administrador'
+    role: string = 'Administrador',
   ): Observable<Categoria> {
     this._loading.set(true);
     this._error.set(null);
@@ -130,14 +127,14 @@ export class CategoriaService {
           this._error.set('No se pudo actualizar la categoría.');
           return throwError(() => err);
         }),
-        finalize(() => this._loading.set(false))
+        finalize(() => this._loading.set(false)),
       );
   }
 
   updateCategoriaStatus(
     id: number,
     activo: boolean,
-    role: string = 'Administrador'
+    role: string = 'Administrador',
   ): Observable<Categoria> {
     this._loading.set(true);
     this._error.set(null);
@@ -145,7 +142,7 @@ export class CategoriaService {
       .put<Categoria>(
         `${this.api}/logistics/categories/${id}/status`,
         { activo },
-        { headers: this.buildHeaders(role) }
+        { headers: this.buildHeaders(role) },
       )
       .pipe(
         tap((updated) => this.patchCachedCategoria(id, updated)),
@@ -153,7 +150,7 @@ export class CategoriaService {
           this._error.set('No se pudo actualizar el estado de la categoría.');
           return throwError(() => err);
         }),
-        finalize(() => this._loading.set(false))
+        finalize(() => this._loading.set(false)),
       );
   }
 
@@ -178,7 +175,7 @@ export class CategoriaService {
           this._error.set('No se pudo eliminar la categoría.');
           return throwError(() => err);
         }),
-        finalize(() => this._loading.set(false))
+        finalize(() => this._loading.set(false)),
       );
   }
 
@@ -190,6 +187,4 @@ export class CategoriaService {
       categories: prev.categories.map((c) => (c.id_categoria === id ? updated : c)),
     });
   }
-
 }
-

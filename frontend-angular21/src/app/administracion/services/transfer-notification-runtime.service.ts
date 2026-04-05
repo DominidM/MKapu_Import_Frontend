@@ -54,18 +54,16 @@ export class TransferNotificationRuntimeService {
         this.started.set(true);
         this.notificationService.start();
 
-        this.router.events
-          .pipe(filter((event) => event instanceof NavigationEnd))
-          .subscribe(() => {
-            try {
-              this.notificationService.start();
-            } catch (error) {
-              console.error(
-                '[TransferNotificationRuntimeService] No se pudo refrescar el runtime global de notificaciones.',
-                error,
-              );
-            }
-          });
+        this.router.events.pipe(filter((event) => event instanceof NavigationEnd)).subscribe(() => {
+          try {
+            this.notificationService.start();
+          } catch (error) {
+            console.error(
+              '[TransferNotificationRuntimeService] No se pudo refrescar el runtime global de notificaciones.',
+              error,
+            );
+          }
+        });
       } catch (error) {
         console.error(
           '[TransferNotificationRuntimeService] No se pudo iniciar el runtime global de notificaciones.',
@@ -84,9 +82,6 @@ export class TransferNotificationRuntimeService {
 
   private shouldShowToastForCurrentRoute(url: string): boolean {
     const normalizedUrl = String(url ?? '').toLowerCase();
-    return (
-      !normalizedUrl.includes('/transferencia') &&
-      !normalizedUrl.includes('/notificaciones')
-    );
+    return !normalizedUrl.includes('/transferencia') && !normalizedUrl.includes('/notificaciones');
   }
 }

@@ -1,6 +1,6 @@
 export interface AuthInterface {
-    username: string;
-    password: string;
+  username: string;
+  password: string;
 }
 
 export interface AuthInterfaceResponse {
@@ -9,10 +9,10 @@ export interface AuthInterfaceResponse {
 }
 
 export interface AuthUserBackend {
-    id: number;
-    nombre_usuario: string;
-    email: string;
-    rol_nombre: string;
+  id: number;
+  nombre_usuario: string;
+  email: string;
+  rol_nombre: string;
 }
 
 export interface AuthAccountBackend {

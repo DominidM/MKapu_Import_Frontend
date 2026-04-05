@@ -1,4 +1,3 @@
-
 <div class="p-2">
   <p-card class="ventas-header-card mb-4 ventas-header-bordered">
     <div class="flex align-items-center justify-content-between flex-wrap gap-2">
@@ -33,7 +32,7 @@
       <div class="estadistica-card">
         <i class="pi pi-send"></i>
         <div>
-          <span class="estadistica-label">En Transito</span>
+          <span class="estadistica-label">En Tránsito</span>
           <span class="estadistica-valor">{{ totalEnviados() }}</span>
         </div>
       </div>
@@ -51,7 +50,7 @@
 <div class="p-2">
   <div class="filtros-container mb-4">
     <div class="seccion-filtros">
-      <h3><i class="pi pi-filter"></i> Filtros de busqueda</h3>
+      <h3><i class="pi pi-filter"></i> Filtros de búsqueda</h3>
 
       <div class="filtros-linea-1">
         <div class="filtro-item filtro-cliente-50">
@@ -75,9 +74,10 @@
         <div class="filtro-item filtro-grupo-fechas">
           <label>Rango de Fechas</label>
           <div class="fechas-con-guion">
+            <!-- ✅ Usa métodos dedicados para evitar recargas en la inicialización -->
             <p-datepicker
               [ngModel]="fechaDesde()"
-              (ngModelChange)="fechaDesde.set($event); cargarDespachos()"
+              (ngModelChange)="onFechaDesdeChange($event)"
               dateFormat="dd/mm/yy"
               placeholder="Fecha Inicio"
               [showClear]="true"
@@ -86,7 +86,7 @@
             <span class="fecha-separador">-</span>
             <p-datepicker
               [ngModel]="fechaHasta()"
-              (ngModelChange)="fechaHasta.set($event); cargarDespachos()"
+              (ngModelChange)="onFechaHastaChange($event)"
               dateFormat="dd/mm/yy"
               placeholder="Fecha Fin"
               [showClear]="true"
@@ -154,22 +154,29 @@
     (exportar)="exportarExcel()"
     (pageChange)="cambiarPagina($event)"
     (limitChange)="onLimitChange($event)">
-    <p-table [value]="filasFiltradas()"
-      styleClass="despacho-table-nativa despacho-table-hover" [rowHover]="true">
+
+    <p-table
+      [value]="filasFiltradas()"
+      styleClass="despacho-table-nativa despacho-table-hover"
+      [rowHover]="true">
+
       <ng-template pTemplate="header">
         <tr>
           <th style="width:18%">Comprobante</th>
           <th style="width:22%">Cliente</th>
           <th style="width:14%">Sede</th>
-          <th style="width:26%">Direccion de Entrega</th>
+          <th style="width:26%">Dirección de Entrega</th>
           <th style="width:10%">Estado</th>
           <th style="width:10%">Acciones</th>
         </tr>
       </ng-template>
+
       <ng-template pTemplate="body" let-d>
         <tr>
           <td>
-            <span class="font-semibold text-primary block">{{ d.comprobante || ('Venta #' + d.id_venta_ref) }}</span>
+            <span class="font-semibold text-primary block">
+              {{ d.comprobante || ('Venta #' + d.id_venta_ref) }}
+            </span>
             <span class="text-xs text-500">#Despacho {{ d.id_despacho }}</span>
           </td>
           <td>
@@ -191,40 +198,65 @@
             </span>
           </td>
           <td>
-            <p-tag [value]="getEstadoLabel(d.estado)" [severity]="getEstadoSeverity(d.estado)" styleClass="font-bold"></p-tag>
+            <p-tag
+              [value]="getEstadoLabel(d.estado)"
+              [severity]="getEstadoSeverity(d.estado)"
+              styleClass="font-bold">
+            </p-tag>
           </td>
           <td>
             <div class="flex align-items-center gap-2">
-              <p-button icon="pi pi-eye" [text]="true" severity="secondary"
+              <p-button
+                icon="pi pi-eye"
+                [text]="true"
+                severity="secondary"
                 styleClass="despacho-icon-btn despacho-icon-soft"
-                pTooltip="Ver Detalle" (onClick)="verDetalle(d)"></p-button>
-              <p-button icon="pi pi-caret-right" [text]="true" severity="secondary"
+                pTooltip="Ver Detalle"
+                (onClick)="verDetalle(d)">
+              </p-button>
+              <p-button
+                icon="pi pi-caret-right"
+                [text]="true"
+                severity="secondary"
                 styleClass="despacho-icon-btn despacho-icon-warn"
                 [disabled]="d.estado !== 'EN_PREPARACION' && d.estado !== 'EN_TRANSITO'"
-                [pTooltip]="d.estado === 'GENERADO' ? 'Confirmar' : (d.estado === 'ENTREGADO' || d.estado === 'CANCELADO') ? 'Estado final' : 'Cambiar Estado'"
-                (onClick)="abrirCambioEstado(d)"></p-button>
-              <p-button icon="pi pi-ban" [text]="true" severity="danger"
+                [pTooltip]="d.estado === 'GENERADO' ? 'Confirmar' :
+                            (d.estado === 'ENTREGADO' || d.estado === 'CANCELADO') ? 'Estado final' :
+                            'Cambiar Estado'"
+                (onClick)="abrirCambioEstado(d)">
+              </p-button>
+              <p-button
+                icon="pi pi-ban"
+                [text]="true"
+                severity="danger"
                 styleClass="despacho-icon-btn despacho-icon-danger"
-                pTooltip="Cancelar" (onClick)="cancelar(d)"></p-button>
+                pTooltip="Cancelar"
+                (onClick)="cancelar(d)">
+              </p-button>
             </div>
           </td>
         </tr>
       </ng-template>
+
       <ng-template pTemplate="emptymessage">
         <tr>
           <td colspan="6" class="text-center py-6">
             <i class="pi pi-truck text-4xl text-400 mb-3 block"></i>
             <p class="text-900 font-medium mb-0">No se encontraron despachos</p>
             <p class="text-600 mt-2">
-              {{ (searchTerm() || filtros().estado || fechaDesde() || fechaHasta()) ? 'Prueba ajustando los filtros' : 'Aun no hay despachos registrados' }}
+              {{ (searchTerm() || filtros().estado || fechaDesde() || fechaHasta())
+                  ? 'Prueba ajustando los filtros'
+                  : 'Aún no hay despachos registrados' }}
             </p>
           </td>
         </tr>
       </ng-template>
+
     </p-table>
   </app-shared-table-container>
 </div>
 
+<!-- ── Dialog cambio de estado ───────────────────────────────────────────── -->
 <p-dialog
   [visible]="cambioEstadoVisible()"
   (visibleChange)="cambioEstadoVisible.set($event)"
@@ -241,7 +273,11 @@
         <span class="estado-info-label">Despacho</span>
         <span class="estado-info-value">#{{ d.id_despacho }}</span>
         <span class="estado-info-label ml-3">Estado actual</span>
-        <p-tag [value]="getEstadoLabel(d.estado)" [severity]="getEstadoSeverity(d.estado)" styleClass="ml-2"></p-tag>
+        <p-tag
+          [value]="getEstadoLabel(d.estado)"
+          [severity]="getEstadoSeverity(d.estado)"
+          styleClass="ml-2">
+        </p-tag>
       </div>
 
       <p class="estado-dialog-pregunta">Selecciona el nuevo estado:</p>
@@ -261,7 +297,7 @@
           <i class="pi pi-times-circle"></i>
           <div>
             <span class="estado-opcion-titulo">Cancelado</span>
-            <span class="estado-opcion-desc">Cancelar</span>
+            <span class="estado-opcion-desc">Cancelar el despacho</span>
           </div>
         </button>
       </div>
@@ -269,8 +305,13 @@
   </ng-container>
 
   <ng-template pTemplate="footer">
-    <p-button label="Cerrar" icon="pi pi-times" severity="secondary"
-      [outlined]="true" (onClick)="cambioEstadoVisible.set(false)"></p-button>
+    <p-button
+      label="Cerrar"
+      icon="pi pi-times"
+      severity="secondary"
+      [outlined]="true"
+      (onClick)="cambioEstadoVisible.set(false)">
+    </p-button>
   </ng-template>
 </p-dialog>
 

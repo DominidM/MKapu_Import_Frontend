@@ -72,7 +72,7 @@ export class NotasCreditoComponent implements OnInit, OnDestroy {
   private subscriptions = new Subscription();
 
   readonly tituloKicker = 'VENTAS';
-  readonly subtituloKicker = 'NOTAS DE CRÃƒÆ’Ã¢â‚¬Â°DITO';
+  readonly subtituloKicker = 'NOTAS DE CREDITO';
   readonly iconoCabecera = 'pi pi-file-edit';
 
   readonly esAdmin = signal<boolean>(false);
@@ -311,7 +311,7 @@ export class NotasCreditoComponent implements OnInit, OnDestroy {
         this.messageService.add({
           severity: 'success',
           summary: 'Nota anulada',
-          detail: 'La nota de crÃƒÆ’Ã‚Â©dito fue anulada correctamente',
+          detail: 'La nota de credito fue anulada correctamente',
           life: 3000,
         });
         this.cargarNotas();
