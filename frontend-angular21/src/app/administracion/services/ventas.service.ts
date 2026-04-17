@@ -13,7 +13,9 @@ import {
   RegistroVentaAdminResponse,
   AnularVentaAdminResponse,
   SedeAdmin,
+  ProductoStockAdmin,
   ProductoStockAdminResponse,
+  ProductoAutocompleteAdmin,
   ProductoAutocompleteAdminResponse,
   ProductoUIAdmin,
   CategoriaConStockAdmin,
@@ -47,6 +49,8 @@ export class VentasAdminService {
   private get headers(): HttpHeaders {
     return new HttpHeaders({ 'x-role': 'Administrador' });
   }
+
+  // ── Historial / Comprobantes ───────────────────────────────────────
 
   listarHistorialVentas(
     query: SalesReceiptsQueryAdmin = {},
@@ -153,27 +157,15 @@ export class VentasAdminService {
   }): Observable<SalesReceiptKpiDto> {
     let params = new HttpParams();
 
-    if (filters.sedeId != null) {
-      params = params.set('sedeId', String(filters.sedeId));
-    }
-    if (filters.dateFrom) {
-      params = params.set('dateFrom', filters.dateFrom);
-    }
-    if (filters.dateTo) {
-      params = params.set('dateTo', filters.dateTo);
-    }
-    if (filters.status) {
-      params = params.set('status', filters.status);
-    }
-    if (filters.paymentMethodId != null) {
+    if (filters.sedeId != null) params = params.set('sedeId', String(filters.sedeId));
+    if (filters.dateFrom) params = params.set('dateFrom', filters.dateFrom);
+    if (filters.dateTo) params = params.set('dateTo', filters.dateTo);
+    if (filters.status) params = params.set('status', filters.status);
+    if (filters.paymentMethodId != null)
       params = params.set('paymentMethodId', String(filters.paymentMethodId));
-    }
-    if (filters.receiptTypeId != null) {
+    if (filters.receiptTypeId != null)
       params = params.set('receiptTypeId', String(filters.receiptTypeId));
-    }
-    if (filters.search) {
-      params = params.set('search', filters.search);
-    }
+    if (filters.search) params = params.set('search', filters.search);
 
     return this.http.get<SalesReceiptKpiDto>(`${this.salesUrl}/receipts/kpi/semanal`, {
       headers: this.headers,
@@ -181,11 +173,19 @@ export class VentasAdminService {
     });
   }
 
+  getDetalleCompleto(id: number, historialPage = 1): Observable<SalesReceiptDetalleCompletoDto> {
+    const params = new HttpParams().set('historialPage', String(historialPage));
+    return this.http.get<SalesReceiptDetalleCompletoDto>(
+      `${this.salesUrl}/receipts/${id}/detalle`,
+      { headers: this.headers, params },
+    );
+  }
+
+  // ── Tipos catálogo ────────────────────────────────────────────────
+
   obtenerTiposVenta(): Observable<TipoVentaAdmin[]> {
     return this.http
-      .get<TipoVentaAdmin[]>(`${this.salesUrl}/receipts/sale-types`, {
-        headers: this.headers,
-      })
+      .get<TipoVentaAdmin[]>(`${this.salesUrl}/receipts/sale-types`, { headers: this.headers })
       .pipe(catchError(() => of([])));
   }
 
@@ -199,11 +199,28 @@ export class VentasAdminService {
 
   obtenerMetodosPago(): Observable<MetodoPagoAdmin[]> {
     return this.http
-      .get<MetodoPagoAdmin[]>(`${this.salesUrl}/receipts/payment-types`, {
+      .get<MetodoPagoAdmin[]>(`${this.salesUrl}/receipts/payment-types`, { headers: this.headers })
+      .pipe(catchError(() => of([])));
+  }
+
+  obtenerBancos(): Observable<BancoAdmin[]> {
+    return this.http
+      .get<BancoAdmin[]>(`${this.salesUrl}/banks`, { headers: this.headers })
+      .pipe(catchError(() => of([])));
+  }
+
+  obtenerTiposServicio(bancoId?: number): Observable<TipoServicioAdmin[]> {
+    let params = new HttpParams();
+    if (bancoId != null) params = params.set('bancoId', String(bancoId));
+    return this.http
+      .get<TipoServicioAdmin[]>(`${this.salesUrl}/banks/service-types`, {
         headers: this.headers,
+        params,
       })
       .pipe(catchError(() => of([])));
   }
+
+  // ── PDF / Comprobante ──────────────────────────────────────────────
 
   descargarComprobantePdf(id: number, nombreArchivo?: string): Observable<void> {
     return this.http
@@ -241,6 +258,52 @@ export class VentasAdminService {
       );
   }
 
+  generarVoucher(id: number, esCopia = false): Observable<void> {
+    const params = esCopia ? '?copia=true' : '';
+    return this.http
+      .get(`${this.salesUrl}/receipts/${id}/thermal${params}`, {
+        headers: this.headers,
+        responseType: 'blob',
+      })
+      .pipe(
+        map((blob: Blob) => {
+          const url = URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }));
+          window.open(url, '_blank');
+          setTimeout(() => URL.revokeObjectURL(url), 10_000);
+        }),
+        catchError((err) => throwError(() => err)),
+      );
+  }
+
+  verNotaVentaPdfEnPestana(idComprobante: number): Observable<void> {
+    const url = `${this.salesUrl}/receipts/${idComprobante}/nota-venta`;
+    const win = window.open('', '_blank');
+    if (!win) return throwError(() => new Error('No se pudo abrir ventana'));
+    win.location.href = url;
+    return of(void 0);
+  }
+
+  descargarNotaVentaPdf(idComprobante: number, nombre: string): Observable<void> {
+    return this.http
+      .get(`${this.salesUrl}/receipts/${idComprobante}/nota-venta`, {
+        responseType: 'blob',
+        headers: this.headers,
+      })
+      .pipe(
+        map((blob: Blob) => {
+          const objectUrl = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = objectUrl;
+          link.download = nombre;
+          link.click();
+          URL.revokeObjectURL(objectUrl);
+        }),
+        catchError((err) => throwError(() => err)),
+      );
+  }
+
+  // ── Notificaciones ────────────────────────────────────────────────
+
   enviarComprobantePorEmail(id: number): Observable<SendNotificationResponse> {
     return this.http
       .post<SendNotificationResponse>(
@@ -269,19 +332,35 @@ export class VentasAdminService {
       .pipe(catchError((err) => throwError(() => err)));
   }
 
+  // ── Promociones ───────────────────────────────────────────────────
+
   obtenerPromocionesActivas(): Observable<PromocionAdmin[]> {
     return this.http
-      .get<PromocionAdmin[]>(`${this.salesUrl}/promotions/active`, {
-        headers: this.headers,
-      })
+      .get<PromocionAdmin[]>(`${this.salesUrl}/promotions/active`, { headers: this.headers })
       .pipe(catchError(() => of([])));
   }
+
+  esPorcentaje(tipo: string): boolean {
+    return tipo?.toUpperCase().includes('PORCENTAJE') || tipo?.toUpperCase().includes('PERCENT');
+  }
+
+  normalizarActivo(activo: boolean | { type: 'Buffer'; data: number[] }): boolean {
+    if (typeof activo === 'boolean') return activo;
+    if (activo && typeof activo === 'object' && 'data' in activo) {
+      return activo.data?.[0] === 1;
+    }
+    return false;
+  }
+
+  // ── Sedes ─────────────────────────────────────────────────────────
 
   obtenerSedes(): Observable<SedeAdmin[]> {
     return this.http
       .get<any>(`${this.adminUrl}/headquarters`, { headers: this.headers })
       .pipe(map((res) => res.data ?? res.headquarters ?? res ?? []));
   }
+
+  // ── Productos ─────────────────────────────────────────────────────
 
   obtenerProductosConStock(
     idSede?: number,
@@ -293,10 +372,10 @@ export class VentasAdminService {
     if (idSede != null) params = params.set('id_sede', String(idSede));
     if (idCategoria != null) params = params.set('id_categoria', String(idCategoria));
 
-    return this.http.get<ProductoStockAdminResponse>(`${this.logisticsUrl}/products/ventas/stock`, {
-      headers: this.headers,
-      params,
-    });
+    return this.http.get<ProductoStockAdminResponse>(
+      `${this.logisticsUrl}/products/ventas/stock`,
+      { headers: this.headers, params },
+    );
   }
 
   buscarProductosVentas(
@@ -313,6 +392,83 @@ export class VentasAdminService {
       { headers: this.headers, params },
     );
   }
+
+  obtenerCategoriasConStock(idSede?: number): Observable<CategoriaConStockAdmin[]> {
+    let params = new HttpParams();
+    if (idSede != null) params = params.set('id_sede', String(idSede));
+    return this.http.get<CategoriaConStockAdmin[]>(
+      `${this.logisticsUrl}/products/categorias-con-stock`,
+      { headers: this.headers, params },
+    );
+  }
+
+  // ── Mapeos de productos ───────────────────────────────────────────
+
+  /**
+   * Mapea una fila de `obtenerProductosConStock` → ProductoUIAdmin.
+   * El backend devuelve stock total (sin desglose por almacén en este endpoint),
+   * por eso se crea un único almacén genérico.
+   */
+  mapearProductoConStock(p: ProductoStockAdmin): ProductoUIAdmin {
+    const stockTotal = Number(p.stock ?? 0);
+    return {
+      id: Number(p.id_producto),
+      codigo: p.codigo ?? '',
+      nombre: p.nombre ?? '',
+      familia: p.familia ?? '',
+      categoriaId: Number(p.id_categoria ?? 0) || undefined,
+      precioUnidad: Number(p.precio_unitario ?? 0),
+      precioCaja: Number(p.precio_caja ?? 0),
+      precioMayorista: Number(p.precio_mayor ?? 0),
+      stock: stockTotal,
+      sede: p.sede ?? '',
+      almacenes: [
+        {
+          id_almacen: null,
+          nombre: 'Almacén principal',
+          stock: stockTotal,
+        },
+      ],
+    };
+  }
+
+  /**
+   * Mapea una fila de `buscarProductosVentas` → ProductoUIAdmin.
+   * El backend devuelve `stockPorAlmacen[]` (Opción A), por lo que
+   * se construye el array de almacenes con id_almacen tipado.
+   */
+  mapearAutocompleteVentas(p: ProductoAutocompleteAdmin): ProductoUIAdmin {
+    const almacenes: Array<{ id_almacen: number | null; nombre: string; stock: number }> =
+      Array.isArray(p.stockPorAlmacen) && p.stockPorAlmacen.length > 0
+        ? p.stockPorAlmacen.map((a) => ({
+            id_almacen: a.id_almacen ?? null,
+            nombre: a.nombre_almacen ?? 'Almacén',
+            stock: Number(a.stock ?? 0),
+          }))
+        : [
+            {
+              id_almacen: null,
+              nombre: 'Almacén principal',
+              stock: Number(p.stock ?? 0),
+            },
+          ];
+
+    return {
+      id: Number(p.id_producto),
+      codigo: p.codigo ?? '',
+      nombre: p.nombre ?? '',
+      familia: p.familia ?? '',
+      categoriaId: Number(p.id_categoria ?? 0) || undefined,
+      precioUnidad: Number(p.precio_unitario ?? 0),
+      precioCaja: Number(p.precio_caja ?? 0),
+      precioMayorista: Number(p.precio_mayor ?? 0),
+      stock: Number(p.stock ?? 0),
+      sede: p.sede ?? '',
+      almacenes,
+    };
+  }
+
+  // ── Remates ───────────────────────────────────────────────────────
 
   buscarRematesAutocomplete(
     search: string,
@@ -336,61 +492,6 @@ export class VentasAdminService {
       );
   }
 
-  obtenerCategoriasConStock(idSede?: number): Observable<CategoriaConStockAdmin[]> {
-    let params = new HttpParams();
-    if (idSede != null) params = params.set('id_sede', String(idSede));
-    return this.http.get<CategoriaConStockAdmin[]>(
-      `${this.logisticsUrl}/products/categorias-con-stock`,
-      { headers: this.headers, params },
-    );
-  }
-
-  mapearProductoConStock(p: any): ProductoUIAdmin {
-    const almacenes: Array<{ nombre: string; stock: number }> = Array.isArray(p.almacenes)
-      ? p.almacenes.map((a: any) => ({
-          nombre: a.nombre ?? a.nombre_almacen ?? 'Almacén',
-          stock: Number(a.stock ?? a.cantidad ?? 0),
-        }))
-      : [{ nombre: p.nombre_almacen ?? 'Almacén', stock: Number(p.stock ?? 0) }];
-
-    return {
-      id: Number(p.id ?? p.id_producto),
-      codigo: p.codigo ?? p.cod_prod ?? '',
-      nombre: p.nombre ?? p.descripcion ?? '',
-      familia: p.familia ?? p.categoria ?? '',
-      categoriaId: Number(p.id_categoria ?? p.categoriaId ?? 0) || undefined,
-      precioUnidad: Number(p.precioUnidad ?? p.precio_unitario ?? 0),
-      precioCaja: Number(p.precioCaja ?? p.precio_caja ?? 0),
-      precioMayorista: Number(p.precioMayorista ?? p.precio_mayor ?? 0),
-      stock: almacenes.reduce((s, a) => s + a.stock, 0),
-      sede: p.sede ?? '',
-      almacenes,
-    };
-  }
-
-  mapearAutocompleteVentas(p: any): ProductoUIAdmin {
-    const almacenes: Array<{ nombre: string; stock: number }> = Array.isArray(p.almacenes)
-      ? p.almacenes.map((a: any) => ({
-          nombre: a.nombre ?? a.nombre_almacen ?? 'Almacén',
-          stock: Number(a.stock ?? a.cantidad ?? 0),
-        }))
-      : [{ nombre: p.nombre_almacen ?? 'Almacén', stock: Number(p.stock ?? 0) }];
-
-    return {
-      id: p.id ?? p.id_producto,
-      codigo: p.codigo ?? p.cod_prod ?? '',
-      nombre: p.nombre ?? p.descripcion ?? '',
-      familia: p.familia ?? p.categoria ?? '',
-      categoriaId: Number(p.id_categoria ?? p.categoriaId ?? 0) || undefined,
-      precioUnidad: Number(p.precioUnidad ?? p.precio_unitario ?? 0),
-      precioCaja: Number(p.precioCaja ?? p.precio_caja ?? 0),
-      precioMayorista: Number(p.precioMayorista ?? p.precio_mayor ?? 0),
-      stock: almacenes.reduce((s, a) => s + a.stock, 0),
-      sede: p.sede ?? '',
-      almacenes,
-    };
-  }
-
   mapearAuctionItem(item: AuctionAutocompleteItemAdmin): RemateUIAdmin {
     return {
       idDetalleRemate: item.id_detalle_remate,
@@ -403,6 +504,8 @@ export class VentasAdminService {
       descripcionRemate: item.descripcion_remate,
     };
   }
+
+  // ── Clientes ──────────────────────────────────────────────────────
 
   buscarCliente(documentValue: string): Observable<ClienteBusquedaAdminResponse> {
     return this.http
@@ -461,9 +564,7 @@ export class VentasAdminService {
     direccion?: string;
   }> {
     return this.http
-      .get<any>(`${this.salesUrl}/reniec/consultar/${numero}`, {
-        headers: this.headers,
-      })
+      .get<any>(`${this.salesUrl}/reniec/consultar/${numero}`, { headers: this.headers })
       .pipe(
         catchError(() =>
           of({
@@ -475,79 +576,5 @@ export class VentasAdminService {
           }),
         ),
       );
-  }
-
-  getDetalleCompleto(id: number, historialPage = 1): Observable<SalesReceiptDetalleCompletoDto> {
-    const params = new HttpParams().set('historialPage', String(historialPage));
-    return this.http.get<SalesReceiptDetalleCompletoDto>(
-      `${this.salesUrl}/receipts/${id}/detalle`,
-      { headers: this.headers, params },
-    );
-  }
-
-  generarVoucher(id: number, esCopia = false): Observable<void> {
-    const params = esCopia ? '?copia=true' : '';
-    return this.http
-      .get(`${this.salesUrl}/receipts/${id}/thermal${params}`, {
-        headers: this.headers,
-        responseType: 'blob',
-      })
-      .pipe(
-        map((blob: Blob) => {
-          const url = URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }));
-          window.open(url, '_blank');
-          setTimeout(() => URL.revokeObjectURL(url), 10_000);
-        }),
-        catchError((err) => throwError(() => err)),
-      );
-  }
-
-  verNotaVentaPdfEnPestana(idComprobante: number): Observable<void> {
-    const url = `${this.salesUrl}/receipts/${idComprobante}/nota-venta`;
-    const win = window.open('', '_blank');
-    if (!win) {
-      return throwError(() => new Error('No se pudo abrir ventana'));
-    }
-    win.location.href = url;
-    return of(void 0);
-  }
-
-  descargarNotaVentaPdf(idComprobante: number, nombre: string): Observable<void> {
-    const url = `${this.salesUrl}/receipts/${idComprobante}/nota-venta`;
-    return this.http
-      .get(url, {
-        responseType: 'blob',
-        headers: this.headers,
-      })
-      .pipe(
-        map((blob: Blob) => {
-          const objectUrl = URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = objectUrl;
-          link.download = nombre;
-          link.click();
-          URL.revokeObjectURL(objectUrl);
-        }),
-        catchError((err) => throwError(() => err)),
-      );
-  }
-
-  obtenerBancos(): Observable<BancoAdmin[]> {
-    return this.http
-      .get<BancoAdmin[]>(`${this.salesUrl}/banks`, {
-        headers: this.headers,
-      })
-      .pipe(catchError(() => of([])));
-  }
-
-  obtenerTiposServicio(bancoId?: number): Observable<TipoServicioAdmin[]> {
-    let params = new HttpParams();
-    if (bancoId != null) params = params.set('bancoId', String(bancoId));
-    return this.http
-      .get<TipoServicioAdmin[]>(`${this.salesUrl}/banks/service-types`, {
-        headers: this.headers,
-        params,
-      })
-      .pipe(catchError(() => of([])));
   }
 }

@@ -46,7 +46,11 @@ import {
   TipoServicioAdmin,
   AuctionAutocompleteItemAdmin,
 } from '../../interfaces/ventas.interface';
-import { RegisterWarrantyDto, WarrantyResponseDto, WarrantyService } from '../../services/warranty.service';
+import {
+  RegisterWarrantyDto,
+  WarrantyResponseDto,
+  WarrantyService,
+} from '../../services/warranty.service';
 
 export type TipoEntrega = 'recojo' | 'delivery';
 export type TipoPrecio = 'unidad' | 'caja' | 'mayorista';
@@ -55,7 +59,8 @@ export interface ProductoPendiente {
   id: number;
   codigo: string;
   nombre: string;
-  stock: number;
+  stock: number; // stock del almacén seleccionado
+  stockTotal: number; // suma de todos los almacenes (para info)
   precioUnidad: number;
   precioCaja: number;
   precioMayorista: number;
@@ -66,6 +71,8 @@ export interface ProductoPendiente {
   esRemate?: boolean;
   idDetalleRemate?: number;
   preOriginal?: number;
+  almacenes: Array<{ id_almacen: number | null; nombre: string; stock: number }>;
+  almacenSeleccionado: number | null;
 }
 
 @Component({
@@ -531,11 +538,16 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
       this.productosPendientes.set(lista);
       return;
     }
+    // Tomar el primer almacén con stock como predeterminado
+    const almacenesConStock = producto.almacenes.filter((a) => a.stock > 0);
+    const almacenDefault = almacenesConStock[0] ?? producto.almacenes[0] ?? null;
+
     const pendiente: ProductoPendiente = {
       id: producto.id,
       codigo: producto.codigo,
       nombre: producto.nombre,
-      stock: producto.stock,
+      stock: almacenDefault?.stock ?? producto.stock,
+      stockTotal: producto.stock,
       precioUnidad: producto.precioUnidad,
       precioCaja: producto.precioCaja,
       precioMayorista: producto.precioMayorista,
@@ -543,6 +555,8 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
       cantidad: 1,
       sede: producto.sede ?? '',
       categoriaId: producto.categoriaId,
+      almacenes: producto.almacenes,
+      almacenSeleccionado: almacenDefault?.id_almacen ?? null,
     };
     this.productosPendientes.set([...lista, pendiente]);
   }
@@ -575,6 +589,7 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
       codigo: item.cod_remate,
       nombre: item.nombre_producto || item.descripcion_remate,
       stock: item.stock_remate,
+      stockTotal: item.stock_remate, // ← campo obligatorio añadido
       precioUnidad: item.pre_remate,
       precioCaja: item.pre_remate,
       precioMayorista: item.pre_remate,
@@ -584,6 +599,8 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
       esRemate: true,
       idDetalleRemate: item.id_detalle_remate,
       preOriginal: item.pre_original,
+      almacenes: [], // ← campo obligatorio añadido (remates no tienen almacén)
+      almacenSeleccionado: null, // ← campo obligatorio añadido
     };
     this.productosPendientes.set([...lista, pendiente]);
   }
@@ -600,8 +617,22 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
     }
   }
 
-  actualizarPrecioPendiente(_i: number): void {
-    this.productosPendientes.update((v) => [...v]);
+  actualizarPrecioPendiente(i: number): void {
+    const l = [...this.productosPendientes()];
+    l[i] = { ...l[i] };
+    this.productosPendientes.set(l);
+  }
+
+  onAlmacenPendienteChange(i: number, idAlmacen: number | null): void {
+    const l = [...this.productosPendientes()];
+    const p = { ...l[i] };
+    p.almacenSeleccionado = idAlmacen;
+    const almacen = p.almacenes.find((a) => a.id_almacen === idAlmacen);
+    p.stock = almacen ? almacen.stock : p.stockTotal;
+    // Clamp cantidad al nuevo stock disponible
+    if (p.cantidad > p.stock) p.cantidad = p.stock;
+    l[i] = p;
+    this.productosPendientes.set(l);
   }
 
   decrementarPendiente(i: number): void {
@@ -659,6 +690,14 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
         igvUnitario: Number((precioBase * IGV_RATE_ADMIN).toFixed(2)),
         categoriaId: p.categoriaId,
         idDetalleRemate: p.esRemate ? (p.idDetalleRemate ?? null) : null,
+        tipoPrecio: p.esRemate
+          ? 'UNITARIO'
+          : p.tipoPrecio === 'caja'
+            ? 'CAJA'
+            : p.tipoPrecio === 'mayorista'
+              ? 'MAYORISTA'
+              : 'UNITARIO',
+        almacenId: p.esRemate ? null : (p.almacenSeleccionado ?? null),
       };
 
       const idx = p.esRemate
@@ -1444,9 +1483,9 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
       const p = this.productosSeleccionados()[0];
       this.garantiaForm.cod_prod = p.codigo;
       this.garantiaForm.prod_nombre = p.description;
-      this.productoGarantiaSeleccionadoSignal.set({ 
-        cod_prod: p.codigo, 
-        prod_nombre: p.description 
+      this.productoGarantiaSeleccionadoSignal.set({
+        cod_prod: p.codigo,
+        prod_nombre: p.description,
       });
     }
     this.sidebarGarantiaVisible = true;
@@ -1456,10 +1495,12 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
     if (!val) return;
     this.garantiaForm.cod_prod = val.cod_prod;
     this.garantiaForm.prod_nombre = val.prod_nombre;
-      this.productoGarantiaSeleccionadoSignal.set(val); 
+    this.productoGarantiaSeleccionadoSignal.set(val);
   }
 
-  productoGarantiaSeleccionadoSignal = signal<{ cod_prod: string; prod_nombre: string } | null>(null);
+  productoGarantiaSeleccionadoSignal = signal<{ cod_prod: string; prod_nombre: string } | null>(
+    null,
+  );
 
   registrarGarantia(): void {
     const comprobante = this.comprobanteGenerado();
@@ -1650,6 +1691,8 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
         codigo: i.codigo,
         categoriaId: i.categoriaId,
         id_detalle_remate: i.idDetalleRemate ?? null,
+        tipoPrecio: i.tipoPrecio ?? 'UNITARIO',
+        almacenId: i.almacenId ?? null,
       })),
     };
 

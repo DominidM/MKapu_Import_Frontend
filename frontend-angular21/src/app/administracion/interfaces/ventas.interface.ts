@@ -71,7 +71,6 @@ export interface ProductoDetalleAdmin {
   promocion_aplicada: boolean;
   descuento_promo_monto: number | null;
   descuento_promo_porcentaje: number | null;
-  /** Presente si el ítem fue vendido desde un remate activo. Null = venta normal */
   remate: RemateDetalleProductoDto | null;
 }
 
@@ -167,7 +166,6 @@ export interface ItemVentaRequest {
   total: number;
   codigo?: string;
   categoriaId?: number;
-  /** Presente solo cuando el ítem proviene de un remate activo */
   id_detalle_remate?: number | null;
 }
 
@@ -204,11 +202,13 @@ export interface RegistroVentaItemResponseAdmin {
   igv: number;
   tipoAfectacionIgv: number;
   total: number;
+  tipoPrecio?: 'UNITARIO' | 'CAJA' | 'MAYORISTA';
 }
 
 export interface RegistroVentaAdminResponse {
   idComprobante: number;
   idCliente: string;
+  nombreCliente?: string;
   numeroCompleto: string;
   serie: string;
   numero: number;
@@ -282,13 +282,23 @@ export interface ProductoStockAdminResponse {
   };
 }
 
+// ── NUEVO: desglose de stock por almacén que devuelve el backend ───
+export interface StockPorAlmacenAdmin {
+  id_almacen: number | null;
+  nombre_almacen: string;
+  stock: number;
+}
+
 export interface ProductoAutocompleteAdmin {
   id_producto: number;
   codigo: string;
   nombre: string;
   familia: string;
   id_categoria: number;
+  /** Stock total sumado de todos los almacenes de la sede */
   stock: number;
+  /** Desglose por almacén — viene del backend (Opción A) */
+  stockPorAlmacen: StockPorAlmacenAdmin[];
   precio_unitario: number;
   precio_caja: number;
   precio_mayor: number;
@@ -311,7 +321,11 @@ export interface ProductoUIAdmin {
   precioMayorista: number;
   stock: number;
   sede: string;
-  almacenes: Array<{ nombre: string; stock: number }>;
+  almacenes: Array<{
+    id_almacen: number | null;
+    nombre: string;
+    stock: number;
+  }>;
 }
 
 export interface CategoriaConStockAdmin {
@@ -378,8 +392,9 @@ export interface ItemVentaUIAdmin {
   total: number;
   igvUnitario: number;
   categoriaId?: number;
-  /** Solo presente si el ítem viene de un remate */
   idDetalleRemate?: number | null;
+  tipoPrecio?: 'UNITARIO' | 'CAJA' | 'MAYORISTA';
+  almacenId?: number | null;
 }
 
 export interface PromocionAdmin {
@@ -449,6 +464,7 @@ export interface TipoServicioAdmin {
   nombre_servicio: string;
   descripcion?: string;
 }
+
 export interface AuctionAutocompleteItemAdmin {
   id_detalle_remate: number;
   id_remate: number;
@@ -469,7 +485,6 @@ export interface AuctionAutocompleteResponseAdmin {
   data: AuctionAutocompleteItemAdmin[];
 }
 
-/** Versión UI del ítem de remate listo para el carrito */
 export interface RemateUIAdmin {
   idDetalleRemate: number;
   idRemate: number;
@@ -483,14 +498,13 @@ export interface RemateUIAdmin {
 
 export interface CarritoItemUIAdmin {
   tipo: 'PRODUCTO' | 'REMANTE';
-  id: string | number; // id_producto o id_detalle_remate
+  id: string | number;
   codigo: string;
   descripcion: string;
   cantidad: number;
   precioUnitario: number;
-  precioVenta: number; // total parcial
+  precioVenta: number;
   igvUnitario: number;
   subtotal: number;
-  // Solo para remates
   remate?: RemateUIAdmin;
 }
