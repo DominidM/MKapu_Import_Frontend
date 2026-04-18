@@ -1767,3 +1767,41 @@
 .pos-row-remate:hover {
   background-color: rgba(180, 120, 20, 0.20);
 }
+
+.pos-sugg-almacenes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+.pos-sugg-stock-alm {
+  font-size: 0.7rem !important;
+}
+.pos-provincia-fields { gap: 12px; }
+
+.pos-provincia-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.pos-provincia-field {
+  flex: 1;
+  min-width: 160px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pos-fisico-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: color-mix(in oklab, var(--color-primary) 8%, var(--color-surface));
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  margin-top: 8px;
+}

@@ -1,6 +1,23 @@
 export const IGV_RATE_ADMIN = 0.18;
 export const IGVRATEADMIN = IGV_RATE_ADMIN;
 
+// En ventas.interface.ts
+export type TipoEntregaAdmin = 'VENTA_FISICA' | 'DELIVERY' | 'RECOJO_TIENDA' | 'ENVIO_AGENCIA';
+
+export const TIPOS_ENTREGA_ADMIN: { label: string; value: TipoEntregaAdmin }[] = [
+  { label: 'Venta física',    value: 'VENTA_FISICA'   },
+  { label: 'Delivery',        value: 'DELIVERY'        },
+  { label: 'Recojo en tienda',value: 'RECOJO_TIENDA'  },
+  { label: 'Envío por agencia',value: 'ENVIO_AGENCIA' },
+];
+
+export const TIPO_ENTREGA_REQUIERE_ENVIO: Record<TipoEntregaAdmin, boolean> = {
+  VENTA_FISICA:   false,
+  DELIVERY:       true,
+  RECOJO_TIENDA:  false,
+  ENVIO_AGENCIA:  true,
+};
+
 export interface SedeAdmin {
   id_sede: number;
   idsede?: number;
@@ -167,6 +184,7 @@ export interface ItemVentaRequest {
   codigo?: string;
   categoriaId?: number;
   id_detalle_remate?: number | null;
+  warehouseId?: number | null;
 }
 
 export interface RegistroVentaAdminRequest {
@@ -190,6 +208,12 @@ export interface RegistroVentaAdminRequest {
   operationType?: string;
   currencyCode?: string;
   items: ItemVentaRequest[];
+  // ── Tipo de entrega ──────────────────────────────────────────────
+  tipoEntrega?: TipoEntregaAdmin;
+  direccionEnvio?: string;
+  departamentoEnvio?: string;
+  referenciaEnvio?: string;
+  telefonoContacto?: string;
 }
 
 export interface RegistroVentaItemResponseAdmin {
@@ -268,6 +292,7 @@ export interface ProductoStockAdmin {
   precio_unitario: number;
   precio_caja: number;
   precio_mayor: number;
+  cantidad_unidades: number;   // ← agrega esta línea (quita unidades_por_caja si la tienes)
   sede: string;
   id_sede: number;
 }
@@ -282,7 +307,6 @@ export interface ProductoStockAdminResponse {
   };
 }
 
-// ── NUEVO: desglose de stock por almacén que devuelve el backend ───
 export interface StockPorAlmacenAdmin {
   id_almacen: number | null;
   nombre_almacen: string;
@@ -295,13 +319,12 @@ export interface ProductoAutocompleteAdmin {
   nombre: string;
   familia: string;
   id_categoria: number;
-  /** Stock total sumado de todos los almacenes de la sede */
   stock: number;
-  /** Desglose por almacén — viene del backend (Opción A) */
   stockPorAlmacen: StockPorAlmacenAdmin[];
   precio_unitario: number;
   precio_caja: number;
   precio_mayor: number;
+  cantidad_unidades: number;   // ← agrega esta línea (quita unidades_por_caja si la tienes)
   sede: string;
   id_sede: number;
 }
@@ -319,6 +342,8 @@ export interface ProductoUIAdmin {
   precioUnidad: number;
   precioCaja: number;
   precioMayorista: number;
+  /** ✅ NUEVO: unidades por caja para mostrar en el label del precio */
+  unidadesPorCaja: number;
   stock: number;
   sede: string;
   almacenes: Array<{
@@ -327,7 +352,6 @@ export interface ProductoUIAdmin {
     stock: number;
   }>;
 }
-
 export interface CategoriaConStockAdmin {
   id_categoria: number;
   nombre: string;
@@ -395,6 +419,9 @@ export interface ItemVentaUIAdmin {
   idDetalleRemate?: number | null;
   tipoPrecio?: 'UNITARIO' | 'CAJA' | 'MAYORISTA';
   almacenId?: number | null;
+  almacenNombre?: string;
+  /** ✅ NUEVO: unidades por caja, para mostrar "Caja x12" en el carrito */
+  unidadesPorCaja?: number;
 }
 
 export interface PromocionAdmin {
@@ -507,4 +534,7 @@ export interface CarritoItemUIAdmin {
   igvUnitario: number;
   subtotal: number;
   remate?: RemateUIAdmin;
+  almacenId?: number | null;
+  almacenNombre?: string;
+  unidadesPorCaja?: number;
 }

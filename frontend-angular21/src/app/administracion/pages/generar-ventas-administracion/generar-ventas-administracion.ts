@@ -52,15 +52,15 @@ import {
   WarrantyService,
 } from '../../services/warranty.service';
 
-export type TipoEntrega = 'recojo' | 'delivery';
+export type TipoEntrega = 'recojo' | 'delivery' | 'fisico' | 'provincia';
 export type TipoPrecio = 'unidad' | 'caja' | 'mayorista';
 
 export interface ProductoPendiente {
   id: number;
   codigo: string;
   nombre: string;
-  stock: number; // stock del almacén seleccionado
-  stockTotal: number; // suma de todos los almacenes (para info)
+  stock: number;
+  stockTotal: number;
   precioUnidad: number;
   precioCaja: number;
   precioMayorista: number;
@@ -73,6 +73,7 @@ export interface ProductoPendiente {
   preOriginal?: number;
   almacenes: Array<{ id_almacen: number | null; nombre: string; stock: number }>;
   almacenSeleccionado: number | null;
+  unidadesPorCaja?: number;
 }
 
 @Component({
@@ -168,7 +169,6 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
   tipoServicioSeleccionado = signal<number | null>(null);
   codSunatMetodoPago = signal<string>('');
 
-  // ── Garantía ──────────────────────────────────────────────────────
   guardandoGarantia = signal(false);
   garantiaRegistrada = signal<WarrantyResponseDto | null>(null);
 
@@ -228,13 +228,15 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
   promoYaAplicada = signal(false);
   saldoCaja = signal<number | null>(null);
 
+  provinciaDestino = signal('');
+  distritoDestino = signal('');
+  ciudadDestino = signal('');
+
   constructor() {
     const user = this.authService.getCurrentUser();
     this.esAdmin = this.authService.getRoleId() === UserRole.ADMIN;
     this.sedeNombreVentas = user?.sedeNombre ?? 'Mi sede';
   }
-
-  // ── Computeds ─────────────────────────────────────────────────────
 
   readonly idMetodoPagoEfectivo = computed(
     () => this.metodosPago().find((m) => m.codSunat === '008')?.id ?? null,
@@ -250,6 +252,49 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
     const id = this.metodoPagoSeleccionado();
     const metodo = this.metodosPago().find((m) => m.id === id);
     return this.COD_SUNAT_CON_BANCO.includes(metodo?.codSunat ?? '');
+  });
+
+  readonly tipoComprobanteSeleccionadoObj = computed(
+    () => this.tiposComprobante().find((t) => t.id === this.tipoComprobante()) ?? null,
+  );
+
+  readonly totalBrutoCarrito = computed(() => {
+    const base = this.productosSeleccionados().reduce((s, i) => s + Number(i.total), 0);
+    const delivery =
+      this.tipoEntrega() === 'delivery' || this.tipoEntrega() === 'provincia'
+        ? this.costoDelivery()
+        : 0;
+    return Number((base - this.descuentoPromocion() + delivery).toFixed(2));
+  });
+
+readonly totalesCarrito = computed(() =>
+  this.ventasService.calcularTotalesCarrito(
+    this.productosSeleccionados().map((i) => ({
+      precioVenta: Number(i.total) / Math.max(Number(i.quantity), 1), 
+      cantidad: Number(i.quantity),
+    })),
+    this.tipoComprobanteSeleccionadoObj(),
+  ),
+);
+
+  readonly subtotal = computed(() => this.totalesCarrito().subtotal);
+  readonly igv = computed(() => this.totalesCarrito().igv);
+  readonly total = computed(() => {
+    const subtotal = this.totalesCarrito().subtotal;
+    const igv = this.totalesCarrito().igv;
+    const descuento = this.descuentoPromocion();
+    const delivery =
+      this.tipoEntrega() === 'delivery' || this.tipoEntrega() === 'provincia'
+        ? this.costoDelivery()
+        : 0;
+
+    const baseSinExtras = Number((subtotal + igv - descuento).toFixed(2));
+
+    if (!this.ventasService.aplicaIgv(this.tipoComprobanteSeleccionadoObj())) {
+      return Number((baseSinExtras + delivery).toFixed(2));
+    }
+
+    return Number((baseSinExtras + delivery).toFixed(2));
   });
 
   readonly comisionMonto = computed(() =>
@@ -281,6 +326,7 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
   readonly tiposServicioOptions = computed(() => {
     const codSunat = this.codSunatMetodoPago();
     const servicios = this.tiposServicio();
+
     if (codSunat === '006') {
       const filtrados = servicios.filter((s) =>
         this.normalizarTexto(s.nombre_servicio).includes('CREDITO'),
@@ -290,6 +336,7 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
         value: s.id_servicio,
       }));
     }
+
     if (codSunat === '005') {
       const filtrados = servicios.filter((s) =>
         this.normalizarTexto(s.nombre_servicio).includes('DEBITO'),
@@ -299,6 +346,7 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
         value: s.id_servicio,
       }));
     }
+
     if (codSunat === '003') {
       const filtrados = servicios.filter((s) => {
         const n = this.normalizarTexto(s.nombre_servicio);
@@ -309,6 +357,7 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
         value: s.id_servicio,
       }));
     }
+
     return servicios.map((s) => ({ label: s.nombre_servicio, value: s.id_servicio }));
   });
 
@@ -339,43 +388,55 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
 
   readonly documentoConfig = computed(() => {
     const docActual = this.clienteDocumento();
-    if (docActual.length === 11 && /^\d+$/.test(docActual))
+
+    if (docActual.length === 11 && /^\d+$/.test(docActual)) {
       return {
         maxLength: 11,
         minLength: 11,
         soloNumeros: true,
         placeholder: 'Ingrese RUC (11 dígitos)',
       };
-    if (this.tipoComprobante() === 1)
+    }
+
+    if (this.tipoComprobante() === 1) {
       return {
         maxLength: 11,
         minLength: 11,
         soloNumeros: true,
         placeholder: 'Ingrese RUC (11 dígitos)',
       };
+    }
+
     const tipo = this.tiposDocumento().find((t) => t.documentTypeId === this.tipoDocBoleta());
     const desc = tipo?.description?.toUpperCase() ?? '';
-    if (desc.includes('DNI'))
+
+    if (desc.includes('DNI')) {
       return {
         maxLength: 8,
         minLength: 8,
         soloNumeros: true,
         placeholder: 'Ingrese DNI (8 dígitos)',
       };
-    if (desc.includes('CARNET') || desc.includes('EXTRANJERI'))
+    }
+
+    if (desc.includes('CARNET') || desc.includes('EXTRANJERI')) {
       return {
         maxLength: 12,
         minLength: 9,
         soloNumeros: false,
         placeholder: 'Ingrese Carnet de Extranjería',
       };
-    if (desc.includes('PASAPORTE'))
+    }
+
+    if (desc.includes('PASAPORTE')) {
       return {
         maxLength: 20,
         minLength: 5,
         soloNumeros: false,
         placeholder: 'Ingrese número de pasaporte',
       };
+    }
+
     return {
       maxLength: 20,
       minLength: 1,
@@ -395,8 +456,10 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
   readonly descuentoPromocion = computed(() => {
     const promo = this.promocionAplicada();
     if (!promo) return 0;
+
     const regla = promo.reglas?.find((r) => r.tipoCondicion === 'PRODUCTO');
     let base: number;
+
     if (regla) {
       const item = this.productosSeleccionados().find(
         (i) => i.codigo === regla.valorCondicion || i.productId.toString() === regla.valorCondicion,
@@ -405,19 +468,11 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
     } else {
       base = this.productosSeleccionados().reduce((s, i) => s + Number(i.total), 0);
     }
+
     return this.esPorcentaje(promo.tipo)
       ? Number(((base * Number(promo.valor)) / 100).toFixed(2))
       : Number(Number(promo.valor).toFixed(2));
   });
-
-  readonly total = computed(() => {
-    const base = this.productosSeleccionados().reduce((s, i) => s + i.total, 0);
-    const delivery = this.tipoEntrega() === 'delivery' ? this.costoDelivery() : 0;
-    return Number((base - this.descuentoPromocion() + delivery).toFixed(2));
-  });
-
-  readonly subtotal = computed(() => Number((this.total() / (1 + IGV_RATE_ADMIN)).toFixed(2)));
-  readonly igv = computed(() => Number((this.total() - this.subtotal()).toFixed(2)));
 
   readonly vuelto = computed(() => {
     const v = this.montoRecibido() - this.totalFinal();
@@ -437,8 +492,6 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
     this.sedes().map((s) => ({ label: s.nombre, value: s.id_sede })),
   );
 
-  // ── Lifecycle ─────────────────────────────────────────────────────
-
   ngOnInit(): void {
     this.isLoading.set(true);
     this.cargarSesion();
@@ -448,6 +501,7 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
     this.cargarTiposComprobante();
     this.leerParamsCotizacion();
     this.cargarSaldoCaja();
+
     if (this.esAdmin) {
       this.cargarSedes();
     } else {
@@ -459,13 +513,12 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
     setTimeout(() => this.cargarFamilias(), 0);
   }
 
-  // ── Búsqueda ──────────────────────────────────────────────────────
-
   onQueryChange(value: string): void {
     this.queryBusqueda.set(value);
     this.productosSugeridos.set([]);
     this.rematesSugeridos.set([]);
     this.panelVisible.set(false);
+
     if (this.searchTimeout) clearTimeout(this.searchTimeout);
     if (!value || value.trim().length < 3) return;
 
@@ -522,6 +575,7 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
 
   onProductoToggle(producto: ProductoUIAdmin): void {
     if (!producto || typeof producto !== 'object' || !producto.nombre) return;
+
     if (producto.stock <= 0) {
       this.messageService.add({
         severity: 'warn',
@@ -531,14 +585,16 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
       });
       return;
     }
+
     const lista = [...this.productosPendientes()];
     const idx = lista.findIndex((p) => !p.esRemate && p.id === producto.id);
+
     if (idx >= 0) {
       lista.splice(idx, 1);
       this.productosPendientes.set(lista);
       return;
     }
-    // Tomar el primer almacén con stock como predeterminado
+
     const almacenesConStock = producto.almacenes.filter((a) => a.stock > 0);
     const almacenDefault = almacenesConStock[0] ?? producto.almacenes[0] ?? null;
 
@@ -557,7 +613,9 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
       categoriaId: producto.categoriaId,
       almacenes: producto.almacenes,
       almacenSeleccionado: almacenDefault?.id_almacen ?? null,
+      unidadesPorCaja: producto.unidadesPorCaja ?? undefined,
     };
+
     this.productosPendientes.set([...lista, pendiente]);
   }
 
@@ -577,19 +635,22 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
       });
       return;
     }
+
     const lista = [...this.productosPendientes()];
     const idx = lista.findIndex((p) => p.esRemate && p.idDetalleRemate === item.id_detalle_remate);
+
     if (idx >= 0) {
       lista.splice(idx, 1);
       this.productosPendientes.set(lista);
       return;
     }
+
     const pendiente: ProductoPendiente = {
       id: item.id_producto,
       codigo: item.cod_remate,
-      nombre: item.nombre_producto || item.descripcion_remate,
+      nombre: `${item.nombre_producto} ${item.descripcion_remate}`.trim(),
       stock: item.stock_remate,
-      stockTotal: item.stock_remate, // ← campo obligatorio añadido
+      stockTotal: item.stock_remate,
       precioUnidad: item.pre_remate,
       precioCaja: item.pre_remate,
       precioMayorista: item.pre_remate,
@@ -599,14 +660,16 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
       esRemate: true,
       idDetalleRemate: item.id_detalle_remate,
       preOriginal: item.pre_original,
-      almacenes: [], // ← campo obligatorio añadido (remates no tienen almacén)
-      almacenSeleccionado: null, // ← campo obligatorio añadido
+      almacenes: [],
+      almacenSeleccionado: null,
     };
+
     this.productosPendientes.set([...lista, pendiente]);
   }
 
   getPrecioPendiente(p: ProductoPendiente): number {
     if (p.esRemate) return p.precioUnidad;
+
     switch (p.tipoPrecio) {
       case 'caja':
         return p.precioCaja;
@@ -627,10 +690,12 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
     const l = [...this.productosPendientes()];
     const p = { ...l[i] };
     p.almacenSeleccionado = idAlmacen;
+
     const almacen = p.almacenes.find((a) => a.id_almacen === idAlmacen);
     p.stock = almacen ? almacen.stock : p.stockTotal;
-    // Clamp cantidad al nuevo stock disponible
+
     if (p.cantidad > p.stock) p.cantidad = p.stock;
+
     l[i] = p;
     this.productosPendientes.set(l);
   }
@@ -673,12 +738,21 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
   agregarTodosAlCarrito(): void {
     const pendientes = this.productosPendientes();
     if (!pendientes.length) return;
+
     let lista = [...this.productosSeleccionados()];
     const errores: string[] = [];
+    const tipoComprobanteActual = this.tipoComprobanteSeleccionadoObj();
 
     for (const p of pendientes) {
       const precioBase = this.getPrecioPendiente(p);
-      const precioConIgv = Number((precioBase * (1 + IGV_RATE_ADMIN)).toFixed(2));
+      const aplicaIgv = this.ventasService.aplicaIgv(tipoComprobanteActual);
+      const precioVentaUnitario = aplicaIgv
+        ? Number((precioBase * (1 + IGV_RATE_ADMIN)).toFixed(2))
+        : Number(precioBase.toFixed(2));
+      const igvUnitario = this.ventasService.calcularIgvUnitario(
+        precioVentaUnitario,
+        tipoComprobanteActual,
+      );
 
       const item: ItemVentaUIAdmin = {
         productId: p.id,
@@ -686,8 +760,8 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
         quantity: p.cantidad,
         unitPrice: precioBase,
         description: p.nombre,
-        total: Number((precioConIgv * p.cantidad).toFixed(2)),
-        igvUnitario: Number((precioBase * IGV_RATE_ADMIN).toFixed(2)),
+        total: Number((precioVentaUnitario * p.cantidad).toFixed(2)),
+        igvUnitario,
         categoriaId: p.categoriaId,
         idDetalleRemate: p.esRemate ? (p.idDetalleRemate ?? null) : null,
         tipoPrecio: p.esRemate
@@ -698,6 +772,7 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
               ? 'MAYORISTA'
               : 'UNITARIO',
         almacenId: p.esRemate ? null : (p.almacenSeleccionado ?? null),
+        unidadesPorCaja: p.unidadesPorCaja,
       };
 
       const idx = p.esRemate
@@ -708,7 +783,8 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
             (x) =>
               !x.idDetalleRemate &&
               x.productId === item.productId &&
-              x.unitPrice === item.unitPrice,
+              x.unitPrice === item.unitPrice &&
+              x.almacenId === item.almacenId,
           );
 
       if (idx >= 0) {
@@ -719,7 +795,8 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
           continue;
         }
         actualizado.quantity = nuevaCant;
-        actualizado.total = Number((precioConIgv * nuevaCant).toFixed(2));
+        actualizado.total = Number((precioVentaUnitario * nuevaCant).toFixed(2));
+        actualizado.igvUnitario = igvUnitario;
         lista[idx] = actualizado;
       } else {
         lista.push(item);
@@ -731,7 +808,7 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
     this.productosSugeridos.set([]);
     this.rematesSugeridos.set([]);
 
-    if (errores.length)
+    if (errores.length) {
       errores.forEach((e) =>
         this.messageService.add({
           severity: 'warn',
@@ -740,18 +817,18 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
           life: 4000,
         }),
       );
+    }
 
     const agregados = pendientes.length - errores.length;
-    if (agregados > 0)
+    if (agregados > 0) {
       this.messageService.add({
         severity: 'success',
         summary: 'Productos agregados',
         detail: `${agregados} producto${agregados > 1 ? 's' : ''} añadido${agregados > 1 ? 's' : ''} al carrito`,
         life: 3000,
       });
+    }
   }
-
-  // ── Sesión / Carga ────────────────────────────────────────────────
 
   private cargarSesion(): void {
     const user = this.authService.getCurrentUser();
@@ -759,8 +836,10 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
       this.router.navigate(['/login']);
       return;
     }
+
     this.idUsuarioActual.set(user.userId?.toString() ?? '0');
     this.nombreUsuarioActual.set(`${user.nombres} ${user.apellidos}`.trim());
+
     if (user.idSede) {
       this.sedeSeleccionada.set(user.idSede);
       this.onSedeChange(user.idSede);
@@ -805,6 +884,7 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
   private cargarSaldoCaja(): void {
     const sedeId = this.sedeSeleccionada();
     if (!sedeId) return;
+
     this.cajaService.getResumenDia(sedeId).subscribe({
       next: (res) => this.saldoCaja.set(res?.dineroEnCaja ?? null),
       error: () => this.saldoCaja.set(null),
@@ -814,11 +894,13 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
   private cargarSedes(): void {
     if (!this.esAdmin) return;
     this.sedesLoading.set(true);
+
     this.ventasService.obtenerSedes().subscribe({
       next: (data) => {
-        this.sedes.set(data.filter((s) => s.activo));
+        this.sedes.set(data.filter((s: any) => s.activo));
         this.sedesLoading.set(false);
         this.isLoading.set(false);
+
         const cotizId = this.cotizacionOrigen();
         if (cotizId) this.cargarDatosDeCotizacion(cotizId);
       },
@@ -839,6 +921,7 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
       const user = this.authService.getCurrentUser();
       if (sedeId !== user?.idSede) return;
     }
+
     this.sedeSeleccionada.set(sedeId);
     this.almacenSeleccionado.set(null);
     this.familiaSeleccionada.set(null);
@@ -846,7 +929,9 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
     this.cargarProductos(true);
     this.cargarFamilias();
     this.cargarSaldoCaja();
+
     if (!sedeId) return;
+
     this.sedeAlmacenService.loadWarehouseOptionsBySede(sedeId).subscribe({
       next: (opts) => {
         if (opts.length > 0) this.almacenSeleccionado.set(opts[0].value);
@@ -862,6 +947,7 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
       this.productosLoading.set(false);
       return;
     }
+
     if (resetear) {
       this.paginaActual.set(1);
       this.productosCargados.set([]);
@@ -870,6 +956,7 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
     } else {
       this.cargandoMas.set(true);
     }
+
     this.ventasService
       .obtenerProductosConStock(
         this.sedeSeleccionada() ?? undefined,
@@ -881,11 +968,13 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
         next: (response) => {
           this.totalRegistros.set(response.pagination.total_records);
           const nuevos = response.data.map((p) => this.ventasService.mapearProductoConStock(p));
+
           if (resetear) {
             this.productosCargados.set(nuevos);
           } else {
             this.productosCargados.update((prev) => [...prev, ...nuevos]);
           }
+
           this.productosFiltrados.set([...this.productosCargados()]);
           this.productosLoading.set(false);
           this.cargandoMas.set(false);
@@ -905,6 +994,7 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
   private cargarFamilias(): void {
     const sedeId = this.sedeSeleccionada();
     if (!sedeId) return;
+
     this.familiasLoading.set(true);
     this.ventasService.obtenerCategoriasConStock(Number(sedeId)).subscribe({
       next: (cats) => {
@@ -943,8 +1033,6 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
     });
   }
 
-  // ── Cliente ───────────────────────────────────────────────────────
-
   onTipoDocBoleta(id: number): void {
     this.tipoDocBoleta.set(id);
     this.limpiarCliente();
@@ -953,9 +1041,11 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
   validarSoloNumeros(event: any): void {
     const input = event.target;
     const cfg = this.documentoConfig();
+
     input.value = cfg.soloNumeros
       ? input.value.replace(/[^0-9]/g, '').slice(0, cfg.maxLength)
       : input.value.replace(/[^a-zA-Z0-9]/g, '').slice(0, cfg.maxLength);
+
     this.clienteDocumento.set(input.value);
     if (this.clienteEncontrado()) this.limpiarCliente();
     this.busquedaRealizada.set(false);
@@ -963,8 +1053,10 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
 
   buscarCliente(): void {
     if (!this.botonClienteHabilitado() || this.clienteEncontrado()) return;
+
     this.clienteLoading.set(true);
     this.busquedaRealizada.set(false);
+
     this.ventasService.buscarCliente(this.clienteDocumento()).subscribe({
       next: (res) => {
         this.clienteEncontrado.set(res);
@@ -990,21 +1082,27 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
   onDocumentoNuevoClienteChange(valor: string): void {
     this.nuevoClienteForm.documentValue = valor;
     this.nombreDesdeReniec.set(false);
+
     const tipoId = this.nuevoClienteForm.documentTypeId;
     if (!tipoId) return;
+
     const tipoSel = this.tiposDocumento().find((t) => t.documentTypeId === tipoId);
     const desc = tipoSel?.description?.toUpperCase() ?? '';
     const esDni = desc.includes('DNI') || desc.includes('IDENTIDAD');
     const esRuc = desc.includes('RUC') || desc.includes('CONTRIBUYENTE');
+
     if (!((esDni && valor.length === 8) || (esRuc && valor.length === 11))) return;
+
     this.reniecLoading.set(true);
     this.ventasService.consultarDocumentoIdentidad(valor).subscribe({
       next: (res) => {
         this.reniecLoading.set(false);
+
         if (res?.nombreCompleto) {
           this.nuevoClienteForm.name = res.nombreCompleto;
           this.nombreDesdeReniec.set(true);
           if (esRuc && res.direccion) this.nuevoClienteForm.address = res.direccion;
+
           this.messageService.add({
             severity: 'success',
             summary: esRuc ? 'SUNAT' : 'RENIEC',
@@ -1043,6 +1141,7 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
   private sincronizarDocumentoEnForm(): void {
     const doc = this.clienteDocumento().trim();
     this.nuevoClienteForm.documentValue = doc;
+
     let tipoActivo;
     if (doc.length === 11 && /^\d+$/.test(doc)) {
       tipoActivo = this.tiposDocumento().find((t) => t.description?.toUpperCase().includes('RUC'));
@@ -1051,6 +1150,7 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
     } else {
       tipoActivo = this.tiposDocumento().find((t) => t.documentTypeId === this.tipoDocBoleta());
     }
+
     if (tipoActivo) this.nuevoClienteForm.documentTypeId = tipoActivo.documentTypeId;
   }
 
@@ -1067,6 +1167,7 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
 
   crearNuevoCliente(): void {
     const { documentTypeId, documentValue, name } = this.nuevoClienteForm;
+
     if (!documentTypeId || !documentValue.trim() || !name.trim()) {
       this.messageService.add({
         severity: 'warn',
@@ -1075,7 +1176,9 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
       });
       return;
     }
+
     this.guardandoCliente.set(true);
+
     const request: CrearClienteAdminRequest = {
       documentTypeId,
       documentValue: documentValue.trim(),
@@ -1084,10 +1187,12 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
       email: this.nuevoClienteForm.email.trim() || undefined,
       phone: this.nuevoClienteForm.phone.trim() || undefined,
     };
+
     this.ventasService.crearCliente(request).subscribe({
       next: (res: ClienteAdminResponse) => {
         this.guardandoCliente.set(false);
         this.creandoCliente.set(false);
+
         const nuevo: ClienteBusquedaAdminResponse = {
           customerId: res.customerId,
           name: res.name,
@@ -1101,11 +1206,13 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
           phone: res.phone,
           displayName: res.displayName,
         };
+
         this.clienteDocumento.set(res.documentValue);
         this.clienteEncontrado.set(nuevo);
         this.busquedaRealizada.set(true);
         this.editandoCliente.set(false);
         this.resetNuevoClienteForm();
+
         this.messageService.add({
           severity: 'success',
           summary: 'Cliente Creado',
@@ -1126,12 +1233,14 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
   iniciarEdicionCliente(): void {
     const c = this.clienteEncontrado();
     if (!c) return;
+
     this.editarClienteForm = {
       name: c.name ?? '',
       address: c.address ?? '',
       email: c.email ?? '',
       phone: c.phone ?? '',
     };
+
     this.editandoCliente.set(true);
   }
 
@@ -1142,17 +1251,21 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
   guardarCambiosCliente(): void {
     const cliente = this.clienteEncontrado();
     if (!cliente) return;
+
     this.guardandoCliente.set(true);
+
     const payload: ActualizarClienteAdminRequest = {
       name: this.editarClienteForm.name.trim() || undefined,
       address: this.editarClienteForm.address.trim() || undefined,
       email: this.editarClienteForm.email.trim() || undefined,
       phone: this.editarClienteForm.phone.trim() || undefined,
     };
+
     this.ventasService.actualizarCliente(cliente.customerId, payload).subscribe({
       next: (res: ClienteAdminResponse) => {
         this.guardandoCliente.set(false);
         this.editandoCliente.set(false);
+
         this.clienteEncontrado.set({
           ...cliente,
           name: res.name,
@@ -1160,6 +1273,7 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
           email: res.email,
           phone: res.phone,
         });
+
         this.messageService.add({
           severity: 'success',
           summary: 'Cliente Actualizado',
@@ -1179,28 +1293,51 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
 
   onTipoComprobanteChange(): void {
     this.limpiarCliente();
+
     if (this.tipoComprobante() === 2) {
       const dni = this.tiposDocumento().find((t) => t.description?.toUpperCase().includes('DNI'));
       if (dni) this.tipoDocBoleta.set(dni.documentTypeId);
     }
+
+    const tipoComprobanteActual = this.tipoComprobanteSeleccionadoObj();
+    const aplicaIgv = this.ventasService.aplicaIgv(tipoComprobanteActual);
+
+    this.productosSeleccionados.update((items) =>
+      items.map((item) => {
+        const precioBase = Number(item.unitPrice ?? 0);
+        const precioVentaUnitario = aplicaIgv
+          ? Number((precioBase * (1 + IGV_RATE_ADMIN)).toFixed(2))
+          : Number(precioBase.toFixed(2));
+
+        return {
+          ...item,
+          total: Number((precioVentaUnitario * item.quantity).toFixed(2)),
+          igvUnitario: this.ventasService.calcularIgvUnitario(
+            precioVentaUnitario,
+            tipoComprobanteActual,
+          ),
+        };
+      }),
+    );
   }
 
   abrirSidebarCliente(): void {
     this.sidebarClienteVisible = true;
   }
 
-  // ── Cotización ────────────────────────────────────────────────────
-
   private leerParamsCotizacion(): void {
     const cotizacionId = this.route.snapshot.queryParamMap.get('cotizacion');
     const tipo = this.route.snapshot.queryParamMap.get('tipo') as 'contado' | 'credito';
+
     if (!cotizacionId) return;
+
     this.cotizacionOrigen.set(Number(cotizacionId));
     this.tipoPagoOrigen.set(tipo ?? 'contado');
   }
 
   private cargarDatosDeCotizacion(id: number): void {
     this.loading.set(true);
+
     this.quoteService.getQuoteById(id).subscribe({
       next: (c) => {
         this.loading.set(false);
@@ -1219,13 +1356,17 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
 
   private prefillDesdeCotizacion(cotizacion: Quote): void {
     if (cotizacion.id_sede && this.esAdmin) this.onSedeChange(cotizacion.id_sede);
+
     const tipoDoc = cotizacion.cliente?.id_tipo_documento;
     this.tipoComprobante.set(tipoDoc === 1 ? 1 : 2);
+
     if (cotizacion.cliente?.valor_doc) {
       this.clienteDocumento.set(cotizacion.cliente.valor_doc);
+
       const nombreCompleto = cotizacion.cliente.razon_social
         ? cotizacion.cliente.razon_social
         : `${cotizacion.cliente.nombre_cliente ?? ''} ${cotizacion.cliente.apellidos_cliente ?? ''}`.trim();
+
       this.clienteEncontrado.set({
         customerId: String(cotizacion.id_cliente),
         name: nombreCompleto,
@@ -1239,30 +1380,43 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
         phone: cotizacion.cliente.telefono ?? '',
         displayName: nombreCompleto,
       });
+
       this.busquedaRealizada.set(true);
     }
+
     if (cotizacion.detalles?.length) {
-      const items: ItemVentaUIAdmin[] = cotizacion.detalles.map((d) => {
+      const tipoComprobanteActual = this.tipoComprobanteSeleccionadoObj();
+      const items: ItemVentaUIAdmin[] = cotizacion.detalles.map((d: any) => {
         const precioBase = Number(d.precio);
-        const precioConIgv = Number((precioBase * (1 + IGV_RATE_ADMIN)).toFixed(2));
+        const aplicaIgv = this.ventasService.aplicaIgv(tipoComprobanteActual);
+        const precioVentaUnitario = aplicaIgv
+          ? Number((precioBase * (1 + IGV_RATE_ADMIN)).toFixed(2))
+          : Number(precioBase.toFixed(2));
         const cantidad = Number(d.cantidad);
+
         return {
           productId: d.id_prod_ref,
           codigo: d.cod_prod,
           quantity: cantidad,
           unitPrice: precioBase,
           description: d.descripcion,
-          total: Number((precioConIgv * cantidad).toFixed(2)),
-          igvUnitario: Number((precioBase * IGV_RATE_ADMIN).toFixed(2)),
+          total: Number((precioVentaUnitario * cantidad).toFixed(2)),
+          igvUnitario: this.ventasService.calcularIgvUnitario(
+            precioVentaUnitario,
+            tipoComprobanteActual,
+          ),
           idDetalleRemate: null,
         };
       });
+
       this.productosSeleccionados.set(items);
     }
+
     if (this.tipoPagoOrigen() === 'credito') {
       const credito = this.metodosPago().find((m) => m.codSunat === '003' || m.codSunat === '005');
       if (credito) this.metodoPagoSeleccionado.set(credito.id);
     }
+
     this.messageService.add({
       severity: 'info',
       summary: 'Cotización cargada',
@@ -1271,30 +1425,33 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
     });
   }
 
-  // ── Promociones ───────────────────────────────────────────────────
-
   private cargarPromociones(): void {
     if (this.promocionesDisponibles().length > 0) return;
+
     this.promocionesLoading.set(true);
     this.promosBuscadas = true;
+
     this.ventasService.obtenerPromocionesActivas().subscribe({
       next: (promos) => {
         const activas = promos
-          .map((p) => ({ ...p, activo: this.normalizarActivo(p.activo) }))
-          .filter((p) => p.activo);
+          .map((p) => ({ ...p, activo: this.normalizarActivo((p as any).activo) }))
+          .filter((p) => (p as any).activo);
+
         this.promocionesDisponibles.set(activas);
         this.promocionesLoading.set(false);
       },
       error: (err) => {
         this.promocionesLoading.set(false);
         this.promocionesDisponibles.set([]);
-        if (err?.status !== 404)
+
+        if ((err as any)?.status !== 404) {
           this.messageService.add({
             severity: 'warn',
             summary: 'Promociones',
             detail: 'No se pudieron cargar',
             life: 3000,
           });
+        }
       },
     });
   }
@@ -1305,7 +1462,9 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
       this.promocionesFiltradas.set([]);
       return;
     }
+
     if (this.promocionesDisponibles().length === 0) this.cargarPromociones();
+
     this.promocionesFiltradas.set(
       this.promocionesDisponibles().filter((p) => p.concepto.toLowerCase().includes(texto)),
     );
@@ -1313,12 +1472,14 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
 
   aplicarPromocion(promo: PromocionAdmin): void {
     const reglaProducto = promo.reglas?.find((r) => r.tipoCondicion === 'PRODUCTO');
+
     if (reglaProducto) {
       const productoEnCarrito = this.productosSeleccionados().some(
         (i) =>
           i.codigo === reglaProducto.valorCondicion ||
           i.productId.toString() === reglaProducto.valorCondicion,
       );
+
       if (!productoEnCarrito) {
         this.messageService.add({
           severity: 'warn',
@@ -1329,14 +1490,18 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
         return;
       }
     }
+
     this.promocionAplicada.set(promo);
     this.codigoPromocionInput.set('');
     this.promocionesFiltradas.set([]);
     this.promoNoEncontrada.set(false);
+
     this.messageService.add({
       severity: 'success',
       summary: 'Promoción aplicada',
-      detail: `${promo.concepto} — descuento: ${this.esPorcentaje(promo.tipo) ? `${promo.valor}%` : `S/. ${promo.valor.toFixed(2)}`}`,
+      detail: `${promo.concepto} — descuento: ${
+        this.esPorcentaje(promo.tipo) ? `${promo.valor}%` : `S/. ${Number(promo.valor).toFixed(2)}`
+      }`,
       life: 3000,
     });
   }
@@ -1344,6 +1509,7 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
   promoAplicaAlCarrito(promo: PromocionAdmin): boolean {
     const regla = promo.reglas?.find((r) => r.tipoCondicion === 'PRODUCTO');
     if (!regla) return true;
+
     return this.productosSeleccionados().some(
       (i) => i.codigo === regla.valorCondicion || i.productId.toString() === regla.valorCondicion,
     );
@@ -1352,8 +1518,10 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
   buscarYAplicarPromocion(): void {
     const codigo = this.codigoPromocionInput().trim();
     if (!codigo) return;
+
     this.promoNoEncontrada.set(false);
     if (this.promocionAplicada()) return;
+
     if (this.promocionesDisponibles().length === 0) {
       this.cargarPromociones();
       this.messageService.add({
@@ -1364,13 +1532,16 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
       });
       return;
     }
+
     const encontrada = this.promocionesDisponibles().find(
       (p) => p.concepto.toLowerCase() === codigo.toLowerCase(),
     );
+
     if (!encontrada) {
       this.promoNoEncontrada.set(true);
       return;
     }
+
     this.aplicarPromocion(encontrada);
   }
 
@@ -1380,6 +1551,7 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
     this.promocionesFiltradas.set([]);
     this.promoNoEncontrada.set(false);
     this.promoYaAplicada.set(false);
+
     this.messageService.add({
       severity: 'info',
       summary: 'Promoción removida',
@@ -1388,32 +1560,42 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
     });
   }
 
-  // ── Entrega / Pago ────────────────────────────────────────────────
-
   onTipoEntregaChange(tipo: TipoEntrega): void {
     this.tipoEntrega.set(tipo);
-    if (tipo === 'recojo') {
+    if (tipo === 'recojo' || tipo === 'fisico') {
       this.direccionDelivery.set('');
       this.costoDelivery.set(0);
-    } else {
+      this.provinciaDestino.set('');
+      this.distritoDestino.set('');
+      this.ciudadDestino.set('');
+    } else if (tipo === 'delivery') {
+      this.provinciaDestino.set('');
+      this.distritoDestino.set('');
+      this.ciudadDestino.set('');
       const dir = this.clienteEncontrado()?.address ?? '';
       if (dir) this.direccionDelivery.set(dir);
+    } else if (tipo === 'provincia') {
+      this.direccionDelivery.set('');
+      this.costoDelivery.set(0);
     }
   }
 
   onMetodoPagoChange(id: number): void {
     this.metodoPagoSeleccionado.set(id);
+
     const metodo = this.metodosPago().find((m) => m.id === id);
     this.codSunatMetodoPago.set(metodo?.codSunat ?? '');
     this.bancoSeleccionado.set(null);
     this.tiposServicio.set([]);
     this.tipoServicioSeleccionado.set(null);
     this.bancosDisponibles.set([]);
+
     if (this.metodoPagoRequiereBanco()) this.cargarBancos();
   }
 
   private cargarBancos(): void {
     if (this.bancosDisponibles().length > 0) return;
+
     this.bancosLoading.set(true);
     this.ventasService.obtenerBancos().subscribe({
       next: (data) => {
@@ -1436,17 +1618,21 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
     this.bancoSeleccionado.set(bancoId);
     this.tiposServicio.set([]);
     this.tipoServicioSeleccionado.set(null);
+
     if (!bancoId) return;
+
     this.tiposServicioLoading.set(true);
     this.ventasService.obtenerTiposServicio(bancoId).subscribe({
       next: (data) => {
         this.tiposServicio.set(data);
         this.tiposServicioLoading.set(false);
+
         const normalizar = (s: string) =>
           s
             .normalize('NFD')
             .replace(/[\u0300-\u036f]/g, '')
             .toUpperCase();
+
         const cod = this.codSunatMetodoPago();
         const keyword =
           cod === '006'
@@ -1456,6 +1642,7 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
               : cod === '003'
                 ? 'TRANSFERENCIA'
                 : '';
+
         if (keyword) {
           const match = data.find((s) => normalizar(s.nombre_servicio).includes(keyword));
           if (match) this.tipoServicioSeleccionado.set(match.id_servicio);
@@ -1473,12 +1660,11 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
     });
   }
 
-  // ── Garantía ──────────────────────────────────────────────────────
-
   abrirSidebarGarantia(): void {
     this.garantiaForm = { cod_prod: '', prod_nombre: '', motivo: '', observaciones: '' };
     this.garantiaRegistrada.set(null);
-    this.productoGarantiaSeleccionadoSignal.set(null); // ← resetear
+    this.productoGarantiaSeleccionadoSignal.set(null);
+
     if (this.productosSeleccionados().length === 1) {
       const p = this.productosSeleccionados()[0];
       this.garantiaForm.cod_prod = p.codigo;
@@ -1488,6 +1674,7 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
         prod_nombre: p.description,
       });
     }
+
     this.sidebarGarantiaVisible = true;
   }
 
@@ -1505,6 +1692,7 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
   registrarGarantia(): void {
     const comprobante = this.comprobanteGenerado();
     if (!comprobante) return;
+
     if (!this.garantiaForm.cod_prod || !this.garantiaForm.motivo.trim()) {
       this.messageService.add({
         severity: 'warn',
@@ -1513,7 +1701,9 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
       });
       return;
     }
+
     this.guardandoGarantia.set(true);
+
     const dto: RegisterWarrantyDto = {
       id_comprobante: comprobante.idComprobante,
       cod_prod: this.garantiaForm.cod_prod,
@@ -1524,10 +1714,8 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
       id_usuario_ref: this.idUsuarioActual(),
     };
 
-    console.log('📤 DTO garantía:', JSON.stringify(dto, null, 2));
-
     this.warrantyService.registerWarranty(dto).subscribe({
-      next: (res) => {
+      next: (res: WarrantyResponseDto) => {
         this.guardandoGarantia.set(false);
         this.garantiaRegistrada.set(res);
         this.messageService.add({
@@ -1538,7 +1726,6 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
         });
       },
       error: (err: any) => {
-        console.error('❌ Error garantía response:', err?.error);
         this.guardandoGarantia.set(false);
         this.messageService.add({
           severity: 'error',
@@ -1550,8 +1737,6 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
     });
   }
 
-  // ── Venta ─────────────────────────────────────────────────────────
-
   generarVenta(): void {
     if (!this.clienteEncontrado()) {
       this.messageService.add({
@@ -1561,6 +1746,7 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
       });
       return;
     }
+
     if (!this.sedeSeleccionada()) {
       this.messageService.add({
         severity: 'warn',
@@ -1569,6 +1755,7 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
       });
       return;
     }
+
     if (this.productosSeleccionados().length === 0) {
       this.messageService.add({
         severity: 'warn',
@@ -1577,6 +1764,7 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
       });
       return;
     }
+
     if (this.tipoEntrega() === 'delivery' && !this.direccionDelivery().trim()) {
       this.messageService.add({
         severity: 'warn',
@@ -1585,6 +1773,15 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
       });
       return;
     }
+    if (this.tipoEntrega() === 'provincia' && !this.provinciaDestino().trim()) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Provincia Requerida',
+        detail: 'Ingrese la provincia de destino',
+      });
+      return;
+    }
+
     if (
       this.tipoPagoOrigen() !== 'credito' &&
       this.metodoPagoRequiereBanco() &&
@@ -1597,8 +1794,10 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
       });
       return;
     }
+
     if (this.tipoPagoOrigen() !== 'credito') {
       const esEfectivo = this.metodoPagoSeleccionado() === this.idMetodoPagoEfectivo();
+
       if (esEfectivo && this.montoRecibido() < this.totalFinal()) {
         this.messageService.add({
           severity: 'warn',
@@ -1607,8 +1806,10 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
         });
         return;
       }
+
       if (!esEfectivo) {
         const numOp = this.numeroOperacion().trim();
+
         if (!numOp) {
           this.messageService.add({
             severity: 'warn',
@@ -1617,6 +1818,7 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
           });
           return;
         }
+
         const numOpRegex = /^\d{20}$/;
         if (!numOpRegex.test(numOp)) {
           this.messageService.add({
@@ -1628,7 +1830,9 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
         }
       }
     }
+
     if (this.loading()) return;
+
     this.confirmationService.confirm({
       message: '¿Está seguro de generar esta venta?',
       header: 'Confirmar Venta',
@@ -1648,15 +1852,21 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
     this.snapshotMetodoPago.set(this.getLabelMetodoPago(this.metodoPagoSeleccionado()!));
     this.snapshotTipoComprobante.set(this.tipoComprobante());
 
-    const delivery = this.tipoEntrega() === 'delivery' ? this.costoDelivery() : 0;
-    const totalItemsBruto = Number(
-      (this.productosSeleccionados().reduce((s, i) => s + i.total, 0) + delivery).toFixed(2),
-    );
-    const totalConComision = this.totalFinal();
-    const subtotalEnvio = Number((totalConComision / (1 + IGV_RATE_ADMIN)).toFixed(2));
-    const igvEnvio = Number((totalConComision - subtotalEnvio).toFixed(2));
     const esCredito = this.tipoPagoOrigen() === 'credito';
     const promo = this.promocionAplicada();
+    const tipoComprobanteActual = this.tipoComprobanteSeleccionadoObj();
+    const aplicaIgv = this.ventasService.aplicaIgv(tipoComprobanteActual);
+
+    const delivery =
+      this.tipoEntrega() === 'delivery' || this.tipoEntrega() === 'provincia'
+        ? this.costoDelivery()
+        : 0;
+
+    const subtotalBase = this.subtotal();
+    const igvBase = this.igv();
+    const totalBase = this.total();
+    const totalConComision = this.totalFinal();
+
     const serie = this.tipoComprobante() === 1 ? 'F001' : 'B001';
     const cotizId = this.cotizacionOrigen();
     const esEfectivo = this.metodoPagoSeleccionado() === this.idMetodoPagoEfectivo();
@@ -1666,8 +1876,8 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
       receiptTypeId: this.tipoComprobante(),
       saleTypeId: this.tipoVentaSeleccionado(),
       serie,
-      subtotal: subtotalEnvio,
-      igv: igvEnvio,
+      subtotal: subtotalBase,
+      igv: aplicaIgv ? igvBase : 0,
       isc: 0,
       total: totalConComision,
       descuento: this.descuentoPromocion(),
@@ -1678,7 +1888,7 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
       operationNumber: esEfectivo ? null : this.numeroOperacion(),
       esCreditoPendiente: esCredito,
       dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      ...(promo && { promotionId: promo.idPromocion }),
+      ...(promo && { promotionId: (promo as any).idPromocion }),
       ...(this.bancoSeleccionado() && { bankId: this.bancoSeleccionado()! }),
       ...(this.tipoServicioSeleccionado() && { serviceTypeId: this.tipoServicioSeleccionado()! }),
       ...(this.comisionMonto() > 0 && { comisionBancaria: this.comisionMonto() }),
@@ -1700,9 +1910,11 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
       next: (response: RegistroVentaAdminResponse) => {
         this.loading.set(false);
         this.comprobanteGenerado.set(response);
+
         const numeroCompleto =
-          response.numeroCompleto ??
-          `${response.serie}-${String(response.numero).padStart(8, '0')}`;
+          (response as any).numeroCompleto ??
+          `${(response as any).serie}-${String((response as any).numero).padStart(8, '0')}`;
+
         this.messageService.add({
           severity: 'success',
           summary: '¡Venta Exitosa!',
@@ -1711,13 +1923,19 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
         });
 
         const almacenDespacho = this.almacenSeleccionado() ?? request.warehouseId ?? 0;
-        if (response.idComprobante > 0 && almacenDespacho) {
+
+        if ((response as any).idComprobante > 0 && almacenDespacho) {
           const direccion =
             this.tipoEntrega() === 'delivery'
               ? this.direccionDelivery().trim()
-              : this.clienteEncontrado()?.address?.trim() || 'Recojo en tienda';
+              : this.tipoEntrega() === 'provincia'
+                ? `${this.provinciaDestino()}, ${this.distritoDestino()}, ${this.ciudadDestino()}`.trim()
+                : this.tipoEntrega() === 'fisico'
+                  ? 'Venta en físico - retiro en tienda'
+                  : 'Recojo en tienda';
+
           const dispatchPayload: CreateDispatchRequest = {
-            id_venta_ref: response.idComprobante,
+            id_venta_ref: (response as any).idComprobante,
             id_usuario_ref: this.idUsuarioActual(),
             id_almacen_origen: Number(almacenDespacho),
             direccion_entrega: direccion,
@@ -1727,8 +1945,9 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
               cantidad_solicitada: item.quantity,
             })),
           };
+
           this.dispatchService.createDispatch(dispatchPayload).subscribe({
-            next: (d) =>
+            next: (d: any) =>
               this.messageService.add({
                 severity: 'info',
                 summary: 'Despacho Creado',
@@ -1745,30 +1964,33 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
           });
         }
 
-        if (cotizId)
+        if (cotizId) {
           this.quoteService.updateQuoteStatus(cotizId, 'APROBADA').subscribe({ error: () => {} });
+        }
 
         if (esCredito) {
           const fechaVenc = new Date();
           fechaVenc.setDate(fechaVenc.getDate() + 30);
+
           this.arService
             .create({
-              salesReceiptId: response.idComprobante,
+              salesReceiptId: (response as any).idComprobante,
               userRef: this.clienteEncontrado()!.name,
-              totalAmount: totalItemsBruto,
+              totalAmount: totalBase + delivery,
               dueDate: fechaVenc.toISOString().split('T')[0],
               paymentTypeId: this.metodoPagoSeleccionado()!,
               currencyCode: 'PEN',
               observation: cotizId ? `Crédito desde cotización #${cotizId}` : 'Venta a crédito',
             })
-            .then((ar) => {
-              if (ar)
+            .then((ar: any) => {
+              if (ar) {
                 this.messageService.add({
                   severity: 'info',
                   summary: 'Cuenta por Cobrar Creada',
-                  detail: `Saldo: S/. ${ar.pendingBalance?.toFixed(2) ?? totalItemsBruto.toFixed(2)}`,
+                  detail: `Saldo: S/. ${ar.pendingBalance?.toFixed(2) ?? (totalBase + delivery).toFixed(2)}`,
                   life: 5000,
                 });
+              }
             });
         }
       },
@@ -1821,8 +2043,6 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
     this.router.navigate(['/admin/historial-ventas-administracion']);
   }
 
-  // ── Helpers ───────────────────────────────────────────────────────
-
   getLabelMetodoPago(id: number): string {
     return this.metodosPago().find((m) => m.id === id)?.descripcion ?? 'N/A';
   }
@@ -1847,8 +2067,10 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
   itemCalificaPromocion(item: ItemVentaUIAdmin): boolean {
     const promo = this.promocionAplicada();
     if (!promo) return false;
+
     const regla = promo.reglas?.find((r) => r.tipoCondicion === 'PRODUCTO');
     if (!regla) return true;
+
     return (
       item.codigo === regla.valorCondicion || item.productId.toString() === regla.valorCondicion
     );
@@ -1866,5 +2088,18 @@ export class GenerarVentasAdministracion implements OnInit, AfterViewInit {
     const input = event.target;
     input.value = input.value.replace(/[^0-9]/g, '').slice(0, 20);
     this.numeroOperacion.set(input.value);
+  }
+
+  getOpcionesTipoPrecioDinamicas(
+    producto: ProductoPendiente,
+  ): { label: string; value: TipoPrecio }[] {
+    const upx = producto.unidadesPorCaja;
+    const labelCaja = upx && upx > 1 ? `Caja (x${upx} und)` : 'Precio Caja';
+
+    return [
+      { label: 'Unidad', value: 'unidad' },
+      { label: labelCaja, value: 'caja' },
+      { label: 'Mayorista', value: 'mayorista' },
+    ];
   }
 }

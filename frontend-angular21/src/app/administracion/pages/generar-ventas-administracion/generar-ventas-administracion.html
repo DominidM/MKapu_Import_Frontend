@@ -38,9 +38,7 @@
 <div class="p-2">
   <div class="pos-body">
     <div class="pos-search-card">
-      <!-- ── Fila de filtros ─────────────────────────────────── -->
       <div class="pos-filters-row">
-        <!-- Sede admin -->
         <div class="pos-sede-wrap" *ngIf="esAdmin">
           <p-select
             [ngModel]="sedeSeleccionada()"
@@ -53,12 +51,12 @@
             styleClass="pos-sede-select"
           />
         </div>
+
         <div class="pos-sede-fija" *ngIf="!esAdmin">
           <i class="pi pi-map-marker"></i>
           <span>{{ sedeNombreVentas }}</span>
         </div>
 
-        <!-- Switch Producto / Remate -->
         <div class="pos-search-mode-toggle">
           <button
             class="pos-mode-btn"
@@ -73,6 +71,7 @@
           >
             <i class="pi pi-box"></i> Producto
           </button>
+
           <button
             class="pos-mode-btn pos-mode-btn-remate"
             [class.active]="modoRemate()"
@@ -88,7 +87,6 @@
           </button>
         </div>
 
-        <!-- Input de búsqueda -->
         <div
           class="pos-autocomplete-wrap"
           [class.pos-autocomplete-wrap-remate]="modoRemate()"
@@ -129,7 +127,6 @@
             <i [class]="modoRemate() ? 'pi pi-tag' : 'pi pi-box'"></i>
           </span>
 
-          <!-- Panel productos normales -->
           <div
             class="pos-search-panel"
             *ngIf="panelVisible() && !modoRemate() && productosSugeridos().length > 0"
@@ -153,25 +150,47 @@
                   "
                 ></i>
               </div>
+
               <div class="pos-sugg-content">
                 <div class="pos-sugg-row1">
                   <span class="pos-sugg-codigo">{{ p.codigo }}</span>
                   <p-tag [value]="p.familia" severity="info" styleClass="pos-sugg-fam" />
+                  <span class="pos-sugg-precio" *ngIf="p.stock > 0">
+                    S/. {{ p.precioUnidad | number: '1.2-2' }}
+                  </span>
+                </div>
+
+                <div class="pos-sugg-nombre">{{ p.nombre }}</div>
+
+                <div
+                  class="pos-sugg-almacenes"
+                  *ngIf="p.almacenes && p.almacenes.length > 0; else sinAlmacenes"
+                >
+                  <p-tag
+                    *ngFor="let alm of p.almacenes"
+                    [value]="alm.nombre + ': ' + alm.stock"
+                    [severity]="alm.stock === 0 ? 'danger' : alm.stock <= 3 ? 'warn' : 'success'"
+                    styleClass="pos-sugg-stock-alm"
+                    [rounded]="true"
+                    pTooltip="Stock en {{ alm.nombre }}"
+                    tooltipPosition="top"
+                  />
+                </div>
+
+                <ng-template #sinAlmacenes>
                   <p-tag
                     [value]="p.stock <= 0 ? 'Sin stock' : 'Stock: ' + p.stock"
                     [severity]="p.stock <= 0 ? 'danger' : obtenerSeveridadStock(p.stock)"
                     styleClass="pos-sugg-stock"
                   />
-                  <span class="pos-sugg-precio" *ngIf="p.stock > 0">
-                    S/. {{ p.precioUnidad | number: '1.2-2' }}
-                  </span>
-                </div>
-                <div class="pos-sugg-nombre">{{ p.nombre }}</div>
-                <small *ngIf="p.stock <= 0" class="pos-sugg-no-stock-msg"
-                  >Sin stock en esta sede</small
-                >
+                </ng-template>
+
+                <small *ngIf="p.stock <= 0" class="pos-sugg-no-stock-msg">
+                  Sin stock en esta sede
+                </small>
               </div>
             </div>
+
             <div class="pos-panel-footer" *ngIf="productosPendientes().length > 0">
               <span class="pos-panel-counter">
                 <i class="pi pi-check-circle"></i>
@@ -193,13 +212,13 @@
             </div>
           </div>
 
-          <!-- Panel remates -->
           <div
             class="pos-search-panel pos-search-panel-remate"
             *ngIf="panelVisible() && modoRemate() && rematesSugeridos().length > 0"
             (mousedown)="$event.preventDefault()"
           >
             <div class="pos-remate-panel-header"><i class="pi pi-tag"></i> Productos en remate</div>
+
             <div
               *ngFor="let r of rematesSugeridos()"
               class="pos-sugg pos-sugg-remate"
@@ -218,6 +237,7 @@
                   "
                 ></i>
               </div>
+
               <div class="pos-sugg-content">
                 <div class="pos-sugg-row1">
                   <span class="pos-sugg-codigo pos-remate-cod">{{ r.cod_remate }}</span>
@@ -236,15 +256,19 @@
                     <span class="pos-remate-precio">S/. {{ r.pre_remate | number: '1.2-2' }}</span>
                   </span>
                 </div>
+
                 <div class="pos-sugg-nombre">{{ r.nombre_producto || r.descripcion_remate }}</div>
+
                 <small
                   *ngIf="r.nombre_producto && r.descripcion_remate !== r.nombre_producto"
                   class="pos-remate-desc-tecnica"
-                  >{{ r.descripcion_remate }}</small
                 >
-                <small *ngIf="r.stock_remate <= 0" class="pos-sugg-no-stock-msg"
-                  >Sin stock en remate</small
-                >
+                  {{ r.descripcion_remate }}
+                </small>
+
+                <small *ngIf="r.stock_remate <= 0" class="pos-sugg-no-stock-msg">
+                  Sin stock en remate
+                </small>
               </div>
             </div>
 
@@ -269,9 +293,7 @@
             </div>
           </div>
         </div>
-        <!-- /pos-autocomplete-wrap -->
 
-        <!-- Categoría — solo en modo producto -->
         <p-select
           *ngIf="!modoRemate()"
           [ngModel]="familiaSeleccionada()"
@@ -286,7 +308,6 @@
           styleClass="pos-cat-select"
         />
 
-        <!-- Cliente -->
         <button
           class="pos-cliente-btn"
           [class.active]="clienteEncontrado()"
@@ -302,9 +323,7 @@
           <span *ngIf="!clienteEncontrado()">Cliente</span>
         </button>
       </div>
-      <!-- /pos-filters-row -->
 
-      <!-- Pendientes -->
       <div class="pos-pending-wrap" *ngIf="productosPendientes().length > 0">
         <div class="pos-pending-header">
           <span class="pos-pending-title">
@@ -312,26 +331,65 @@
             Seleccionados para agregar
             <span class="pos-pending-badge">{{ productosPendientes().length }}</span>
           </span>
+
           <button class="pos-pending-clear" (click)="limpiarPendientes()">
             <i class="pi pi-times"></i> Limpiar
           </button>
         </div>
+
         <div class="pos-pending-list">
           <div *ngFor="let p of productosPendientes(); let i = index" class="pos-pending-item">
             <div class="pos-pending-item-info">
               <span class="pos-pending-codigo">{{ p.codigo }}</span>
+
               <span class="pos-pending-nombre">
                 {{ p.nombre }}
                 <span *ngIf="p.esRemate" class="pos-remate-badge-mini">
                   <i class="pi pi-tag"></i> Remate
                 </span>
               </span>
-              <span class="pos-pending-stock">Stock: {{ p.stock }}</span>
+
+              <div
+                class="pos-sugg-almacenes"
+                *ngIf="
+                  !p.esRemate && p.almacenes && p.almacenes.length > 0;
+                  else stockSimplePendiente
+                "
+              >
+                <p-tag
+                  *ngFor="let alm of p.almacenes"
+                  [value]="alm.nombre + ': ' + alm.stock"
+                  [severity]="alm.stock === 0 ? 'danger' : alm.stock <= 3 ? 'warn' : 'success'"
+                  styleClass="pos-sugg-stock-alm"
+                  [rounded]="true"
+                />
+              </div>
+
+              <ng-template #stockSimplePendiente>
+                <span class="pos-pending-stock">Stock disp.: {{ p.stock }}</span>
+              </ng-template>
+
+              <span class="pos-pending-stock" *ngIf="!p.esRemate && p.almacenSeleccionado !== null">
+                Disponible en almacén seleccionado: {{ p.stock }}
+              </span>
+
               <span *ngIf="p.esRemate && p.preOriginal" class="pos-remate-original-mini">
                 Orig: S/. {{ p.preOriginal | number: '1.2-2' }}
               </span>
             </div>
+
             <div class="pos-pending-item-controls">
+              <select
+                *ngIf="!p.esRemate && p.almacenes && p.almacenes.length > 1"
+                class="pos-pending-tipo"
+                [ngModel]="p.almacenSeleccionado"
+                (ngModelChange)="onAlmacenPendienteChange(i, $event)"
+              >
+                <option *ngFor="let alm of p.almacenes" [value]="alm.id_almacen">
+                  {{ alm.nombre }} ({{ alm.stock }})
+                </option>
+              </select>
+
               <select
                 *ngIf="!p.esRemate"
                 class="pos-pending-tipo"
@@ -339,14 +397,19 @@
                 (change)="actualizarPrecioPendiente(i)"
               >
                 <option value="unidad">Unidad S/. {{ p.precioUnidad | number: '1.2-2' }}</option>
-                <option value="caja">Caja S/. {{ p.precioCaja | number: '1.2-2' }}</option>
+                <option value="caja">
+                  Caja ({{ p.unidadesPorCaja ?? '?' }} u.) — S/.
+                  {{ p.precioCaja | number: '1.2-2' }}
+                </option>
                 <option value="mayorista">
                   Mayor. S/. {{ p.precioMayorista | number: '1.2-2' }}
                 </option>
               </select>
+
               <span *ngIf="p.esRemate" class="pos-pending-tipo-remate">
                 <i class="pi pi-tag"></i> S/. {{ p.precioUnidad | number: '1.2-2' }}
               </span>
+
               <div class="pos-pending-qty-wrap">
                 <button
                   class="pos-qty-btn"
@@ -355,6 +418,7 @@
                 >
                   −
                 </button>
+
                 <input
                   type="number"
                   class="pos-qty-input"
@@ -363,6 +427,7 @@
                   [max]="p.stock"
                   (change)="clampCantidadPendiente(i)"
                 />
+
                 <button
                   class="pos-qty-btn"
                   (click)="incrementarPendiente(i)"
@@ -371,18 +436,21 @@
                   +
                 </button>
               </div>
+
               <span class="pos-pending-precio"
                 >S/. {{ getPrecioPendiente(p) | number: '1.2-2' }}</span
               >
               <span class="pos-pending-subtotal"
                 >S/. {{ getPrecioPendiente(p) * p.cantidad | number: '1.2-2' }}</span
               >
+
               <button class="pos-pending-del" (click)="quitarPendiente(i)">
                 <i class="pi pi-times"></i>
               </button>
             </div>
           </div>
         </div>
+
         <div class="pos-pending-footer">
           <button class="pos-btn-agregar-todos" (click)="agregarTodosAlCarrito()">
             <i class="pi pi-shopping-cart"></i>
@@ -399,6 +467,7 @@
       <i class="pi pi-building"></i>
       <p>Selecciona una sede para comenzar</p>
     </div>
+
     <div
       class="pos-empty-hint"
       *ngIf="sedeSeleccionada() && productosSeleccionados().length === 0 && !comprobanteGenerado()"
@@ -407,7 +476,6 @@
       <p>Busca y selecciona productos desde el campo de arriba</p>
     </div>
 
-    <!-- ── Comprobante generado ───────────────────────────────────── -->
     <div *ngIf="comprobanteGenerado()" class="pos-success-card">
       <div class="pos-success-icon"><i class="pi pi-check-circle"></i></div>
       <div class="pos-success-info">
@@ -415,7 +483,9 @@
         <p class="pos-success-num">{{ comprobanteGenerado()!.numeroCompleto }}</p>
         <small>{{ comprobanteGenerado()!.fecEmision | date: 'dd/MM/yyyy HH:mm' }}</small>
       </div>
+
       <p-divider styleClass="w-full" />
+
       <div class="pos-success-btns">
         <p-button
           label="Nueva Venta"
@@ -455,7 +525,6 @@
           "
           styleClass="ventas-pill"
         />
-        <!-- ── NUEVO: Registrar Garantía ── -->
         <p-button
           label="Registrar Garantía"
           icon="pi pi-shield"
@@ -477,7 +546,6 @@
       </div>
     </div>
 
-    <!-- ── Carrito ────────────────────────────────────────────────── -->
     <div
       *ngIf="productosSeleccionados().length > 0 && !comprobanteGenerado()"
       class="pos-cart-card"
@@ -488,6 +556,7 @@
           Carrito de compras
           <span class="pos-cart-badge">{{ productosSeleccionados().length }}</span>
         </span>
+
         <div
           class="pos-cart-cliente-chip"
           *ngIf="clienteEncontrado()"
@@ -501,6 +570,7 @@
             styleClass="pos-comp-tag"
           />
         </div>
+
         <button
           class="pos-cart-add-cliente"
           *ngIf="!clienteEncontrado()"
@@ -566,14 +636,24 @@
         <div class="pos-bottom-left">
           <div class="pos-section">
             <p class="pos-section-label"><i class="pi pi-truck"></i> Tipo de Entrega</p>
+
             <div class="pos-opt-row">
+              <button
+                class="pos-opt-btn"
+                [class.active]="tipoEntrega() === 'fisico'"
+                (click)="onTipoEntregaChange('fisico')"
+              >
+                <i class="pi pi-shop"></i> Venta en físico
+              </button>
+
               <button
                 class="pos-opt-btn"
                 [class.active]="tipoEntrega() === 'recojo'"
                 (click)="onTipoEntregaChange('recojo')"
               >
-                <i class="pi pi-shop"></i> Recojo en tienda
+                <i class="pi pi-building"></i> Recojo en tienda
               </button>
+
               <button
                 class="pos-opt-btn"
                 [class.active]="tipoEntrega() === 'delivery'"
@@ -581,7 +661,16 @@
               >
                 <i class="pi pi-truck"></i> Delivery
               </button>
+
+              <button
+                class="pos-opt-btn"
+                [class.active]="tipoEntrega() === 'provincia'"
+                (click)="onTipoEntregaChange('provincia')"
+              >
+                <i class="pi pi-send"></i> Envío a provincia
+              </button>
             </div>
+
             <div *ngIf="tipoEntrega() === 'delivery'" class="pos-delivery-fields">
               <input
                 pInputText
@@ -601,10 +690,71 @@
                 styleClass="pos-delivery-cost"
               />
             </div>
+
+            <div
+              *ngIf="tipoEntrega() === 'provincia'"
+              class="pos-delivery-fields pos-provincia-fields"
+            >
+              <div class="pos-provincia-row">
+                <div class="pos-provincia-field">
+                  <label class="pos-input-label"
+                    ><i class="pi pi-map"></i> Departamento / Región *</label
+                  >
+                  <input
+                    pInputText
+                    [value]="provinciaDestino()"
+                    (input)="provinciaDestino.set($any($event.target).value)"
+                    placeholder="Ej: Cusco, Arequipa…"
+                    class="pos-delivery-input"
+                  />
+                </div>
+
+                <div class="pos-provincia-field">
+                  <label class="pos-input-label"
+                    ><i class="pi pi-map-marker"></i> Provincia / Ciudad</label
+                  >
+                  <input
+                    pInputText
+                    [value]="ciudadDestino()"
+                    (input)="ciudadDestino.set($any($event.target).value)"
+                    placeholder="Ej: Cusco, Urubamba…"
+                    class="pos-delivery-input"
+                  />
+                </div>
+
+                <div class="pos-provincia-field">
+                  <label class="pos-input-label"><i class="pi pi-home"></i> Distrito</label>
+                  <input
+                    pInputText
+                    [value]="distritoDestino()"
+                    (input)="distritoDestino.set($any($event.target).value)"
+                    placeholder="Ej: San Blas, Wanchaq…"
+                    class="pos-delivery-input"
+                  />
+                </div>
+              </div>
+
+              <p-inputNumber
+                [ngModel]="costoDelivery()"
+                (ngModelChange)="costoDelivery.set($event)"
+                mode="currency"
+                currency="PEN"
+                locale="es-PE"
+                [min]="0"
+                placeholder="Costo de envío a provincia"
+                styleClass="pos-delivery-cost"
+              />
+            </div>
+
+            <div *ngIf="tipoEntrega() === 'fisico'" class="pos-fisico-info">
+              <i class="pi pi-info-circle"></i>
+              <span>El cliente retira el producto directamente en la empresa</span>
+            </div>
           </div>
 
           <div class="pos-section" *ngIf="tipoPagoOrigen() !== 'credito'">
             <p class="pos-section-label"><i class="pi pi-wallet"></i> Método de Pago</p>
+
             <div class="pos-opt-row">
               <button
                 *ngFor="let m of metodoPagoOptions()"
@@ -618,6 +768,7 @@
 
             <div *ngIf="metodoPagoRequiereBanco()" class="pos-banco-wrap">
               <p class="pos-section-label mt-2"><i class="pi pi-building"></i> Banco emisor</p>
+
               <p-select
                 [ngModel]="bancoSeleccionado()"
                 (ngModelChange)="onBancoChange($event)"
@@ -629,10 +780,12 @@
                 [showClear]="true"
                 styleClass="w-full pos-banco-select"
               />
+
               <ng-container *ngIf="bancoSeleccionado()">
                 <p class="pos-section-label mt-2">
                   <i class="pi pi-credit-card"></i> Tipo de servicio
                 </p>
+
                 <ng-container *ngIf="!tiposServicioLoading()">
                   <p-select
                     *ngIf="tiposServicioOptions().length > 0"
@@ -645,14 +798,17 @@
                     [showClear]="true"
                     styleClass="w-full pos-banco-select"
                   />
+
                   <div *ngIf="tiposServicioOptions().length === 0" class="pos-banco-sin-servicio">
                     <i class="pi pi-exclamation-triangle"></i>
                     Este banco no tiene servicios registrados. Contacta al administrador.
                   </div>
                 </ng-container>
+
                 <div *ngIf="tiposServicioLoading()" class="pos-banco-sin-servicio">
                   <i class="pi pi-spin pi-spinner"></i> Cargando servicios…
                 </div>
+
                 <div class="pos-comision-badge" *ngIf="bancoSeleccionado()">
                   <i class="pi pi-info-circle"></i>
                   Se aplica comisión bancaria del 5%:
@@ -708,25 +864,28 @@
 
           <div class="pos-section">
             <p class="pos-section-label"><i class="pi pi-percentage"></i> Promoción</p>
+
             <div *ngIf="promocionAplicada()" class="pos-promo-applied">
               <i class="pi pi-check-circle"></i>
               <div class="pos-promo-applied-info">
                 <span class="pos-promo-applied-name">{{ promocionAplicada()!.concepto }}</span>
                 <span class="pos-promo-applied-val">
                   -S/. {{ descuentoPromocion() | number: '1.2-2' }}
-                  <small
-                    >({{
+                  <small>
+                    ({{
                       esPorcentaje(promocionAplicada()!.tipo)
                         ? promocionAplicada()!.valor + '%'
                         : 'S/. ' + (promocionAplicada()!.valor | number: '1.2-2')
-                    }})</small
-                  >
+                    }})
+                  </small>
                 </span>
               </div>
+
               <button class="pos-promo-quitar" (click)="quitarPromocion()">
                 <i class="pi pi-times"></i>
               </button>
             </div>
+
             <div *ngIf="!promocionAplicada()" class="pos-promo-search-wrap">
               <div class="pos-promo-search-row">
                 <input
@@ -741,6 +900,7 @@
                   placeholder="Buscar promoción por nombre…"
                   class="pos-promo-input"
                 />
+
                 <button
                   class="pos-promo-search-btn"
                   (click)="buscarYAplicarPromocion()"
@@ -749,6 +909,7 @@
                   <i [class]="promocionesLoading() ? 'pi pi-spin pi-spinner' : 'pi pi-search'"></i>
                 </button>
               </div>
+
               <div
                 class="pos-promo-results"
                 *ngIf="
@@ -767,6 +928,7 @@
                       <i class="pi pi-info-circle"></i> Requiere producto específico no agregado
                     </small>
                   </div>
+
                   <span class="pos-promo-result-val">
                     {{
                       esPorcentaje(promo.tipo)
@@ -776,6 +938,7 @@
                   </span>
                 </div>
               </div>
+
               <small *ngIf="promoNoEncontrada()" class="pos-promo-error">
                 <i class="pi pi-times-circle"></i> No se encontró esa promoción
               </small>
@@ -786,31 +949,45 @@
         <div class="pos-bottom-right">
           <div class="pos-totales">
             <div class="pos-total-row">
-              <span>Subtotal (sin IGV)</span><span>S/. {{ subtotal() | number: '1.2-2' }}</span>
+              <span>Subtotal (sin IGV)</span>
+              <span>S/. {{ subtotal() | number: '1.2-2' }}</span>
             </div>
+
             <div class="pos-total-row">
-              <span>IGV (18%)</span><span>S/. {{ igv() | number: '1.2-2' }}</span>
+              <span>IGV (18%)</span>
+              <span>S/. {{ igv() | number: '1.2-2' }}</span>
             </div>
+
             <div class="pos-total-row pos-total-desc" *ngIf="descuentoPromocion() > 0">
               <span><i class="pi pi-tag"></i> Descuento</span>
               <span>-S/. {{ descuentoPromocion() | number: '1.2-2' }}</span>
             </div>
+
             <div
               class="pos-total-row pos-total-delivery"
-              *ngIf="tipoEntrega() === 'delivery' && costoDelivery() > 0"
+              *ngIf="
+                (tipoEntrega() === 'delivery' || tipoEntrega() === 'provincia') &&
+                costoDelivery() > 0
+              "
             >
-              <span><i class="pi pi-truck"></i> Delivery</span>
+              <span>
+                <i class="pi pi-truck"></i>
+                {{ tipoEntrega() === 'provincia' ? 'Envío a provincia' : 'Delivery' }}
+              </span>
               <span>S/. {{ costoDelivery() | number: '1.2-2' }}</span>
             </div>
+
             <div class="pos-total-row pos-total-comision" *ngIf="comisionMonto() > 0">
               <span><i class="pi pi-credit-card"></i> Comisión bancaria (5%)</span>
               <span>+S/. {{ comisionMonto() | number: '1.2-2' }}</span>
             </div>
+
             <div class="pos-total-final">
               <span>TOTAL A PAGAR</span>
               <strong>S/. {{ totalFinal() | number: '1.2-2' }}</strong>
             </div>
           </div>
+
           <button
             class="pos-btn-submit"
             (click)="generarVenta()"
@@ -820,6 +997,7 @@
             <i [class]="loading() ? 'pi pi-spin pi-spinner' : 'pi pi-check-circle'"></i>
             {{ loading() ? 'Procesando…' : 'Confirmar Venta' }}
           </button>
+
           <p class="pos-submit-hint" *ngIf="!clienteEncontrado()">
             <i class="pi pi-info-circle"></i> Agrega un cliente para continuar
           </p>
@@ -829,7 +1007,6 @@
   </div>
 </div>
 
-<!-- ── Sidebar cliente ────────────────────────────────────────────── -->
 <p-drawer
   [(visible)]="sidebarClienteVisible"
   position="right"
@@ -876,12 +1053,14 @@
           [attr.maxlength]="documentoConfig().maxLength"
         />
       </div>
+
       <small class="pos-sb-hint" *ngIf="clienteDocumento()">
         {{ clienteDocumento().length }} / {{ longitudDocumento() }} dígitos
         <span class="pos-ok" *ngIf="clienteDocumento().length === longitudDocumento()"
           >✓ Completo</span
         >
       </small>
+
       <p-button
         label="Buscar Cliente"
         icon="pi pi-search"
@@ -890,6 +1069,7 @@
         [loading]="clienteLoading()"
         styleClass="w-full mt-2"
       />
+
       <div
         *ngIf="busquedaRealizada() && !clienteEncontrado() && !creandoCliente()"
         class="pos-sb-no-result"
@@ -1006,6 +1186,7 @@
             "
           />
         </div>
+
         <div class="pos-sb-field">
           <label>Número de Documento *</label>
           <div class="pos-sb-doc-loader">
@@ -1020,6 +1201,7 @@
             <i *ngIf="reniecLoading()" class="pi pi-spin pi-spinner pos-reniec-spin"></i>
           </div>
         </div>
+
         <div class="pos-sb-field">
           <label>Nombre / Razón Social *</label>
           <div class="pos-sb-nombre-row">
@@ -1034,10 +1216,12 @@
             </span>
           </div>
         </div>
+
         <div class="pos-sb-field">
           <label>Dirección</label>
           <input pInputText [(ngModel)]="nuevoClienteForm.address" class="w-full" />
         </div>
+
         <div class="pos-sb-field">
           <label>Teléfono</label>
           <input
@@ -1048,10 +1232,12 @@
             inputmode="numeric"
           />
         </div>
+
         <div class="pos-sb-field">
           <label>Email (opcional)</label>
           <input pInputText [(ngModel)]="nuevoClienteForm.email" class="w-full" type="email" />
         </div>
+
         <div class="pos-sb-form-actions">
           <p-button
             label="Cancelar"
@@ -1071,7 +1257,6 @@
   </div>
 </p-drawer>
 
-<!-- ── Sidebar garantía ───────────────────────────────────────────── -->
 <p-drawer
   [(visible)]="sidebarGarantiaVisible"
   position="right"
@@ -1079,19 +1264,25 @@
   header="Registrar Garantía"
 >
   <div class="pos-sb-body">
-
-    <!-- Estado: garantía ya registrada -->
     <div *ngIf="garantiaRegistrada()" class="pos-garantia-success">
-      <div class="pos-garantia-success-icon">
-        <i class="pi pi-shield"></i>
-      </div>
+      <div class="pos-garantia-success-icon"><i class="pi pi-shield"></i></div>
       <h4>¡Garantía registrada!</h4>
       <p class="pos-success-num">{{ garantiaRegistrada()!.num_garantia }}</p>
-      <div class="pos-sb-meta" style="margin-top: 8px;">
+      <div class="pos-sb-meta" style="margin-top: 8px">
         <span><i class="pi pi-box"></i> {{ garantiaRegistrada()?.prod_nombre }}</span>
-        <span><i class="pi pi-file-check"></i> Comprobante #{{ garantiaRegistrada()?.id_comprobante }}</span>
-        <span><i class="pi pi-calendar"></i> {{ garantiaRegistrada()?.fec_registro | date: 'dd/MM/yyyy HH:mm' }}</span>
-        <span><i class="pi pi-calendar-times"></i> Vence: {{ garantiaRegistrada()?.fec_vencimiento | date: 'dd/MM/yyyy' }}</span>
+        <span
+          ><i class="pi pi-file-check"></i> Comprobante #{{
+            garantiaRegistrada()?.id_comprobante
+          }}</span
+        >
+        <span
+          ><i class="pi pi-calendar"></i>
+          {{ garantiaRegistrada()?.fec_registro | date: 'dd/MM/yyyy HH:mm' }}</span
+        >
+        <span
+          ><i class="pi pi-calendar-times"></i> Vence:
+          {{ garantiaRegistrada()?.fec_vencimiento | date: 'dd/MM/yyyy' }}</span
+        >
       </div>
       <p-button
         label="Cerrar"
@@ -1103,10 +1294,7 @@
       />
     </div>
 
-    <!-- Formulario de garantía -->
     <ng-container *ngIf="!garantiaRegistrada()">
-
-      <!-- Comprobante vinculado -->
       <div class="pos-sb-section">
         <p class="pos-sb-label"><i class="pi pi-file-check"></i> Comprobante vinculado</p>
         <div class="pos-sb-cliente-card">
@@ -1115,20 +1303,19 @@
             <span class="pos-sb-verified"><i class="pi pi-check-circle"></i> Emitido</span>
           </div>
           <div class="pos-sb-meta">
-            <span>
-              <i class="pi pi-calendar"></i>
-              {{ comprobanteGenerado()?.fecEmision | date: 'dd/MM/yyyy HH:mm' }}
-            </span>
-            <span *ngIf="clienteEncontrado()">
-              <i class="pi pi-user"></i> {{ clienteEncontrado()!.name }}
-            </span>
+            <span
+              ><i class="pi pi-calendar"></i>
+              {{ comprobanteGenerado()?.fecEmision | date: 'dd/MM/yyyy HH:mm' }}</span
+            >
+            <span *ngIf="clienteEncontrado()"
+              ><i class="pi pi-user"></i> {{ clienteEncontrado()!.name }}</span
+            >
           </div>
         </div>
       </div>
 
       <p-divider />
 
-      <!-- Selección de producto -->
       <div class="pos-sb-section">
         <p class="pos-sb-label"><i class="pi pi-box"></i> Producto con garantía *</p>
         <p-select
@@ -1142,13 +1329,12 @@
         />
         <small
           *ngIf="garantiaForm.cod_prod"
-          style="color: var(--text-color-secondary); margin-top: 4px; display: block;"
+          style="color: var(--text-color-secondary); margin-top: 4px; display: block"
         >
           <i class="pi pi-info-circle"></i> {{ garantiaForm.prod_nombre }}
         </small>
       </div>
 
-      <!-- Motivo -->
       <div class="pos-sb-section">
         <p class="pos-sb-label"><i class="pi pi-comment"></i> Motivo *</p>
         <textarea
@@ -1156,23 +1342,23 @@
           [(ngModel)]="garantiaForm.motivo"
           placeholder="Describe el motivo de la garantía (defecto, daño, mal funcionamiento…)"
           [rows]="3"
-          style="width: 100%; resize: vertical;"
+          style="width: 100%; resize: vertical"
         ></textarea>
       </div>
 
-      <!-- Observaciones -->
       <div class="pos-sb-section">
-        <p class="pos-sb-label"><i class="pi pi-align-left"></i> Observaciones <small>(opcional)</small></p>
+        <p class="pos-sb-label">
+          <i class="pi pi-align-left"></i> Observaciones <small>(opcional)</small>
+        </p>
         <textarea
           pTextarea
           [(ngModel)]="garantiaForm.observaciones"
           placeholder="Información adicional, condición del producto…"
           [rows]="2"
-          style="width: 100%; resize: vertical;"
+          style="width: 100%; resize: vertical"
         ></textarea>
       </div>
 
-      <!-- Botón registrar -->
       <div class="pos-sb-section">
         <p-button
           label="Registrar Garantía"
@@ -1191,7 +1377,6 @@
           (onClick)="sidebarGarantiaVisible = false"
         />
       </div>
-
     </ng-container>
   </div>
 </p-drawer>

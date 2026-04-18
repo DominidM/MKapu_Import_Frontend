@@ -5,6 +5,7 @@ import { map, catchError } from 'rxjs/operators';
 import { environment } from '../../../enviroments/enviroment';
 
 import {
+  IGV_RATE_ADMIN, // ← agregar esta línea
   SalesReceiptsQueryAdmin,
   SalesReceiptSummaryListResponseAdmin,
   SalesReceiptWithHistoryDtoAdmin,
@@ -34,9 +35,11 @@ import {
   BancoAdmin,
   TipoServicioAdmin,
   AuctionAutocompleteItemAdmin,
-  AuctionAutocompleteResponseAdmin,
   RemateUIAdmin,
 } from '../interfaces/ventas.interface';
+
+/** codSunat de Nota de Venta — sin IGV */
+const NOTA_VENTA_COD_SUNAT = 'NV';
 
 @Injectable({ providedIn: 'root' })
 export class VentasAdminService {
@@ -181,7 +184,7 @@ export class VentasAdminService {
     );
   }
 
-  // ── Tipos catálogo ────────────────────────────────────────────────
+  // ── Tipos catálogo ─────────────────────────────────────────────────
 
   obtenerTiposVenta(): Observable<TipoVentaAdmin[]> {
     return this.http
@@ -218,6 +221,40 @@ export class VentasAdminService {
         params,
       })
       .pipe(catchError(() => of([])));
+  }
+
+  calcularTotalesCarrito(
+    items: { precioVenta: number; cantidad: number }[],
+    tipoComprobante: TipoComprobanteAdmin | null,
+  ): { subtotal: number; igv: number; total: number } {
+    const total = items.reduce((s, i) => s + Number(i.precioVenta) * Number(i.cantidad), 0);
+
+    if (!this.aplicaIgv(tipoComprobante)) {
+      // Nota de Venta: el precio ya es el precio final sin IGV
+      return {
+        subtotal: Number(total.toFixed(2)),
+        igv: 0,
+        total: Number(total.toFixed(2)),
+      };
+    }
+
+    // Boleta / Factura: el total incluye IGV → descomponerlo
+    const subtotal = Number((total / (1 + IGV_RATE_ADMIN)).toFixed(2));
+    const igv = Number((total - subtotal).toFixed(2));
+    return { subtotal, igv, total: Number(total.toFixed(2)) };
+  }
+
+  aplicaIgv(tipoComprobante: TipoComprobanteAdmin | null): boolean {
+    if (!tipoComprobante) return true;
+    return tipoComprobante.codSunat !== 'NV';
+  }
+
+  calcularIgvUnitario(
+    precioVentaUnitario: number,
+    tipoComprobante: TipoComprobanteAdmin | null,
+  ): number {
+    if (!this.aplicaIgv(tipoComprobante)) return 0;
+    return Number((precioVentaUnitario - precioVentaUnitario / (1 + IGV_RATE_ADMIN)).toFixed(2));
   }
 
   // ── PDF / Comprobante ──────────────────────────────────────────────
@@ -302,7 +339,7 @@ export class VentasAdminService {
       );
   }
 
-  // ── Notificaciones ────────────────────────────────────────────────
+  // ── Notificaciones ─────────────────────────────────────────────────
 
   enviarComprobantePorEmail(id: number): Observable<SendNotificationResponse> {
     return this.http
@@ -332,7 +369,7 @@ export class VentasAdminService {
       .pipe(catchError((err) => throwError(() => err)));
   }
 
-  // ── Promociones ───────────────────────────────────────────────────
+  // ── Promociones ────────────────────────────────────────────────────
 
   obtenerPromocionesActivas(): Observable<PromocionAdmin[]> {
     return this.http
@@ -352,7 +389,7 @@ export class VentasAdminService {
     return false;
   }
 
-  // ── Sedes ─────────────────────────────────────────────────────────
+  // ── Sedes ──────────────────────────────────────────────────────────
 
   obtenerSedes(): Observable<SedeAdmin[]> {
     return this.http
@@ -360,7 +397,7 @@ export class VentasAdminService {
       .pipe(map((res) => res.data ?? res.headquarters ?? res ?? []));
   }
 
-  // ── Productos ─────────────────────────────────────────────────────
+  // ── Productos ──────────────────────────────────────────────────────
 
   obtenerProductosConStock(
     idSede?: number,
@@ -372,10 +409,10 @@ export class VentasAdminService {
     if (idSede != null) params = params.set('id_sede', String(idSede));
     if (idCategoria != null) params = params.set('id_categoria', String(idCategoria));
 
-    return this.http.get<ProductoStockAdminResponse>(
-      `${this.logisticsUrl}/products/ventas/stock`,
-      { headers: this.headers, params },
-    );
+    return this.http.get<ProductoStockAdminResponse>(`${this.logisticsUrl}/products/ventas/stock`, {
+      headers: this.headers,
+      params,
+    });
   }
 
   buscarProductosVentas(
@@ -402,13 +439,8 @@ export class VentasAdminService {
     );
   }
 
-  // ── Mapeos de productos ───────────────────────────────────────────
+  // ── Mapeos de productos ────────────────────────────────────────────
 
-  /**
-   * Mapea una fila de `obtenerProductosConStock` → ProductoUIAdmin.
-   * El backend devuelve stock total (sin desglose por almacén en este endpoint),
-   * por eso se crea un único almacén genérico.
-   */
   mapearProductoConStock(p: ProductoStockAdmin): ProductoUIAdmin {
     const stockTotal = Number(p.stock ?? 0);
     return {
@@ -420,22 +452,16 @@ export class VentasAdminService {
       precioUnidad: Number(p.precio_unitario ?? 0),
       precioCaja: Number(p.precio_caja ?? 0),
       precioMayorista: Number(p.precio_mayor ?? 0),
+      unidadesPorCaja: Number(p.cantidad_unidades ?? 0),
       stock: stockTotal,
       sede: p.sede ?? '',
-      almacenes: [
-        {
-          id_almacen: null,
-          nombre: 'Almacén principal',
-          stock: stockTotal,
-        },
-      ],
+      almacenes: [{ id_almacen: null, nombre: 'Almacén principal', stock: stockTotal }],
     };
   }
 
   /**
-   * Mapea una fila de `buscarProductosVentas` → ProductoUIAdmin.
-   * El backend devuelve `stockPorAlmacen[]` (Opción A), por lo que
-   * se construye el array de almacenes con id_almacen tipado.
+   * ✅ Usa stockPorAlmacen[] para mostrar tags individuales por almacén.
+   * ✅ Mapea unidades_por_caja para mostrar "Caja x12" en el selector de precio.
    */
   mapearAutocompleteVentas(p: ProductoAutocompleteAdmin): ProductoUIAdmin {
     const almacenes: Array<{ id_almacen: number | null; nombre: string; stock: number }> =
@@ -445,13 +471,7 @@ export class VentasAdminService {
             nombre: a.nombre_almacen ?? 'Almacén',
             stock: Number(a.stock ?? 0),
           }))
-        : [
-            {
-              id_almacen: null,
-              nombre: 'Almacén principal',
-              stock: Number(p.stock ?? 0),
-            },
-          ];
+        : [{ id_almacen: null, nombre: 'Almacén principal', stock: Number(p.stock ?? 0) }];
 
     return {
       id: Number(p.id_producto),
@@ -462,13 +482,33 @@ export class VentasAdminService {
       precioUnidad: Number(p.precio_unitario ?? 0),
       precioCaja: Number(p.precio_caja ?? 0),
       precioMayorista: Number(p.precio_mayor ?? 0),
+      unidadesPorCaja: Number(p.cantidad_unidades ?? 0),
       stock: Number(p.stock ?? 0),
       sede: p.sede ?? '',
       almacenes,
     };
   }
 
-  // ── Remates ───────────────────────────────────────────────────────
+  /**
+   * ✅ Stock de un almacén específico dentro de un ProductoUIAdmin.
+   */
+  getStockPorAlmacen(producto: ProductoUIAdmin, almacenId: number | null): number {
+    if (almacenId === null) return producto.stock;
+    return producto.almacenes.find((a) => a.id_almacen === almacenId)?.stock ?? 0;
+  }
+
+  /**
+   * ✅ Label del precio caja incluyendo las unidades.
+   * Ejemplo: "Precio Caja (x12)" o "Precio Caja" si no hay dato.
+   */
+  labelPrecioCaja(producto: ProductoUIAdmin): string {
+    if (producto.unidadesPorCaja > 0) {
+      return `Precio Caja (x${producto.unidadesPorCaja} und)`;
+    }
+    return 'Precio Caja';
+  }
+
+  // ── Remates ────────────────────────────────────────────────────────
 
   buscarRematesAutocomplete(
     search: string,
@@ -505,7 +545,7 @@ export class VentasAdminService {
     };
   }
 
-  // ── Clientes ──────────────────────────────────────────────────────
+  // ── Clientes ───────────────────────────────────────────────────────
 
   buscarCliente(documentValue: string): Observable<ClienteBusquedaAdminResponse> {
     return this.http
