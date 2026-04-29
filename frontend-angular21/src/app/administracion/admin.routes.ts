@@ -338,7 +338,7 @@ export const ADMIN_ROUTES: Routes = [
             (m) => m.ClienteSeguimiento,
           ),
         canActivate: [roleGuard],
-        data: { permiso: 'SEGUIMIENTO-CLIENTE' },
+        data: { permiso: 'SEGUIMIENTO_CLIENTE' },
       },
     ],
   },
